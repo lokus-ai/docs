@@ -10,6 +10,7 @@ Visit [docs.lokus.com](https://docs.lokus.com) to read the full documentation.
 
 - **Getting Started Guide** - Installation and setup instructions
 - **Features Overview** - Complete feature documentation
+- **Task Management** - Comprehensive guide to integrated kanban system
 - **Keyboard Shortcuts** - Comprehensive shortcut reference
 - **Development Guide** - Contributing and development setup
 - **API Reference** - Technical API documentation
@@ -58,6 +59,7 @@ pages/
 ├── index.mdx           # Home page
 ├── getting-started.mdx # Installation and setup
 ├── features.mdx        # Feature documentation
+├── task-management.mdx # Task management system guide
 ├── shortcuts.mdx       # Keyboard shortcuts
 ├── development.mdx     # Development guide
 ├── api.mdx            # API reference
@@ -75,7 +77,31 @@ pages/
 
 ## 🚀 Deployment
 
-The documentation is automatically deployed to [docs.lokus.com](https://docs.lokus.com) when changes are pushed to the main branch.
+The documentation is automatically deployed when changes are pushed to the main branch.
+
+### Vercel (Recommended)
+
+1. **Connect Repository**: Import your GitHub repository to Vercel
+2. **Framework Detection**: Vercel automatically detects Next.js configuration
+3. **Build Settings** (automatically configured):
+   - Build Command: `npm run build`
+   - Output Directory: `out`
+   - Install Command: `npm install`
+   - Development Command: `npm run dev`
+
+### Alternative Hosting Platforms
+
+#### Netlify
+```bash
+Build command: npm run build
+Publish directory: out
+```
+
+#### GitHub Pages
+```bash
+Build command: npm run build
+Deploy from: out directory
+```
 
 ### Manual Deployment
 
@@ -83,9 +109,7 @@ The documentation is automatically deployed to [docs.lokus.com](https://docs.lok
 # Build static site
 npm run build
 
-# Export static files
-npm run export
-
+# The static files will be in the 'out' directory
 # Deploy to your hosting provider
 ```
 
