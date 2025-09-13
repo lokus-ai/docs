@@ -6,39 +6,11 @@ const config: DocsThemeConfig = {
     <div style={{
       display: 'flex',
       alignItems: 'center',
-      gap: '12px',
-      position: 'relative'
+      gap: '8px',
+      fontWeight: 'bold',
+      fontSize: '1.2rem'
     }}>
-      <div style={{
-        background: 'linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffa726)',
-        backgroundSize: '300% 300%',
-        animation: 'rainbowShift 3s ease-in-out infinite',
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
-        fontSize: '28px',
-        filter: 'drop-shadow(0 0 8px rgba(255, 107, 107, 0.3))'
-      }}>🌌</div>
-      <div style={{
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
-        backgroundSize: '200% 200%',
-        animation: 'gradientShift 4s ease-in-out infinite',
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
-        fontWeight: '800',
-        fontSize: '24px',
-        letterSpacing: '-0.5px'
-      }}>Lokus</div>
-      <div style={{
-        position: 'absolute',
-        top: '-5px',
-        right: '-15px',
-        width: '8px',
-        height: '8px',
-        background: 'linear-gradient(45deg, #ff6b6b, #4ecdc4)',
-        borderRadius: '50%',
-        animation: 'pulse 2s ease-in-out infinite',
-        boxShadow: '0 0 20px rgba(255, 107, 107, 0.6)'
-      }} />
+      🌌 Lokus
     </div>
   ),
   project: {
@@ -49,40 +21,10 @@ const config: DocsThemeConfig = {
   },
   docsRepositoryBase: 'https://github.com/lokus-ai/docs',
   footer: {
-    text: (
-      <div style={{
-        background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(240, 147, 251, 0.1) 100%)',
-        backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        borderRadius: '20px',
-        padding: '24px',
-        textAlign: 'center' as const,
-        position: 'relative',
-        overflow: 'hidden'
-      }}>
-        <div style={{
-          position: 'absolute',
-          top: '-50%',
-          left: '-50%',
-          width: '200%',
-          height: '200%',
-          background: 'conic-gradient(from 0deg, transparent, rgba(102, 126, 234, 0.1), transparent)',
-          animation: 'spin 15s linear infinite'
-        }} />
-        <span style={{
-          position: 'relative',
-          zIndex: 1,
-          background: 'linear-gradient(45deg, #667eea, #764ba2, #f093fb)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent'
-        }}>
-          © 2024 Lokus. Built with ❤️ and AI. Powered by the future of note-taking.
-        </span>
-      </div>
-    ),
+    text: 'Lokus Documentation - A modern, intuitive note-taking application',
   },
   search: {
-    placeholder: '🔍 Search with AI magic...'
+    placeholder: 'Search documentation...'
   },
   useNextSeoProps() {
     return {
@@ -164,42 +106,12 @@ const config: DocsThemeConfig = {
         }
         
         body {
-          background: #000;
-          position: relative;
-          overflow-x: hidden;
-        }
-        
-        body::before {
-          content: '';
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100vw;
-          height: 100vh;
           background: 
-            radial-gradient(circle at 20% 80%, rgba(102, 126, 234, 0.3) 0%, transparent 50%),
-            radial-gradient(circle at 80% 20%, rgba(118, 75, 162, 0.3) 0%, transparent 50%),
-            radial-gradient(circle at 40% 40%, rgba(240, 147, 251, 0.2) 0%, transparent 50%),
-            radial-gradient(circle at 60% 80%, rgba(0, 212, 255, 0.2) 0%, transparent 50%),
-            linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(240, 147, 251, 0.05) 100%);
-          animation: meshMove 20s ease-in-out infinite;
-          pointer-events: none;
-          z-index: -3;
-        }
-        
-        body::after {
-          content: '';
-          position: fixed;
-          top: -50%;
-          left: -50%;
-          width: 200%;
-          height: 200%;
-          background: 
-            conic-gradient(from 0deg at 30% 30%, transparent, rgba(102, 126, 234, 0.1), transparent, rgba(240, 147, 251, 0.1), transparent),
-            conic-gradient(from 180deg at 70% 70%, transparent, rgba(118, 75, 162, 0.1), transparent, rgba(0, 212, 255, 0.1), transparent);
-          animation: spin 30s linear infinite;
-          pointer-events: none;
-          z-index: -2;
+            radial-gradient(circle at 20% 20%, rgba(102, 126, 234, 0.05) 0%, transparent 50%),
+            radial-gradient(circle at 80% 80%, rgba(118, 75, 162, 0.05) 0%, transparent 50%),
+            radial-gradient(circle at 60% 40%, rgba(240, 147, 251, 0.03) 0%, transparent 50%);
+          background-attachment: fixed;
+          min-height: 100vh;
         }
         
         .nextra-nav-container {
@@ -232,26 +144,18 @@ const config: DocsThemeConfig = {
         }
         
         h1, h2, h3, h4, h5, h6 {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-          background-size: 200% 200%;
-          animation: gradientShift 4s ease-in-out infinite;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
-          font-weight: 800;
-          position: relative;
+          font-weight: 600;
         }
         
-        h1::after, h2::after {
-          content: '';
-          position: absolute;
-          bottom: -4px;
-          left: 0;
-          width: 60px;
-          height: 3px;
-          background: linear-gradient(90deg, #667eea, #f093fb);
-          border-radius: 2px;
-          animation: gradientShift 2s ease-in-out infinite;
+        .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+          background: linear-gradient(135deg, #a8b5ff 0%, #c4a8ff 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
         }
         
         pre {
