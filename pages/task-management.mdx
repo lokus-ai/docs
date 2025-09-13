@@ -1,0 +1,255 @@
+# Task Management System
+
+Lokus includes a powerful, integrated task management system that seamlessly connects your notes with a visual kanban board. Create, organize, and track tasks directly from your writing workflow.
+
+## 📋 Overview
+
+The task management system consists of three main components:
+- **Task Creation Widget** - Create new tasks with `!task`
+- **Task Import Widget** - Reference existing tasks with `@task`
+- **Kanban Board** - Visual task organization and management
+
+## 🚀 Creating Tasks
+
+### Using the Task Creation Widget
+
+Type `!task ` (with a space) anywhere in your notes to trigger the task creation widget.
+
+```
+!task 
+```
+
+#### Widget Features
+- **Smart Input**: Type your task description
+- **Task Types**: Press `Tab` to cycle through task types:
+  - 🔴 **Urgent** - High priority tasks requiring immediate attention
+  - 🟡 **Question** - Tasks that need clarification or research
+  - 🔵 **In Progress** - Tasks currently being worked on
+  - ⚪ **Todo** - Standard tasks to be completed
+
+#### Keyboard Shortcuts
+| Key | Action |
+|-----|--------|
+| `Tab` | Cycle task types |
+| `Enter` | Create task |
+| `Escape` | Cancel and close widget |
+
+#### Example Usage
+```
+Writing my project plan...
+
+!task Review project requirements with team
+```
+
+This creates: 🔴 Review project requirements with team
+
+## 🔗 Importing Existing Tasks
+
+### Using the Task Import Widget
+
+Type `@task ` (with a space) to open the task import widget and reference existing tasks.
+
+```
+@task 
+```
+
+#### Widget Features
+- **Search & Filter**: Type to search through existing tasks
+- **Live Results**: See matching tasks as you type
+- **Keyboard Navigation**: Use arrow keys to navigate results
+
+#### Keyboard Shortcuts
+| Key | Action |
+|-----|--------|
+| `↑/↓` | Navigate task list |
+| `Enter` | Select highlighted task |
+| `Escape` | Cancel and close widget |
+
+#### Example Usage
+```
+In today's meeting we discussed:
+
+@task Fix authentication bug
+
+Let's prioritize this for the next sprint.
+```
+
+## 📊 Kanban Board
+
+### Mini Kanban (Sidebar)
+
+Access the mini kanban view from the sidebar:
+1. Click the **Tasks** tab in the left sidebar
+2. Or click the grid icon (⌗) in the main navigation
+
+#### Features
+- **Compact View**: See all tasks at a glance
+- **Quick Actions**: Create, edit, and move tasks
+- **Status Columns**: Tasks organized by status
+- **Open Full View**: Click "Open Full Kanban" for expanded view
+
+### Full Kanban (Main Editor)
+
+Open the full kanban board as a tab in the main editor:
+1. Click **Open Full Kanban** from mini kanban
+2. Or open via Command Palette (`⌘K` → "kanban")
+
+#### Features
+- **Drag & Drop**: Move tasks between columns
+- **Task Details**: Rich task information and metadata
+- **Bulk Operations**: Select and modify multiple tasks
+- **Status Management**: Visual task progression
+
+### Status Columns
+
+| Status | Icon | Description |
+|--------|------|-------------|
+| **Urgent** | 🔴 | High priority, needs immediate attention |
+| **Question** | 🟡 | Requires research or clarification |  
+| **In Progress** | 🔵 | Currently being worked on |
+| **Todo** | ⚪ | Standard tasks to be completed |
+
+## ⚡ Interactive Task Elements
+
+Tasks inserted in your notes become interactive elements that connect directly to the kanban board.
+
+### Task Element Features
+- **Visual Styling**: Tasks appear with distinctive styling and status icons
+- **Clickable**: Click any task to jump to the kanban board
+- **Status Indicators**: Color-coded status badges
+- **Hover Effects**: Visual feedback on interaction
+
+### Example
+```markdown
+Meeting Notes - September 13, 2025
+
+Action items from today:
+🔴 Review Q4 budget proposal
+🔵 Update user documentation  
+⚪ Schedule team retrospective
+
+Next week's priorities:
+🟡 Research new deployment options
+```
+
+## 🔄 Workflow Integration
+
+### Note-to-Task Workflow
+1. **Write Notes**: Use natural writing flow
+2. **Identify Tasks**: Mark action items with `!task`
+3. **Organize Visually**: View and organize in kanban
+4. **Reference Later**: Use `@task` to reference across notes
+
+### Task-to-Note Workflow  
+1. **Plan in Kanban**: Organize tasks visually
+2. **Detail in Notes**: Add context and details
+3. **Cross-Reference**: Link related tasks and notes
+4. **Track Progress**: Update status and move tasks
+
+## 🎯 Best Practices
+
+### Task Creation
+- **Be Specific**: Write clear, actionable task descriptions
+- **Use Appropriate Types**: Match task type to urgency and nature
+- **Context Matters**: Create tasks where they naturally fit in your notes
+
+### Task Organization  
+- **Regular Reviews**: Check kanban board regularly
+- **Status Updates**: Keep task statuses current
+- **Archive Completed**: Remove or archive finished tasks
+
+### Integration Tips
+- **Meeting Notes**: Use `!task` for action items during meetings
+- **Project Planning**: Create tasks for project milestones
+- **Daily Workflow**: Reference tasks with `@task` in daily notes
+
+## ⌨️ Keyboard Shortcuts
+
+### Task Creation Widget
+| Shortcut | Action |
+|----------|--------|
+| `!task ` | Open task creation widget |
+| `Tab` | Cycle through task types |
+| `Enter` | Create and insert task |
+| `Escape` | Cancel widget |
+
+### Task Import Widget  
+| Shortcut | Action |
+|----------|--------|
+| `@task ` | Open task import widget |
+| `↑/↓` | Navigate task list |
+| `Type to search` | Filter tasks |
+| `Enter` | Import selected task |
+| `Escape` | Cancel widget |
+
+### Kanban Navigation
+| Shortcut | Action |
+|----------|--------|
+| `⌘K` → "kanban" | Open full kanban board |
+| Click task element | Jump to kanban board |
+| Drag & drop | Move tasks between columns |
+
+## 🔧 Technical Implementation
+
+### Architecture
+The task management system is built using:
+- **TipTap Extensions**: Custom editor extensions for task widgets
+- **Tauri Backend**: Rust-based task persistence and CRUD operations
+- **React Components**: Modern UI components with drag-and-drop support
+- **Real-time Sync**: Bi-directional sync between editor and kanban
+
+### Data Storage
+- **Local Database**: Tasks stored locally for privacy and speed
+- **File Integration**: Tasks linked to specific files and locations
+- **Session Persistence**: Task states preserved across app restarts
+
+### Performance Features
+- **Lazy Loading**: Widgets and kanban components loaded on demand
+- **Efficient Rendering**: Minimal re-renders with optimized React components
+- **Debounced Operations**: Search and filter operations optimized
+
+## 🧪 Testing
+
+The task management system includes comprehensive test coverage:
+- **21 Unit Tests**: Core functionality and edge cases
+- **16 E2E Tests**: Complete user workflows and interactions
+- **Error Handling**: Graceful handling of failures and edge cases
+
+### Test Scenarios Covered
+- Task creation with all status types
+- Task import and search functionality  
+- Widget keyboard navigation and shortcuts
+- Kanban board interactions and drag-drop
+- Error handling and recovery
+- Cross-browser compatibility
+
+## 🚀 Getting Started
+
+### Quick Start
+1. Open any note in Lokus
+2. Type `!task ` to create your first task
+3. Press `Tab` to explore different task types
+4. Press `Enter` to create the task
+5. Click the grid icon (⌗) to view your kanban board
+
+### Advanced Usage
+1. Create multiple tasks in different notes
+2. Use `@task ` to reference existing tasks
+3. Organize tasks visually in the kanban board
+4. Click task elements to navigate between notes and board
+
+## 💡 Tips & Tricks
+
+### Productivity Tips
+- **Batch Creation**: Create multiple tasks quickly using `!task` repeatedly
+- **Context Switching**: Use task elements as bookmarks to jump between contexts
+- **Status Tracking**: Update task statuses to visualize progress
+- **Search Integration**: Use import widget to find and reference old tasks
+
+### Advanced Workflows
+- **Project Management**: Create project-specific notes with task breakdowns
+- **Meeting Management**: Use task creation during meetings for real-time action items
+- **Daily Reviews**: Reference important tasks in daily notes with `@task`
+- **Status Reports**: Use kanban view to generate progress reports
+
+The task management system transforms Lokus from a simple note-taking app into a comprehensive productivity tool, seamlessly blending writing and task organization.
