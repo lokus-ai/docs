@@ -1,91 +1,296 @@
-
+{/* Dynamic Floating Particles */}
 <div style={{
-  position: 'relative',
-  textAlign: 'center',
-  padding: '80px 20px',
-  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
-  backdropFilter: 'blur(20px)',
-  borderRadius: '32px',
-  border: '1px solid rgba(255, 255, 255, 0.2)',
-  margin: '40px 0',
-  boxShadow: '0 24px 48px rgba(0, 0, 0, 0.1)'
+  position: 'fixed',
+  top: 0,
+  left: 0,
+  width: '100vw',
+  height: '100vh',
+  pointerEvents: 'none',
+  zIndex: -1,
+  overflow: 'hidden'
 }}>
-  <h1 style={{
-    fontSize: 'clamp(2.5rem, 8vw, 5rem)',
-    fontWeight: '700',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    backgroundClip: 'text',
-    marginBottom: '24px',
-    lineHeight: '1.1'
-  }}>
-    Welcome to Lokus
-  </h1>
-  
-  <p style={{
-    fontSize: 'clamp(1.2rem, 3vw, 1.8rem)',
-    color: 'var(--nextra-colors-gray-600)',
-    maxWidth: '800px',
-    margin: '0 auto 40px',
-    lineHeight: '1.6'
-  }}>
-    🌌 The <strong style={{
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      WebkitBackgroundClip: 'text',
-      WebkitTextFillColor: 'transparent',
-      backgroundClip: 'text'
-    }}>next-generation AI-powered</strong> note-taking application with stunning design and powerful editing capabilities.
-  </p>
+  {Array.from({ length: 15 }, (_, i) => (
+    <div
+      key={i}
+      style={{
+        position: 'absolute',
+        width: `${Math.random() * 8 + 4}px`,
+        height: `${Math.random() * 8 + 4}px`,
+        background: i % 3 === 0 
+          ? 'linear-gradient(45deg, #667eea, #764ba2)'
+          : i % 3 === 1 
+          ? 'linear-gradient(45deg, #764ba2, #f093fb)'
+          : 'linear-gradient(45deg, #f093fb, #00d4ff)',
+        borderRadius: '50%',
+        left: `${Math.random() * 100}%`,
+        top: `${Math.random() * 100}%`,
+        animation: `floatParticles ${15 + Math.random() * 10}s linear infinite`,
+        animationDelay: `${Math.random() * 15}s`,
+        boxShadow: `0 0 20px currentColor`,
+        filter: 'blur(1px)'
+      }}
+    />
+  ))}
+</div>
+
+{/* Morphing Gradient Blobs */}
+<div style={{
+  position: 'fixed',
+  top: 0,
+  left: 0,
+  width: '100vw',
+  height: '100vh',
+  pointerEvents: 'none',
+  zIndex: -2,
+  overflow: 'hidden'
+}}>
+  <div style={{
+    position: 'absolute',
+    width: '600px',
+    height: '600px',
+    background: 'radial-gradient(circle, rgba(102, 126, 234, 0.4) 0%, rgba(102, 126, 234, 0.1) 40%, transparent 70%)',
+    filter: 'blur(60px)',
+    animation: 'morphBlob 25s ease-in-out infinite, meshMove 20s ease-in-out infinite',
+    top: '20%',
+    left: '10%'
+  }} />
   
   <div style={{
-    display: 'flex',
-    gap: '20px',
-    justifyContent: 'center',
-    flexWrap: 'wrap'
+    position: 'absolute',
+    width: '500px',
+    height: '500px',
+    background: 'radial-gradient(circle, rgba(240, 147, 251, 0.4) 0%, rgba(240, 147, 251, 0.1) 40%, transparent 70%)',
+    filter: 'blur(50px)',
+    animation: 'morphBlob 30s ease-in-out infinite, meshMove 25s ease-in-out infinite reverse',
+    bottom: '20%',
+    right: '10%'
+  }} />
+  
+  <div style={{
+    position: 'absolute',
+    width: '400px',
+    height: '400px',
+    background: 'radial-gradient(circle, rgba(0, 212, 255, 0.3) 0%, rgba(0, 212, 255, 0.1) 40%, transparent 70%)',
+    filter: 'blur(40px)',
+    animation: 'morphBlob 35s ease-in-out infinite, meshMove 30s ease-in-out infinite',
+    top: '60%',
+    left: '60%'
+  }} />
+</div>
+
+{/* Mind-Blowing Hero Section */}
+<div style={{
+  position: 'relative',
+  minHeight: '100vh',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  textAlign: 'center',
+  padding: '0 20px',
+  overflow: 'hidden'
+}}>
+  {/* Animated Grid Background */}
+  <div style={{
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    backgroundImage: `
+      linear-gradient(rgba(102, 126, 234, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(102, 126, 234, 0.05) 1px, transparent 1px)
+    `,
+    backgroundSize: '40px 40px',
+    animation: 'meshMove 30s ease-in-out infinite',
+    maskImage: 'radial-gradient(ellipse at center, black 40%, transparent 80%)',
+    WebkitMaskImage: 'radial-gradient(ellipse at center, black 40%, transparent 80%)'
+  }} />
+  
+  {/* Main Content */}
+  <div style={{
+    position: 'relative',
+    zIndex: 10,
+    maxWidth: '1000px'
   }}>
-    <a 
-      href="/getting-started" 
-      style={{
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        color: 'white',
-        padding: '16px 32px',
-        borderRadius: '16px',
-        textDecoration: 'none',
-        fontWeight: '600',
-        fontSize: '1.1rem',
-        boxShadow: '0 8px 24px rgba(102, 126, 234, 0.3)',
-        transition: 'all 0.3s ease',
-        border: 'none',
-        cursor: 'pointer',
-        WebkitBackgroundClip: 'unset',
-        WebkitTextFillColor: 'unset',
-        backgroundClip: 'unset'
-      }}
-    >
-      🚀 Get Started
-    </a>
-    <a 
-      href="/features" 
-      style={{
-        background: 'rgba(255, 255, 255, 0.1)',
-        backdropFilter: 'blur(10px)',
-        color: 'var(--nextra-colors-gray-700)',
-        padding: '16px 32px',
-        borderRadius: '16px',
-        textDecoration: 'none',
-        fontWeight: '600',
-        fontSize: '1.1rem',
-        border: '1px solid rgba(255, 255, 255, 0.2)',
-        transition: 'all 0.3s ease',
-        cursor: 'pointer',
-        WebkitBackgroundClip: 'unset',
-        WebkitTextFillColor: 'unset',
-        backgroundClip: 'unset'
-      }}
-    >
-      ⚡ Explore Features
-    </a>
+    
+    {/* Floating Badge */}
+    <div style={{
+      display: 'inline-block',
+      background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(240, 147, 251, 0.2) 100%)',
+      backdropFilter: 'blur(20px)',
+      border: '1px solid rgba(102, 126, 234, 0.3)',
+      borderRadius: '50px',
+      padding: '8px 20px',
+      marginBottom: '32px',
+      fontSize: '14px',
+      fontWeight: '500',
+      color: '#a8b5ff',
+      animation: 'pulse 3s ease-in-out infinite'
+    }}>
+      🚀 Next-Generation AI Documentation
+    </div>
+
+    {/* Epic Title */}
+    <h1 style={{
+      fontSize: 'clamp(3rem, 10vw, 8rem)',
+      fontWeight: '900',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #00d4ff 75%, #667eea 100%)',
+      backgroundSize: '300% 300%',
+      animation: 'gradientShift 6s ease-in-out infinite',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
+      backgroundClip: 'text',
+      marginBottom: '32px',
+      lineHeight: '1',
+      letterSpacing: '-0.02em',
+      textShadow: '0 0 80px rgba(102, 126, 234, 0.5)',
+      filter: 'drop-shadow(0 0 20px rgba(240, 147, 251, 0.3))'
+    }}>
+      Welcome to<br />
+      <span style={{
+        background: 'linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #f093fb)',
+        backgroundSize: '400% 400%',
+        animation: 'rainbowShift 4s ease-in-out infinite',
+        WebkitBackgroundClip: 'text',
+        WebkitTextFillColor: 'transparent'
+      }}>
+        Lokus
+      </span>
+    </h1>
+    
+    {/* Epic Subtitle */}
+    <p style={{
+      fontSize: 'clamp(1.2rem, 4vw, 2rem)',
+      color: 'rgba(255, 255, 255, 0.8)',
+      maxWidth: '800px',
+      margin: '0 auto 48px',
+      lineHeight: '1.5',
+      fontWeight: '400'
+    }}>
+      The <strong style={{
+        background: 'linear-gradient(135deg, #667eea 0%, #f093fb 100%)',
+        WebkitBackgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
+        fontWeight: '600'
+      }}>AI-powered note-taking revolution</strong> with mind-bending design, 
+      blazing performance, and features that will transform how you think and create.
+    </p>
+    
+    {/* CTA Buttons */}
+    <div style={{
+      display: 'flex',
+      gap: '24px',
+      justifyContent: 'center',
+      flexWrap: 'wrap',
+      marginBottom: '60px'
+    }}>
+      <a 
+        href="/getting-started" 
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '8px',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+          backgroundSize: '200% 200%',
+          animation: 'gradientShift 3s ease-in-out infinite',
+          color: 'white',
+          padding: '18px 36px',
+          borderRadius: '16px',
+          textDecoration: 'none',
+          fontWeight: '700',
+          fontSize: '1.1rem',
+          boxShadow: '0 12px 40px rgba(102, 126, 234, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1)',
+          transition: 'all 0.3s ease',
+          position: 'relative',
+          overflow: 'hidden',
+          WebkitBackgroundClip: 'unset',
+          WebkitTextFillColor: 'unset',
+          backgroundClip: 'unset'
+        }}
+      >
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: '-100%',
+          width: '100%',
+          height: '100%',
+          background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)',
+          animation: 'shimmer 2s ease-in-out infinite'
+        }} />
+        🚀 Get Started Now
+      </a>
+      
+      <a 
+        href="/features" 
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '8px',
+          background: 'rgba(255, 255, 255, 0.05)',
+          backdropFilter: 'blur(20px)',
+          color: 'rgba(255, 255, 255, 0.9)',
+          padding: '18px 36px',
+          borderRadius: '16px',
+          textDecoration: 'none',
+          fontWeight: '600',
+          fontSize: '1.1rem',
+          border: '1px solid rgba(102, 126, 234, 0.3)',
+          transition: 'all 0.3s ease',
+          position: 'relative',
+          WebkitBackgroundClip: 'unset',
+          WebkitTextFillColor: 'unset',
+          backgroundClip: 'unset'
+        }}
+      >
+        ⚡ Explore Magic
+      </a>
+    </div>
+    
+    {/* Stats */}
+    <div style={{
+      display: 'flex',
+      gap: '48px',
+      justifyContent: 'center',
+      flexWrap: 'wrap',
+      opacity: 0.7
+    }}>
+      <div style={{
+        textAlign: 'center'
+      }}>
+        <div style={{
+          fontSize: '2rem',
+          fontWeight: '800',
+          background: 'linear-gradient(135deg, #667eea, #f093fb)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent'
+        }}>102+</div>
+        <div style={{ fontSize: '0.9rem', color: 'rgba(255, 255, 255, 0.6)' }}>Tests Passing</div>
+      </div>
+      <div style={{
+        textAlign: 'center'
+      }}>
+        <div style={{
+          fontSize: '2rem',
+          fontWeight: '800',
+          background: 'linear-gradient(135deg, #764ba2, #00d4ff)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent'
+        }}>⚡</div>
+        <div style={{ fontSize: '0.9rem', color: 'rgba(255, 255, 255, 0.6)' }}>Lightning Fast</div>
+      </div>
+      <div style={{
+        textAlign: 'center'
+      }}>
+        <div style={{
+          fontSize: '2rem',
+          fontWeight: '800',
+          background: 'linear-gradient(135deg, #f093fb, #667eea)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent'
+        }}>∞</div>
+        <div style={{ fontSize: '0.9rem', color: 'rgba(255, 255, 255, 0.6)' }}>Possibilities</div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -93,88 +298,156 @@
 
 <div style={{
   display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-  gap: '24px',
-  margin: '32px 0'
+  gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
+  gap: '32px',
+  margin: '80px 0',
+  padding: '0 20px'
 }}>
   <div style={{
-    background: 'rgba(255, 255, 255, 0.1)',
+    background: 'rgba(0, 0, 0, 0.4)',
     backdropFilter: 'blur(20px)',
-    border: '1px solid rgba(255, 255, 255, 0.2)',
-    borderRadius: '20px',
-    padding: '32px',
+    border: '1px solid rgba(102, 126, 234, 0.3)',
+    borderRadius: '24px',
+    padding: '40px',
     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+    position: 'relative',
+    overflow: 'hidden'
   }}>
     <div style={{
-      fontSize: '2.5rem',
-      marginBottom: '16px'
+      position: 'absolute',
+      top: '-50px',
+      right: '-50px',
+      width: '100px',
+      height: '100px',
+      background: 'linear-gradient(135deg, #667eea, #764ba2)',
+      borderRadius: '50%',
+      filter: 'blur(40px)',
+      opacity: 0.3,
+      animation: 'pulse 4s ease-in-out infinite'
+    }} />
+    
+    <div style={{
+      fontSize: '3rem',
+      marginBottom: '20px',
+      animation: 'pulse 2s ease-in-out infinite'
     }}>⌘K</div>
+    
     <h3 style={{
-      fontSize: '1.25rem',
-      fontWeight: '600',
-      marginBottom: '12px',
+      fontSize: '1.5rem',
+      fontWeight: '700',
+      marginBottom: '16px',
       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       WebkitBackgroundClip: 'text',
       WebkitTextFillColor: 'transparent',
       backgroundClip: 'text'
     }}>Command Palette</h3>
-    <p style={{ color: 'var(--nextra-colors-gray-600)', lineHeight: '1.6' }}>
-      Instant access to files, actions, and commands with beautiful shadcn/ui design.
+    
+    <p style={{ 
+      color: 'rgba(255, 255, 255, 0.7)', 
+      lineHeight: '1.6',
+      fontSize: '1.1rem'
+    }}>
+      Instant access to files, actions, and commands with beautiful shadcn/ui design and fuzzy search that feels like magic.
     </p>
   </div>
 
   <div style={{
-    background: 'rgba(255, 255, 255, 0.1)',
+    background: 'rgba(0, 0, 0, 0.4)',
     backdropFilter: 'blur(20px)',
-    border: '1px solid rgba(255, 255, 255, 0.2)',
-    borderRadius: '20px',
-    padding: '32px',
+    border: '1px solid rgba(240, 147, 251, 0.3)',
+    borderRadius: '24px',
+    padding: '40px',
     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+    position: 'relative',
+    overflow: 'hidden'
   }}>
     <div style={{
-      fontSize: '2.5rem',
-      marginBottom: '16px'
+      position: 'absolute',
+      bottom: '-50px',
+      left: '-50px',
+      width: '100px',
+      height: '100px',
+      background: 'linear-gradient(135deg, #f093fb, #00d4ff)',
+      borderRadius: '50%',
+      filter: 'blur(40px)',
+      opacity: 0.3,
+      animation: 'pulse 3s ease-in-out infinite'
+    }} />
+    
+    <div style={{
+      fontSize: '3rem',
+      marginBottom: '20px',
+      animation: 'rainbowShift 4s ease-in-out infinite'
     }}>✨</div>
+    
     <h3 style={{
-      fontSize: '1.25rem',
-      fontWeight: '600',
-      marginBottom: '12px',
+      fontSize: '1.5rem',
+      fontWeight: '700',
+      marginBottom: '16px',
       background: 'linear-gradient(135deg, #764ba2 0%, #f093fb 100%)',
       WebkitBackgroundClip: 'text',
       WebkitTextFillColor: 'transparent',
       backgroundClip: 'text'
-    }}>Rich Markdown Editor</h3>
-    <p style={{ color: 'var(--nextra-colors-gray-600)', lineHeight: '1.6' }}>
-      TipTap-powered editor with live preview and auto-paste processing.
+    }}>Rich Editor</h3>
+    
+    <p style={{ 
+      color: 'rgba(255, 255, 255, 0.7)', 
+      lineHeight: '1.6',
+      fontSize: '1.1rem'
+    }}>
+      TipTap-powered editor with live preview, auto-paste processing, WikiLinks, and markdown magic that adapts to your flow.
     </p>
   </div>
 
   <div style={{
-    background: 'rgba(255, 255, 255, 0.1)',
+    background: 'rgba(0, 0, 0, 0.4)',
     backdropFilter: 'blur(20px)',
-    border: '1px solid rgba(255, 255, 255, 0.2)',
-    borderRadius: '20px',
-    padding: '32px',
+    border: '1px solid rgba(0, 212, 255, 0.3)',
+    borderRadius: '24px',
+    padding: '40px',
     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+    position: 'relative',
+    overflow: 'hidden'
   }}>
     <div style={{
-      fontSize: '2.5rem',
-      marginBottom: '16px'
+      position: 'absolute',
+      top: '50%',
+      right: '-30px',
+      width: '80px',
+      height: '80px',
+      background: 'linear-gradient(135deg, #00d4ff, #667eea)',
+      borderRadius: '50%',
+      filter: 'blur(30px)',
+      opacity: 0.4,
+      animation: 'morphBlob 6s ease-in-out infinite'
+    }} />
+    
+    <div style={{
+      fontSize: '3rem',
+      marginBottom: '20px',
+      background: 'linear-gradient(45deg, #f093fb, #00d4ff, #667eea)',
+      backgroundSize: '300% 300%',
+      animation: 'gradientShift 5s ease-in-out infinite',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent'
     }}>🎨</div>
+    
     <h3 style={{
-      fontSize: '1.25rem',
-      fontWeight: '600',
-      marginBottom: '12px',
-      background: 'linear-gradient(135deg, #f093fb 0%, #667eea 100%)',
+      fontSize: '1.5rem',
+      fontWeight: '700',
+      marginBottom: '16px',
+      background: 'linear-gradient(135deg, #f093fb 0%, #00d4ff 100%)',
       WebkitBackgroundClip: 'text',
       WebkitTextFillColor: 'transparent',
       backgroundClip: 'text'
     }}>Fluid UX</h3>
-    <p style={{ color: 'var(--nextra-colors-gray-600)', lineHeight: '1.6' }}>
-      Smooth animations and glassmorphism effects that feel magical.
+    
+    <p style={{ 
+      color: 'rgba(255, 255, 255, 0.7)', 
+      lineHeight: '1.6',
+      fontSize: '1.1rem'
+    }}>
+      Smooth animations, morphing gradients, and glassmorphism effects that create an experience beyond imagination.
     </p>
   </div>
 </div>

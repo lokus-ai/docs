@@ -6,21 +6,39 @@ const config: DocsThemeConfig = {
     <div style={{
       display: 'flex',
       alignItems: 'center',
-      gap: '8px',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      WebkitBackgroundClip: 'text',
-      WebkitTextFillColor: 'transparent',
-      backgroundClip: 'text',
-      fontWeight: 'bold',
-      fontSize: '20px'
+      gap: '12px',
+      position: 'relative'
     }}>
-      <span style={{
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      <div style={{
+        background: 'linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffa726)',
+        backgroundSize: '300% 300%',
+        animation: 'rainbowShift 3s ease-in-out infinite',
         WebkitBackgroundClip: 'text',
         WebkitTextFillColor: 'transparent',
-        fontSize: '24px'
-      }}>🌌</span>
-      Lokus
+        fontSize: '28px',
+        filter: 'drop-shadow(0 0 8px rgba(255, 107, 107, 0.3))'
+      }}>🌌</div>
+      <div style={{
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+        backgroundSize: '200% 200%',
+        animation: 'gradientShift 4s ease-in-out infinite',
+        WebkitBackgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
+        fontWeight: '800',
+        fontSize: '24px',
+        letterSpacing: '-0.5px'
+      }}>Lokus</div>
+      <div style={{
+        position: 'absolute',
+        top: '-5px',
+        right: '-15px',
+        width: '8px',
+        height: '8px',
+        background: 'linear-gradient(45deg, #ff6b6b, #4ecdc4)',
+        borderRadius: '50%',
+        animation: 'pulse 2s ease-in-out infinite',
+        boxShadow: '0 0 20px rgba(255, 107, 107, 0.6)'
+      }} />
     </div>
   ),
   project: {
@@ -33,21 +51,38 @@ const config: DocsThemeConfig = {
   footer: {
     text: (
       <div style={{
-        background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
-        backdropFilter: 'blur(10px)',
+        background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(240, 147, 251, 0.1) 100%)',
+        backdropFilter: 'blur(20px)',
         border: '1px solid rgba(255, 255, 255, 0.1)',
-        borderRadius: '12px',
-        padding: '16px',
+        borderRadius: '20px',
+        padding: '24px',
         textAlign: 'center' as const,
-        color: 'var(--nextra-colors-gray-600)',
-        margin: '20px 0'
+        position: 'relative',
+        overflow: 'hidden'
       }}>
-        © 2024 Lokus. Built with ❤️ and AI. Powered by the future of note-taking.
+        <div style={{
+          position: 'absolute',
+          top: '-50%',
+          left: '-50%',
+          width: '200%',
+          height: '200%',
+          background: 'conic-gradient(from 0deg, transparent, rgba(102, 126, 234, 0.1), transparent)',
+          animation: 'spin 15s linear infinite'
+        }} />
+        <span style={{
+          position: 'relative',
+          zIndex: 1,
+          background: 'linear-gradient(45deg, #667eea, #764ba2, #f093fb)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent'
+        }}>
+          © 2024 Lokus. Built with ❤️ and AI. Powered by the future of note-taking.
+        </span>
       </div>
     ),
   },
   search: {
-    placeholder: 'Search with AI magic...'
+    placeholder: '🔍 Search with AI magic...'
   },
   useNextSeoProps() {
     return {
@@ -58,17 +93,17 @@ const config: DocsThemeConfig = {
     <>
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <meta property="og:title" content="Lokus AI Documentation" />
-      <meta property="og:description" content="Next-generation AI-powered note-taking with beautiful design" />
+      <meta property="og:description" content="Next-generation AI-powered note-taking with stunning design" />
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet" />
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
       <style jsx global>{`
         :root {
           --lokus-primary: #667eea;
           --lokus-secondary: #764ba2;
           --lokus-accent: #f093fb;
-          --lokus-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          --lokus-gradient-soft: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+          --lokus-neon: #00d4ff;
+          --lokus-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
         }
         
         * {
@@ -79,43 +114,80 @@ const config: DocsThemeConfig = {
           font-family: 'JetBrains Mono', 'SF Mono', Monaco, 'Roboto Mono', monospace !important;
         }
         
+        @keyframes rainbowShift {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+        
+        @keyframes gradientShift {
+          0%, 100% { background-position: 0% 0%; }
+          50% { background-position: 100% 100%; }
+        }
+        
+        @keyframes pulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.6; transform: scale(1.2); }
+        }
+        
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        
+        @keyframes meshMove {
+          0%, 100% { 
+            transform: translateX(0px) translateY(0px) rotate(0deg) scale(1);
+            filter: hue-rotate(0deg);
+          }
+          33% { 
+            transform: translateX(-30px) translateY(-20px) rotate(120deg) scale(1.1);
+            filter: hue-rotate(120deg);
+          }
+          66% { 
+            transform: translateX(30px) translateY(20px) rotate(240deg) scale(0.9);
+            filter: hue-rotate(240deg);
+          }
+        }
+        
+        @keyframes floatParticles {
+          0% { transform: translateY(100vh) translateX(0px) rotate(0deg) scale(0); opacity: 0; }
+          10% { opacity: 1; transform: translateY(90vh) translateX(10px) rotate(36deg) scale(1); }
+          90% { opacity: 1; transform: translateY(10vh) translateX(-10px) rotate(324deg) scale(1); }
+          100% { transform: translateY(-10vh) translateX(0px) rotate(360deg) scale(0); opacity: 0; }
+        }
+        
+        @keyframes morphBlob {
+          0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+          25% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+          50% { border-radius: 50% 60% 30% 60% / 30% 40% 60% 70%; }
+          75% { border-radius: 60% 40% 60% 30% / 70% 50% 40% 30%; }
+        }
+        
         body {
-          background: 
-            radial-gradient(circle at 20% 20%, rgba(102, 126, 234, 0.15) 0%, transparent 50%),
-            radial-gradient(circle at 80% 80%, rgba(118, 75, 162, 0.15) 0%, transparent 50%),
-            radial-gradient(circle at 60% 40%, rgba(240, 147, 251, 0.1) 0%, transparent 50%);
-          background-attachment: fixed;
-          min-height: 100vh;
-        }
-        
-        .nextra-nav-container {
-          backdrop-filter: blur(20px);
-          background: rgba(255, 255, 255, 0.8);
-          border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .dark .nextra-nav-container {
-          background: rgba(0, 0, 0, 0.8);
-          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .nextra-sidebar-container {
-          backdrop-filter: blur(20px);
-          background: rgba(255, 255, 255, 0.6);
-          border-right: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .dark .nextra-sidebar-container {
-          background: rgba(0, 0, 0, 0.6);
-          border-right: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .nextra-content {
+          background: #000;
           position: relative;
-          overflow: hidden;
+          overflow-x: hidden;
         }
         
-        .nextra-content::before {
+        body::before {
+          content: '';
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          background: 
+            radial-gradient(circle at 20% 80%, rgba(102, 126, 234, 0.3) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(118, 75, 162, 0.3) 0%, transparent 50%),
+            radial-gradient(circle at 40% 40%, rgba(240, 147, 251, 0.2) 0%, transparent 50%),
+            radial-gradient(circle at 60% 80%, rgba(0, 212, 255, 0.2) 0%, transparent 50%),
+            linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(240, 147, 251, 0.05) 100%);
+          animation: meshMove 20s ease-in-out infinite;
+          pointer-events: none;
+          z-index: -3;
+        }
+        
+        body::after {
           content: '';
           position: fixed;
           top: -50%;
@@ -123,96 +195,165 @@ const config: DocsThemeConfig = {
           width: 200%;
           height: 200%;
           background: 
-            radial-gradient(circle at 25% 25%, rgba(102, 126, 234, 0.3) 0%, transparent 25%),
-            radial-gradient(circle at 75% 75%, rgba(118, 75, 162, 0.3) 0%, transparent 25%);
-          animation: float 20s ease-in-out infinite;
+            conic-gradient(from 0deg at 30% 30%, transparent, rgba(102, 126, 234, 0.1), transparent, rgba(240, 147, 251, 0.1), transparent),
+            conic-gradient(from 180deg at 70% 70%, transparent, rgba(118, 75, 162, 0.1), transparent, rgba(0, 212, 255, 0.1), transparent);
+          animation: spin 30s linear infinite;
           pointer-events: none;
-          z-index: -1;
-          opacity: 0.5;
+          z-index: -2;
         }
         
-        @keyframes float {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          33% { transform: translateY(-20px) rotate(2deg); }
-          66% { transform: translateY(10px) rotate(-1deg); }
+        .nextra-nav-container {
+          backdrop-filter: blur(20px) saturate(180%);
+          background: rgba(0, 0, 0, 0.8);
+          border-bottom: 1px solid rgba(102, 126, 234, 0.2);
+          position: relative;
+        }
+        
+        .nextra-nav-container::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.8), rgba(240, 147, 251, 0.8), transparent);
+          animation: gradientShift 3s ease-in-out infinite;
+        }
+        
+        .nextra-sidebar-container {
+          backdrop-filter: blur(20px) saturate(180%);
+          background: rgba(0, 0, 0, 0.7);
+          border-right: 1px solid rgba(102, 126, 234, 0.2);
+        }
+        
+        .nextra-content {
+          position: relative;
+          z-index: 1;
         }
         
         h1, h2, h3, h4, h5, h6 {
-          background: var(--lokus-gradient);
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+          background-size: 200% 200%;
+          animation: gradientShift 4s ease-in-out infinite;
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
-          font-weight: 600;
+          font-weight: 800;
+          position: relative;
         }
         
-        .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
-          background: linear-gradient(135deg, #a8b5ff 0%, #c4a8ff 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
+        h1::after, h2::after {
+          content: '';
+          position: absolute;
+          bottom: -4px;
+          left: 0;
+          width: 60px;
+          height: 3px;
+          background: linear-gradient(90deg, #667eea, #f093fb);
+          border-radius: 2px;
+          animation: gradientShift 2s ease-in-out infinite;
         }
         
         pre {
-          background: rgba(255, 255, 255, 0.05) !important;
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 16px;
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+          background: rgba(0, 0, 0, 0.8) !important;
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(102, 126, 234, 0.3);
+          border-radius: 20px;
+          box-shadow: 
+            0 8px 32px rgba(0, 0, 0, 0.4),
+            0 0 0 1px rgba(102, 126, 234, 0.1);
+          position: relative;
+          overflow: hidden;
+        }
+        
+        pre::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+          animation: shimmer 3s ease-in-out infinite;
+        }
+        
+        @keyframes shimmer {
+          0% { left: -100%; }
+          100% { left: 100%; }
         }
         
         code:not(pre code) {
-          background: rgba(102, 126, 234, 0.1) !important;
-          padding: 2px 6px;
-          border-radius: 6px;
-          border: 1px solid rgba(102, 126, 234, 0.2);
+          background: rgba(102, 126, 234, 0.2) !important;
+          padding: 4px 8px;
+          border-radius: 8px;
+          border: 1px solid rgba(102, 126, 234, 0.3);
+          box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
         }
         
         blockquote {
-          background: var(--lokus-gradient-soft);
+          background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(240, 147, 251, 0.1) 100%);
           backdrop-filter: blur(10px);
-          border-left: 4px solid var(--lokus-primary);
-          border-radius: 12px;
-          padding: 16px 20px;
+          border-left: 4px solid;
+          border-image: linear-gradient(to bottom, #667eea, #f093fb) 1;
+          border-radius: 16px;
+          padding: 20px 24px;
           margin: 24px 0;
-          box-shadow: 0 4px 16px rgba(102, 126, 234, 0.1);
+          box-shadow: 0 8px 32px rgba(102, 126, 234, 0.1);
+          position: relative;
+        }
+        
+        blockquote::before {
+          content: '';
+          position: absolute;
+          top: -1px;
+          left: -1px;
+          right: -1px;
+          bottom: -1px;
+          background: linear-gradient(45deg, #667eea, #764ba2, #f093fb);
+          border-radius: 16px;
+          z-index: -1;
+          opacity: 0.5;
+          filter: blur(4px);
         }
         
         a {
-          background: var(--lokus-gradient);
+          background: linear-gradient(45deg, #667eea, #f093fb);
+          background-size: 200% 200%;
+          animation: gradientShift 3s ease-in-out infinite;
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
           text-decoration: none;
           position: relative;
+          transition: all 0.3s ease;
         }
         
         a:hover {
-          opacity: 0.8;
+          filter: brightness(1.2);
+          text-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
         }
         
         .nextra-toc {
           backdrop-filter: blur(20px);
-          background: rgba(255, 255, 255, 0.6);
-          border-radius: 16px;
-          padding: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .dark .nextra-toc {
           background: rgba(0, 0, 0, 0.6);
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 20px;
+          padding: 20px;
+          border: 1px solid rgba(102, 126, 234, 0.2);
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
         
         .nextra-search input {
-          background: rgba(255, 255, 255, 0.1);
+          background: rgba(0, 0, 0, 0.7);
           backdrop-filter: blur(10px);
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          border-radius: 12px;
+          border: 1px solid rgba(102, 126, 234, 0.3);
+          border-radius: 16px;
+          color: white;
+          transition: all 0.3s ease;
         }
         
-        .dark .nextra-search input {
-          background: rgba(0, 0, 0, 0.3);
-          border: 1px solid rgba(255, 255, 255, 0.1);
+        .nextra-search input:focus {
+          border-color: rgba(240, 147, 251, 0.6);
+          box-shadow: 0 0 20px rgba(240, 147, 251, 0.3);
         }
       `}</style>
     </>
@@ -223,11 +364,11 @@ const config: DocsThemeConfig = {
       if (type === 'separator') {
         return (
           <div style={{
-            background: 'var(--lokus-gradient)',
+            background: 'linear-gradient(90deg, #667eea, #f093fb)',
             height: '2px',
             borderRadius: '1px',
             margin: '16px 0',
-            opacity: 0.3
+            animation: 'gradientShift 2s ease-in-out infinite'
           }} />
         )
       }
