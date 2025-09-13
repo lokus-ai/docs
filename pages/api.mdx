@@ -1,0 +1,678 @@
+# API Reference
+
+This reference covers all public APIs available in Lokus for extending and integrating with the application.
+
+## Tauri Commands
+
+These Rust commands can be called from the frontend using `invoke()`.
+
+### File Operations
+
+#### `read_file(path: string): Promise<string>`
+Read file contents from the filesystem.
+
+```javascript
+import { invoke } from '@tauri-apps/api/core'
+
+const content = await invoke('read_file', { path: '/path/to/file.md' })
+console.log(content)
+```
+
+#### `write_file(path: string, content: string): Promise<void>`
+Write content to a file.
+
+```javascript
+await invoke('write_file', { 
+  path: '/path/to/file.md',
+  content: '# My Document\n\nContent here...'
+})
+```
+
+#### `create_file(path: string): Promise<void>`
+Create a new empty file.
+
+```javascript
+await invoke('create_file', { path: '/path/to/new-file.md' })
+```
+
+#### `delete_file(path: string): Promise<void>`
+Delete a file from the filesystem.
+
+```javascript
+await invoke('delete_file', { path: '/path/to/file.md' })
+```
+
+#### `rename_file(old_path: string, new_path: string): Promise<void>`
+Rename or move a file.
+
+```javascript
+await invoke('rename_file', { 
+  oldPath: '/old/path.md',
+  newPath: '/new/path.md'
+})
+```
+
+### Directory Operations
+
+#### `list_directory(path: string): Promise<FileEntry[]>`
+List contents of a directory.
+
+```javascript
+const entries = await invoke('list_directory', { path: '/workspace' })
+// Returns: Array of FileEntry objects
+```
+
+**FileEntry Interface:**
+```typescript
+interface FileEntry {
+  name: string        // File/folder name
+  path: string        // Full path
+  is_directory: boolean
+  size?: number       // File size in bytes
+  modified?: string   // Last modified timestamp
+}
+```
+
+#### `create_directory(path: string): Promise<void>`
+Create a new directory.
+
+```javascript
+await invoke('create_directory', { path: '/workspace/new-folder' })
+```
+
+#### `watch_directory(path: string): Promise<void>`
+Start watching a directory for changes.
+
+```javascript
+await invoke('watch_directory', { path: '/workspace' })
+// Emits 'file-changed' events
+```
+
+### System Integration
+
+#### `reveal_in_finder(path: string): Promise<void>`
+Show file/folder in system file manager.
+
+```javascript
+await invoke('reveal_in_finder', { path: '/path/to/file.md' })
+```
+
+#### `open_terminal(path: string): Promise<void>`
+Open terminal at specified path.
+
+```javascript
+await invoke('open_terminal', { path: '/workspace' })
+```
+
+#### `copy_to_clipboard(text: string): Promise<void>`
+Copy text to system clipboard.
+
+```javascript
+await invoke('copy_to_clipboard', { text: 'Hello, clipboard!' })
+```
+
+#### `paste_from_clipboard(): Promise<string>`
+Get text from system clipboard.
+
+```javascript
+const clipboardText = await invoke('paste_from_clipboard')
+```
+
+### Configuration
+
+#### `get_config(): Promise<Config>`
+Get application configuration.
+
+```javascript
+const config = await invoke('get_config')
+```
+
+**Config Interface:**
+```typescript
+interface Config {
+  theme: 'light' | 'dark' | 'system'
+  editor: {
+    fontSize: number
+    fontFamily: string
+    lineHeight: number
+    tabSize: number
+  }
+  shortcuts: Record<string, string>
+  workspace: {
+    defaultPath?: string
+    recentFiles: string[]
+  }
+}
+```
+
+#### `set_config(config: Partial<Config>): Promise<void>`
+Update application configuration.
+
+```javascript
+await invoke('set_config', {
+  config: {
+    theme: 'dark',
+    editor: { fontSize: 16 }
+  }
+})
+```
+
+## Frontend Events
+
+Lokus uses a custom event system for component communication.
+
+### Event Emitter
+
+#### `emit(event: string, data?: any): void`
+Emit a custom event.
+
+```javascript
+import { emit } from '@tauri-apps/api/event'
+
+// Emit file opened event
+await emit('lokus:file-opened', { path: '/file.md' })
+
+// Emit without data
+await emit('lokus:save-requested')
+```
+
+#### `listen(event: string, callback: Function): Promise<UnlistenFn>`
+Listen for custom events.
+
+```javascript
+import { listen } from '@tauri-apps/api/event'
+
+const unlisten = await listen('lokus:file-opened', (event) => {
+  console.log('File opened:', event.payload.path)
+})
+
+// Clean up listener
+unlisten()
+```
+
+### Built-in Events
+
+#### `lokus:file-opened`
+Fired when a file is opened.
+
+```javascript
+await listen('lokus:file-opened', (event) => {
+  const { path, content } = event.payload
+  // Handle file opened
+})
+```
+
+#### `lokus:file-saved`
+Fired when a file is saved.
+
+```javascript
+await listen('lokus:file-saved', (event) => {
+  const { path } = event.payload
+  // Handle file saved
+})
+```
+
+#### `lokus:file-changed`
+Fired when a file is modified externally.
+
+```javascript
+await listen('lokus:file-changed', (event) => {
+  const { path, changeType } = event.payload
+  // changeType: 'created' | 'modified' | 'deleted'
+})
+```
+
+#### `lokus:workspace-changed`
+Fired when workspace directory changes.
+
+```javascript
+await listen('lokus:workspace-changed', (event) => {
+  const { path } = event.payload
+  // Handle workspace change
+})
+```
+
+## React Hooks
+
+Custom hooks for common Lokus operations.
+
+### `useFileOperations()`
+Hook for file management operations.
+
+```javascript
+import { useFileOperations } from './hooks/useFileOperations'
+
+const MyComponent = () => {
+  const {
+    openFile,
+    saveFile,
+    createFile,
+    deleteFile,
+    renameFile
+  } = useFileOperations()
+
+  const handleOpen = async () => {
+    const content = await openFile('/path/to/file.md')
+    console.log(content)
+  }
+
+  return <button onClick={handleOpen}>Open File</button>
+}
+```
+
+**Return Interface:**
+```typescript
+interface FileOperations {
+  openFile: (path: string) => Promise<string>
+  saveFile: (path: string, content: string) => Promise<void>
+  createFile: (path: string) => Promise<void>
+  deleteFile: (path: string) => Promise<void>
+  renameFile: (oldPath: string, newPath: string) => Promise<void>
+}
+```
+
+### `useWorkspace()`
+Hook for workspace management.
+
+```javascript
+import { useWorkspace } from './hooks/useWorkspace'
+
+const MyComponent = () => {
+  const {
+    currentPath,
+    fileTree,
+    setWorkspace,
+    refreshWorkspace
+  } = useWorkspace()
+
+  return (
+    <div>
+      <p>Current workspace: {currentPath}</p>
+      <button onClick={() => setWorkspace('/new/path')}>
+        Change Workspace
+      </button>
+    </div>
+  )
+}
+```
+
+### `useEditor()`
+Hook for editor state and operations.
+
+```javascript
+import { useEditor } from './hooks/useEditor'
+
+const MyComponent = () => {
+  const {
+    editor,
+    content,
+    hasUnsavedChanges,
+    save,
+    undo,
+    redo
+  } = useEditor()
+
+  return (
+    <div>
+      <button onClick={save} disabled={!hasUnsavedChanges}>
+        Save
+      </button>
+      <button onClick={undo}>Undo</button>
+      <button onClick={redo}>Redo</button>
+    </div>
+  )
+}
+```
+
+### `useShortcuts()`
+Hook for keyboard shortcut management.
+
+```javascript
+import { useShortcuts } from './hooks/useShortcuts'
+
+const MyComponent = () => {
+  const { registerShortcut, unregisterShortcut } = useShortcuts()
+
+  useEffect(() => {
+    const unregister = registerShortcut('cmd+k', () => {
+      console.log('Command palette opened')
+    })
+
+    return unregister
+  }, [registerShortcut])
+
+  return <div>Component with shortcuts</div>
+}
+```
+
+## Editor Extensions
+
+Extend the TipTap editor with custom functionality.
+
+### Creating Extensions
+
+```javascript
+import { Extension } from '@tiptap/core'
+
+const MyExtension = Extension.create({
+  name: 'myExtension',
+
+  addOptions() {
+    return {
+      HTMLAttributes: {},
+    }
+  },
+
+  addCommands() {
+    return {
+      myCommand: () => ({ commands }) => {
+        return commands.insertContent('Hello from my extension!')
+      },
+    }
+  },
+
+  addKeyboardShortcuts() {
+    return {
+      'Mod-Shift-m': () => this.editor.commands.myCommand(),
+    }
+  }
+})
+
+export default MyExtension
+```
+
+### Using Extensions
+
+```javascript
+import { useEditor } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
+import MyExtension from './MyExtension'
+
+const editor = useEditor({
+  extensions: [
+    StarterKit,
+    MyExtension.configure({
+      // Extension options
+    })
+  ]
+})
+```
+
+### Built-in Extensions
+
+#### WikiLink
+Support for `[[wiki-style]]` links.
+
+```javascript
+import WikiLink from './extensions/WikiLink'
+
+const editor = useEditor({
+  extensions: [
+    WikiLink.configure({
+      openOnClick: true,
+      HTMLAttributes: {
+        class: 'wiki-link'
+      }
+    })
+  ]
+})
+```
+
+#### MarkdownPaste
+Automatic markdown conversion on paste.
+
+```javascript
+import MarkdownPaste from './extensions/MarkdownPaste'
+
+const editor = useEditor({
+  extensions: [
+    MarkdownPaste.configure({
+      processCodeBlocks: true,
+      processTables: true
+    })
+  ]
+})
+```
+
+## Utility Functions
+
+Common utility functions for Lokus development.
+
+### File Utilities
+
+#### `getFileExtension(path: string): string`
+Get file extension from path.
+
+```javascript
+import { getFileExtension } from './utils/file'
+
+const ext = getFileExtension('/path/to/file.md') // 'md'
+```
+
+#### `isMarkdownFile(path: string): boolean`
+Check if file is a Markdown file.
+
+```javascript
+import { isMarkdownFile } from './utils/file'
+
+if (isMarkdownFile(filePath)) {
+  // Handle as markdown
+}
+```
+
+#### `formatFileSize(bytes: number): string`
+Format file size for display.
+
+```javascript
+import { formatFileSize } from './utils/file'
+
+const size = formatFileSize(1024) // '1 KB'
+```
+
+### Markdown Utilities
+
+#### `parseMarkdown(text: string): AST`
+Parse markdown text to AST.
+
+```javascript
+import { parseMarkdown } from './utils/markdown'
+
+const ast = parseMarkdown('# Hello\n\nWorld')
+```
+
+#### `renderMarkdown(text: string): string`
+Render markdown to HTML.
+
+```javascript
+import { renderMarkdown } from './utils/markdown'
+
+const html = renderMarkdown('**bold** text')
+```
+
+#### `extractHeadings(text: string): Heading[]`
+Extract headings from markdown text.
+
+```javascript
+import { extractHeadings } from './utils/markdown'
+
+const headings = extractHeadings(markdownText)
+// Returns: [{ level: 1, text: 'Title', id: 'title' }]
+```
+
+### UI Utilities
+
+#### `cn(...classes: string[]): string`
+Conditional className utility.
+
+```javascript
+import { cn } from './utils/ui'
+
+const className = cn(
+  'base-class',
+  isActive && 'active-class',
+  'always-applied'
+)
+```
+
+#### `formatAccelerator(shortcut: string): string`
+Format keyboard shortcut for display.
+
+```javascript
+import { formatAccelerator } from './utils/ui'
+
+const display = formatAccelerator('cmd+k') // '⌘K'
+```
+
+## Configuration Schema
+
+### Editor Configuration
+
+```typescript
+interface EditorConfig {
+  fontSize: number          // 12-24
+  fontFamily: string       // Font family name
+  lineHeight: number       // 1.0-3.0
+  letterSpacing: number    // -0.05-0.1
+  tabSize: number          // 2, 4, 8
+  wordWrap: boolean
+  showLineNumbers: boolean
+  minimap: boolean
+}
+```
+
+### Theme Configuration
+
+```typescript
+interface ThemeConfig {
+  mode: 'light' | 'dark' | 'system'
+  colors: {
+    primary: string
+    secondary: string
+    accent: string
+    background: string
+    foreground: string
+    muted: string
+    border: string
+  }
+  fontSizes: {
+    xs: string
+    sm: string
+    base: string
+    lg: string
+    xl: string
+  }
+}
+```
+
+### Shortcut Configuration
+
+```typescript
+interface ShortcutConfig {
+  [commandId: string]: {
+    key: string           // e.g., 'cmd+k'
+    description: string
+    category: string
+    enabled: boolean
+  }
+}
+```
+
+## Error Handling
+
+### Error Types
+
+```typescript
+interface LokusError {
+  code: string
+  message: string
+  details?: any
+}
+
+// Common error codes
+type ErrorCode = 
+  | 'FILE_NOT_FOUND'
+  | 'PERMISSION_DENIED'
+  | 'INVALID_PATH'
+  | 'WORKSPACE_ERROR'
+  | 'EDITOR_ERROR'
+  | 'CONFIG_ERROR'
+```
+
+### Error Handling Patterns
+
+```javascript
+try {
+  const content = await invoke('read_file', { path })
+} catch (error) {
+  if (error.code === 'FILE_NOT_FOUND') {
+    // Handle file not found
+  } else if (error.code === 'PERMISSION_DENIED') {
+    // Handle permission error
+  } else {
+    // Handle other errors
+    console.error('Unexpected error:', error)
+  }
+}
+```
+
+## Testing APIs
+
+### Test Utilities
+
+```javascript
+import { render, fireEvent } from '@testing-library/react'
+import { vi } from 'vitest'
+
+// Mock Tauri commands
+vi.mock('@tauri-apps/api/core', () => ({
+  invoke: vi.fn()
+}))
+
+// Mock file operations
+const mockInvoke = vi.mocked(invoke)
+mockInvoke.mockResolvedValue('file content')
+
+// Test component
+const { getByRole } = render(<MyComponent />)
+fireEvent.click(getByRole('button'))
+
+expect(mockInvoke).toHaveBeenCalledWith('read_file', { path: '/test.md' })
+```
+
+### Mock Data
+
+```javascript
+export const mockFileTree = [
+  {
+    name: 'README.md',
+    path: '/README.md',
+    is_directory: false,
+    size: 1024,
+    modified: '2023-12-01T10:00:00Z'
+  },
+  {
+    name: 'docs',
+    path: '/docs',
+    is_directory: true,
+    modified: '2023-12-01T09:00:00Z'
+  }
+]
+
+export const mockConfig = {
+  theme: 'dark',
+  editor: {
+    fontSize: 16,
+    fontFamily: 'monospace',
+    lineHeight: 1.5,
+    tabSize: 2
+  },
+  shortcuts: {
+    'save': 'cmd+s',
+    'open': 'cmd+o'
+  }
+}
+```
+
+---
+
+This API reference provides the foundation for extending and integrating with Lokus. For more detailed examples and advanced usage, see the [Development Guide](/development).

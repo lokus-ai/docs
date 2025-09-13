@@ -1,0 +1,210 @@
+# Features
+
+Lokus provides a comprehensive set of features designed to enhance your note-taking and writing experience.
+
+## ⌘K Command Palette
+
+The command palette is your gateway to quick actions and file navigation.
+
+### Access
+- **Keyboard**: Press `⌘K` (Mac) or `Ctrl+K` (Windows/Linux)
+- **Menu**: View → Command Palette
+
+### Features
+- **File Search**: Quickly find and open any file in your workspace
+- **Recent Files**: Access recently opened files
+- **Quick Actions**: 
+  - Save current file (`⌘S`)
+  - Create new file
+  - Create new folder
+  - Open preferences
+  - Toggle sidebar
+
+### Usage Tips
+```
+⌘K → Type filename → Enter (Open file)
+⌘K → "new" → Enter (Create new file)
+⌘K → "save" → Enter (Save current file)
+```
+
+## 🖱️ Context Menus
+
+VS Code-style context menus provide quick access to relevant actions.
+
+### File Context Menu
+Right-click on any file in the sidebar to access:
+
+- **Open** - Open the file in the main editor
+- **Open to the Side** - Open in a new tab/split view
+- **Open With...** - Choose application to open with
+- **Reveal in Finder** - Show file in system file manager
+- **Open in Integrated Terminal** - Open terminal at file location
+- **Cut** (`⌘X`) - Cut file for moving
+- **Copy** (`⌘C`) - Copy file for duplicating
+- **Copy Path** - Copy file path to clipboard
+- **Rename...** - Rename the file
+- **Delete** - Move file to trash
+- **Share** - Share file options
+
+### Editor Context Menu
+Right-click in the editor to access:
+
+#### Edit Actions
+- **Cut** (`⌘X`) - Cut selected text
+- **Copy** (`⌘C`) - Copy selected text  
+- **Paste** (`⌘V`) - Paste from clipboard
+- **Select All** (`⌘A`) - Select all content
+
+#### History
+- **Undo** (`⌘Z`) - Undo last action
+- **Redo** (`⌘⇧Z`) - Redo last undone action
+
+#### Search
+- **Find** (`⌘F`) - Find text in document
+- **Find and Replace** (`⌘⌥F`) - Find and replace text
+
+#### Commands Submenu
+- **Command Palette** - Open command palette
+- **Insert Table** - Insert markdown table
+- **Insert Code Block** - Insert fenced code block
+- **Insert Link** - Insert markdown link
+- **Insert Image** - Insert image reference
+
+#### Export
+- **Export as Markdown** - Save as .md file
+- **Export as HTML** - Convert to HTML
+- **Import File...** - Import content from file
+
+## 📝 Rich Text Editor
+
+Powered by TipTap, our editor provides a seamless writing experience.
+
+### Markdown Support
+- **Headers**: `# H1`, `## H2`, `### H3`, etc.
+- **Emphasis**: `**bold**`, `*italic*`, `~~strikethrough~~`
+- **Lists**: Ordered (`1. item`) and unordered (`- item`)
+- **Task Lists**: `- [x] completed` and `- [ ] todo`
+- **Links**: `[text](url)` and `[[wiki links]]`
+- **Code**: `inline code` and ` ```fenced blocks``` `
+- **Tables**: Full markdown table support
+- **Math**: LaTeX math expressions with `$inline$` and `$$block$$`
+
+### Live Features
+- **Auto-paste Processing**: Automatically converts pasted markdown
+- **Smart Typography**: Auto-correct quotes, dashes, and ellipses
+- **Syntax Highlighting**: Code blocks with language-specific highlighting
+- **Link Preview**: Hover to preview link destinations
+- **Image Embedding**: Drag and drop image support
+
+### Performance Optimizations
+- **Efficient Rendering**: Minimal re-renders with `shouldRerenderOnTransaction: false`
+- **Lazy Loading**: Extensions loaded on demand
+- **Memory Management**: Automatic cleanup of unused resources
+
+## 📁 File Management
+
+Intuitive file operations with a clean interface.
+
+### Sidebar Navigation
+- **File Tree**: Hierarchical view of your workspace
+- **Quick Search**: Type to filter visible files
+- **Drag and Drop**: Move files and folders
+- **Expand/Collapse**: Navigate large folder structures
+
+### File Operations
+- **Create**: New files and folders
+- **Rename**: In-place renaming with validation
+- **Delete**: Safe deletion with confirmation
+- **Move**: Drag and drop or cut/paste
+- **Copy**: Duplicate files and folders
+
+### File Types
+Lokus recognizes and handles various file types:
+- **Markdown** (`.md`, `.markdown`) - Full editing support
+- **Text** (`.txt`) - Plain text editing
+- **Code** (`.js`, `.ts`, `.py`, etc.) - Syntax highlighting
+- **Images** (`.png`, `.jpg`, `.gif`) - Preview and embedding
+
+## ⌨️ Keyboard Shortcuts
+
+Native keyboard shortcuts for efficient workflow.
+
+### Essential Shortcuts
+| Action | Mac | Windows/Linux |
+|--------|-----|---------------|
+| Command Palette | `⌘K` | `Ctrl+K` |
+| Save File | `⌘S` | `Ctrl+S` |
+| New File | `⌘N` | `Ctrl+N` |
+| Open File | `⌘O` | `Ctrl+O` |
+| Close Tab | `⌘W` | `Ctrl+W` |
+
+### Edit Shortcuts
+| Action | Mac | Windows/Linux |
+|--------|-----|---------------|
+| Cut | `⌘X` | `Ctrl+X` |
+| Copy | `⌘C` | `Ctrl+C` |
+| Paste | `⌘V` | `Ctrl+V` |
+| Select All | `⌘A` | `Ctrl+A` |
+| Undo | `⌘Z` | `Ctrl+Z` |
+| Redo | `⌘⇧Z` | `Ctrl+Shift+Z` |
+
+### Search Shortcuts
+| Action | Mac | Windows/Linux |
+|--------|-----|---------------|
+| Find | `⌘F` | `Ctrl+F` |
+| Find and Replace | `⌘⌥F` | `Ctrl+Alt+F` |
+
+## 🎨 User Experience
+
+Lokus focuses on providing a fluid, responsive user experience.
+
+### Smooth Animations
+- **Transitions**: Smooth state changes with cubic-bezier easing
+- **Hover Effects**: Subtle elevation and color changes
+- **Focus States**: Clear focus indicators with smooth rings
+- **Loading States**: Elegant loading animations and skeletons
+
+### Accessibility
+- **Keyboard Navigation**: Full keyboard accessibility
+- **Screen Reader Support**: Proper ARIA labels and roles
+- **High Contrast**: Support for high contrast themes
+- **Reduced Motion**: Respects `prefers-reduced-motion` setting
+
+### Responsive Design
+- **Adaptive Layout**: Responsive to window size changes
+- **Mobile Ready**: Touch-friendly interface elements
+- **Cross-Platform**: Consistent experience across operating systems
+
+## 🔧 Customization
+
+Personalize Lokus to match your workflow.
+
+### Theme Support
+- **Light Theme**: Clean, bright interface
+- **Dark Theme**: Easy on the eyes for long writing sessions
+- **System Theme**: Automatically matches your OS preference
+
+### Editor Settings
+- **Font Family**: Choose your preferred typeface
+- **Font Size**: Adjustable from 12px to 24px
+- **Line Height**: Control line spacing
+- **Letter Spacing**: Fine-tune character spacing
+
+### Layout Options
+- **Sidebar Toggle**: Show/hide file sidebar
+- **Focus Mode**: Distraction-free writing
+- **Typewriter Mode**: Keep current line centered
+
+## 🔌 Extensibility
+
+Built with extensibility in mind for future enhancements.
+
+### Plugin Architecture
+- **Modular Extensions**: Add functionality without core changes
+- **Theme Extensions**: Custom themes and styling
+- **Editor Extensions**: New editing capabilities and shortcuts
+
+### Integration Ready
+- **Export Options**: Multiple format support
+- **Import Capabilities**: Bring content from other tools
+- **API Ready**: Foundation for third-party integrations

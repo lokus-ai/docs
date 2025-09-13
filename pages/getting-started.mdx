@@ -1,0 +1,251 @@
+# Getting Started
+
+Welcome to Lokus! This guide will help you get up and running quickly.
+
+## Installation
+
+### Download Release (Recommended)
+
+Download the latest release for your platform:
+
+import { Tabs, Tab } from 'nextra-theme-docs'
+
+<Tabs items={['macOS', 'Windows', 'Linux']}>
+  <Tab>
+    **macOS 10.14+ required**
+    
+    1. Download [Lokus.dmg](https://github.com/lokus-ai/lokus/releases/latest/download/Lokus.dmg)
+    2. Open the downloaded DMG file
+    3. Drag Lokus to your Applications folder
+    4. Launch Lokus from Applications or Spotlight
+    
+    > **Note**: You may need to allow the app in System Preferences → Security & Privacy if you see a security warning.
+  </Tab>
+  <Tab>
+    **Windows 10+ required**
+    
+    Coming soon! We're working on Windows support.
+    
+    In the meantime, you can [build from source](#build-from-source).
+  </Tab>
+  <Tab>
+    **Linux (Ubuntu 18.04+, Fedora 30+)**
+    
+    Coming soon! We're working on Linux distribution packages.
+    
+    In the meantime, you can [build from source](#build-from-source).
+  </Tab>
+</Tabs>
+
+### Build from Source
+
+If you prefer to build Lokus from source or want to contribute:
+
+#### Prerequisites
+- **Node.js** 18+ and npm
+- **Rust** 1.70+ (install via [rustup](https://rustup.rs/))
+- **System dependencies**:
+  - macOS: Xcode Command Line Tools
+  - Windows: Microsoft C++ Build Tools
+  - Linux: `build-essential`, `libwebkit2gtk-4.0-dev`, `libssl-dev`
+
+#### Build Steps
+```bash
+# Clone the repository
+git clone https://github.com/lokus-ai/lokus.git
+cd lokus
+
+# Install dependencies
+npm install
+
+# Build and run in development mode
+npm run tauri dev
+
+# Build for production
+npm run tauri build
+```
+
+## First Launch
+
+When you first launch Lokus, you'll see a clean interface with:
+
+1. **Sidebar** - File navigation on the left
+2. **Editor** - Main writing area in the center
+3. **Menu Bar** - Application menus at the top
+
+### Creating Your First Note
+
+1. **Open Command Palette**: Press `⌘K` (Mac) or `Ctrl+K`
+2. **Create New File**: Type "new" and press Enter
+3. **Start Writing**: Begin typing in the editor
+4. **Save**: Press `⌘S` or use File → Save
+
+### Opening Existing Files
+
+1. **Command Palette**: Press `⌘K` and type the filename
+2. **File Menu**: Use File → Open (`⌘O`)
+3. **Sidebar**: Click on files in the left panel
+4. **Drag & Drop**: Drag files into the Lokus window
+
+## Basic Usage
+
+### Writing with Markdown
+
+Lokus supports full Markdown syntax. Here are some examples:
+
+```markdown
+# Main Heading
+## Sub Heading
+
+**Bold text** and *italic text*
+
+- Bullet points
+- Another item
+
+1. Numbered lists
+2. Work great too
+
+`Inline code` and code blocks:
+
+```javascript
+function hello() {
+  console.log("Hello, Lokus!");
+}
+\```
+
+[Links](https://lokus.ai) and [[Wiki Links]]
+
+> Blockquotes for important notes
+
+| Tables | Work |
+|--------|------|
+| Like   | This |
+```
+
+### File Management
+
+#### Creating Files and Folders
+- **New File**: `⌘N` or Command Palette → "New File"
+- **New Folder**: Command Palette → "New Folder"
+- **Right-click**: Context menu in sidebar
+
+#### Organizing Content
+- **Rename**: Right-click file → Rename
+- **Move**: Drag and drop files/folders
+- **Delete**: Right-click → Delete or select and press `Delete`
+
+#### File Types
+Lokus works best with:
+- **Markdown files** (`.md`) - Full editing support
+- **Text files** (`.txt`) - Plain text editing
+- **Code files** - Syntax highlighting
+
+### Keyboard Shortcuts
+
+Essential shortcuts to boost your productivity:
+
+| Action | Shortcut |
+|--------|----------|
+| Command Palette | `⌘K` |
+| Save File | `⌘S` |
+| New File | `⌘N` |
+| Find in File | `⌘F` |
+| Cut/Copy/Paste | `⌘X`/`⌘C`/`⌘V` |
+
+See the [complete shortcuts reference](/shortcuts) for more.
+
+## Configuration
+
+### Workspace Setup
+
+1. **Choose a Folder**: File → Open Folder to set your workspace
+2. **Organize Structure**: Create folders for different projects
+3. **Set Preferences**: Lokus → Preferences for customization
+
+### Editor Settings
+
+Access editor settings through Lokus → Preferences:
+
+- **Font Family**: Choose your preferred typeface
+- **Font Size**: Adjust for comfort (12-24px)
+- **Line Height**: Control spacing (1.2-2.0)
+- **Theme**: Light, Dark, or System
+
+### File Associations
+
+On macOS, you can set Lokus as the default app for Markdown files:
+
+1. Right-click a `.md` file in Finder
+2. Choose "Get Info"
+3. Under "Open with", select Lokus
+4. Click "Change All..." to apply to all Markdown files
+
+## Tips for New Users
+
+### 1. Master the Command Palette
+The `⌘K` command palette is your best friend. It provides quick access to:
+- File search and navigation
+- Quick actions and commands
+- Recent files
+
+### 2. Use Context Menus
+Right-click anywhere for context-sensitive actions:
+- Files in sidebar: Open, rename, delete, etc.
+- Editor: Cut, copy, paste, find, etc.
+
+### 3. Learn Basic Markdown
+Even if you're new to Markdown, these basics will get you started:
+- `# Heading` for titles
+- `**bold**` and `*italic*` for emphasis
+- `- item` for bullet points
+- `[link text](URL)` for links
+
+### 4. Organize with Folders
+Create a logical folder structure:
+```
+My Notes/
+├── Projects/
+│   ├── Project A/
+│   └── Project B/
+├── Ideas/
+└── Daily Notes/
+```
+
+### 5. Use Wiki Links
+Connect related notes with `[[Note Name]]` syntax for easy navigation.
+
+## Troubleshooting
+
+### Common Issues
+
+#### App Won't Launch (macOS)
+- **Security Warning**: Go to System Preferences → Security & Privacy → Allow app
+- **Quarantine Issue**: Try `xattr -d com.apple.quarantine /Applications/Lokus.app`
+
+#### Files Not Showing
+- **Check Workspace**: Ensure you've opened the correct folder
+- **Refresh**: Try closing and reopening the sidebar
+
+#### Performance Issues
+- **Large Files**: Lokus works best with files under 1MB
+- **Many Files**: Consider organizing into subfolders
+
+### Getting Help
+
+If you need assistance:
+
+1. **Documentation**: Check this documentation site
+2. **GitHub Issues**: [Report bugs](https://github.com/lokus-ai/lokus/issues)
+3. **Community**: Join our [Discord](https://discord.gg/your-discord)
+4. **Discussions**: [GitHub Discussions](https://github.com/lokus-ai/lokus/discussions)
+
+## Next Steps
+
+Now that you're set up, explore more features:
+
+- [Learn about all features](/features)
+- [Master keyboard shortcuts](/shortcuts)
+- [Contribute to development](/development)
+- [Check the API reference](/api)
+
+Happy writing with Lokus! 🌌

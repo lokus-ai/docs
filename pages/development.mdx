@@ -1,0 +1,538 @@
+# Development
+
+Welcome to Lokus development! This guide covers everything you need to know to contribute to Lokus.
+
+## Getting Started
+
+### Prerequisites
+
+Before you begin, ensure you have:
+
+- **Node.js** 18+ and npm
+- **Rust** 1.70+ ([install via rustup](https://rustup.rs/))
+- **Git** for version control
+- **Code Editor** (VS Code recommended)
+
+### System Dependencies
+
+#### macOS
+```bash
+# Install Xcode Command Line Tools
+xcode-select --install
+```
+
+#### Windows
+```bash
+# Install Microsoft C++ Build Tools
+# Download from: https://visualstudio.microsoft.com/visual-cpp-build-tools/
+```
+
+#### Linux (Ubuntu/Debian)
+```bash
+sudo apt update
+sudo apt install build-essential libwebkit2gtk-4.0-dev libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
+```
+
+#### Linux (Fedora)
+```bash
+sudo dnf groupinstall "C Development Tools and Libraries"
+sudo dnf install webkit2gtk3-devel openssl-devel gtk3-devel libappindicator-gtk3-devel librsvg2-devel
+```
+
+### Project Setup
+
+1. **Fork and Clone**
+```bash
+# Fork the repository on GitHub first
+git clone https://github.com/YOUR_USERNAME/lokus.git
+cd lokus
+```
+
+2. **Install Dependencies**
+```bash
+npm install
+```
+
+3. **Run Development Server**
+```bash
+npm run tauri dev
+```
+
+4. **Build for Production**
+```bash
+npm run tauri build
+```
+
+## Project Structure
+
+```
+lokus/
+├── src/                    # React frontend source
+│   ├── components/         # React components
+│   │   ├── ui/            # UI library components
+│   │   ├── CommandPalette.jsx
+│   │   ├── EditorContextMenu.jsx
+│   │   └── FileContextMenu.jsx
+│   ├── core/              # Core functionality
+│   │   ├── clipboard/     # Clipboard management
+│   │   ├── config/        # Configuration system
+│   │   ├── editor/        # Editor settings
+│   │   └── shortcuts/     # Keyboard shortcuts
+│   ├── editor/            # TipTap editor integration
+│   │   ├── components/    # Editor components
+│   │   ├── extensions/    # TipTap extensions
+│   │   └── lib/          # Editor utilities
+│   ├── styles/            # CSS and styling
+│   ├── utils/             # Utility functions
+│   └── views/             # Main application views
+├── src-tauri/             # Rust backend
+│   ├── src/
+│   │   ├── handlers/      # Command handlers
+│   │   ├── menu.rs        # Application menu
+│   │   └── main.rs        # Entry point
+│   ├── Cargo.toml         # Rust dependencies
+│   └── tauri.conf.json    # Tauri configuration
+├── tests/                 # Test files
+├── scripts/               # Build and utility scripts
+└── docs/                  # Documentation
+```
+
+## Architecture
+
+### Frontend (React)
+
+Lokus uses modern React patterns and libraries:
+
+- **React 18** with concurrent features
+- **Vite** for fast development and building
+- **TipTap** for the rich text editor
+- **Tailwind CSS** for styling
+- **Radix UI** for accessible components
+
+### Backend (Tauri/Rust)
+
+The backend handles:
+
+- **File system operations**
+- **Native OS integration**
+- **Performance-critical operations**
+- **Security and sandboxing**
+
+### Communication
+
+Frontend and backend communicate via:
+
+- **Tauri Commands** - Frontend calls Rust functions
+- **Events** - Rust emits events to frontend
+- **IPC** - Inter-process communication
+
+## Development Workflow
+
+### 1. Setting Up Your Environment
+
+```bash
+# Clone your fork
+git clone https://github.com/YOUR_USERNAME/lokus.git
+cd lokus
+
+# Add upstream remote
+git remote add upstream https://github.com/lokus-ai/lokus.git
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run tauri dev
+```
+
+### 2. Making Changes
+
+```bash
+# Create feature branch
+git checkout -b feature/your-feature-name
+
+# Make your changes
+# ... edit files ...
+
+# Test your changes
+npm test
+npm run tauri dev
+
+# Commit changes
+git add .
+git commit -m "feat: add your feature description"
+```
+
+### 3. Testing
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run specific test file
+npm test src/components/CommandPalette.test.jsx
+
+# Check test coverage
+npm run test:coverage
+```
+
+### 4. Building
+
+```bash
+# Development build
+npm run tauri dev
+
+# Production build
+npm run tauri build
+
+# Frontend only (for web testing)
+npm run dev
+```
+
+## Contributing Guidelines
+
+### Code Style
+
+We use consistent formatting and linting:
+
+```bash
+# Format code
+npm run format
+
+# Lint code
+npm run lint
+
+# Type check
+npm run type-check
+```
+
+### Commit Convention
+
+We follow [Conventional Commits](https://conventionalcommits.org/):
+
+```
+feat: add new feature
+fix: fix bug
+docs: update documentation
+style: formatting changes
+refactor: code refactoring
+test: add or update tests
+chore: maintenance tasks
+```
+
+### Pull Request Process
+
+1. **Fork** the repository
+2. **Create** a feature branch
+3. **Make** your changes with tests
+4. **Ensure** all tests pass
+5. **Create** a pull request
+6. **Address** review feedback
+7. **Merge** when approved
+
+### Testing Requirements
+
+All contributions must include appropriate tests:
+
+- **Unit tests** for utility functions
+- **Component tests** for React components
+- **Integration tests** for feature workflows
+- **E2E tests** for critical user journeys
+
+## Testing
+
+### Test Structure
+
+```
+tests/
+├── setup.js               # Test configuration
+├── unit/                  # Unit tests
+├── integration/           # Integration tests
+└── e2e/                   # End-to-end tests
+```
+
+### Writing Tests
+
+#### Component Tests
+```javascript
+import { describe, it, expect } from 'vitest'
+import { render, fireEvent } from '@testing-library/react'
+import MyComponent from './MyComponent.jsx'
+
+describe('MyComponent', () => {
+  it('should render correctly', () => {
+    const { getByText } = render(<MyComponent />)
+    expect(getByText('Hello')).toBeInTheDocument()
+  })
+
+  it('should handle clicks', () => {
+    const handleClick = vi.fn()
+    const { getByRole } = render(<MyComponent onClick={handleClick} />)
+    
+    fireEvent.click(getByRole('button'))
+    expect(handleClick).toHaveBeenCalled()
+  })
+})
+```
+
+#### Utility Tests
+```javascript
+import { describe, it, expect } from 'vitest'
+import { formatDate } from './utils.js'
+
+describe('formatDate', () => {
+  it('should format date correctly', () => {
+    const date = new Date('2023-01-01')
+    expect(formatDate(date)).toBe('Jan 1, 2023')
+  })
+})
+```
+
+### Mocking
+
+Common mocking patterns:
+
+```javascript
+// Mock Tauri APIs
+vi.mock('@tauri-apps/api/core', () => ({
+  invoke: vi.fn()
+}))
+
+// Mock React hooks
+vi.mock('react', async () => {
+  const actual = await vi.importActual('react')
+  return {
+    ...actual,
+    useState: vi.fn()
+  }
+})
+
+// Mock UI components
+vi.mock('./ui/button', () => ({
+  Button: ({ children, onClick }) => (
+    <button onClick={onClick}>{children}</button>
+  )
+}))
+```
+
+## Adding Features
+
+### 1. Planning
+
+Before implementing:
+
+1. **Open an issue** describing the feature
+2. **Discuss** the approach with maintainers
+3. **Design** the API and user interface
+4. **Break down** into smaller tasks
+
+### 2. Implementation
+
+#### Frontend Components
+
+```javascript
+// src/components/MyFeature.jsx
+import React, { useState, useCallback } from 'react'
+import { Button } from './ui/button'
+
+const MyFeature = ({ onAction }) => {
+  const [state, setState] = useState(null)
+  
+  const handleClick = useCallback(() => {
+    onAction?.('clicked')
+  }, [onAction])
+
+  return (
+    <div className="my-feature">
+      <Button onClick={handleClick}>
+        Click me
+      </Button>
+    </div>
+  )
+}
+
+export default MyFeature
+```
+
+#### Backend Commands
+
+```rust
+// src-tauri/src/handlers/my_feature.rs
+use tauri::command;
+
+#[command]
+pub fn my_feature_action(data: String) -> Result<String, String> {
+    // Implement your logic here
+    Ok(format!("Processed: {}", data))
+}
+
+// Register in main.rs
+fn main() {
+    tauri::Builder::default()
+        .invoke_handler(tauri::generate_handler![
+            my_feature_action
+        ])
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
+}
+```
+
+#### Integration
+
+```javascript
+// Frontend usage
+import { invoke } from '@tauri-apps/api/core'
+
+const MyComponent = () => {
+  const handleAction = async () => {
+    try {
+      const result = await invoke('my_feature_action', { 
+        data: 'test' 
+      })
+      console.log(result)
+    } catch (error) {
+      console.error('Error:', error)
+    }
+  }
+
+  return <button onClick={handleAction}>Test Feature</button>
+}
+```
+
+### 3. Testing
+
+```javascript
+// src/components/MyFeature.test.jsx
+import { describe, it, expect, vi } from 'vitest'
+import { render, fireEvent } from '@testing-library/react'
+import MyFeature from './MyFeature.jsx'
+
+// Mock Tauri
+vi.mock('@tauri-apps/api/core', () => ({
+  invoke: vi.fn()
+}))
+
+describe('MyFeature', () => {
+  it('should call onAction when clicked', () => {
+    const mockAction = vi.fn()
+    const { getByRole } = render(<MyFeature onAction={mockAction} />)
+    
+    fireEvent.click(getByRole('button'))
+    expect(mockAction).toHaveBeenCalledWith('clicked')
+  })
+})
+```
+
+## Performance Optimization
+
+### Frontend Optimization
+
+1. **Use React.memo** for expensive components
+2. **Implement useCallback** for event handlers
+3. **Optimize re-renders** with useMemo
+4. **Lazy load** components with React.lazy
+
+Example:
+```javascript
+import { memo, useCallback, useMemo } from 'react'
+
+const ExpensiveComponent = memo(({ data, onUpdate }) => {
+  const processedData = useMemo(() => {
+    return data.map(item => ({ ...item, processed: true }))
+  }, [data])
+
+  const handleUpdate = useCallback((id) => {
+    onUpdate?.(id)
+  }, [onUpdate])
+
+  return (
+    <div>
+      {processedData.map(item => (
+        <Item key={item.id} data={item} onUpdate={handleUpdate} />
+      ))}
+    </div>
+  )
+})
+```
+
+### Backend Optimization
+
+1. **Use async operations** for I/O
+2. **Implement caching** for frequent operations
+3. **Optimize file operations** with streams
+4. **Profile** with Rust tools
+
+## Debugging
+
+### Frontend Debugging
+
+1. **Browser DevTools** - Use React DevTools extension
+2. **Console Logging** - Strategic console.log placement
+3. **React Error Boundaries** - Catch component errors
+4. **Redux DevTools** - If using state management
+
+### Backend Debugging
+
+1. **Rust Debugging** - Use `println!` and `dbg!` macros
+2. **Tauri DevTools** - Enable in development
+3. **Logging** - Use `log` crate for structured logging
+4. **Profiling** - Use `cargo flamegraph` for performance
+
+### Development Tools
+
+```bash
+# Enable Tauri devtools
+export TAURI_DEBUG=true
+npm run tauri dev
+
+# Rust debugging
+RUST_LOG=debug npm run tauri dev
+
+# Detailed logging
+RUST_LOG=trace npm run tauri dev
+```
+
+## Deployment
+
+### Building Releases
+
+```bash
+# Build for current platform
+npm run tauri build
+
+# Build for specific platform (requires setup)
+npm run tauri build -- --target universal-apple-darwin
+```
+
+### Release Process
+
+1. **Version Bump** - Update version in package.json and Cargo.toml
+2. **Changelog** - Update CHANGELOG.md
+3. **Tag Release** - Create git tag
+4. **GitHub Release** - Upload built artifacts
+5. **Update Docs** - Deploy documentation updates
+
+## Resources
+
+### Documentation
+- [Tauri Documentation](https://tauri.app/v1/guides/)
+- [React Documentation](https://react.dev/)
+- [TipTap Documentation](https://tiptap.dev/)
+- [Rust Book](https://doc.rust-lang.org/book/)
+
+### Tools
+- [Tauri CLI](https://tauri.app/v1/guides/getting-started/prerequisites/#installing)
+- [Rust Analyzer](https://rust-analyzer.github.io/) - VS Code extension
+- [React DevTools](https://chrome.google.com/webstore/detail/react-developer-tools/)
+
+### Community
+- [GitHub Discussions](https://github.com/lokus-ai/lokus/discussions)
+- [Discord Server](https://discord.gg/your-discord)
+- [Issue Tracker](https://github.com/lokus-ai/lokus/issues)
+
+---
+
+Happy coding! If you have questions, don't hesitate to open a discussion or join our Discord community. 🚀

@@ -1,0 +1,188 @@
+# Changelog
+
+All notable changes to Lokus will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Added
+- Nothing yet
+
+### Changed
+- Nothing yet
+
+### Fixed
+- Nothing yet
+
+## [0.1.0] - 2025-09-13
+
+### Added
+- **⌘K Command Palette** - Quick access to files, actions, and commands with shadcn/ui design
+- **VS Code-style Context Menus** - Right-click menus for files and editor area
+- **Rich Markdown Editor** - TipTap-powered editor with live preview and syntax highlighting
+- **File Management System** - Intuitive sidebar with file operations (create, rename, delete, move)
+- **Keyboard Shortcuts** - Native macOS shortcuts (⌘C, ⌘V, ⌘A) working properly
+- **Comprehensive Testing** - 102+ automated tests covering all major features
+- **Fluid UX Enhancements** - Smooth animations, transitions, and performance optimizations
+
+#### Command Palette Features
+- File search with fuzzy matching
+- Recent files quick access
+- Quick actions: Save, New File, New Folder, Open Preferences, Toggle Sidebar
+- Keyboard shortcuts display (`⌘S`, `⌘N`, etc.)
+- Stays open until dismissed (no need to hold ⌘K)
+
+#### Context Menu Features
+- **File Context Menu**: Open, Open to Side, Reveal in Finder, Copy Path, Delete, Share
+- **Editor Context Menu**: Cut, Copy, Paste, Undo/Redo, Find, Commands submenu, Export options
+- Proper disabled states for unavailable actions
+- Keyboard shortcut indicators
+
+#### Editor Features
+- **Markdown Support**: Headers, emphasis, lists, task lists, links, code, tables, math
+- **Auto-paste Processing**: Automatically converts pasted markdown to formatted content
+- **WikiLink Support**: `[[wiki-style]]` links for connecting notes
+- **Smart Typography**: Auto-correct quotes, dashes, and ellipses
+- **Performance Optimized**: `shouldRerenderOnTransaction: false` and optimized callbacks
+
+#### File Operations
+- Create and organize files and folders
+- Drag and drop support
+- File type recognition (Markdown, text, code)
+- Safe deletion with confirmation
+- Copy path functionality
+
+#### UX Enhancements
+- **Smooth Animations**: Cubic-bezier easing for all transitions
+- **Hover Effects**: Subtle elevation and color changes
+- **Focus States**: Clear focus indicators with smooth rings
+- **Accessibility**: Respects `prefers-reduced-motion` setting
+- **Responsive Design**: Adapts to window size changes
+
+### Technical Improvements
+- **Fixed Native Clipboard**: Removed global shortcut conflicts that broke ⌘C, ⌘V, ⌘A
+- **Restored Markdown Paste**: Retrieved and fixed auto-compilation from git history
+- **Enhanced Live Settings**: Added proper validation and error handling for editor settings
+- **Performance Optimizations**: React.memo, useCallback, and TipTap optimizations
+- **Test Infrastructure**: Comprehensive test suite with proper mocking and coverage
+
+### Testing
+- **Component Tests**: CommandPalette, EditorContextMenu, FileContextMenu
+- **Unit Tests**: Markdown utilities, clipboard shortcuts, live settings
+- **Integration Tests**: Editor component, WikiLink extension
+- **Fixed All Failing Tests**: Updated mocks, APIs, and test expectations
+- **Test Utilities**: Setup file, proper icon mocking, context menu testing
+
+### Fixed
+- ❌ **Clipboard shortcuts not working** - Removed problematic global shortcuts
+- ❌ **Markdown paste not auto-compiling** - Restored original handlePaste function
+- ❌ **Command palette requiring key hold** - Changed to stay-open behavior
+- ❌ **Test failures** - Fixed mocks and updated test expectations
+- ❌ **Editor performance issues** - Added shouldRerenderOnTransaction optimization
+- ❌ **Missing UI components** - Added proper mocking for all UI elements
+
+### Dependencies
+- React 18+ with concurrent features
+- TipTap rich text editor
+- Tauri for desktop app framework
+- Vite for fast development builds
+- Vitest for testing
+- Tailwind CSS for styling
+- Radix UI for accessible components
+- shadcn/ui for component library
+
+## [Development Milestones]
+
+### Alpha Phase (Completed)
+- ✅ Basic editor functionality
+- ✅ File management system
+- ✅ Command palette implementation
+- ✅ Context menu system
+- ✅ Comprehensive testing
+- ✅ Performance optimizations
+
+### Beta Phase (Planned)
+- 🔄 Advanced search functionality
+- 🔄 Plugin system architecture
+- 🔄 Collaborative editing features
+- 🔄 Cloud sync capabilities
+- 🔄 Mobile companion app
+
+### Release Phase (Planned)
+- 🔄 Windows and Linux support
+- 🔄 Application signing and distribution
+- 🔄 Documentation website (docs.lokus.com)
+- 🔄 Community features
+- 🔄 Enterprise features
+
+## Migration Guide
+
+### From Previous Versions
+
+If you're upgrading from a previous development version:
+
+1. **Backup your files** - Always backup your workspace before upgrading
+2. **Check configuration** - Settings may need to be reset
+3. **Test shortcuts** - Keyboard shortcuts have been updated
+4. **Verify plugins** - Custom extensions may need updates
+
+### Breaking Changes
+
+#### Version 0.1.0
+- **Shortcut System**: Global shortcuts removed, now uses native OS shortcuts
+- **Context Menus**: New implementation may affect custom styling
+- **Editor API**: Some internal APIs changed for performance improvements
+
+## Known Issues
+
+### Current Limitations
+- **Platform Support**: Currently macOS only (Windows/Linux in development)
+- **File Size**: Large files (>10MB) may have performance impact
+- **Math Rendering**: Complex LaTeX expressions may not render correctly
+- **Plugin System**: Not yet implemented for third-party extensions
+
+### Workarounds
+- **Large Files**: Break into smaller documents
+- **Math Issues**: Use simpler notation or external tools
+- **Missing Features**: Check roadmap for planned additions
+
+## Roadmap
+
+### Short Term (Q4 2024)
+- Windows and Linux builds
+- Advanced search with regex
+- Plugin architecture foundation
+- Performance improvements
+
+### Medium Term (Q1 2025)
+- Real-time collaboration
+- Cloud sync integration
+- Mobile app development
+- Advanced export options
+
+### Long Term (Q2+ 2025)
+- AI-powered features
+- Enterprise collaboration tools
+- Advanced customization options
+- Third-party integrations
+
+## Contributing
+
+See our [Development Guide](/development) for information on:
+- Setting up development environment
+- Code style and conventions
+- Testing requirements
+- Pull request process
+
+## Support
+
+- **Documentation**: [docs.lokus.com](https://docs.lokus.com)
+- **Issues**: [GitHub Issues](https://github.com/lokus-ai/lokus/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/lokus-ai/lokus/discussions)
+- **Discord**: [Join our community](https://discord.gg/your-discord)
+
+---
+
+**Note**: This changelog is automatically updated with each release. For the most current information, check the [GitHub releases page](https://github.com/lokus-ai/lokus/releases).

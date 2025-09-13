@@ -1,0 +1,22 @@
+{
+  "name": "lokus-docs",
+  "version": "1.0.0",
+  "description": "Comprehensive documentation for Lokus - A modern, intuitive note-taking application",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "export": "next build && next export"
+  },
+  "dependencies": {
+    "next": "^13.4.19",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "nextra": "^2.13.2",
+    "nextra-theme-docs": "^2.13.2"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.20",
+    "typescript": "^5.1.6"
+  }
+}
