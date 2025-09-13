@@ -1,16 +1,183 @@
-# Welcome to Lokus
 
-🌌 **Lokus** is a modern, intuitive note-taking application with powerful editing capabilities, built with Tauri and React.
+<div style={{
+  position: 'relative',
+  textAlign: 'center',
+  padding: '80px 20px',
+  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+  backdropFilter: 'blur(20px)',
+  borderRadius: '32px',
+  border: '1px solid rgba(255, 255, 255, 0.2)',
+  margin: '40px 0',
+  boxShadow: '0 24px 48px rgba(0, 0, 0, 0.1)'
+}}>
+  <h1 style={{
+    fontSize: 'clamp(2.5rem, 8vw, 5rem)',
+    fontWeight: '700',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text',
+    marginBottom: '24px',
+    lineHeight: '1.1'
+  }}>
+    Welcome to Lokus
+  </h1>
+  
+  <p style={{
+    fontSize: 'clamp(1.2rem, 3vw, 1.8rem)',
+    color: 'var(--nextra-colors-gray-600)',
+    maxWidth: '800px',
+    margin: '0 auto 40px',
+    lineHeight: '1.6'
+  }}>
+    🌌 The <strong style={{
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
+      backgroundClip: 'text'
+    }}>next-generation AI-powered</strong> note-taking application with stunning design and powerful editing capabilities.
+  </p>
+  
+  <div style={{
+    display: 'flex',
+    gap: '20px',
+    justifyContent: 'center',
+    flexWrap: 'wrap'
+  }}>
+    <a 
+      href="/getting-started" 
+      style={{
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        color: 'white',
+        padding: '16px 32px',
+        borderRadius: '16px',
+        textDecoration: 'none',
+        fontWeight: '600',
+        fontSize: '1.1rem',
+        boxShadow: '0 8px 24px rgba(102, 126, 234, 0.3)',
+        transition: 'all 0.3s ease',
+        border: 'none',
+        cursor: 'pointer',
+        WebkitBackgroundClip: 'unset',
+        WebkitTextFillColor: 'unset',
+        backgroundClip: 'unset'
+      }}
+    >
+      🚀 Get Started
+    </a>
+    <a 
+      href="/features" 
+      style={{
+        background: 'rgba(255, 255, 255, 0.1)',
+        backdropFilter: 'blur(10px)',
+        color: 'var(--nextra-colors-gray-700)',
+        padding: '16px 32px',
+        borderRadius: '16px',
+        textDecoration: 'none',
+        fontWeight: '600',
+        fontSize: '1.1rem',
+        border: '1px solid rgba(255, 255, 255, 0.2)',
+        transition: 'all 0.3s ease',
+        cursor: 'pointer',
+        WebkitBackgroundClip: 'unset',
+        WebkitTextFillColor: 'unset',
+        backgroundClip: 'unset'
+      }}
+    >
+      ⚡ Explore Features
+    </a>
+  </div>
+</div>
 
 ## ✨ Key Features
 
-- **⌘K Command Palette** - Quick access to files, actions, and commands
-- **Rich Markdown Editor** - TipTap-powered editor with live preview
-- **Context Menus** - VS Code-style right-click menus for enhanced workflow
-- **File Management** - Intuitive sidebar with file operations
-- **Keyboard Shortcuts** - Native macOS shortcuts (⌘C, ⌘V, ⌘A, etc.)
-- **Fluid UX** - Smooth animations and responsive design
-- **Cross-Platform** - Built with Tauri for desktop performance
+<div style={{
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+  gap: '24px',
+  margin: '32px 0'
+}}>
+  <div style={{
+    background: 'rgba(255, 255, 255, 0.1)',
+    backdropFilter: 'blur(20px)',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    borderRadius: '20px',
+    padding: '32px',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+  }}>
+    <div style={{
+      fontSize: '2.5rem',
+      marginBottom: '16px'
+    }}>⌘K</div>
+    <h3 style={{
+      fontSize: '1.25rem',
+      fontWeight: '600',
+      marginBottom: '12px',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
+      backgroundClip: 'text'
+    }}>Command Palette</h3>
+    <p style={{ color: 'var(--nextra-colors-gray-600)', lineHeight: '1.6' }}>
+      Instant access to files, actions, and commands with beautiful shadcn/ui design.
+    </p>
+  </div>
+
+  <div style={{
+    background: 'rgba(255, 255, 255, 0.1)',
+    backdropFilter: 'blur(20px)',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    borderRadius: '20px',
+    padding: '32px',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+  }}>
+    <div style={{
+      fontSize: '2.5rem',
+      marginBottom: '16px'
+    }}>✨</div>
+    <h3 style={{
+      fontSize: '1.25rem',
+      fontWeight: '600',
+      marginBottom: '12px',
+      background: 'linear-gradient(135deg, #764ba2 0%, #f093fb 100%)',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
+      backgroundClip: 'text'
+    }}>Rich Markdown Editor</h3>
+    <p style={{ color: 'var(--nextra-colors-gray-600)', lineHeight: '1.6' }}>
+      TipTap-powered editor with live preview and auto-paste processing.
+    </p>
+  </div>
+
+  <div style={{
+    background: 'rgba(255, 255, 255, 0.1)',
+    backdropFilter: 'blur(20px)',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    borderRadius: '20px',
+    padding: '32px',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+  }}>
+    <div style={{
+      fontSize: '2.5rem',
+      marginBottom: '16px'
+    }}>🎨</div>
+    <h3 style={{
+      fontSize: '1.25rem',
+      fontWeight: '600',
+      marginBottom: '12px',
+      background: 'linear-gradient(135deg, #f093fb 0%, #667eea 100%)',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
+      backgroundClip: 'text'
+    }}>Fluid UX</h3>
+    <p style={{ color: 'var(--nextra-colors-gray-600)', lineHeight: '1.6' }}>
+      Smooth animations and glassmorphism effects that feel magical.
+    </p>
+  </div>
+</div>
 
 ## 🚀 Quick Start
 
