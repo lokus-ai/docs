@@ -17,9 +17,9 @@ const config: DocsThemeConfig = {
     link: 'https://github.com/lokus-ai/lokus',
   },
   chat: {
-    link: 'https://discord.gg/your-discord',
+    link: 'https://github.com/lokus-ai/lokus/discussions',
   },
-  docsRepositoryBase: 'https://github.com/lokus-ai/docs',
+  docsRepositoryBase: 'https://github.com/lokus-ai/lokus/tree/main/docs',
   footer: {
     text: 'Lokus Documentation - A modern, intuitive note-taking application',
   },

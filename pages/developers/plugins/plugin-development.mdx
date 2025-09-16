@@ -1,0 +1,577 @@
+# Plugin Development Guide
+
+Learn how to create powerful plugins for Lokus using our comprehensive plugin architecture with React integration, status bar components, and secure API access.
+
+## Plugin Architecture Overview
+
+Lokus features a modular plugin system with:
+- **React Integration**: Full React component support with global React access
+- **Status Bar API**: Create custom status bar components
+- **Secure Runtime**: Plugin sandboxing and security management
+- **Plugin Registry**: Discovery and management system
+- **Inter-Plugin Communication**: Standardized messaging patterns
+
+## Getting Started
+
+### Prerequisites
+- Node.js 18+
+- Basic React knowledge
+- TypeScript familiarity (recommended)
+- Lokus development environment
+
+### Plugin CLI
+Use the official Lokus Plugin CLI for scaffolding:
+
+```bash
+npm install -g @lokus/plugin-cli
+
+# Create a new plugin
+lokus-plugin create my-awesome-plugin
+cd my-awesome-plugin
+
+# Development mode
+npm run dev
+
+# Build for production
+npm run build
+```
+
+### Plugin Structure
+```
+my-plugin/
+├── src/
+│   ├── index.ts          # Main plugin entry
+│   ├── components/       # React components
+│   ├── hooks/           # Custom React hooks
+│   └── utils/           # Utility functions
+├── package.json         # Plugin manifest
+├── plugin.config.js     # Plugin configuration
+└── README.md           # Plugin documentation
+```
+
+## Basic Plugin Example
+
+### Simple Status Bar Plugin
+
+```typescript
+// src/index.ts
+import React from 'react';
+import { LokusPlugin, StatusBarComponent } from '@lokus/plugin-api';
+
+interface WordCountState {
+  words: number;
+  characters: number;
+}
+
+const WordCountComponent: StatusBarComponent = () => {
+  const [stats, setStats] = React.useState<WordCountState>({ 
+    words: 0, 
+    characters: 0 
+  });
+
+  // Subscribe to editor changes
+  React.useEffect(() => {
+    const unsubscribe = lokus.editor.onContentChange((content: string) => {
+      const words = content.trim().split(/\s+/).filter(Boolean).length;
+      const characters = content.length;
+      setStats({ words, characters });
+    });
+
+    return unsubscribe;
+  }, []);
+
+  return React.createElement('div', {
+    style: { 
+      display: 'flex', 
+      gap: '8px', 
+      fontSize: '12px',
+      color: 'var(--lokus-text-secondary)' 
+    }
+  }, [
+    React.createElement('span', { key: 'words' }, `${stats.words} words`),
+    React.createElement('span', { key: 'chars' }, `${stats.characters} chars`)
+  ]);
+};
+
+const wordCountPlugin: LokusPlugin = {
+  id: 'word-count',
+  name: 'Word Count',
+  version: '1.0.0',
+  description: 'Display word and character count in status bar',
+  
+  activate(context) {
+    // Register status bar component
+    context.statusBar.register('word-count', WordCountComponent, {
+      position: 'right',
+      priority: 100
+    });
+  },
+
+  deactivate(context) {
+    // Cleanup
+    context.statusBar.unregister('word-count');
+  }
+};
+
+export default wordCountPlugin;
+```
+
+### Plugin Manifest (package.json)
+```json
+{
+  "name": "@lokus/word-count-plugin",
+  "version": "1.0.0",
+  "description": "Word and character counter for Lokus",
+  "main": "dist/index.js",
+  "keywords": ["lokus", "plugin", "productivity"],
+  "lokus": {
+    "id": "word-count",
+    "displayName": "Word Count",
+    "categories": ["productivity", "editor"],
+    "activationEvents": ["onStartup"],
+    "contributes": {
+      "statusBar": ["word-count"]
+    }
+  },
+  "dependencies": {
+    "@lokus/plugin-api": "^1.0.0"
+  }
+}
+```
+
+## Status Bar Plugin Development
+
+### Creating Status Bar Components
+
+Status bar plugins can display real-time information and interactive elements:
+
+```typescript
+import React from 'react';
+import { StatusBarComponent } from '@lokus/plugin-api';
+
+const PomodoroTimer: StatusBarComponent = () => {
+  const [time, setTime] = React.useState(25 * 60); // 25 minutes
+  const [isRunning, setIsRunning] = React.useState(false);
+  const [isBreak, setIsBreak] = React.useState(false);
+
+  React.useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    if (isRunning && time > 0) {
+      interval = setInterval(() => {
+        setTime(time => time - 1);
+      }, 1000);
+    } else if (time === 0) {
+      // Timer finished
+      setIsRunning(false);
+      setIsBreak(!isBreak);
+      setTime(isBreak ? 25 * 60 : 5 * 60); // 25min work, 5min break
+      
+      // Show notification
+      lokus.notifications.show({
+        title: isBreak ? 'Break time!' : 'Back to work!',
+        type: 'info'
+      });
+    }
+
+    return () => clearInterval(interval);
+  }, [isRunning, time, isBreak]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const toggleTimer = () => setIsRunning(!isRunning);
+  const resetTimer = () => {
+    setIsRunning(false);
+    setTime(25 * 60);
+    setIsBreak(false);
+  };
+
+  return React.createElement('div', {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '4px',
+      cursor: 'pointer',
+      padding: '4px 8px',
+      borderRadius: '4px',
+      backgroundColor: isBreak ? 'var(--lokus-success)' : 'var(--lokus-primary)',
+      color: 'white',
+      fontSize: '11px',
+      fontFamily: 'monospace'
+    },
+    onClick: toggleTimer,
+    onContextMenu: (e: React.MouseEvent) => {
+      e.preventDefault();
+      resetTimer();
+    }
+  }, [
+    React.createElement('span', { key: 'icon' }, isBreak ? '🧘' : '🍅'),
+    React.createElement('span', { key: 'time' }, formatTime(time)),
+    React.createElement('span', { 
+      key: 'status', 
+      style: { fontSize: '8px', opacity: 0.8 } 
+    }, isRunning ? '⏸' : '▶')
+  ]);
+};
+```
+
+### Status Bar Registration Options
+
+```typescript
+context.statusBar.register('component-id', Component, {
+  position: 'left' | 'center' | 'right',  // Status bar position
+  priority: number,                        // Display order (higher = more left/right)
+  condition: () => boolean,                // When to show component
+  tooltip: 'Component description'         // Hover tooltip
+});
+```
+
+## Advanced Plugin Features
+
+### React Integration
+
+Lokus provides full React integration for plugins:
+
+```typescript
+// Global React is available
+const { useState, useEffect, useMemo } = React;
+
+// Custom hooks
+const useEditorContent = () => {
+  const [content, setContent] = useState('');
+  
+  useEffect(() => {
+    const unsubscribe = lokus.editor.onContentChange(setContent);
+    return unsubscribe;
+  }, []);
+  
+  return content;
+};
+
+// Complex components
+const AdvancedPlugin: StatusBarComponent = () => {
+  const content = useEditorContent();
+  const wordCount = useMemo(() => 
+    content.trim().split(/\s+/).filter(Boolean).length, 
+    [content]
+  );
+
+  return React.createElement('div', null, `${wordCount} words`);
+};
+```
+
+### Plugin Communication
+
+Plugins can communicate with each other through the event system:
+
+```typescript
+// Publishing events
+lokus.events.emit('plugin.word-count.updated', { count: wordCount });
+
+// Subscribing to events
+lokus.events.on('plugin.*.updated', (event, data) => {
+  console.log(`Plugin ${event.source} updated:`, data);
+});
+
+// Direct plugin communication
+const otherPlugin = lokus.plugins.get('other-plugin-id');
+if (otherPlugin && otherPlugin.api) {
+  otherPlugin.api.doSomething();
+}
+```
+
+### File System Access
+
+Plugins can access files through the secure API:
+
+```typescript
+// Read file content
+const content = await lokus.fs.readFile('/path/to/file.md');
+
+// Write file content
+await lokus.fs.writeFile('/path/to/output.md', processedContent);
+
+// Watch for file changes
+const watcher = lokus.fs.watch('/workspace/folder', (event, filename) => {
+  console.log(`File ${filename} ${event}`);
+});
+
+// List directory contents
+const files = await lokus.fs.readDir('/workspace');
+```
+
+### Editor Integration
+
+Interact with the editor programmatically:
+
+```typescript
+// Get current content
+const content = lokus.editor.getContent();
+
+// Set content
+lokus.editor.setContent('New content here');
+
+// Insert at cursor
+lokus.editor.insertAtCursor('Inserted text');
+
+// Get selection
+const selection = lokus.editor.getSelection();
+
+// Register editor commands
+lokus.editor.addCommand('my-command', () => {
+  lokus.editor.insertAtCursor('Hello from plugin!');
+});
+```
+
+## Plugin Examples
+
+### Code Snippets Plugin
+
+```typescript
+interface Snippet {
+  id: string;
+  name: string;
+  language: string;
+  code: string;
+  description?: string;
+}
+
+const CodeSnippetsPlugin: LokusPlugin = {
+  id: 'code-snippets',
+  name: 'Code Snippets',
+  version: '1.0.0',
+
+  activate(context) {
+    // Load snippets from storage
+    const snippets: Snippet[] = context.storage.get('snippets', []);
+
+    // Register command palette command
+    context.commands.register('insert-snippet', {
+      title: 'Insert Code Snippet',
+      async execute() {
+        const selected = await lokus.ui.showQuickPick(
+          snippets.map(s => ({
+            label: s.name,
+            description: s.description,
+            detail: s.language,
+            value: s
+          }))
+        );
+
+        if (selected) {
+          lokus.editor.insertAtCursor(`\`\`\`${selected.language}\n${selected.code}\n\`\`\``);
+        }
+      }
+    });
+
+    // Status bar component
+    const SnippetsButton: StatusBarComponent = () => {
+      return React.createElement('button', {
+        onClick: () => context.commands.execute('insert-snippet'),
+        style: {
+          background: 'none',
+          border: 'none',
+          color: 'var(--lokus-text)',
+          cursor: 'pointer',
+          fontSize: '12px'
+        }
+      }, `📄 ${snippets.length} snippets`);
+    };
+
+    context.statusBar.register('snippets', SnippetsButton);
+  }
+};
+```
+
+### Custom Theme Plugin
+
+```typescript
+const CustomThemePlugin: LokusPlugin = {
+  id: 'custom-theme',
+  name: 'Custom Theme Manager',
+  version: '1.0.0',
+
+  activate(context) {
+    const themes = new Map<string, any>();
+
+    // Register theme
+    const registerTheme = (id: string, theme: any) => {
+      themes.set(id, theme);
+      lokus.themes.register(id, theme);
+    };
+
+    // Built-in themes
+    registerTheme('ocean-blue', {
+      name: 'Ocean Blue',
+      colors: {
+        primary: '#0066cc',
+        secondary: '#004499',
+        background: '#f0f8ff',
+        text: '#333333'
+      }
+    });
+
+    // Theme selector component
+    const ThemeSelector: StatusBarComponent = () => {
+      const [currentTheme, setCurrentTheme] = React.useState(
+        lokus.themes.getCurrent()
+      );
+
+      const cycleTheme = () => {
+        const themeIds = Array.from(themes.keys());
+        const currentIndex = themeIds.indexOf(currentTheme);
+        const nextIndex = (currentIndex + 1) % themeIds.length;
+        const nextTheme = themeIds[nextIndex];
+        
+        lokus.themes.apply(nextTheme);
+        setCurrentTheme(nextTheme);
+      };
+
+      return React.createElement('button', {
+        onClick: cycleTheme,
+        style: {
+          background: 'none',
+          border: 'none',
+          color: 'var(--lokus-text)',
+          cursor: 'pointer'
+        }
+      }, '🎨');
+    };
+
+    context.statusBar.register('theme-selector', ThemeSelector);
+  }
+};
+```
+
+## Testing Plugins
+
+### Unit Testing
+
+```typescript
+// tests/plugin.test.ts
+import { describe, it, expect, vi } from 'vitest';
+import wordCountPlugin from '../src/index';
+
+describe('Word Count Plugin', () => {
+  it('should register status bar component', () => {
+    const mockContext = {
+      statusBar: {
+        register: vi.fn()
+      }
+    };
+
+    wordCountPlugin.activate(mockContext);
+    
+    expect(mockContext.statusBar.register).toHaveBeenCalledWith(
+      'word-count',
+      expect.any(Function),
+      expect.objectContaining({
+        position: 'right'
+      })
+    );
+  });
+
+  it('should count words correctly', () => {
+    const testText = 'Hello world this is a test';
+    const expectedWords = 6;
+    
+    // Test word counting logic
+    const words = testText.trim().split(/\s+/).filter(Boolean).length;
+    expect(words).toBe(expectedWords);
+  });
+});
+```
+
+### Integration Testing
+
+```typescript
+// tests/integration.test.ts
+import { describe, it, expect } from 'vitest';
+import { createTestEnvironment } from '@lokus/plugin-testing';
+
+describe('Plugin Integration', () => {
+  it('should integrate with editor', async () => {
+    const env = await createTestEnvironment();
+    await env.loadPlugin('word-count');
+    
+    // Simulate editor content change
+    await env.editor.setContent('Hello world');
+    
+    // Check status bar update
+    const statusBar = env.statusBar.getComponent('word-count');
+    expect(statusBar.textContent).toContain('2 words');
+  });
+});
+```
+
+## Plugin Distribution
+
+### Publishing to NPM
+
+```bash
+# Build plugin
+npm run build
+
+# Publish to NPM
+npm publish
+
+# Or publish scoped package
+npm publish --access public
+```
+
+### Plugin Registry
+
+Register your plugin in the Lokus Plugin Registry:
+
+```json
+{
+  "name": "@your-org/plugin-name",
+  "lokus": {
+    "registry": {
+      "categories": ["productivity", "editor"],
+      "tags": ["word-count", "statistics"],
+      "screenshots": ["screenshot1.png", "screenshot2.png"],
+      "homepage": "https://github.com/your-org/plugin-name",
+      "repository": "https://github.com/your-org/plugin-name"
+    }
+  }
+}
+```
+
+## Best Practices
+
+### Performance
+- **Lazy Loading**: Load heavy dependencies only when needed
+- **Debouncing**: Debounce frequent events like content changes
+- **Memory Management**: Clean up subscriptions and intervals
+- **Efficient Rendering**: Use React.memo for expensive components
+
+### Security
+- **Input Validation**: Validate all user inputs and external data
+- **API Limits**: Respect rate limits and resource constraints
+- **Error Handling**: Graceful handling of errors and edge cases
+- **Permissions**: Request only necessary permissions
+
+### User Experience
+- **Progressive Enhancement**: Work without breaking core functionality
+- **Accessibility**: Follow accessibility best practices
+- **Internationalization**: Support multiple languages where applicable
+- **Documentation**: Provide clear usage instructions
+
+### Development
+- **TypeScript**: Use TypeScript for better development experience
+- **Testing**: Write comprehensive tests for your plugin
+- **Versioning**: Follow semantic versioning for releases
+- **Code Quality**: Use linting and formatting tools
+
+## Plugin API Reference
+
+> **Complete API Documentation**: See [Plugin API Reference](../../reference/api/plugin-api.md) for the complete API documentation.
+> 
+> **Example Plugins**: Check out [Plugin Examples](./examples/) for more comprehensive examples.
+> 
+> **Plugin Testing**: Learn about [Plugin Testing](./testing.md) for thorough testing strategies.

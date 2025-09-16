@@ -1,0 +1,32 @@
+# 📝 Rich Text Editor
+
+Powered by TipTap, our editor provides a seamless writing experience with advanced markdown processing.
+
+## Markdown Support
+- **Headers**: `# H1`, `## H2`, `### H3`, etc.
+- **Emphasis**: `**bold**`, `*italic*`, `~~strikethrough~~`
+- **Lists**: Ordered (`1. item`) and unordered (`- item`)
+- **Task Lists**: `- [x] completed` and `- [ ] todo`
+- **Links**: `[text](url)` and `[[wiki links]]`
+- **Code**: `inline code` and ` ```fenced blocks``` `
+- **Tables**: Full markdown table support
+- **Math**: LaTeX math expressions with `$inline$` and `$$block$$`
+
+## Live Features
+- **Auto-paste Processing**: Automatically converts pasted markdown with universal compiler
+- **Smart Typography**: Auto-correct quotes, dashes, and ellipses
+- **Syntax Highlighting**: Code blocks with language-specific highlighting
+- **Link Preview**: Hover to preview link destinations
+- **Image Embedding**: Drag and drop image support
+
+## Universal Markdown Compiler
+Lokus features a centralized markdown processing system that:
+- **Aggressive Detection**: Recognizes markdown patterns across all contexts
+- **Placeholder Preservation**: Maintains template variables during compilation
+- **Consistent Processing**: Unified behavior across paste, import, and editing operations
+- **Performance Optimized**: Efficient rendering with minimal re-renders
+
+## Performance Optimizations
+- **Efficient Rendering**: Minimal re-renders with `shouldRerenderOnTransaction: false`
+- **Lazy Loading**: Extensions loaded on demand
+- **Memory Management**: Automatic cleanup of unused resources

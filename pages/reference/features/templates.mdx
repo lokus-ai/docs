@@ -1,0 +1,62 @@
+# 📄 Universal Template System
+
+A powerful template system that allows you to create reusable content with dynamic variables and JavaScript execution capabilities.
+
+## Overview
+The Universal Template System enables you to create dynamic, reusable content templates with:
+- **Variable Substitution**: Dynamic placeholders that auto-populate
+- **JavaScript Execution**: Custom logic within templates
+- **Command Palette Integration**: Quick access via `⌘K`
+- **Secure Sandbox**: Safe JavaScript execution environment
+
+## Template Variables
+Lokus supports various built-in template variables:
+
+### Built-in Variables
+- `{{date}}` - Current date in various formats
+- `{{time}}` - Current time
+- `{{user}}` - Current user name
+- `{{cursor}}` - Cursor positioning placeholder
+
+### Variable Syntax
+```markdown
+# Daily Note for {{date}}
+Created by: {{user}}
+Time: {{time}}
+
+{{cursor}}
+```
+
+## Advanced Features
+
+### JavaScript in Templates
+Execute JavaScript within your templates for dynamic content:
+```markdown
+## Week of {{date}}
+<!-- JavaScript execution for dynamic content -->
+Current week number: {{js: Math.ceil((new Date().getDate()) / 7)}}
+```
+
+### Custom Variables
+Create and manage custom template variables:
+- **User-defined Variables**: Create reusable custom placeholders
+- **Dynamic Values**: Variables that compute values at insertion time
+- **Contextual Variables**: Variables that adapt based on current workspace
+
+## Template Creation
+1. **Access Templates**: Use `⌘K` → "Insert Template"
+2. **Browse Library**: Search and filter available templates
+3. **Quick Insertion**: One-click template insertion with automatic processing
+4. **Custom Templates**: Create your own templates with variables and logic
+
+## Template Management
+- **Template Library**: Centralized template storage
+- **Search and Filter**: Quickly find templates by name or content
+- **Template Categories**: Organize templates by type or purpose
+- **Version Control**: Track template changes and updates
+
+## Use Cases
+- **Daily Notes**: Consistent structure for daily journal entries
+- **Meeting Notes**: Standardized meeting note format
+- **Project Templates**: Kickstart new projects with predefined structure
+- **Code Snippets**: Reusable code templates with variable substitution

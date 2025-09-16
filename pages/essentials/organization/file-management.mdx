@@ -1,0 +1,242 @@
+# File Management
+
+Learn how to effectively organize, navigate, and manage your files and workspace in Lokus.
+
+## Understanding Your Workspace
+
+### Workspace Concept
+Your workspace is the root folder that contains all your notes and projects. When you open a folder in Lokus, it becomes your workspace and appears in the sidebar for easy navigation.
+
+### Setting Up Your Workspace
+1. **Choose a Location**: Select a dedicated folder for your notes
+2. **Open in Lokus**: File → Open Folder or drag folder to Lokus
+3. **Organize Structure**: Create logical subdirectories
+4. **Access Anywhere**: Workspace remains accessible across sessions
+
+### Recommended Structure
+```
+My Notes/
+├── 📋 Daily Notes/
+├── 🏗️ Projects/
+│   ├── Project Alpha/
+│   └── Project Beta/
+├── 📚 Resources/
+├── 💡 Ideas/
+└── 📄 Templates/
+```
+
+## File Operations
+
+### Creating Files and Folders
+
+#### New File
+- **Command Palette**: `⌘K` → "new file" → Enter
+- **Keyboard**: `⌘N`
+- **Menu**: File → New File
+- **Sidebar**: Right-click → New File
+
+#### New Folder
+- **Command Palette**: `⌘K` → "new folder" → Enter
+- **Sidebar**: Right-click → New Folder
+- **Menu**: File → New Folder
+
+### File Navigation
+
+#### Opening Files
+- **Command Palette**: `⌘K` → type filename → Enter
+- **Sidebar**: Click on any file
+- **Recent Files**: `⌘K` shows recently accessed files
+- **Quick Open**: `⌘O` for system file dialog
+
+#### Sidebar Navigation
+- **Expand/Collapse**: Click arrows next to folders
+- **Quick Filter**: Start typing to filter visible files
+- **Scroll**: Navigate large folder structures
+- **Drag & Drop**: Reorganize files and folders
+
+### File Management Operations
+
+#### Renaming
+1. **Right-click** on file → "Rename"
+2. **Type new name** (keep .md extension for Markdown files)
+3. **Press Enter** to confirm
+
+#### Moving Files
+- **Drag and Drop**: Drag files to new locations in sidebar
+- **Cut and Paste**: Right-click → Cut, then Paste in destination
+- **Command Palette**: Use move commands for specific operations
+
+#### Copying Files
+- **Right-click** → Copy → navigate to destination → Paste
+- **Duplicate**: Copy and paste in same folder, rename accordingly
+- **Backup**: Copy important files to backup locations
+
+#### Deleting Files
+- **Right-click** → Delete
+- **Keyboard**: Select file, press `Delete` key
+- **Confirmation**: Lokus will ask for confirmation before deletion
+- **Recovery**: Check your system's trash/recycle bin to recover
+
+## File Types and Support
+
+### Markdown Files (.md)
+- **Full Support**: Complete editing, preview, and formatting
+- **Live Rendering**: See formatting as you type
+- **Syntax Highlighting**: Code blocks and special syntax
+- **Export Options**: HTML, PDF, and other formats
+
+### Text Files (.txt)
+- **Plain Text**: Simple text editing without formatting
+- **Fast Loading**: Efficient for large plain text files
+- **Code Editing**: Basic syntax highlighting for code files
+- **Cross-Platform**: Universal compatibility
+
+### Other File Types
+- **Code Files**: Syntax highlighting for .js, .py, .ts, etc.
+- **Images**: Preview and reference in notes
+- **Documents**: Limited support for viewing
+- **Binary Files**: Generally not supported for editing
+
+## Workspace Organization Strategies
+
+### By Project
+```
+Workspace/
+├── Client Work/
+│   ├── Client A/
+│   └── Client B/
+├── Personal/
+│   ├── Learning/
+│   └── Ideas/
+└── Archive/
+```
+
+### By Content Type
+```
+Workspace/
+├── Meeting Notes/
+├── Research/
+├── Documentation/
+├── Daily Journals/
+└── References/
+```
+
+### By Time Period
+```
+Workspace/
+├── 2024/
+│   ├── Q1/
+│   ├── Q2/
+│   └── Daily/
+├── 2023/
+└── Archive/
+```
+
+### GTD (Getting Things Done)
+```
+Workspace/
+├── 📥 Inbox/
+├── 🎯 Projects/
+├── 📅 Someday Maybe/
+├── 📚 Reference/
+└── ✅ Archive/
+```
+
+## Advanced File Management
+
+### Bulk Operations
+- **Multi-Select**: Hold `⌘` (Mac) or `Ctrl` (Windows) to select multiple files
+- **Range Select**: Hold `Shift` to select ranges
+- **Batch Operations**: Apply operations to multiple selected files
+- **Folder Operations**: Operations on folders affect all contents
+
+### File Searching
+- **Global Search**: Search across all files in workspace
+- **Filename Search**: `⌘K` for quick file finding
+- **Content Search**: Find text within files
+- **Filter by Type**: Show only specific file types
+
+### External Integration
+- **Finder/Explorer**: Right-click → "Reveal in Finder/Explorer"
+- **Terminal**: Right-click → "Open in Terminal"
+- **External Apps**: Right-click → "Open with..."
+- **Cloud Sync**: Works with Dropbox, iCloud, Google Drive when workspace is in synced folder
+
+## File Management Best Practices
+
+### Naming Conventions
+- **Descriptive Names**: Use clear, searchable filenames
+- **Date Prefixes**: `2024-03-15-meeting-notes.md` for chronological sorting
+- **Consistent Format**: Establish and stick to naming patterns
+- **Avoid Special Characters**: Use hyphens instead of spaces in filenames
+
+### Folder Structure
+- **Logical Hierarchy**: No more than 3-4 levels deep
+- **Clear Categories**: Each folder should have a distinct purpose
+- **Regular Cleanup**: Archive or delete outdated content
+- **Index Files**: Create index.md files in folders to explain contents
+
+### File Hygiene
+- **Regular Backups**: Keep backups of important files
+- **Version Control**: Consider Git for important projects
+- **Archive Old Content**: Move completed projects to archive
+- **Link Maintenance**: Check and update internal links regularly
+
+## Troubleshooting File Issues
+
+### Common Problems
+
+#### Files Not Showing
+- **Check File Types**: Ensure files have supported extensions
+- **Refresh Workspace**: Close and reopen folder
+- **Check Permissions**: Verify read permissions on files
+- **Hidden Files**: Lokus shows all visible files in folder
+
+#### Can't Save Files
+- **Check Permissions**: Ensure write access to folder
+- **Disk Space**: Verify sufficient free space
+- **File Locks**: Close other applications using the file
+- **Path Length**: Very long paths may cause issues
+
+#### Performance Issues
+- **Large Folders**: Consider organizing into subfolders
+- **Many Files**: File watching may slow down with thousands of files
+- **Large Files**: Break very large files into smaller sections
+- **Network Drives**: Local drives perform better than network locations
+
+### Recovery Strategies
+- **System Backups**: Use your system's backup features
+- **Cloud Storage**: Automatic backup through cloud sync
+- **Version History**: Some cloud services provide version history
+- **Export Regularly**: Export important content to multiple formats
+
+## Integration with Other Tools
+
+### Cloud Storage
+- **Setup**: Point Lokus workspace to cloud-synced folder
+- **Automatic Sync**: Changes sync across devices
+- **Conflict Resolution**: Handle sync conflicts manually
+- **Offline Access**: Files available when offline
+
+### Version Control
+- **Git Integration**: Initialize Git repository in workspace
+- **Track Changes**: Version control for important projects
+- **Collaboration**: Share and collaborate on documents
+- **Branching**: Use branches for different versions
+
+### External Editors
+- **Specialized Tools**: Use external editors for specific file types
+- **Round-trip Editing**: Edit externally, view in Lokus
+- **File Watching**: Lokus detects external changes
+- **Workflow Integration**: Part of larger content creation workflow
+
+## Next Steps
+
+- **Master [Command Palette](../productivity/command-palette)** for faster file operations
+- **Learn [Search Basics](search-basics)** to find content quickly
+- **Explore [Templates](../../advanced/customization/templates)** for consistent file creation
+- **Check [Keyboard Shortcuts](../../reference/keyboard-shortcuts)** for efficient file management
+
+---
+
+*Good file management is the foundation of an effective note-taking system. Invest time in setting up a logical structure that will serve you well as your content grows.*

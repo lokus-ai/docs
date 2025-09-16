@@ -1,0 +1,228 @@
+# Developer Resources
+
+Everything you need to contribute to Lokus, create plugins, and understand the technical architecture.
+
+## Getting Started
+
+Whether you're contributing to Lokus core or building plugins, this section has you covered:
+
+### 🛠️ Development Setup
+Set up your development environment:
+- **Development Environment** - Complete setup guide (coming soon)
+- **Building & Testing** - Build processes and testing (coming soon)
+- **Contributing Guidelines** - How to contribute to Lokus (coming soon)
+
+### 🏗️ Architecture  
+Understand how Lokus works:
+- **System Overview** - High-level architecture (coming soon)
+- **Editor Architecture** - How the editor system works (coming soon)
+- **Plugin System** - Plugin architecture and APIs (coming soon)
+
+### 🔌 Plugin Development
+Create powerful extensions for Lokus:
+- **[Plugin Development Guide](developers/plugins/plugin-development)** - Complete guide to building plugins
+- **API Reference** - Full plugin API documentation (coming soon)
+- **Examples** - Real plugin examples to learn from (coming soon)
+- **Testing** - Plugin testing strategies (coming soon)
+
+## Quick Start
+
+### For Contributors
+1. **Clone the repository**: `git clone https://github.com/lokus-ai/lokus`
+2. **Set up development**: Follow the development environment guide
+3. **Run in development**: `npm run tauri dev`
+4. **Make changes**: Follow our contributing guidelines
+5. **Submit PR**: Create a pull request with your improvements
+
+### For Plugin Developers
+1. **Install Plugin CLI**: `npm install -g @lokus/plugin-cli`
+2. **Create plugin**: `lokus-plugin create my-plugin`
+3. **Develop**: Use the [Plugin Development Guide](developers/plugins/plugin-development)
+4. **Test**: Follow plugin testing best practices
+5. **Publish**: Share with the community
+
+## Technical Stack
+
+### Core Technologies
+- **Frontend**: React 19, TypeScript, Tailwind CSS
+- **Backend**: Rust, Tauri 2.0
+- **Editor**: TipTap with custom extensions
+- **Build**: Vite, Vitest for testing
+
+### Key Libraries
+- **UI Framework**: React with modern hooks
+- **Styling**: Tailwind CSS with custom design system
+- **State Management**: React Context and custom hooks
+- **File System**: Tauri's native file system APIs
+- **Plugin System**: Custom runtime with security sandboxing
+
+### Architecture Highlights
+- **Native Performance**: Rust backend for desktop-class performance
+- **Security**: Sandboxed plugin execution
+- **Extensibility**: Comprehensive plugin API
+- **Modern**: Latest web technologies with native integration
+
+## Development Areas
+
+### Core Application
+Contribute to the main Lokus application:
+- **Editor Features**: Enhance the writing experience
+- **File Management**: Improve workspace navigation
+- **UI/UX**: Design and usability improvements
+- **Performance**: Optimization and efficiency
+- **Testing**: Improve test coverage and quality
+
+### Plugin Ecosystem
+Build the plugin ecosystem:
+- **Plugin Examples**: Create reference implementations
+- **Plugin Tools**: Improve development tools
+- **Plugin Registry**: Help with plugin discovery
+- **Documentation**: Improve plugin development docs
+
+### Documentation
+Help improve this documentation:
+- **Content**: Add missing documentation
+- **Examples**: Create better code examples
+- **Tutorials**: Write step-by-step guides
+- **Translation**: Internationalization support
+
+## API Overview
+
+### Core APIs
+- **Editor API**: Programmatic editor control
+- **File System API**: Secure file operations
+- **UI API**: Interface components and dialogs
+- **Events API**: Application event system
+
+### Plugin APIs
+- **Plugin Lifecycle**: Activation, deactivation, management
+- **Status Bar API**: Custom status bar components
+- **Command API**: Register custom commands
+- **Settings API**: Plugin configuration
+
+### Advanced APIs
+- **Template API**: Template system integration
+- **Theme API**: Custom theme development
+- **Notification API**: User notifications
+- **Storage API**: Plugin data persistence
+
+## Code Examples
+
+### Basic Plugin Structure
+```typescript
+import { LokusPlugin } from '@lokus/plugin-api';
+
+const myPlugin: LokusPlugin = {
+  id: 'my-plugin',
+  name: 'My Plugin',
+  version: '1.0.0',
+  
+  activate(context) {
+    // Plugin initialization
+  },
+  
+  deactivate(context) {
+    // Plugin cleanup
+  }
+};
+
+export default myPlugin;
+```
+
+### Editor Integration
+```typescript
+// Get current content
+const content = lokus.editor.getContent();
+
+// Insert at cursor
+lokus.editor.insertAtCursor('Hello, World!');
+
+// Listen for changes
+lokus.editor.onContentChange((newContent) => {
+  console.log('Content updated:', newContent);
+});
+```
+
+### Status Bar Component
+```typescript
+const StatusComponent = () => {
+  const [count, setCount] = React.useState(0);
+  
+  return React.createElement('div', {
+    onClick: () => setCount(c => c + 1)
+  }, `Clicks: ${count}`);
+};
+
+context.statusBar.register('click-counter', StatusComponent);
+```
+
+## Testing
+
+### Running Tests
+```bash
+# Unit tests
+npm test
+
+# E2E tests  
+npm run test:e2e
+
+# Plugin tests
+npm run test:plugins
+```
+
+### Test Coverage
+- **Core Features**: Comprehensive unit test coverage
+- **Plugin API**: Integration test coverage
+- **E2E Testing**: User workflow validation
+- **Performance**: Benchmarking and optimization
+
+## Resources
+
+### Documentation
+- **[Complete API Reference](../reference/api/)** - Full API documentation
+- **[Plugin Examples](developers/plugins/examples/)** - Real-world plugin examples
+- **[Architecture Deep Dive](developers/architecture/)** - Technical implementation details
+
+### Community
+- **[GitHub Issues](https://github.com/lokus-ai/lokus/issues)** - Bug reports and feature requests
+- **[GitHub Discussions](https://github.com/lokus-ai/lokus/discussions)** - Community discussions
+- **[Contributing Guide](https://github.com/lokus-ai/lokus/blob/main/CONTRIBUTING.md)** - How to contribute
+
+### Tools
+- **[@lokus/plugin-cli](https://npmjs.com/package/@lokus/plugin-cli)** - Plugin development tools
+- **Development Environment** - Complete setup instructions
+- **Testing Framework** - Plugin testing utilities
+
+## Contribution Guidelines
+
+### Getting Started
+1. **Read the Code of Conduct**: Ensure you understand our community standards
+2. **Check Existing Issues**: Look for good first issues or areas needing help
+3. **Fork and Clone**: Set up your development environment
+4. **Make Changes**: Follow our coding standards and practices
+5. **Test Thoroughly**: Ensure your changes work and don't break existing functionality
+6. **Submit PR**: Create a clear pull request with description of changes
+
+### Code Standards
+- **TypeScript**: Use TypeScript for all new code
+- **ESLint**: Follow our linting rules
+- **Prettier**: Use consistent code formatting
+- **Testing**: Include tests for new features
+- **Documentation**: Update docs for any API changes
+
+## Support
+
+### Getting Help
+- **Technical Questions**: GitHub Discussions
+- **Bug Reports**: GitHub Issues
+- **Feature Requests**: GitHub Issues with feature label
+- **Plugin Development**: Plugin development discussions
+
+### Contributing Support
+- **Code Review**: Core team provides feedback on pull requests
+- **Mentorship**: Available for significant contributions
+- **Recognition**: Contributors acknowledged in release notes
+
+---
+
+*Join the Lokus development community and help build the future of note-taking!*

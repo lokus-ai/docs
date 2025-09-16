@@ -1,0 +1,348 @@
+# Template Basics
+
+Get started with Lokus templates to speed up content creation and maintain consistency across your notes.
+
+## What Are Templates?
+
+Templates are reusable content patterns that help you:
+- **Create consistent structure** for similar types of notes
+- **Save time** by not rewriting common content
+- **Include dynamic information** like dates and times automatically
+- **Maintain professional standards** across all your content
+
+## Quick Start with Templates
+
+### Using Your First Template
+
+1. **Open Command Palette**: Press `⌘K`
+2. **Find Templates**: Type "template" or "insert template"
+3. **Browse Available**: See list of available templates
+4. **Select and Insert**: Choose one and press Enter
+5. **Automatic Processing**: Variables are replaced automatically
+
+### Basic Template Variables
+
+Templates use special placeholders that get replaced with real data:
+
+- `{{date}}` - Today's date (2024-03-15)
+- `{{time}}` - Current time (14:30)
+- `{{user}}` - Your username
+- `{{cursor}}` - Where your cursor will be placed after insertion
+
+### Example: Simple Daily Note Template
+```markdown
+# Daily Note - {{date}}
+
+## Today's Goals
+{{cursor}}
+
+## What I Learned
+
+
+## Tomorrow's Priorities
+- [ ] 
+- [ ] 
+- [ ] 
+
+---
+Created at {{time}} by {{user}}
+```
+
+When inserted, this becomes:
+```markdown
+# Daily Note - 2024-03-15
+
+## Today's Goals
+[cursor positioned here]
+
+## What I Learned
+
+
+## Tomorrow's Priorities
+- [ ] 
+- [ ] 
+- [ ] 
+
+---
+Created at 14:30 by john
+```
+
+## Common Template Use Cases
+
+### Meeting Notes
+```markdown
+# {{date}} - Meeting Notes
+
+**Attendees**: {{cursor}}
+**Time**: {{time}}
+
+## Agenda
+1. 
+2. 
+3. 
+
+## Notes
+
+
+## Action Items
+- [ ] **Owner**: Task - Due: 
+- [ ] **Owner**: Task - Due: 
+
+## Next Meeting
+**Date**: 
+**Agenda**: 
+```
+
+### Project Planning
+```markdown
+# Project: [PROJECT NAME]
+
+**Start Date**: {{date}}
+**Created by**: {{user}}
+
+## Overview
+{{cursor}}
+
+## Goals
+- [ ] Goal 1
+- [ ] Goal 2
+- [ ] Goal 3
+
+## Timeline
+- **Week 1**: 
+- **Week 2**: 
+- **Week 3**: 
+- **Week 4**: 
+
+## Resources
+- 
+
+## Success Metrics
+- 
+```
+
+### Weekly Review
+```markdown
+# Week of {{date}}
+
+## Wins This Week
+{{cursor}}
+
+## Challenges
+
+
+## Lessons Learned
+
+
+## Next Week's Focus
+- [ ] Priority 1
+- [ ] Priority 2
+- [ ] Priority 3
+
+## Metrics
+- **Goals Completed**: / 
+- **Key Metrics**: 
+
+---
+Review completed at {{time}}
+```
+
+## Finding and Using Templates
+
+### Template Discovery
+- **Command Palette**: `⌘K` → "template" shows all available
+- **Search by Name**: Type partial template names to filter
+- **Recent Templates**: Recently used templates appear first
+- **Category Browsing**: Templates organized by type
+
+### Template Insertion Process
+1. **Position Cursor**: Place cursor where you want the template
+2. **Access Templates**: Use Command Palette (`⌘K` → "template")
+3. **Select Template**: Browse and choose the template you need
+4. **Automatic Insertion**: Template content appears with variables processed
+5. **Start Writing**: Cursor positioned at `{{cursor}}` location
+
+## Creating Your Own Templates
+
+### Simple Template Creation
+1. **Create New File**: Make a new .md file for your template
+2. **Add Content**: Write your template with variables
+3. **Save in Templates Folder**: Save to your templates directory
+4. **Use Immediately**: Available in Command Palette right away
+
+### Template File Example
+Create a file called `book-notes-template.md`:
+```markdown
+# Book Notes: [BOOK TITLE]
+
+**Author**: 
+**Date Started**: {{date}}
+**Rating**: ⭐⭐⭐⭐⭐
+
+## Summary
+{{cursor}}
+
+## Key Takeaways
+- 
+- 
+- 
+
+## Favorite Quotes
+> 
+
+## My Thoughts
+
+
+## Action Items
+- [ ] 
+- [ ] 
+
+---
+Notes created {{time}} by {{user}}
+```
+
+### Template Best Practices
+- **Clear Structure**: Use headings and sections consistently
+- **Helpful Placeholders**: Include example text in brackets [LIKE THIS]
+- **Smart Cursor Placement**: Put `{{cursor}}` where users will start typing
+- **Include Context**: Add helpful prompts and examples
+- **Test Your Templates**: Use them yourself to find improvements
+
+## Variable Reference
+
+### Built-in Variables
+| Variable | Output | Example |
+|----------|--------|---------|
+| `{{date}}` | Current date | 2024-03-15 |
+| `{{time}}` | Current time | 14:30 |
+| `{{user}}` | System username | john |
+| `{{cursor}}` | Cursor position | (invisible) |
+
+### Date Formatting
+You can format dates in different ways:
+- `{{date}}` - Default format (YYYY-MM-DD)
+- `{{date:MMMM Do, YYYY}}` - March 15th, 2024
+- `{{date:dddd}}` - Friday
+- `{{date:MM/DD/YY}}` - 03/15/24
+
+### Time Formatting
+Different time formats available:
+- `{{time}}` - 24-hour format (14:30)
+- `{{time:h:mm A}}` - 12-hour format (2:30 PM)
+- `{{time:HH:mm:ss}}` - With seconds (14:30:45)
+
+## Template Organization
+
+### Template Folders
+Organize templates into categories:
+```
+Templates/
+├── Daily/
+│   ├── daily-note.md
+│   ├── journal-entry.md
+│   └── standup-notes.md
+├── Projects/
+│   ├── project-kickoff.md
+│   ├── sprint-planning.md
+│   └── retrospective.md
+├── Meetings/
+│   ├── one-on-one.md
+│   ├── team-meeting.md
+│   └── client-call.md
+└── Personal/
+    ├── book-notes.md
+    ├── recipe.md
+    └── travel-planning.md
+```
+
+### Template Naming
+- **Descriptive Names**: `meeting-notes-template.md` not `template1.md`
+- **Category Prefixes**: `daily-standup.md`, `project-kickoff.md`
+- **Version Control**: `v1-meeting-notes.md` for different versions
+- **Consistent Format**: Use same naming pattern across all templates
+
+## Advanced Template Features
+
+### Multiple Cursor Positions
+Use numbered cursor positions for complex templates:
+```markdown
+# {{1:Project Name}}
+
+**Start Date**: {{date}}
+**Owner**: {{2:Project Owner}}
+
+## Overview
+{{3:cursor}}
+
+## Next Steps
+{{4:}}
+```
+
+### Conditional Content
+Templates can include optional sections:
+```markdown
+# Meeting Notes - {{date}}
+
+{{#if standup}}
+## Standup Format
+- What did you do yesterday?
+- What will you do today?  
+- Any blockers?
+{{/if}}
+
+## Notes
+{{cursor}}
+```
+
+### Template Inheritance
+Create base templates that other templates can extend:
+```markdown
+<!-- Base meeting template -->
+# {{title}} - {{date}}
+**Time**: {{time}}
+**Attendees**: {{attendees}}
+
+{{content}}
+
+---
+Created by {{user}}
+```
+
+## Integration with Workflow
+
+### Daily Workflow
+1. **Morning**: Use daily note template to plan day
+2. **Meetings**: Insert meeting template for each meeting
+3. **Projects**: Use project templates for new initiatives
+4. **Evening**: Weekly review template for reflection
+
+### Template Shortcuts
+- **Memorize Key Templates**: Know your most-used template names
+- **Quick Access**: `⌘K` → "daily" for daily note template
+- **Muscle Memory**: Build habits around template usage
+- **Customize for Speed**: Adjust templates to reduce typing
+
+## Troubleshooting Templates
+
+### Common Issues
+- **Variables Not Working**: Check `{{variable}}` syntax is correct
+- **Template Not Found**: Verify file is in templates directory
+- **Cursor Not Positioned**: Ensure `{{cursor}}` is included
+- **Formatting Issues**: Check Markdown syntax in template
+
+### Template Debugging
+- **Test in Isolation**: Try template variables individually
+- **Check File Location**: Ensure template files are accessible
+- **Syntax Validation**: Verify all brackets and syntax are correct
+- **Variable Spelling**: Double-check variable names for typos
+
+## Next Steps
+
+Ready to go deeper with templates?
+- **[Universal Templates](../../advanced/customization/templates)** - Learn advanced features like JavaScript
+- **[Command Palette Mastery](command-palette)** - Become faster with template access
+- **[Workflow Optimization](../../advanced/customization/workflow-optimization)** - Integrate templates into efficient workflows
+
+---
+
+*Templates are one of Lokus's most powerful productivity features. Start with simple templates and gradually build a library that matches your unique workflow needs.*

@@ -1,0 +1,325 @@
+# Universal Template System
+
+Lokus's Universal Template System is a powerful feature that allows you to create dynamic, reusable content with variable substitution and JavaScript execution capabilities.
+
+## Overview
+
+The template system enables you to:
+- **Create Reusable Content**: Build templates for common document types
+- **Dynamic Variables**: Auto-populate dates, times, user info, and custom data
+- **JavaScript Execution**: Run custom logic within templates
+- **Command Palette Integration**: Quick access via `⌘K`
+- **Secure Sandbox**: Safe JavaScript execution environment
+
+## Template Variables
+
+### Built-in Variables
+
+Lokus provides several built-in variables that are automatically processed:
+
+#### Date and Time
+- `{{date}}` - Current date (YYYY-MM-DD format)
+- `{{date:format}}` - Custom date format
+- `{{time}}` - Current time (HH:MM format)
+- `{{time:format}}` - Custom time format
+
+**Examples:**
+```markdown
+# Daily Note for {{date}}
+Created at {{time}} by {{user}}
+
+# Custom Formats
+Today: {{date:MMMM Do, YYYY}}
+Time: {{time:h:mm A}}
+```
+
+#### User Information
+- `{{user}}` - Current system username
+- `{{cursor}}` - Cursor positioning placeholder
+
+#### Advanced Variables
+- `{{uuid}}` - Generate unique identifier
+- `{{filename}}` - Current file name
+- `{{workspace}}` - Workspace directory name
+
+### Custom Date Formats
+
+The date and time variables support custom formatting using moment.js syntax:
+
+```markdown
+{{date:YYYY-MM-DD}} → 2024-03-15
+{{date:MMMM Do, YYYY}} → March 15th, 2024
+{{date:dddd}} → Friday
+{{time:h:mm A}} → 3:30 PM
+{{time:HH:mm:ss}} → 15:30:45
+```
+
+### Cursor Positioning
+
+Use `{{cursor}}` to specify where the cursor should be placed after template insertion:
+
+```markdown
+# Meeting Notes - {{date}}
+
+## Attendees
+- {{cursor}}
+
+## Agenda
+1. 
+2. 
+3. 
+
+## Action Items
+- [ ] 
+```
+
+## JavaScript in Templates
+
+### Basic JavaScript Execution
+
+Execute JavaScript within templates for dynamic content generation:
+
+```markdown
+# Weekly Report
+Week number: {{js: Math.ceil((new Date().getDate()) / 7)}}
+Days until weekend: {{js: 6 - new Date().getDay()}}
+```
+
+### Complex Logic
+
+Create more sophisticated templates with conditional logic:
+
+```markdown
+# Task List for {{date}}
+
+{{js: 
+  const day = new Date().getDay();
+  if (day === 1) return "## Monday Motivation\n- Start the week strong!";
+  if (day === 5) return "## Friday Focus\n- Finish strong!";
+  return "## Daily Tasks";
+}}
+
+- {{cursor}}
+```
+
+### Utility Functions
+
+Access built-in utility functions in your JavaScript:
+
+```markdown
+# Project Status Update
+
+{{js:
+  const utils = lokus.template.utils;
+  const date = utils.formatDate(new Date(), 'MMMM YYYY');
+  return `Report for ${date}`;
+}}
+
+Generated: {{js: new Date().toISOString()}}
+```
+
+### Security and Sandboxing
+
+JavaScript execution in templates runs in a secure sandbox that:
+- **Prevents File Access**: No access to local file system
+- **Network Restrictions**: Cannot make external network requests
+- **Limited APIs**: Only safe JavaScript APIs are available
+- **Resource Limits**: Execution time and memory limits apply
+
+## Template Creation
+
+### Creating Your First Template
+
+1. **Create Template File**: Save any `.md` file in your templates directory
+2. **Add Variables**: Include `{{variable}}` placeholders
+3. **Test Template**: Use Command Palette → "Insert Template"
+
+### Template Organization
+
+```
+Templates/
+├── Daily/
+│   ├── daily-note.md
+│   ├── standup-meeting.md
+│   └── journal-entry.md
+├── Projects/
+│   ├── project-kickoff.md
+│   ├── sprint-planning.md
+│   └── retrospective.md
+└── Personal/
+    ├── book-notes.md
+    ├── recipe.md
+    └── travel-planning.md
+```
+
+### Template Examples
+
+#### Daily Note Template
+```markdown
+# {{date:dddd, MMMM Do YYYY}}
+
+## Today's Focus
+{{cursor}}
+
+## Schedule
+- 9:00 AM - 
+- 10:30 AM - 
+- 2:00 PM - 
+
+## Notes
+
+## Tomorrow's Priorities
+- [ ] 
+- [ ] 
+- [ ] 
+
+---
+Created: {{time}} | Weather: ☀️
+```
+
+#### Meeting Notes Template
+```markdown
+# {{js: prompt("Meeting Title:")}} - {{date}}
+
+**Date:** {{date:MMMM Do, YYYY}}  
+**Time:** {{time:h:mm A}}  
+**Attendees:** {{cursor}}
+
+## Agenda
+1. 
+2. 
+3. 
+
+## Discussion
+
+
+## Decisions Made
+- 
+
+## Action Items
+- [ ] **Owner:** Due: 
+- [ ] **Owner:** Due: 
+
+## Next Meeting
+**Date:** 
+**Focus:** 
+```
+
+#### Project Template with Dynamic Content
+```markdown
+# {{js: prompt("Project Name:")}}
+
+{{js:
+  const projectName = lokus.template.vars.projectName || "New Project";
+  const startDate = new Date().toISOString().split('T')[0];
+  return `**Project Start:** ${startDate}`;
+}}
+
+## Overview
+{{cursor}}
+
+## Goals
+- [ ] **Goal 1:** 
+- [ ] **Goal 2:** 
+- [ ] **Goal 3:** 
+
+## Timeline
+{{js:
+  const milestones = [];
+  const start = new Date();
+  for (let i = 1; i <= 4; i++) {
+    const date = new Date(start);
+    date.setMonth(date.getMonth() + i);
+    milestones.push(`- **Milestone ${i}:** ${date.toISOString().split('T')[0]}`);
+  }
+  return milestones.join('\n');
+}}
+
+## Resources
+- 
+
+## Success Metrics
+- 
+```
+
+## Template Management
+
+### Accessing Templates
+
+#### Via Command Palette
+1. Press `⌘K`
+2. Type "template" or "insert template"
+3. Browse available templates
+4. Select and insert
+
+#### Template Search
+- **Quick Find**: Type template names directly
+- **Category Browse**: Navigate by folder structure
+- **Recent Templates**: Recently used appear first
+- **Fuzzy Search**: Partial name matching
+
+### Template Variables Processing
+
+When you insert a template:
+1. **Variable Detection**: Lokus scans for `{{variable}}` patterns
+2. **JavaScript Execution**: Processes any `{{js: code}}` blocks
+3. **Variable Substitution**: Replaces variables with computed values
+4. **Cursor Positioning**: Places cursor at `{{cursor}}` location
+
+### Template Debugging
+
+If a template isn't working as expected:
+
+1. **Check Syntax**: Ensure `{{}}` brackets are properly closed
+2. **JavaScript Errors**: Check browser console for JS errors
+3. **Variable Names**: Verify variable names are spelled correctly
+4. **File Location**: Ensure template is in the templates directory
+
+## Best Practices
+
+### Template Design
+- **Start Simple**: Begin with basic variables, add complexity gradually
+- **Clear Naming**: Use descriptive template file names
+- **Organize by Type**: Group related templates in folders
+- **Document Variables**: Include comments explaining custom variables
+
+### Variable Usage
+- **Consistent Naming**: Use clear, descriptive variable names
+- **Default Values**: Provide fallbacks for optional variables
+- **Type Safety**: Validate input types in JavaScript blocks
+
+### JavaScript Best Practices
+- **Keep It Simple**: Complex logic can make templates hard to maintain
+- **Error Handling**: Use try/catch for robust templates
+- **Performance**: Avoid expensive operations in template JS
+- **Readability**: Comment complex JavaScript logic
+
+### Template Maintenance
+- **Version Control**: Keep templates in version control
+- **Regular Review**: Update templates as needs evolve
+- **Share Templates**: Create a template library for your team
+- **Backup**: Regular backups of your template collection
+
+## Integration with Other Features
+
+### Command Palette
+Templates integrate seamlessly with the Command Palette for:
+- Quick template insertion
+- Template search and discovery
+- Recent template access
+
+### File Management
+- Templates respect your workspace organization
+- Template files can be managed like any other files
+- Support for nested template directories
+
+### Plugin System
+Plugins can extend the template system by:
+- Adding custom variables
+- Providing template sources
+- Enhancing JavaScript capabilities
+
+> **Next Steps**: 
+> - Learn about [Plugin Development](../../developers/plugins/plugin-development.md) to extend templates
+> - Explore [Advanced Workflows](../workflow-optimization.md) using templates
+> - Check the [Template API Reference](../../reference/api/template-api.md) for developers

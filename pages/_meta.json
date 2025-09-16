@@ -1,10 +1,16 @@
 {
   "index": "Introduction",
-  "getting-started": "Getting Started",
-  "features": "Features",
-  "task-management": "Task Management",
-  "shortcuts": "Keyboard Shortcuts",
-  "development": "Development",
-  "api": "API Reference",
-  "changelog": "Changelog"
+  "getting-started": "🚀 Getting Started", 
+  "essentials": "📖 Essentials",
+  "advanced": "🎯 Advanced",
+  "developers": "🔧 Developers",
+  "reference": "📚 Reference", 
+  "tutorials": "📋 Tutorials",
+  "support": "🆘 Support",
+  "---": {
+    "type": "separator"
+  },
+  "task-management": "📋 Task Management",
+  "shortcuts": "⌨️ Shortcuts",
+  "changelog": "📈 Changelog"
 }

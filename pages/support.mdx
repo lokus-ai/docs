@@ -1,0 +1,207 @@
+# Support & Help
+
+Get help with Lokus, find answers to common questions, and connect with the community.
+
+## Getting Help
+
+### Quick Self-Help
+- **[Documentation Search](/)** - Search all documentation
+- **[FAQ](#frequently-asked-questions)** - Common questions and answers
+- **[Troubleshooting](#troubleshooting)** - Solutions to common issues
+- **[Keyboard Shortcuts](shortcuts)** - Quick reference for all shortcuts
+
+### Community Support
+- **[GitHub Discussions](https://github.com/lokus-ai/lokus/discussions)** - Ask questions and get community help
+- **[GitHub Issues](https://github.com/lokus-ai/lokus/issues)** - Report bugs and request features
+- **User Forums** - Community discussions (coming soon)
+- **Discord Server** - Real-time chat support (coming soon)
+
+### Professional Support
+- **Priority Support** - For teams and organizations (coming soon)
+- **Training Services** - Onboarding and workflow optimization (coming soon)
+- **Custom Development** - Plugin and integration development (coming soon)
+
+## Frequently Asked Questions
+
+### Getting Started
+
+**Q: How do I install Lokus?**
+A: Download the latest release from our [Getting Started](getting-started) page. On macOS, download the DMG file, open it, and drag Lokus to your Applications folder.
+
+**Q: What file formats does Lokus support?**
+A: Lokus works best with Markdown (.md) files but also supports plain text (.txt) and provides syntax highlighting for many code file types.
+
+**Q: Can I import my existing notes?**
+A: Yes! Lokus can open any text-based files. Simply point Lokus to your existing notes folder or copy files into your Lokus workspace.
+
+**Q: Is my data stored locally?**
+A: Yes, all your notes are stored locally on your computer. Lokus doesn't require an internet connection and doesn't store your data on external servers.
+
+### Using Lokus
+
+**Q: How do I create a new note?**
+A: Press `⌘K` to open the Command Palette, type "new", and press Enter. You can also use `⌘N` or go to File → New File.
+
+**Q: What's the Command Palette?**
+A: The Command Palette (`⌘K`) is your main interface for accessing features, finding files, and executing commands quickly. It's the fastest way to do almost anything in Lokus.
+
+**Q: How do I link notes together?**
+A: Use wiki-style links with double brackets: `[[Note Name]]`. This creates connections between your notes that you can navigate by clicking.
+
+**Q: Can I customize the appearance?**
+A: Yes! Go to Lokus → Preferences to adjust fonts, themes, and other visual settings. You can also create custom themes through the plugin system.
+
+### Advanced Features
+
+**Q: What are templates and how do I use them?**
+A: Templates are reusable content patterns with dynamic variables. Press `⌘K`, type "template", and select from available templates. Learn more in our [Templates guide](advanced/customization/templates).
+
+**Q: How do I create a plugin?**
+A: Use the Plugin CLI: `npm install -g @lokus/plugin-cli` then `lokus-plugin create my-plugin`. See our [Plugin Development guide](developers/plugins/plugin-development) for details.
+
+**Q: Can I sync my notes across devices?**
+A: Lokus stores files locally, but you can sync using cloud storage services like iCloud, Dropbox, or Google Drive by pointing Lokus to a synced folder.
+
+### Troubleshooting
+
+**Q: Lokus won't start on macOS - security warning**
+A: Go to System Preferences → Security & Privacy → General, and click "Open Anyway" for Lokus. Alternatively, run: `xattr -d com.apple.quarantine /Applications/Lokus.app`
+
+**Q: Files aren't showing in the sidebar**
+A: Make sure you've opened a folder (File → Open Folder) and that your files are in supported formats (.md, .txt, etc.).
+
+**Q: Performance is slow with large files**
+A: Lokus works best with files under 1MB. Consider breaking large files into smaller sections or using the outline/folding features.
+
+**Q: Plugin isn't working**
+A: Check that the plugin is properly installed and activated. Look in the developer console (View → Developer → Toggle Developer Tools) for error messages.
+
+## Troubleshooting
+
+### Installation Issues
+
+#### macOS
+- **"App is damaged and can't be opened"**: Download a fresh copy from our official site
+- **"App can't be opened because it's from an unidentified developer"**: Allow in Security & Privacy settings
+- **Quarantine issues**: Run `xattr -d com.apple.quarantine /Applications/Lokus.app`
+
+#### Windows
+- **Windows Defender warning**: Add Lokus to your exclusions list
+- **Missing dependencies**: Install Visual C++ Redistributable if needed
+- **Permission errors**: Run as administrator for initial setup
+
+#### Linux
+- **Package dependencies**: Install required system libraries
+- **AppImage won't run**: Make the file executable: `chmod +x Lokus.AppImage`
+- **File associations**: Set up .md file associations manually
+
+### Performance Issues
+
+#### Large Files
+- **Slow loading**: Break files into smaller sections (< 1MB recommended)
+- **Laggy typing**: Disable live preview for very large documents
+- **Memory usage**: Restart Lokus periodically with large workspaces
+
+#### Many Files
+- **Slow sidebar**: Organize files into subdirectories
+- **Search slowdown**: Index large workspaces may take time initially
+- **File watching**: Disable file watching for very large directories
+
+### Feature-Specific Issues
+
+#### Templates
+- **Variables not working**: Check syntax: `{{variable}}` format
+- **JavaScript errors**: Check browser console for error details
+- **Template not found**: Verify template is in correct directory
+
+#### Plugins
+- **Plugin not loading**: Check plugin is compatible with your Lokus version
+- **API errors**: Verify plugin uses current API version
+- **Permission issues**: Some plugins may require additional permissions
+
+#### File Management
+- **Can't save files**: Check file permissions and disk space
+- **Missing files**: Verify file path and workspace settings
+- **Sync conflicts**: Handle cloud storage conflicts manually
+
+## Error Messages
+
+### Common Error Messages and Solutions
+
+**"Cannot read file"**
+- Check file permissions
+- Verify file path is correct
+- Ensure file isn't locked by another application
+
+**"Plugin failed to load"**
+- Update plugin to latest version
+- Check plugin compatibility
+- Review plugin documentation
+
+**"Workspace not found"**
+- Verify workspace path exists
+- Check folder permissions
+- Re-open workspace folder
+
+**"Save failed"**
+- Check available disk space
+- Verify write permissions
+- Ensure filename is valid
+
+## Community Guidelines
+
+### Getting Good Help
+- **Be specific**: Include error messages, steps to reproduce, and system information
+- **Search first**: Check if your question has been answered before
+- **Provide context**: Share relevant configuration and workflow details
+- **Be patient**: Community volunteers help in their free time
+
+### Helping Others
+- **Be kind**: Remember everyone was a beginner once
+- **Be thorough**: Provide complete answers with context
+- **Stay on topic**: Keep discussions focused and relevant
+- **Share knowledge**: Document solutions for future users
+
+## Contributing to Support
+
+### Improving Documentation
+- **Report gaps**: Let us know what's missing or unclear
+- **Suggest improvements**: Better explanations, examples, or organization
+- **Add examples**: Real-world usage examples are valuable
+- **Fix errors**: Correct any mistakes you find
+
+### Community Support
+- **Answer questions**: Help other users in discussions
+- **Create tutorials**: Share your workflows and techniques
+- **Test features**: Help test new features and report issues
+- **Spread the word**: Share Lokus with others who might benefit
+
+## Contact Information
+
+### Bug Reports
+**GitHub Issues**: [Report bugs](https://github.com/lokus-ai/lokus/issues)
+- Include system information (OS, version)
+- Describe steps to reproduce
+- Attach relevant files if possible
+
+### Feature Requests
+**GitHub Discussions**: [Request features](https://github.com/lokus-ai/lokus/discussions)
+- Describe the use case
+- Explain why the feature would be valuable
+- Consider how it fits with existing features
+
+### General Questions
+**GitHub Discussions**: [Ask questions](https://github.com/lokus-ai/lokus/discussions)
+- Check existing discussions first
+- Provide context about your workflow
+- Be specific about what you're trying to achieve
+
+### Security Issues
+**Email**: security@lokus.ai (for security vulnerabilities only)
+- Don't post security issues publicly
+- Provide detailed information about the vulnerability
+- Allow reasonable time for response
+
+---
+
+*We're here to help you succeed with Lokus. Don't hesitate to reach out if you need assistance, and consider helping other users once you become more experienced!*
