@@ -1,0 +1,737 @@
+# Platform Architecture
+
+Lokus features a sophisticated platform abstraction layer that provides consistent functionality across Windows, macOS, and Linux while leveraging platform-specific capabilities. This guide explains the technical architecture and implementation details.
+
+## Architecture Overview
+
+### Design Principles
+
+The platform architecture follows these core principles:
+
+1. **Trait-based Abstraction** - Common operations defined as traits with platform-specific implementations
+2. **Compile-time Safety** - Platform-specific code conditionally compiled for target OS
+3. **Runtime Feature Detection** - Dynamic capability checking for graceful degradation
+4. **Unified Error Handling** - Consistent error types and user messaging across platforms
+5. **Clean Separation** - Business logic isolated from platform-dependent code
+
+### System Architecture Diagram
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     Frontend (React)                       │
+├─────────────────────────────────────────────────────────────┤
+│              Platform Utilities (JavaScript)               │
+├─────────────────────────────────────────────────────────────┤
+│                   Tauri IPC Bridge                         │
+├─────────────────────────────────────────────────────────────┤
+│              Platform Abstraction Layer (Rust)             │
+├─────────────────┬─────────────────┬─────────────────────────┤
+│ Windows Module  │  macOS Module   │    Linux Module         │
+├─────────────────┼─────────────────┼─────────────────────────┤
+│   Win32 APIs    │   Cocoa APIs    │    GTK/X11 APIs        │
+│   WebView2      │   WKWebView     │    WebKitGTK           │
+│   Windows SDK   │   Foundation    │    GLib/GIO            │
+└─────────────────┴─────────────────┴─────────────────────────┘
+```
+
+## Platform Abstraction Layer
+
+### Core Traits
+
+The platform abstraction layer defines several key traits that each platform implements:
+
+#### FileSystemOperations
+```rust
+pub trait FileSystemOperations {
+    /// Reveal a file or directory in the platform's file manager
+    fn reveal_in_file_manager(&self, path: &Path) -> Result<(), PlatformError>;
+    
+    /// Open a terminal at the specified directory  
+    fn open_terminal(&self, path: &Path) -> Result<(), PlatformError>;
+}
+```
+
+#### SystemIntegration
+```rust
+pub trait SystemIntegration {
+    /// Get the platform name for debugging/logging
+    fn platform_name(&self) -> &'static str;
+    
+    /// Check if a specific feature is supported
+    fn supports_feature(&self, feature: PlatformFeature) -> bool;
+    
+    /// Get platform-specific configuration
+    fn get_platform_config(&self) -> PlatformConfig;
+}
+```
+
+#### ClipboardOperations
+```rust
+pub trait ClipboardOperations {
+    /// Read text content from clipboard
+    fn read_text(&self) -> Result<String, PlatformError>;
+    
+    /// Write text content to clipboard
+    fn write_text(&self, text: &str) -> Result<(), PlatformError>;
+    
+    /// Read HTML content from clipboard (if supported)
+    fn read_html(&self) -> Result<Option<String>, PlatformError>;
+    
+    /// Write HTML content to clipboard
+    fn write_html(&self, html: &str, fallback_text: &str) -> Result<(), PlatformError>;
+}
+```
+
+#### PlatformProvider
+```rust
+pub trait PlatformProvider: FileSystemOperations + SystemIntegration + Send + Sync {
+    /// Initialize platform-specific resources
+    fn initialize(&mut self) -> Result<(), PlatformError>;
+    
+    /// Clean up platform-specific resources
+    fn cleanup(&mut self) -> Result<(), PlatformError>;
+}
+```
+
+### Platform Features
+
+The system includes runtime feature detection for platform-specific capabilities:
+
+```rust
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PlatformFeature {
+    FileManagerReveal,
+    TerminalLaunch,
+    CustomTerminal,
+    QuickLook,           // macOS only
+    ContextMenus,
+    NativeNotifications,
+    GlobalShortcuts,
+    SystemTray,
+    TouchBar,           // macOS only
+    WindowsRegistry,    // Windows only
+}
+```
+
+### Error Handling
+
+Unified error handling provides consistent error reporting across platforms:
+
+```rust
+#[derive(Debug, Clone)]
+pub struct PlatformError {
+    pub kind: PlatformErrorKind,
+    pub message: String,
+    pub platform_code: Option<i32>,
+    pub context: HashMap<String, String>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum PlatformErrorKind {
+    PermissionDenied,
+    ApplicationNotFound,
+    PathNotFound,
+    UnsupportedOperation,
+    NetworkError,
+    ConfigurationError,
+    Unknown,
+}
+```
+
+## Platform-Specific Implementations
+
+### Windows Implementation
+
+**File System Operations:**
+```rust
+impl FileSystemOperations for WindowsPlatform {
+    fn reveal_in_file_manager(&self, path: &Path) -> Result<(), PlatformError> {
+        use std::process::Command;
+        
+        let path_str = path.to_string_lossy();
+        let result = Command::new("explorer")
+            .args(&["/select,", &path_str])
+            .spawn();
+            
+        match result {
+            Ok(_) => Ok(()),
+            Err(e) => Err(PlatformError::new(
+                PlatformErrorKind::ApplicationNotFound,
+                format!("Failed to open Explorer: {}", e)
+            ))
+        }
+    }
+    
+    fn open_terminal(&self, path: &Path) -> Result<(), PlatformError> {
+        // Windows Terminal, PowerShell, or CMD fallback
+        let terminals = ["wt.exe", "powershell.exe", "cmd.exe"];
+        
+        for terminal in &terminals {
+            let result = Command::new(terminal)
+                .current_dir(path)
+                .spawn();
+                
+            if result.is_ok() {
+                return Ok(());
+            }
+        }
+        
+        Err(PlatformError::new(
+            PlatformErrorKind::ApplicationNotFound,
+            "No suitable terminal application found".to_string()
+        ))
+    }
+}
+```
+
+**System Integration:**
+```rust
+impl SystemIntegration for WindowsPlatform {
+    fn platform_name(&self) -> &'static str {
+        "Windows"
+    }
+    
+    fn supports_feature(&self, feature: PlatformFeature) -> bool {
+        match feature {
+            PlatformFeature::FileManagerReveal => true,
+            PlatformFeature::TerminalLaunch => true,
+            PlatformFeature::WindowsRegistry => true,
+            PlatformFeature::TouchBar => false,
+            PlatformFeature::QuickLook => false,
+            _ => true,
+        }
+    }
+    
+    fn get_platform_config(&self) -> PlatformConfig {
+        PlatformConfig {
+            preferred_terminal: Some("wt.exe".to_string()),
+            file_manager_name: "Explorer".to_string(),
+            native_dialogs: true,
+            path_separator: '\\',
+        }
+    }
+}
+```
+
+### macOS Implementation
+
+**File System Operations:**
+```rust
+impl FileSystemOperations for MacOsPlatform {
+    fn reveal_in_file_manager(&self, path: &Path) -> Result<(), PlatformError> {
+        use std::process::Command;
+        
+        let result = Command::new("open")
+            .args(&["-R", &path.to_string_lossy()])
+            .spawn();
+            
+        match result {
+            Ok(_) => Ok(()),
+            Err(e) => Err(PlatformError::new(
+                PlatformErrorKind::ApplicationNotFound,
+                format!("Failed to open Finder: {}", e)
+            ))
+        }
+    }
+    
+    fn open_terminal(&self, path: &Path) -> Result<(), PlatformError> {
+        // Use AppleScript for proper Terminal.app integration
+        let script = format!(
+            r#"tell application "Terminal"
+                activate
+                do script "cd '{}'"
+            end tell"#,
+            path.to_string_lossy()
+        );
+        
+        let result = Command::new("osascript")
+            .args(&["-e", &script])
+            .spawn();
+            
+        match result {
+            Ok(_) => Ok(()),
+            Err(e) => Err(PlatformError::new(
+                PlatformErrorKind::ApplicationNotFound,
+                format!("Failed to open Terminal: {}", e)
+            ))
+        }
+    }
+}
+```
+
+**System Integration:**
+```rust
+impl SystemIntegration for MacOsPlatform {
+    fn platform_name(&self) -> &'static str {
+        "macOS"
+    }
+    
+    fn supports_feature(&self, feature: PlatformFeature) -> bool {
+        match feature {
+            PlatformFeature::QuickLook => true,
+            PlatformFeature::TouchBar => true,
+            PlatformFeature::WindowsRegistry => false,
+            _ => true,
+        }
+    }
+    
+    fn get_platform_config(&self) -> PlatformConfig {
+        PlatformConfig {
+            preferred_terminal: Some("Terminal.app".to_string()),
+            file_manager_name: "Finder".to_string(),
+            native_dialogs: true,
+            path_separator: '/',
+        }
+    }
+}
+```
+
+### Linux Implementation
+
+**File System Operations:**
+```rust
+impl FileSystemOperations for LinuxPlatform {
+    fn reveal_in_file_manager(&self, path: &Path) -> Result<(), PlatformError> {
+        use std::process::Command;
+        
+        // Try different file managers in order of preference
+        let file_managers = [
+            ("nautilus", vec!["--select".to_string()]),
+            ("dolphin", vec!["--select".to_string()]),
+            ("thunar", vec![]),
+            ("pcmanfm", vec![]),
+            ("xdg-open", vec![]),
+        ];
+        
+        let path_str = path.to_string_lossy().to_string();
+        
+        for (manager, mut args) in file_managers.iter() {
+            args.push(path_str.clone());
+            
+            let result = Command::new(manager)
+                .args(&args)
+                .spawn();
+                
+            if result.is_ok() {
+                return Ok(());
+            }
+        }
+        
+        Err(PlatformError::new(
+            PlatformErrorKind::ApplicationNotFound,
+            "No suitable file manager found".to_string()
+        ))
+    }
+    
+    fn open_terminal(&self, path: &Path) -> Result<(), PlatformError> {
+        let terminals = [
+            ("gnome-terminal", vec!["--working-directory".to_string()]),
+            ("konsole", vec!["--workdir".to_string()]),
+            ("xfce4-terminal", vec!["--working-directory".to_string()]),
+            ("xterm", vec!["-e".to_string(), "cd".to_string()]),
+        ];
+        
+        let path_str = path.to_string_lossy().to_string();
+        
+        for (terminal, mut args) in terminals.iter() {
+            args.push(path_str.clone());
+            
+            let result = Command::new(terminal)
+                .args(&args)
+                .spawn();
+                
+            if result.is_ok() {
+                return Ok(());
+            }
+        }
+        
+        Err(PlatformError::new(
+            PlatformErrorKind::ApplicationNotFound,
+            "No suitable terminal application found".to_string()
+        ))
+    }
+}
+```
+
+**System Integration:**
+```rust
+impl SystemIntegration for LinuxPlatform {
+    fn platform_name(&self) -> &'static str {
+        "Linux"
+    }
+    
+    fn supports_feature(&self, feature: PlatformFeature) -> bool {
+        match feature {
+            PlatformFeature::QuickLook => false,
+            PlatformFeature::TouchBar => false,
+            PlatformFeature::WindowsRegistry => false,
+            _ => true,
+        }
+    }
+    
+    fn get_platform_config(&self) -> PlatformConfig {
+        PlatformConfig {
+            preferred_terminal: self.detect_terminal(),
+            file_manager_name: self.detect_file_manager(),
+            native_dialogs: true,
+            path_separator: '/',
+        }
+    }
+}
+```
+
+## Frontend Platform Utilities
+
+### JavaScript Platform Detection
+
+The frontend includes a comprehensive platform detection and utility system:
+
+```javascript
+// src/utils/platform.js
+
+export const PLATFORMS = {
+  WINDOWS: 'windows',
+  MACOS: 'macos',
+  LINUX: 'linux',
+  UNKNOWN: 'unknown'
+};
+
+export function detectPlatform() {
+  if (typeof window !== 'undefined' && window.__TAURI__) {
+    const userAgent = navigator.userAgent.toLowerCase();
+    
+    if (userAgent.includes('windows')) return PLATFORMS.WINDOWS;
+    if (userAgent.includes('mac')) return PLATFORMS.MACOS;
+    if (userAgent.includes('linux')) return PLATFORMS.LINUX;
+  }
+  
+  return PLATFORMS.UNKNOWN;
+}
+```
+
+### Platform-Specific UI Adaptations
+
+```javascript
+export function getPlatformUIPreferences() {
+  const platform = getCurrentPlatform();
+  
+  return {
+    showScrollbars: platform !== PLATFORMS.MACOS,
+    useNativeContextMenus: platform === PLATFORMS.MACOS,
+    windowControlsPosition: platform === PLATFORMS.MACOS ? 'left' : 'right',
+    titleBarStyle: platform === PLATFORMS.MACOS ? 'transparent' : 'default',
+    animationDuration: platform === PLATFORMS.MACOS ? 300 : 200
+  };
+}
+```
+
+### Keyboard Shortcut Mapping
+
+```javascript
+export const MODIFIER_KEYS = {
+  [PLATFORMS.WINDOWS]: {
+    primary: 'Ctrl',
+    secondary: 'Alt',
+    symbol: 'Ctrl'
+  },
+  [PLATFORMS.MACOS]: {
+    primary: 'Cmd',
+    secondary: 'Option',
+    symbol: '⌘'
+  },
+  [PLATFORMS.LINUX]: {
+    primary: 'Ctrl',
+    secondary: 'Alt',
+    symbol: 'Ctrl'
+  }
+};
+
+export function createShortcut(key, options = {}) {
+  const modifiers = getModifierKeys();
+  const parts = [];
+  
+  if (options.primary) parts.push(modifiers.primary);
+  if (options.secondary) parts.push(modifiers.secondary);
+  if (options.shift) parts.push('Shift');
+  
+  parts.push(key);
+  return parts.join('+');
+}
+```
+
+## IPC Bridge Integration
+
+### Tauri Command Handlers
+
+The platform abstraction layer integrates with Tauri's command system:
+
+```rust
+use crate::platform::get_platform_provider;
+
+#[tauri::command]
+pub async fn reveal_in_file_manager(path: String) -> Result<(), String> {
+    let provider = get_platform_provider();
+    let path = std::path::Path::new(&path);
+    
+    provider.reveal_in_file_manager(path)
+        .map_err(|e| e.user_message())
+}
+
+#[tauri::command]
+pub async fn open_terminal(path: String) -> Result<(), String> {
+    let provider = get_platform_provider();
+    let path = std::path::Path::new(&path);
+    
+    provider.open_terminal(path)
+        .map_err(|e| e.user_message())
+}
+
+#[tauri::command]
+pub async fn get_platform_info() -> PlatformInfo {
+    let provider = get_platform_provider();
+    
+    PlatformInfo {
+        name: provider.platform_name().to_string(),
+        config: provider.get_platform_config(),
+        supported_features: PlatformFeature::all()
+            .into_iter()
+            .filter(|&feature| provider.supports_feature(feature))
+            .collect(),
+    }
+}
+```
+
+### Frontend Integration
+
+```javascript
+import { invoke } from '@tauri-apps/api/core';
+
+export async function revealInFileManager(path) {
+  try {
+    await invoke('reveal_in_file_manager', { path });
+  } catch (error) {
+    console.error('Failed to reveal file:', error);
+    throw new Error(`Could not reveal file: ${error}`);
+  }
+}
+
+export async function openTerminalAt(path) {
+  try {
+    await invoke('open_terminal', { path });
+  } catch (error) {
+    console.error('Failed to open terminal:', error);
+    throw new Error(`Could not open terminal: ${error}`);
+  }
+}
+
+export async function getPlatformInfo() {
+  try {
+    return await invoke('get_platform_info');
+  } catch (error) {
+    console.error('Failed to get platform info:', error);
+    return null;
+  }
+}
+```
+
+## Configuration Management
+
+### Platform-Specific Settings
+
+Each platform can have different default configurations:
+
+```rust
+impl PlatformConfig {
+    pub fn default_for_platform(platform: &str) -> Self {
+        match platform {
+            "Windows" => PlatformConfig {
+                preferred_terminal: Some("wt.exe".to_string()),
+                file_manager_name: "Explorer".to_string(),
+                native_dialogs: true,
+                path_separator: '\\',
+                window_decorations: true,
+                system_theme_integration: true,
+            },
+            "macOS" => PlatformConfig {
+                preferred_terminal: Some("Terminal.app".to_string()),
+                file_manager_name: "Finder".to_string(),
+                native_dialogs: true,
+                path_separator: '/',
+                window_decorations: false, // Custom title bar
+                system_theme_integration: true,
+            },
+            "Linux" => PlatformConfig {
+                preferred_terminal: None, // Auto-detect
+                file_manager_name: "File Manager".to_string(),
+                native_dialogs: true,
+                path_separator: '/',
+                window_decorations: true,
+                system_theme_integration: true,
+            },
+            _ => PlatformConfig::default(),
+        }
+    }
+}
+```
+
+### Runtime Configuration
+
+```javascript
+// Platform-specific configuration loading
+export async function loadPlatformConfig() {
+  const platformInfo = await getPlatformInfo();
+  const platform = getCurrentPlatform();
+  
+  const config = {
+    ...platformInfo.config,
+    ...getStoredUserPreferences(platform),
+    ...getEnvironmentOverrides()
+  };
+  
+  return config;
+}
+```
+
+## Performance Considerations
+
+### Lazy Loading
+
+Platform-specific code is loaded only when needed:
+
+```rust
+pub struct PlatformProvider {
+    implementation: OnceCell<Box<dyn PlatformImpl>>,
+}
+
+impl PlatformProvider {
+    pub fn get(&self) -> &dyn PlatformImpl {
+        self.implementation.get_or_init(|| {
+            #[cfg(target_os = "windows")]
+            return Box::new(WindowsPlatform::new());
+            
+            #[cfg(target_os = "macos")]
+            return Box::new(MacOsPlatform::new());
+            
+            #[cfg(target_os = "linux")]
+            return Box::new(LinuxPlatform::new());
+        })
+    }
+}
+```
+
+### Caching
+
+Platform information and capabilities are cached:
+
+```rust
+pub struct CachedPlatformProvider {
+    provider: Box<dyn PlatformProvider>,
+    feature_cache: RwLock<HashMap<PlatformFeature, bool>>,
+    config_cache: OnceCell<PlatformConfig>,
+}
+
+impl CachedPlatformProvider {
+    pub fn supports_feature(&self, feature: PlatformFeature) -> bool {
+        {
+            let cache = self.feature_cache.read().unwrap();
+            if let Some(&result) = cache.get(&feature) {
+                return result;
+            }
+        }
+        
+        let result = self.provider.supports_feature(feature);
+        let mut cache = self.feature_cache.write().unwrap();
+        cache.insert(feature, result);
+        result
+    }
+}
+```
+
+## Testing Strategy
+
+### Unit Testing
+
+Each platform implementation includes comprehensive unit tests:
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::TempDir;
+    
+    #[test]
+    fn test_reveal_in_file_manager() {
+        let provider = get_platform_provider();
+        let temp_dir = TempDir::new().unwrap();
+        
+        let result = provider.reveal_in_file_manager(temp_dir.path());
+        assert!(result.is_ok());
+    }
+    
+    #[test]
+    fn test_feature_detection() {
+        let provider = get_platform_provider();
+        
+        // All platforms should support basic file operations
+        assert!(provider.supports_feature(PlatformFeature::FileManagerReveal));
+        assert!(provider.supports_feature(PlatformFeature::TerminalLaunch));
+        
+        // Platform-specific features
+        #[cfg(target_os = "macos")]
+        assert!(provider.supports_feature(PlatformFeature::QuickLook));
+        
+        #[cfg(not(target_os = "macos"))]
+        assert!(!provider.supports_feature(PlatformFeature::QuickLook));
+    }
+}
+```
+
+### Integration Testing
+
+Cross-platform integration tests validate the abstraction layer:
+
+```rust
+#[cfg(test)]
+mod integration_tests {
+    use super::*;
+    
+    #[test]
+    fn test_cross_platform_consistency() {
+        let provider = get_platform_provider();
+        
+        // Platform name should never be empty
+        assert!(!provider.platform_name().is_empty());
+        
+        // Config should be valid
+        let config = provider.get_platform_config();
+        assert!(!config.file_manager_name.is_empty());
+        assert!(['/','\\'].contains(&config.path_separator));
+    }
+}
+```
+
+## Extension Points
+
+### Adding New Platforms
+
+To add support for a new platform:
+
+1. **Create platform module** (`src-tauri/src/platform/new_platform.rs`)
+2. **Implement traits** (`FileSystemOperations`, `SystemIntegration`, etc.)
+3. **Add conditional compilation** in `mod.rs`
+4. **Update feature detection** in frontend utilities
+5. **Add platform-specific tests**
+
+### Adding New Features
+
+To add a new cross-platform feature:
+
+1. **Define trait method** in appropriate trait
+2. **Add to PlatformFeature enum** if optional
+3. **Implement in all platforms** with appropriate fallbacks
+4. **Add frontend wrapper** functions
+5. **Update documentation** and examples
+
+---
+
+*For implementation examples and best practices, see our [Developer Setup Guide](/developer-setup) and [Build System Documentation](/build-system).*

@@ -1,10 +1,49 @@
+import { Sparkles, Rocket, Timer, Zap, Clipboard, Keyboard, Wrench, BookOpen, Apple, Monitor, Lightbulb, Construction, Play } from 'lucide-react'
+
 # Welcome to Lokus
 
-🌌 **Lokus** is a modern, intuitive note-taking application with powerful editing capabilities, built with Tauri and React.
+**Lokus** is a modern, intuitive note-taking application with powerful editing capabilities, built with Tauri and React.
 
-## ✨ Key Features
+<div style={{
+  background: 'rgba(0, 0, 0, 0.02)',
+  padding: '2rem',
+  borderRadius: '1rem',
+  border: '1px solid rgba(0, 0, 0, 0.1)',
+  margin: '2rem 0'
+}}>
+  <div style={{ textAlign: 'center' }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+      <Rocket size={24} style={{ color: '#1a1a1a', strokeWidth: 1.5 }} />
+      <h2 style={{ margin: '0', fontSize: '1.5rem', color: '#1a1a1a' }}>Ready to get started?</h2>
+    </div>
+    <p style={{ margin: '0 0 1.5rem 0', opacity: 0.7 }}>Transform your note-taking experience with Lokus</p>
+    <a href="/getting-started" style={{
+      background: '#1a1a1a',
+      color: 'white',
+      padding: '0.75rem 2rem',
+      borderRadius: '0.5rem',
+      textDecoration: 'none',
+      fontWeight: 'bold',
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      transition: 'all 0.2s ease',
+      border: '1px solid transparent'
+    }}>
+      Get Started Now
+      <Play size={16} style={{ strokeWidth: 1.5 }} />
+    </a>
+  </div>
+</div>
 
-- **📋 Task Management** - Integrated kanban system with `!task` and `@task` triggers
+## Key Features
+
+<div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
+  <Sparkles size={20} style={{ color: '#1a1a1a', strokeWidth: 1.5 }} />
+  <span style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>Powerful capabilities</span>
+</div>
+
+- **Task Management** - Integrated kanban system with `!task` and `@task` triggers
 - **⌘K Command Palette** - Quick access to files, actions, and commands
 - **Rich Markdown Editor** - TipTap-powered editor with live preview
 - **Context Menus** - VS Code-style right-click menus for enhanced workflow
@@ -13,17 +52,95 @@
 - **Fluid UX** - Smooth animations and responsive design
 - **Cross-Platform** - Built with Tauri for desktop performance
 
-## 🚀 Quick Start
+## Quick Start
 
-### macOS
+<div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
+  <Rocket size={20} style={{ color: '#1a1a1a', strokeWidth: 1.5 }} />
+  <span style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>Get up and running</span>
+</div>
+
+<div style={{
+  background: 'rgba(0, 0, 0, 0.02)',
+  padding: '1.5rem',
+  borderRadius: '1rem',
+  border: '1px solid rgba(0, 0, 0, 0.08)',
+  margin: '1.5rem 0'
+}}>
+  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+    <Timer size={20} style={{ color: '#1a1a1a', strokeWidth: 1.5 }} />
+    <strong style={{ color: '#1a1a1a' }}>Ready in 5 minutes</strong>
+  </div>
+  <p style={{ margin: '0', opacity: 0.6 }}>Get Lokus running on your system in just a few steps. Choose your platform below and follow the installation guide.</p>
+</div>
+
+<div style={{
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+  gap: '1.5rem',
+  margin: '2rem 0'
+}}>
+  <div style={{
+    padding: '1.5rem',
+    background: 'rgba(0, 0, 0, 0.02)',
+    border: '1px solid rgba(0, 0, 0, 0.08)',
+    borderRadius: '1rem'
+  }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+      <Apple size={24} style={{ color: '#1a1a1a', strokeWidth: 1.5 }} />
+      <h3 style={{ margin: '0', color: '#1a1a1a' }}>macOS</h3>
+    </div>
+    
 ```bash
 # Download the latest release for macOS
 curl -L https://github.com/lokus-ai/lokus/releases/latest/download/Lokus.dmg -o Lokus.dmg
 open Lokus.dmg
 ```
 
-### Windows & Linux
-Coming soon - Windows and Linux builds are in development.
+<div style={{
+  background: 'rgba(0, 0, 0, 0.04)',
+  padding: '1rem',
+  borderRadius: '0.5rem',
+  marginTop: '1rem',
+  fontSize: '0.9rem'
+}}>
+  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
+    <Lightbulb size={16} style={{ color: '#1a1a1a', opacity: 0.8, marginTop: '2px', strokeWidth: 1.5 }} />
+    <div>
+      <strong style={{ opacity: 0.8 }}>Installation Tip:</strong> <span style={{ opacity: 0.7 }}>After downloading, simply drag Lokus to your Applications folder. The app is notarized and will run without security warnings.</span>
+    </div>
+  </div>
+</div>
+  </div>
+
+  <div style={{
+    padding: '1.5rem',
+    background: 'rgba(0, 0, 0, 0.02)',
+    border: '1px solid rgba(0, 0, 0, 0.05)',
+    borderRadius: '1rem',
+    opacity: 0.6
+  }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+      <Monitor size={24} style={{ color: '#666', opacity: 0.6, strokeWidth: 1.5 }} />
+      <h3 style={{ margin: '0', color: '#666', opacity: 0.8 }}>Windows & Linux</h3>
+    </div>
+    
+<div style={{
+  background: 'rgba(0, 0, 0, 0.03)',
+  padding: '1rem',
+  borderRadius: '0.5rem',
+  textAlign: 'center'
+}}>
+  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center', marginBottom: '0.5rem' }}>
+    <Construction size={16} style={{ color: '#666', opacity: 0.7, strokeWidth: 1.5 }} />
+    <strong style={{ opacity: 0.7 }}>Coming Soon</strong>
+  </div>
+  <span style={{ fontSize: '0.9rem', opacity: 0.6 }}>
+    Windows and Linux builds are in active development.<br/>
+    Join our <a href="https://discord.gg/your-discord" style={{ color: '#1a1a1a', textDecoration: 'underline' }}>Discord</a> for updates on release timelines.
+  </span>
+</div>
+  </div>
+</div>
 
 ## 🎯 What Makes Lokus Special?
 
@@ -48,22 +165,115 @@ Comprehensive testing and documentation:
 - Extensible plugin architecture
 - Open source and customizable
 
-## 📚 Documentation
+## Documentation
 
-### 🚀 [Getting Started](/getting-started)
-Learn how to install and set up Lokus on your system.
+<div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
+  <BookOpen size={20} style={{ color: '#1a1a1a', strokeWidth: 1.5 }} />
+  <span style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>Explore the docs</span>
+</div>
 
-### ⚡ [Features](/features)
-Explore all the powerful features Lokus has to offer.
+<div style={{
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+  gap: '1.5rem',
+  margin: '2rem 0'
+}}>
+  <a href="/getting-started" style={{
+    display: 'block',
+    padding: '1.5rem',
+    background: 'rgba(0, 0, 0, 0.02)',
+    border: '1px solid rgba(0, 0, 0, 0.08)',
+    borderRadius: '1rem',
+    textDecoration: 'none',
+    transition: 'all 0.3s ease'
+  }}>
+    <div style={{ marginBottom: '0.5rem' }}>
+      <Rocket size={32} style={{ color: '#1a1a1a', opacity: 0.7, strokeWidth: 1.5 }} />
+    </div>
+    <h3 style={{ margin: '0 0 0.5rem 0', color: '#1a1a1a' }}>Getting Started</h3>
+    <p style={{ margin: '0', opacity: 0.6, fontSize: '0.9rem' }}>Learn how to install and set up Lokus on your system.</p>
+  </a>
 
-### 📋 [Task Management](/task-management)
-Learn how to use the integrated kanban system for task organization.
+  <a href="/features" style={{
+    display: 'block',
+    padding: '1.5rem',
+    background: 'rgba(0, 0, 0, 0.02)',
+    border: '1px solid rgba(0, 0, 0, 0.08)',
+    borderRadius: '1rem',
+    textDecoration: 'none',
+    transition: 'all 0.3s ease'
+  }}>
+    <div style={{ marginBottom: '0.5rem' }}>
+      <Zap size={32} style={{ color: '#1a1a1a', opacity: 0.7, strokeWidth: 1.5 }} />
+    </div>
+    <h3 style={{ margin: '0 0 0.5rem 0', color: '#1a1a1a' }}>Features</h3>
+    <p style={{ margin: '0', opacity: 0.6, fontSize: '0.9rem' }}>Explore all the powerful features Lokus has to offer.</p>
+  </a>
 
-### ⌨️ [Shortcuts](/shortcuts)
-Master Lokus with powerful keyboard shortcuts.
+  <a href="/task-management" style={{
+    display: 'block',
+    padding: '1.5rem',
+    background: 'rgba(0, 0, 0, 0.02)',
+    border: '1px solid rgba(0, 0, 0, 0.08)',
+    borderRadius: '1rem',
+    textDecoration: 'none',
+    transition: 'all 0.3s ease'
+  }}>
+    <div style={{ marginBottom: '0.5rem' }}>
+      <Clipboard size={32} style={{ color: '#1a1a1a', opacity: 0.7, strokeWidth: 1.5 }} />
+    </div>
+    <h3 style={{ margin: '0 0 0.5rem 0', color: '#1a1a1a' }}>Task Management</h3>
+    <p style={{ margin: '0', opacity: 0.6, fontSize: '0.9rem' }}>Learn how to use the integrated kanban system for task organization.</p>
+  </a>
 
-### 🛠️ [Development](/development)
-Contributing to Lokus and extending its functionality.
+  <a href="/reference/keyboard-shortcuts" style={{
+    display: 'block',
+    padding: '1.5rem',
+    background: 'rgba(0, 0, 0, 0.02)',
+    border: '1px solid rgba(0, 0, 0, 0.08)',
+    borderRadius: '1rem',
+    textDecoration: 'none',
+    transition: 'all 0.3s ease'
+  }}>
+    <div style={{ marginBottom: '0.5rem' }}>
+      <Keyboard size={32} style={{ color: '#1a1a1a', opacity: 0.7, strokeWidth: 1.5 }} />
+    </div>
+    <h3 style={{ margin: '0 0 0.5rem 0', color: '#1a1a1a' }}>Shortcuts</h3>
+    <p style={{ margin: '0', opacity: 0.6, fontSize: '0.9rem' }}>Master Lokus with powerful keyboard shortcuts.</p>
+  </a>
+
+  <a href="/development" style={{
+    display: 'block',
+    padding: '1.5rem',
+    background: 'rgba(0, 0, 0, 0.02)',
+    border: '1px solid rgba(0, 0, 0, 0.08)',
+    borderRadius: '1rem',
+    textDecoration: 'none',
+    transition: 'all 0.3s ease'
+  }}>
+    <div style={{ marginBottom: '0.5rem' }}>
+      <Wrench size={32} style={{ color: '#1a1a1a', opacity: 0.7, strokeWidth: 1.5 }} />
+    </div>
+    <h3 style={{ margin: '0 0 0.5rem 0', color: '#1a1a1a' }}>Development</h3>
+    <p style={{ margin: '0', opacity: 0.6, fontSize: '0.9rem' }}>Contributing to Lokus and extending its functionality.</p>
+  </a>
+
+  <a href="/reference/api" style={{
+    display: 'block',
+    padding: '1.5rem',
+    background: 'rgba(0, 0, 0, 0.02)',
+    border: '1px solid rgba(0, 0, 0, 0.08)',
+    borderRadius: '1rem',
+    textDecoration: 'none',
+    transition: 'all 0.3s ease'
+  }}>
+    <div style={{ marginBottom: '0.5rem' }}>
+      <BookOpen size={32} style={{ color: '#1a1a1a', opacity: 0.7, strokeWidth: 1.5 }} />
+    </div>
+    <h3 style={{ margin: '0 0 0.5rem 0', color: '#1a1a1a' }}>API Reference</h3>
+    <p style={{ margin: '0', opacity: 0.6, fontSize: '0.9rem' }}>Complete API documentation and examples.</p>
+  </a>
+</div>
 
 ## 🌟 Community
 

@@ -1,0 +1,603 @@
+# Developer Setup Guide
+
+This comprehensive guide walks you through setting up a development environment for Lokus on Windows, macOS, and Linux. Whether you're contributing to the core project or building plugins, this guide has everything you need.
+
+## Prerequisites
+
+### Required Tools
+
+Before starting, ensure you have these tools installed on your development machine:
+
+| Tool | Version | Installation |
+|------|---------|-------------|
+| **Node.js** | 18.0+ (LTS recommended) | [nodejs.org](https://nodejs.org/) |
+| **npm** | 8.0+ | Included with Node.js |
+| **Rust** | 1.70+ (latest stable) | [rustup.rs](https://rustup.rs/) |
+| **Git** | Latest | [git-scm.com](https://git-scm.com/) |
+
+### Platform-Specific Requirements
+
+#### Windows Development Setup
+
+**1. Visual Studio Build Tools**
+```powershell
+# Option 1: Using winget (recommended)
+winget install Microsoft.VisualStudio.2022.BuildTools
+
+# Option 2: Using chocolatey
+choco install visualstudio2022buildtools
+
+# Option 3: Manual download
+# Download from https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022
+```
+
+**2. WebView2 SDK**
+```powershell
+# Install WebView2 SDK for development
+winget install Microsoft.EdgeWebView2
+
+# Verify installation
+Get-AppxPackage -Name "Microsoft.WebView2"
+```
+
+**3. Windows SDK**
+- Included with Visual Studio Build Tools
+- Minimum required: Windows 10 SDK (10.0.19041.0)
+- Latest recommended for best compatibility
+
+**4. Rust Windows Targets**
+```powershell
+# Add Windows targets for cross-compilation
+rustup target add x86_64-pc-windows-msvc
+rustup target add aarch64-pc-windows-msvc
+```
+
+**5. Development Environment Setup**
+```powershell
+# Set environment variables
+$env:RUST_BACKTRACE = "full"
+$env:CARGO_BUILD_JOBS = [Environment]::ProcessorCount
+
+# Install recommended tools
+winget install Microsoft.WindowsTerminal
+winget install Microsoft.VisualStudioCode
+```
+
+#### macOS Development Setup
+
+**1. Xcode Command Line Tools**
+```bash
+# Install Xcode Command Line Tools
+xcode-select --install
+
+# Verify installation
+xcode-select -p
+xcrun --show-sdk-path
+
+# For App Store distribution, install full Xcode
+# Available from Mac App Store
+```
+
+**2. Rust macOS Targets**
+```bash
+# Add macOS targets for universal binaries
+rustup target add x86_64-apple-darwin
+rustup target add aarch64-apple-darwin
+```
+
+**3. Development Tools**
+```bash
+# Install Homebrew (package manager)
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Install additional development tools
+brew install git node
+brew install --cask visual-studio-code
+```
+
+**4. Code Signing Setup (for distribution)**
+```bash
+# Install Apple Developer certificates
+# 1. Join Apple Developer Program
+# 2. Download certificates from developer.apple.com
+# 3. Install in Keychain Access
+
+# Verify code signing setup
+security find-identity -v -p codesigning
+```
+
+#### Linux Development Setup
+
+**Ubuntu/Debian:**
+```bash
+# Update package list
+sudo apt-get update
+
+# Install build essentials
+sudo apt-get install -y \
+    build-essential \
+    curl \
+    wget \
+    file \
+    libssl-dev \
+    libgtk-3-dev \
+    libwebkit2gtk-4.1-dev \
+    libappindicator3-dev \
+    librsvg2-dev \
+    patchelf \
+    pkg-config
+
+# For older Ubuntu versions (20.04)
+# sudo apt-get install libwebkit2gtk-4.0-dev
+
+# Install Node.js via NodeSource
+curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+sudo apt-get install -y nodejs
+```
+
+**Fedora/RHEL/CentOS:**
+```bash
+# Install development tools
+sudo dnf groupinstall "Development Tools"
+
+# Install required libraries
+sudo dnf install -y \
+    openssl-devel \
+    gtk3-devel \
+    webkit2gtk4.0-devel \
+    libappindicator-gtk3-devel \
+    librsvg2-devel \
+    pkg-config
+
+# Install Node.js
+sudo dnf install -y nodejs npm
+```
+
+**Arch Linux:**
+```bash
+# Install development tools
+sudo pacman -S base-devel
+
+# Install required libraries
+sudo pacman -S \
+    openssl \
+    gtk3 \
+    webkit2gtk \
+    libappindicator-gtk3 \
+    librsvg \
+    pkg-config
+
+# Install Node.js
+sudo pacman -S nodejs npm
+```
+
+**3. Rust Linux Targets**
+```bash
+# Add Linux targets
+rustup target add x86_64-unknown-linux-gnu
+rustup target add aarch64-unknown-linux-gnu
+```
+
+## Project Setup
+
+### 1. Clone the Repository
+
+```bash
+# Clone the main repository
+git clone https://github.com/lokus-ai/lokus.git
+cd lokus
+
+# Install dependencies
+npm install
+
+# Install Rust dependencies
+cargo fetch
+```
+
+### 2. Install Development Tools
+
+```bash
+# Install Tauri CLI
+cargo install tauri-cli --version "^2.0"
+
+# Verify Tauri installation
+cargo tauri --version
+
+# Install additional development dependencies
+npm install -g @tauri-apps/cli
+```
+
+### 3. Environment Configuration
+
+Create a `.env` file in the project root:
+
+```bash
+# .env
+RUST_BACKTRACE=1
+TAURI_ENV=development
+
+# Platform-specific optimizations
+# Windows
+CARGO_BUILD_JOBS=8
+WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--enable-logging
+
+# macOS
+MACOSX_DEPLOYMENT_TARGET=10.15
+
+# Linux
+GTK_DEBUG=interactive
+```
+
+### 4. IDE Setup
+
+#### Visual Studio Code (Recommended)
+
+**Install Essential Extensions:**
+```bash
+# Install VS Code extensions
+code --install-extension rust-lang.rust-analyzer
+code --install-extension tauri-apps.tauri-vscode
+code --install-extension bradlc.vscode-tailwindcss
+code --install-extension ms-vscode.vscode-typescript-next
+code --install-extension ms-vscode.vscode-json
+```
+
+**VS Code Configuration (.vscode/settings.json):**
+```json
+{
+  "rust-analyzer.cargo.features": "all",
+  "rust-analyzer.checkOnSave.command": "clippy",
+  "typescript.preferences.includePackageJsonAutoImports": "on",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "files.associations": {
+    "*.rs": "rust",
+    "*.toml": "toml"
+  }
+}
+```
+
+**Workspace Configuration (.vscode/launch.json):**
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Tauri Development Debug",
+      "cargo": {
+        "args": [
+          "build",
+          "--bin=lokus",
+          "--no-default-features"
+        ],
+        "filter": {
+          "name": "lokus",
+          "kind": "bin"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}
+```
+
+#### Alternative IDEs
+
+**JetBrains RustRover:**
+- Excellent Rust support with intelligent code completion
+- Built-in debugger and profiler
+- Integrated terminal and version control
+
+**Vim/Neovim (Linux):**
+```bash
+# Install rust-analyzer language server
+rustup component add rust-analyzer
+
+# Neovim configuration with LSP
+# Add to ~/.config/nvim/init.lua
+```
+
+## Development Workflow
+
+### 1. Running in Development Mode
+
+```bash
+# Start development server with hot reload
+npm run tauri dev
+
+# Platform-specific development
+npm run dev:windows    # Windows configuration
+npm run dev:macos      # macOS configuration  
+npm run dev:linux      # Linux configuration
+```
+
+### 2. Testing
+
+```bash
+# Run unit tests
+npm test
+npm run test:watch     # Watch mode
+
+# Run E2E tests
+npm run test:e2e
+npm run test:e2e:ui    # Interactive mode
+
+# Platform-specific testing
+npm run test:cross-platform
+```
+
+### 3. Building
+
+```bash
+# Development build
+npm run build
+
+# Platform-specific builds
+npm run build:windows
+npm run build:macos
+npm run build:linux
+
+# Cross-platform build (requires multiple platforms)
+npm run build:all
+```
+
+### 4. Debugging
+
+#### Frontend Debugging
+
+**Chrome DevTools:**
+- Open development version
+- Right-click → Inspect Element
+- Use Console, Network, Performance tabs
+
+**VS Code Debugging:**
+```json
+{
+  "type": "node",
+  "request": "attach",
+  "name": "Attach to Vite",
+  "port": 9229,
+  "restart": true,
+  "skipFiles": ["<node_internals>/**"]
+}
+```
+
+#### Backend Debugging (Rust)
+
+**LLDB (macOS/Linux):**
+```bash
+# Build with debug symbols
+cargo build
+
+# Launch with debugger
+lldb target/debug/lokus
+(lldb) run
+```
+
+**GDB (Linux):**
+```bash
+# Install debugging symbols
+sudo apt install gdb
+
+# Debug the application
+gdb target/debug/lokus
+(gdb) run
+(gdb) bt  # backtrace on crash
+```
+
+**Visual Studio (Windows):**
+```powershell
+# Build with debug info
+cargo build
+
+# Attach Visual Studio debugger to process
+# Debug → Attach to Process → lokus.exe
+```
+
+## Platform-Specific Development Tips
+
+### Windows Development
+
+**PowerShell Configuration:**
+```powershell
+# Enable developer mode
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock" -Name "AllowDevelopmentWithoutDevLicense" -Value 1
+
+# Set execution policy
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+
+# Optimize for development
+$env:CARGO_INCREMENTAL = "1"
+$env:RUST_BACKTRACE = "full"
+```
+
+**Windows-Specific Debugging:**
+```powershell
+# Enable WebView2 logging
+$env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = "--enable-logging --v=1"
+
+# Monitor WebView2 logs
+Get-Content "$env:LOCALAPPDATA\Microsoft\EdgeWebView2\EBWebView\Logs\*" -Wait
+```
+
+### macOS Development
+
+**Performance Optimization:**
+```bash
+# Enable Metal rendering
+export MTL_HUD_ENABLED=1
+
+# Optimize compilation
+export CARGO_INCREMENTAL=1
+export CARGO_BUILD_JOBS=$(sysctl -n hw.ncpu)
+```
+
+**macOS-Specific Debugging:**
+```bash
+# Use Instruments for profiling
+instruments -t "Time Profiler" target/debug/lokus
+
+# Monitor system logs
+log stream --predicate 'process == "lokus"'
+
+# Memory debugging
+leaks --atExit -- target/debug/lokus
+```
+
+### Linux Development
+
+**Environment Optimization:**
+```bash
+# GTK debugging
+export GTK_DEBUG=interactive
+export G_MESSAGES_DEBUG=all
+
+# Wayland development
+export GDK_BACKEND=wayland
+export MOZ_ENABLE_WAYLAND=1
+
+# Performance monitoring
+export RUST_LOG=debug
+```
+
+**Linux-Specific Debugging:**
+```bash
+# Use Valgrind for memory debugging
+valgrind --tool=memcheck --leak-check=full target/debug/lokus
+
+# Monitor system calls
+strace -e trace=file target/debug/lokus
+
+# Profile with perf
+perf record target/debug/lokus
+perf report
+```
+
+## Troubleshooting Common Issues
+
+### Build Failures
+
+**"Failed to find MSVC"** (Windows):
+```powershell
+# Reinstall Visual Studio Build Tools
+winget uninstall Microsoft.VisualStudio.2022.BuildTools
+winget install Microsoft.VisualStudio.2022.BuildTools
+
+# Verify MSVC installation
+where cl.exe
+```
+
+**"No such file or directory: 'cc'"** (macOS):
+```bash
+# Reinstall Xcode Command Line Tools
+sudo xcode-select --reset
+xcode-select --install
+```
+
+**"Package gtk+-3.0 was not found"** (Linux):
+```bash
+# Ubuntu/Debian
+sudo apt install libgtk-3-dev
+
+# Fedora
+sudo dnf install gtk3-devel
+
+# Arch
+sudo pacman -S gtk3
+```
+
+### Runtime Issues
+
+**WebView2 Not Found** (Windows):
+```powershell
+# Install WebView2 runtime
+winget install Microsoft.EdgeWebView2
+
+# Verify installation
+Get-AppxPackage -Name "*WebView2*"
+```
+
+**Code Signing Issues** (macOS):
+```bash
+# Reset code signing
+security delete-identity -c "Developer ID Application"
+# Re-download certificates from Apple Developer
+
+# Clear quarantine
+sudo xattr -r -d com.apple.quarantine /Applications/Lokus.app
+```
+
+**Permission Denied** (Linux):
+```bash
+# Fix file permissions
+chmod +x target/debug/lokus
+
+# Check SELinux (if applicable)
+sestatus
+setsebool -P allow_execheap 1
+```
+
+## Performance Optimization
+
+### Build Performance
+
+```bash
+# Enable parallel compilation
+export CARGO_BUILD_JOBS=$(nproc)  # Linux/macOS
+$env:CARGO_BUILD_JOBS = [Environment]::ProcessorCount  # Windows
+
+# Use faster linker (Linux)
+sudo apt install lld
+export RUSTFLAGS="-C link-arg=-fuse-ld=lld"
+
+# Use faster linker (macOS)
+export RUSTFLAGS="-C link-arg=-fuse-ld=/usr/bin/ld"
+```
+
+### Development Server Performance
+
+```bash
+# Optimize Vite configuration
+# vite.config.js
+export default {
+  server: {
+    hmr: true,
+    watch: {
+      ignored: ['**/target/**', '**/node_modules/**']
+    }
+  },
+  build: {
+    sourcemap: true,
+    minify: false // Faster builds in development
+  }
+}
+```
+
+## Getting Help
+
+### Documentation
+
+- [Cross-Platform Overview](/cross-platform) - Platform support information
+- [Build System Documentation](/build-system) - Detailed build instructions
+- [Platform Architecture](/platform-architecture) - Technical architecture
+
+### Community Support
+
+- **Discord**: [Join our Discord](https://discord.gg/lokus) for real-time help
+- **GitHub Discussions**: [Ask questions](https://github.com/lokus-ai/lokus/discussions)
+- **GitHub Issues**: [Report bugs](https://github.com/lokus-ai/lokus/issues)
+
+### Platform-Specific Help
+
+- **Windows**: Check Event Viewer for application logs
+- **macOS**: Use Console.app to view system logs  
+- **Linux**: Use `journalctl --user` for application logs
+
+---
+
+*Ready to start contributing? Check out our [Contributing Guidelines](https://github.com/lokus-ai/lokus/blob/main/CONTRIBUTING.md) and [Platform Architecture Guide](/platform-architecture).*

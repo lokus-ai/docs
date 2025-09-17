@@ -1,0 +1,927 @@
+# Build System Documentation
+
+Lokus features a sophisticated cross-platform build system that produces native applications for Windows, macOS, and Linux. This guide covers build configurations, scripts, CI/CD integration, and troubleshooting.
+
+## Build System Overview
+
+### Architecture
+
+The Lokus build system combines multiple technologies to create native applications:
+
+- **Frontend**: Vite + React for web layer bundling
+- **Backend**: Cargo + Tauri for native application compilation  
+- **Platform Scripts**: Node.js scripts for platform-specific build logic
+- **CI/CD**: GitHub Actions for automated cross-platform builds
+- **Distribution**: Platform-native installers and packages
+
+### Build Targets
+
+| Platform | Architectures | Installer Types | Status |
+|----------|---------------|-----------------|---------|
+| **Windows** | x64, ARM64 | MSI, Portable | ✅ Stable |
+| **macOS** | x64, Apple Silicon | DMG, Universal Binary | ✅ Stable |
+| **Linux** | x64, ARM64 | AppImage, DEB, RPM | ✅ Stable |
+
+## Build Configurations
+
+### Tauri Configuration Files
+
+Lokus uses separate Tauri configuration files for each platform to optimize builds:
+
+**Main Configuration (`src-tauri/tauri.conf.json`):**
+```json
+{
+  "productName": "Lokus",
+  "version": "1.0.3",
+  "identifier": "ai.lokus.app",
+  "build": {
+    "targets": "all",
+    "runner": null,
+    "devUrl": "http://localhost:1420",
+    "distDir": "../dist",
+    "withGlobalTauri": false,
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build"
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app", "msi", "deb", "rpm", "appimage", "dmg"],
+    "category": "Productivity",
+    "copyright": "© 2024 Lokus AI",
+    "licenseFile": "../LICENSE"
+  }
+}
+```
+
+**Windows Configuration (`src-tauri/tauri.windows.conf.json`):**
+```json
+{
+  "bundle": {
+    "targets": ["msi"],
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": "http://timestamp.digicert.com",
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper",
+        "silent": true
+      },
+      "allowDowngrades": false,
+      "wix": {
+        "language": "en-US",
+        "template": "main.wxs",
+        "fragmentPaths": [],
+        "componentGroupRefs": [],
+        "componentRefs": [],
+        "featureGroupRefs": [],
+        "featureRefs": [],
+        "mergeRefs": []
+      }
+    }
+  },
+  "tauri": {
+    "windows": [
+      {
+        "title": "Lokus",
+        "width": 1200,
+        "height": 800,
+        "decorations": true,
+        "transparent": false,
+        "resizable": true,
+        "minWidth": 800,
+        "minHeight": 600
+      }
+    ]
+  }
+}
+```
+
+**macOS Configuration (`src-tauri/tauri.macos.conf.json`):**
+```json
+{
+  "bundle": {
+    "targets": ["app", "dmg"],
+    "macOS": {
+      "frameworks": [],
+      "minimumSystemVersion": "10.15",
+      "exceptionDomain": "",
+      "signingIdentity": null,
+      "providerShortName": null,
+      "entitlements": null,
+      "dmg": {
+        "appPosition": {
+          "x": 180,
+          "y": 170
+        },
+        "applicationFolderPosition": {
+          "x": 480,
+          "y": 170
+        },
+        "windowSize": {
+          "width": 660,
+          "height": 400
+        }
+      }
+    }
+  },
+  "tauri": {
+    "macOSPrivateApi": true,
+    "windows": [
+      {
+        "titleBarStyle": "transparent",
+        "hiddenTitle": true,
+        "fullscreen": false
+      }
+    ]
+  }
+}
+```
+
+### Package.json Build Scripts
+
+The `package.json` includes platform-specific build commands:
+
+```json
+{
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    
+    "dev:windows": "node scripts/check-platform.js && tauri dev --config src-tauri/tauri.windows.conf.json",
+    "dev:macos": "node scripts/check-platform.js && tauri dev --config src-tauri/tauri.macos.conf.json", 
+    "dev:linux": "node scripts/check-platform.js && tauri dev",
+    
+    "build:windows": "node scripts/build-windows.js",
+    "build:macos": "node scripts/build-macos.js",
+    "build:linux": "node scripts/build-linux.js",
+    "build:all": "node scripts/check-platform.js && npm run build:all:cross",
+    "build:all:cross": "npm run build:windows && npm run build:macos && npm run build:linux",
+    
+    "check-platform": "node scripts/check-platform.js",
+    "deps:check": "node scripts/check-platform.js --verbose",
+    "clean": "rimraf dist src-tauri/target dist-windows dist-macos dist-linux"
+  }
+}
+```
+
+## Platform-Specific Build Scripts
+
+### Windows Build Script (`scripts/build-windows.js`)
+
+**Features:**
+- Platform validation and dependency checking
+- MSI installer generation with WebView2 bootstrapper
+- Code signing preparation (certificate integration)
+- Build optimization and compression
+- Portable executable creation
+
+**Key Operations:**
+```javascript
+// Dependency validation
+validateWindowsEnvironment();
+checkVisualStudioBuildTools();
+checkWebView2SDK();
+
+// Build process
+buildFrontend();
+buildTauriApplication();
+generateMSIInstaller();
+createPortableVersion();
+signExecutables(); // If certificates available
+```
+
+**Usage:**
+```bash
+# Standard build
+npm run build:windows
+
+# Debug build with verbose output
+npm run build:windows -- --verbose --debug
+
+# Dry run (validation only)
+npm run build:windows -- --dry-run
+```
+
+### macOS Build Script (`scripts/build-macos.js`)
+
+**Features:**
+- Universal binary creation (Intel + Apple Silicon)
+- DMG creation with custom background and layout
+- Code signing and notarization preparation
+- App Store compatibility checks
+- Metadata and info.plist generation
+
+**Key Operations:**
+```javascript
+// Environment validation
+validateXcodeInstallation();
+checkCodeSigningCertificates();
+
+// Build process
+buildUniversalBinary();
+createAppBundle();
+generateDMGInstaller();
+prepareForNotarization();
+```
+
+**Usage:**
+```bash
+# Universal binary build
+npm run build:macos
+
+# Architecture-specific builds
+npm run build:macos -- --target x86_64-apple-darwin
+npm run build:macos -- --target aarch64-apple-darwin
+
+# With code signing
+npm run build:macos -- --sign --notarize
+```
+
+### Linux Build Script (`scripts/build-linux.js`)
+
+**Features:**
+- Multi-distribution package generation
+- AppImage creation with portable dependencies
+- DEB and RPM package generation
+- Desktop integration and mime type registration
+- Dependency resolution and bundling
+
+**Key Operations:**
+```javascript
+// Distribution detection
+detectLinuxDistribution();
+validatePackagingTools();
+
+// Build process
+buildLinuxBinary();
+createAppImage();
+generateDebPackage();
+generateRpmPackage();
+setupDesktopIntegration();
+```
+
+**Usage:**
+```bash
+# All Linux packages
+npm run build:linux
+
+# Specific package types
+npm run build:linux -- --appimage-only
+npm run build:linux -- --deb-only
+npm run build:linux -- --rpm-only
+
+# Distribution-specific optimization
+npm run build:linux -- --distro ubuntu
+npm run build:linux -- --distro fedora
+```
+
+## Cross-Platform Build Commands
+
+### Development Builds
+
+```bash
+# Start development server (current platform)
+npm run tauri dev
+
+# Platform-specific development
+npm run dev:windows    # Windows configuration
+npm run dev:macos      # macOS configuration  
+npm run dev:linux      # Linux configuration
+
+# Development with specific features
+npm run dev:windows -- --features "webview2-edge"
+npm run dev:macos -- --features "macos-private-api"
+npm run dev:linux -- --features "appindicator"
+```
+
+### Production Builds
+
+```bash
+# Current platform build
+npm run build
+npm run tauri build
+
+# Platform-specific builds
+npm run build:windows  # MSI + Portable
+npm run build:macos    # DMG + App Bundle
+npm run build:linux    # AppImage + DEB + RPM
+
+# Cross-platform build (requires all platform environments)
+npm run build:all
+```
+
+### Platform Validation
+
+```bash
+# Check current platform setup
+npm run check-platform
+
+# Verbose dependency checking
+npm run deps:check
+
+# Platform-specific validation
+node scripts/check-platform.js --platform windows
+node scripts/check-platform.js --platform macos
+node scripts/check-platform.js --platform linux
+```
+
+## Build Optimization
+
+### Compilation Optimizations
+
+**Rust Optimizations (`Cargo.toml`):**
+```toml
+[profile.dev]
+incremental = true
+debug = 1
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.release-with-debug]
+inherits = "release"
+debug = true
+strip = false
+```
+
+**Frontend Optimizations (`vite.config.js`):**
+```javascript
+export default {
+  build: {
+    target: 'es2020',
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true
+      }
+    },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          editor: ['@tiptap/core', '@tiptap/react']
+        }
+      }
+    }
+  }
+}
+```
+
+### Build Performance
+
+**Parallel Compilation:**
+```bash
+# Windows (PowerShell)
+$env:CARGO_BUILD_JOBS = [Environment]::ProcessorCount
+
+# macOS/Linux
+export CARGO_BUILD_JOBS=$(nproc)
+
+# Platform-specific optimizations
+export RUSTFLAGS="-C target-cpu=native"
+```
+
+**Incremental Builds:**
+```bash
+# Enable incremental compilation
+export CARGO_INCREMENTAL=1
+
+# Use faster linker (Linux)
+export RUSTFLAGS="-C link-arg=-fuse-ld=lld"
+
+# Use faster linker (macOS)
+export RUSTFLAGS="-C link-arg=-fuse-ld=/usr/bin/ld"
+```
+
+**Caching Strategies:**
+```bash
+# Clean specific targets
+npm run clean               # Clean all build artifacts
+rimraf src-tauri/target     # Clean Rust build cache
+rimraf dist                 # Clean frontend build
+rimraf node_modules/.vite   # Clean Vite cache
+
+# Selective cleaning
+cargo clean --package lokus
+cargo clean --target-dir target/release
+```
+
+## CI/CD Integration
+
+### GitHub Actions Workflows
+
+**Multi-Platform Build (`.github/workflows/build-multi-platform.yml`):**
+```yaml
+name: "Multi-Platform Build"
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [macos-latest, ubuntu-latest, windows-latest]
+        include:
+          - platform: macos-latest
+            target: universal-apple-darwin
+            tauri_config: src-tauri/tauri.macos.conf.json
+          - platform: ubuntu-latest  
+            target: x86_64-unknown-linux-gnu
+            tauri_config: src-tauri/tauri.conf.json
+          - platform: windows-latest
+            target: x86_64-pc-windows-msvc
+            tauri_config: src-tauri/tauri.windows.conf.json
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+          
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+          
+      - name: Cache Rust Dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src-tauri/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          
+      - name: Install Dependencies (Linux)
+        if: matrix.platform == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev
+          
+      - name: Install Dependencies (Windows)
+        if: matrix.platform == 'windows-latest'
+        run: |
+          # WebView2 and build tools are pre-installed on GitHub runners
+          
+      - name: Install Node Dependencies
+        run: npm ci
+        
+      - name: Build Application
+        run: |
+          if [ "${{ matrix.platform }}" = "macos-latest" ]; then
+            npm run build:macos
+          elif [ "${{ matrix.platform }}" = "ubuntu-latest" ]; then
+            npm run build:linux
+          elif [ "${{ matrix.platform }}" = "windows-latest" ]; then
+            npm run build:windows
+          fi
+        shell: bash
+        
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: lokus-${{ matrix.platform }}
+          path: |
+            src-tauri/target/release/bundle/
+```
+
+**Release Workflow (`.github/workflows/release.yml`):**
+```yaml
+name: "Release"
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.create-release.outputs.result }}
+      
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create Release
+        id: create-release
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { data } = await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: `${{ github.ref_name }}`,
+              name: `Lokus ${{ github.ref_name }}`,
+              body: 'Release notes will be updated shortly.',
+              draft: true,
+              prerelease: false
+            })
+            return data.id
+
+  build-release:
+    needs: create-release
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [macos-latest, ubuntu-latest, windows-latest]
+        
+    runs-on: ${{ matrix.platform }}
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      # ... (setup steps similar to build workflow)
+      
+      - name: Build and Upload Release Assets
+        run: |
+          # Platform-specific build and upload logic
+          # Upload to GitHub release using GitHub CLI or actions
+```
+
+### Local CI Testing
+
+```bash
+# Install act for local GitHub Actions testing
+# macOS
+brew install act
+
+# Linux
+curl https://raw.githubusercontent.com/nektos/act/master/install.sh | sudo bash
+
+# Windows (using chocolatey)
+choco install act-cli
+
+# Run workflows locally
+act                          # Run default workflow
+act pull_request            # Test PR workflow
+act -j build-release        # Test specific job
+```
+
+## Distribution and Packaging
+
+### Windows Distribution
+
+**MSI Installer:**
+- Professional Windows installer package
+- Automatic WebView2 dependency management
+- Registry integration for file associations
+- Start menu and desktop shortcuts
+- Uninstaller with complete cleanup
+
+**Portable Version:**
+- Self-contained executable
+- No installation required
+- Registry-free operation
+- USB/portable drive compatible
+
+### macOS Distribution
+
+**DMG Installer:**
+- macOS-native disk image format
+- Custom background and layout
+- Drag-and-drop installation experience
+- Automatic mounting and cleanup
+
+**Universal Binary:**
+- Combined Intel and Apple Silicon support
+- Single download for all Mac architectures
+- Optimized for each CPU architecture
+- Backward compatibility with older Macs
+
+### Linux Distribution
+
+**AppImage:**
+- Universal Linux binary format
+- No installation required
+- Desktop integration on first run
+- Compatible with all major distributions
+
+**DEB Packages:**
+- Debian/Ubuntu native packages
+- APT repository integration
+- Dependency resolution
+- System integration
+
+**RPM Packages:**
+- Red Hat/Fedora native packages
+- YUM/DNF repository integration
+- Dependency management
+- System service integration
+
+## Build Troubleshooting
+
+### Common Build Errors
+
+**"Failed to find MSVC"** (Windows):
+```bash
+# Solution 1: Install Visual Studio Build Tools
+winget install Microsoft.VisualStudio.2022.BuildTools
+
+# Solution 2: Install full Visual Studio
+winget install Microsoft.VisualStudio.2022.Community
+
+# Verify installation
+where cl.exe
+```
+
+**"No such file or directory: 'cc'"** (macOS):
+```bash
+# Install Xcode Command Line Tools
+xcode-select --install
+
+# Reset if corrupted
+sudo xcode-select --reset
+xcode-select --install
+```
+
+**"Package not found: gtk+-3.0"** (Linux):
+```bash
+# Ubuntu/Debian
+sudo apt-get install libgtk-3-dev libwebkit2gtk-4.1-dev
+
+# Fedora
+sudo dnf install gtk3-devel webkit2gtk4.0-devel
+
+# Arch Linux
+sudo pacman -S gtk3 webkit2gtk
+```
+
+### Build Performance Issues
+
+**Slow Rust Compilation:**
+```bash
+# Enable parallel compilation
+export CARGO_BUILD_JOBS=$(nproc)
+
+# Use faster linker
+export RUSTFLAGS="-C link-arg=-fuse-ld=lld"
+
+# Enable incremental compilation
+export CARGO_INCREMENTAL=1
+```
+
+**Out of Memory During Build:**
+```bash
+# Reduce parallel jobs
+export CARGO_BUILD_JOBS=2
+
+# Use less memory-intensive optimizations
+export RUSTFLAGS="-C opt-level=2"
+
+# Clear build cache
+cargo clean
+```
+
+**Vite Build Timeouts:**
+```javascript
+// vite.config.js
+export default {
+  build: {
+    timeout: 300000, // 5 minutes
+    chunkSizeWarningLimit: 1000
+  }
+}
+```
+
+### Debugging Build Issues
+
+**Enable Verbose Logging:**
+```bash
+# Rust build debugging
+export RUST_LOG=debug
+export RUST_BACKTRACE=full
+
+# Tauri build debugging  
+export TAURI_LOG=debug
+
+# Platform script debugging
+npm run build:windows -- --verbose
+npm run build:macos -- --verbose --debug
+npm run build:linux -- --verbose
+```
+
+**Platform-Specific Debugging:**
+
+**Windows:**
+```powershell
+# Check Windows SDK
+reg query "HKLM\SOFTWARE\WOW6432Node\Microsoft\Microsoft SDKs\Windows\v10.0"
+
+# Check MSVC installation
+"C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products *
+```
+
+**macOS:**
+```bash
+# Check Xcode installation
+xcode-select -p
+xcrun --show-sdk-path
+
+# Check code signing certificates
+security find-identity -v -p codesigning
+```
+
+**Linux:**
+```bash
+# Check required libraries
+pkg-config --modversion gtk+-3.0 webkit2gtk-4.1
+
+# Check compiler toolchain
+gcc --version
+rustc --version
+```
+
+## Advanced Build Customization
+
+### Custom Build Targets
+
+**Adding New Architecture Support:**
+```bash
+# Add ARM64 support for Linux
+rustup target add aarch64-unknown-linux-gnu
+
+# Cross-compilation setup
+export CC_aarch64_unknown_linux_gnu=aarch64-linux-gnu-gcc
+export CXX_aarch64_unknown_linux_gnu=aarch64-linux-gnu-g++
+
+# Build for ARM64
+cargo tauri build --target aarch64-unknown-linux-gnu
+```
+
+**Custom Tauri Configuration:**
+```json
+{
+  "build": {
+    "features": ["custom-protocol", "api-all"],
+    "runner": null,
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build:custom"
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["custom-installer"],
+    "resources": ["assets/*", "extra-resources/*"]
+  }
+}
+```
+
+### Environment-Specific Builds
+
+**Development vs Production:**
+```bash
+# Development build with debug symbols
+npm run build -- --dev
+
+# Production build with optimizations
+npm run build -- --release
+
+# Staging build with telemetry
+npm run build -- --staging
+```
+
+**Feature Flag Management:**
+```rust
+// In Rust code
+#[cfg(feature = "development")]
+fn enable_debug_features() {
+    // Development-only features
+}
+
+#[cfg(not(feature = "development"))]
+fn enable_debug_features() {
+    // No-op in production
+}
+```
+
+### Custom Installer Generation
+
+**Windows Custom MSI:**
+```xml
+<!-- custom.wxs - WiX installer template -->
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*" 
+           Name="Lokus" 
+           Language="1033" 
+           Version="$(var.Version)" 
+           Manufacturer="Lokus AI"
+           UpgradeCode="GENERATED_GUID">
+    
+    <Package InstallerVersion="200" 
+             Compressed="yes" 
+             InstallScope="perMachine" />
+             
+    <!-- Custom installer behavior -->
+    <Feature Id="ProductFeature" Title="Lokus" Level="1">
+      <ComponentGroupRef Id="ProductComponents" />
+      <ComponentRef Id="ApplicationShortcut" />
+    </Feature>
+  </Product>
+</Wix>
+```
+
+**macOS Custom DMG:**
+```bash
+#!/bin/bash
+# create-dmg-custom.sh
+
+# Custom DMG creation with branding
+create-dmg \
+  --volname "Install Lokus" \
+  --volicon "assets/lokus-icon.icns" \
+  --background "assets/dmg-background.png" \
+  --window-pos 200 120 \
+  --window-size 800 400 \
+  --icon-size 100 \
+  --icon "Lokus.app" 200 190 \
+  --hide-extension "Lokus.app" \
+  --app-drop-link 600 185 \
+  "dist/Lokus.dmg" \
+  "src-tauri/target/release/bundle/macos/"
+```
+
+## Integration with External Tools
+
+### Code Signing Integration
+
+**Windows Code Signing:**
+```javascript
+// In build script
+const { execSync } = require('child_process');
+
+function signExecutable(exePath, certificatePath, password) {
+  const command = `signtool sign /f "${certificatePath}" /p "${password}" /t http://timestamp.digicert.com "${exePath}"`;
+  execSync(command);
+}
+```
+
+**macOS Code Signing:**
+```bash
+#!/bin/bash
+# Sign application
+codesign --force --deep --timestamp \
+         --options runtime \
+         --sign "Developer ID Application: Your Name" \
+         "target/release/bundle/macos/Lokus.app"
+
+# Notarize for distribution
+xcrun notarytool submit "Lokus.dmg" \
+                --apple-id "your-email@example.com" \
+                --password "app-password" \
+                --wait
+```
+
+### Package Repository Integration
+
+**Linux Repository Setup:**
+```bash
+# Create APT repository structure
+mkdir -p repo/dists/stable/main/binary-amd64
+mkdir -p repo/pool/main/l/lokus
+
+# Generate repository metadata
+dpkg-scanpackages pool/ /dev/null | gzip > dists/stable/main/binary-amd64/Packages.gz
+
+# Sign repository
+gpg --armor --detach-sign --sign dists/stable/Release
+```
+
+**Homebrew Cask Integration:**
+```ruby
+# lokus.rb - Homebrew cask formula
+cask "lokus" do
+  version "1.0.3"
+  sha256 "sha256_hash_here"
+
+  url "https://github.com/lokus-ai/lokus/releases/download/v#{version}/Lokus.dmg"
+  name "Lokus"
+  desc "Knowledge management and note-taking application"
+  homepage "https://lokus.ai/"
+
+  app "Lokus.app"
+
+  zap trash: [
+    "~/Library/Application Support/Lokus",
+    "~/Library/Preferences/ai.lokus.app.plist",
+  ]
+end
+```
+
+---
+
+*For more information about specific platform development, see our [Developer Setup Guide](/developer-setup) and [Platform Architecture](/platform-architecture) documentation.*

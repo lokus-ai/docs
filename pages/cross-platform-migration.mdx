@@ -1,0 +1,570 @@
+# Cross-Platform Migration Guide
+
+This guide documents the comprehensive cross-platform implementation added to Lokus, including breaking changes, migration steps, and best practices for maintaining cross-platform compatibility.
+
+## Overview of Cross-Platform Implementation
+
+### What Changed
+
+The cross-platform implementation (introduced in v1.0.3) transformed Lokus from a macOS-focused application into a professional cross-platform desktop application. Key changes include:
+
+- **Complete platform abstraction layer** with trait-based implementations
+- **Platform-specific build systems** and configuration files  
+- **Multi-platform CI/CD pipeline** with automated testing
+- **Native installer generation** for all supported platforms
+- **Unified error handling** and feature detection system
+- **Frontend platform utilities** for UI adaptations
+
+### Supported Platforms
+
+| Platform | Status | Installer Types | Architecture Support |
+|----------|--------|-----------------|---------------------|
+| **Windows** | ✅ Stable | MSI, Portable | x64, ARM64 |
+| **macOS** | ✅ Stable | DMG, Universal | x64, Apple Silicon |
+| **Linux** | ✅ Stable | AppImage, DEB, RPM | x64, ARM64 |
+
+## Breaking Changes
+
+### Configuration File Changes
+
+**Before (v1.0.2 and earlier):**
+```json
+// Single tauri.conf.json
+{
+  "build": {
+    "targets": "all"
+  },
+  "bundle": {
+    "targets": ["app"]
+  }
+}
+```
+
+**After (v1.0.3+):**
+```json
+// Platform-specific configurations
+// tauri.conf.json (base)
+// tauri.windows.conf.json (Windows-specific)
+// tauri.macos.conf.json (macOS-specific)
+```
+
+**Migration Required:**
+- Update build scripts to use platform-specific configurations
+- Modify CI/CD workflows to handle multiple config files
+- Update development commands to use appropriate config
+
+### Build Command Changes
+
+**Before:**
+```bash
+npm run tauri dev
+npm run tauri build
+```
+
+**After:**
+```bash
+# Platform-specific development
+npm run dev:windows
+npm run dev:macos
+npm run dev:linux
+
+# Platform-specific builds  
+npm run build:windows
+npm run build:macos
+npm run build:linux
+```
+
+**Migration Steps:**
+1. Update package.json scripts
+2. Modify development workflows
+3. Update documentation and README files
+
+### API Changes
+
+#### New Platform Utilities
+
+**Frontend Changes:**
+```javascript
+// NEW: Platform detection utilities
+import { 
+  getCurrentPlatform, 
+  isWindows, 
+  isMacOS, 
+  isLinux,
+  platformSwitch 
+} from '@/utils/platform';
+
+// Example usage
+const shortcuts = platformSwitch({
+  windows: () => ({ save: 'Ctrl+S' }),
+  macos: () => ({ save: '⌘+S' }),
+  linux: () => ({ save: 'Ctrl+S' }),
+  default: () => ({ save: 'Ctrl+S' })
+});
+```
+
+**Backend Changes:**
+```rust
+// NEW: Platform abstraction layer
+use crate::platform::{get_platform_provider, PlatformFeature};
+
+let provider = get_platform_provider();
+if provider.supports_feature(PlatformFeature::QuickLook) {
+    // macOS-specific functionality
+}
+```
+
+#### Deprecated APIs
+
+The following APIs were deprecated and replaced:
+
+```javascript
+// DEPRECATED
+window.__TAURI__.shell.open(path);
+
+// NEW: Platform-aware file operations
+import { revealInFileManager } from '@/utils/platform';
+await revealInFileManager(path);
+```
+
+### File Structure Changes
+
+**New Files Added:**
+```
+src/
+├── utils/platform.js          # NEW: Frontend platform utilities
+scripts/
+├── build-windows.js           # NEW: Windows build script
+├── build-macos.js             # NEW: macOS build script  
+├── build-linux.js             # NEW: Linux build script
+└── check-platform.js          # NEW: Platform validation
+src-tauri/
+├── tauri.windows.conf.json    # NEW: Windows configuration
+├── tauri.macos.conf.json      # NEW: macOS configuration
+└── src/platform/              # NEW: Platform abstraction layer
+    ├── mod.rs
+    ├── windows.rs
+    ├── macos.rs
+    ├── linux.rs
+    ├── errors.rs
+    └── clipboard.rs
+```
+
+## Migration Steps
+
+### For Existing Installations
+
+#### User Data Migration
+
+User data and settings are automatically migrated between versions. However, for cross-platform usage:
+
+**Windows:**
+```powershell
+# Settings location
+%APPDATA%\Lokus\
+
+# Documents default
+%USERPROFILE%\Documents\Lokus\
+```
+
+**macOS:**
+```bash
+# Settings location
+~/Library/Application Support/Lokus/
+
+# Documents default
+~/Documents/Lokus/
+```
+
+**Linux:**
+```bash
+# Settings location
+~/.config/lokus/
+
+# Documents default  
+~/Documents/Lokus/
+```
+
+#### Manual Migration Steps
+
+1. **Export Settings** (if migrating between platforms):
+   ```javascript
+   // In Lokus v1.0.2
+   File > Export > Settings
+   ```
+
+2. **Copy Documents**:
+   - Copy your workspace directory to the new platform
+   - Maintain the same relative structure
+
+3. **Import Settings** (on new platform):
+   ```javascript
+   // In Lokus v1.0.3+
+   File > Import > Settings
+   ```
+
+### For Developers
+
+#### Update Development Environment
+
+1. **Install Platform-Specific Dependencies:**
+
+   **Windows:**
+   ```powershell
+   winget install Microsoft.VisualStudio.2022.BuildTools
+   winget install Microsoft.EdgeWebView2
+   ```
+
+   **macOS:**
+   ```bash
+   xcode-select --install
+   ```
+
+   **Linux:**
+   ```bash
+   sudo apt install libgtk-3-dev libwebkit2gtk-4.1-dev
+   ```
+
+2. **Update Build Scripts:**
+   ```json
+   {
+     "scripts": {
+       "dev": "npm run dev:${npm_config_platform:-$(node -p 'process.platform')}",
+       "build": "npm run build:${npm_config_platform:-$(node -p 'process.platform')}"
+     }
+   }
+   ```
+
+3. **Update CI/CD Workflows:**
+   ```yaml
+   # .github/workflows/test.yml
+   strategy:
+     matrix:
+       os: [ubuntu-latest, windows-latest, macos-latest]
+   ```
+
+#### Code Migration
+
+**Platform-Specific Code:**
+```javascript
+// BEFORE: Platform detection in components
+const isMac = navigator.platform.includes('Mac');
+
+// AFTER: Use platform utilities
+import { isMacOS } from '@/utils/platform';
+const isMac = isMacOS();
+```
+
+**Conditional Rendering:**
+```jsx
+// BEFORE: Manual platform checks
+{navigator.platform.includes('Mac') && <MacOnlyComponent />}
+
+// AFTER: Platform-aware rendering
+import { platformSwitch } from '@/utils/platform';
+
+const PlatformSpecificComponent = platformSwitch({
+  macos: () => <MacComponent />,
+  windows: () => <WindowsComponent />,
+  linux: () => <LinuxComponent />,
+  default: () => <DefaultComponent />
+});
+```
+
+**File Operations:**
+```javascript
+// BEFORE: Direct Tauri calls
+import { open } from '@tauri-apps/api/shell';
+await open(filePath);
+
+// AFTER: Platform-aware operations
+import { revealInFileManager } from '@/utils/platform';
+await revealInFileManager(filePath);
+```
+
+### For Plugin Developers
+
+#### Plugin Compatibility
+
+Existing plugins require minimal changes but should be updated for better cross-platform support:
+
+**Plugin Manifest Updates:**
+```json
+{
+  "name": "my-plugin",
+  "version": "1.0.0",
+  "platforms": ["windows", "macos", "linux"],
+  "requirements": {
+    "lokus": ">=1.0.3"
+  }
+}
+```
+
+**Platform-Specific Plugin Code:**
+```javascript
+// Plugin with platform adaptations
+import { getCurrentPlatform, PLATFORMS } from '@lokus/platform-utils';
+
+class MyPlugin {
+  init() {
+    const platform = getCurrentPlatform();
+    
+    if (platform === PLATFORMS.WINDOWS) {
+      this.initWindowsFeatures();
+    } else if (platform === PLATFORMS.MACOS) {
+      this.initMacOSFeatures();
+    } else if (platform === PLATFORMS.LINUX) {
+      this.initLinuxFeatures();
+    }
+  }
+}
+```
+
+## Best Practices for Cross-Platform Development
+
+### Code Organization
+
+**1. Platform Detection**
+```javascript
+// Always use the official platform utilities
+import { getCurrentPlatform, isWindows, isMacOS, isLinux } from '@/utils/platform';
+
+// Avoid direct navigator checks
+// DON'T: navigator.platform.includes('Win')
+// DO: isWindows()
+```
+
+**2. Feature Detection**
+```javascript
+// Check for platform-specific features
+import { isPlatformFeatureAvailable } from '@/utils/platform';
+
+if (isPlatformFeatureAvailable('touchBar')) {
+  // Initialize Touch Bar features
+}
+```
+
+**3. Conditional Logic**
+```javascript
+// Use platformSwitch for cleaner conditional logic
+import { platformSwitch } from '@/utils/platform';
+
+const config = platformSwitch({
+  windows: () => ({ modifier: 'Ctrl' }),
+  macos: () => ({ modifier: 'Cmd' }),
+  linux: () => ({ modifier: 'Ctrl' }),
+  default: () => ({ modifier: 'Ctrl' })
+});
+```
+
+### UI/UX Considerations
+
+**1. Platform-Appropriate Controls**
+```jsx
+import { getPlatformUIPreferences } from '@/utils/platform';
+
+const UIComponent = () => {
+  const { windowControlsPosition } = getPlatformUIPreferences();
+  
+  return (
+    <div className={`window-controls-${windowControlsPosition}`}>
+      {/* Platform-appropriate window controls */}
+    </div>
+  );
+};
+```
+
+**2. Keyboard Shortcuts**
+```javascript
+import { createShortcut } from '@/utils/platform';
+
+const shortcuts = {
+  save: createShortcut('S', { primary: true }),     // Ctrl+S or ⌘+S
+  copy: createShortcut('C', { primary: true }),     // Ctrl+C or ⌘+C
+  paste: createShortcut('V', { primary: true })     // Ctrl+V or ⌘+V
+};
+```
+
+**3. File Paths**
+```javascript
+import { normalizePath, joinPath } from '@/utils/platform';
+
+// Always normalize paths for display
+const displayPath = normalizePath(rawPath);
+
+// Use joinPath for path construction
+const fullPath = joinPath(basePath, 'subfolder', 'file.txt');
+```
+
+### Testing Strategies
+
+**1. Cross-Platform Testing**
+```javascript
+// Use platform mocking in tests
+import { setPlatformForTesting } from '@/utils/platform';
+
+describe('Cross-platform feature', () => {
+  test('works on Windows', () => {
+    setPlatformForTesting('windows');
+    // Test Windows-specific behavior
+  });
+  
+  test('works on macOS', () => {
+    setPlatformForTesting('macos');
+    // Test macOS-specific behavior
+  });
+});
+```
+
+**2. Feature Detection Testing**
+```javascript
+import { mockPlatformFeature } from '@/test-utils/platform';
+
+test('handles missing platform features', () => {
+  mockPlatformFeature('touchBar', false);
+  
+  // Test graceful degradation
+  const component = render(<MyComponent />);
+  expect(component.queryByTestId('touch-bar')).toBeNull();
+});
+```
+
+## Performance Considerations
+
+### Platform-Specific Optimizations
+
+**1. Bundle Optimization**
+```javascript
+// vite.config.js - Platform-specific builds
+export default {
+  build: {
+    rollupOptions: {
+      external: (id) => {
+        // Exclude platform-specific modules for other platforms
+        if (process.env.TARGET_PLATFORM === 'windows' && id.includes('macos')) {
+          return true;
+        }
+        return false;
+      }
+    }
+  }
+};
+```
+
+**2. Lazy Loading**
+```javascript
+// Load platform-specific code only when needed
+const loadPlatformModule = async () => {
+  const platform = getCurrentPlatform();
+  
+  switch (platform) {
+    case 'windows':
+      return import('./platform/windows');
+    case 'macos':
+      return import('./platform/macos');
+    case 'linux':
+      return import('./platform/linux');
+    default:
+      return import('./platform/default');
+  }
+};
+```
+
+### Memory Management
+
+**1. Platform Resource Cleanup**
+```javascript
+// Ensure platform-specific resources are cleaned up
+class PlatformManager {
+  constructor() {
+    this.platform = getCurrentPlatform();
+    this.resources = new Set();
+  }
+  
+  async cleanup() {
+    for (const resource of this.resources) {
+      await resource.cleanup();
+    }
+    this.resources.clear();
+  }
+}
+```
+
+## Troubleshooting Migration Issues
+
+### Common Migration Problems
+
+**1. Build Failures**
+```bash
+# Problem: "Configuration not found"
+Error: Could not find tauri.windows.conf.json
+
+# Solution: Update build commands
+npm run build:windows  # Instead of npm run tauri build
+```
+
+**2. Platform Detection Issues**
+```javascript
+// Problem: Incorrect platform detection
+// Solution: Clear platform cache
+import { clearPlatformCache } from '@/utils/platform';
+clearPlatformCache();
+```
+
+**3. File Path Issues**
+```javascript
+// Problem: Windows path separators on other platforms
+// Solution: Always normalize paths
+import { normalizePath } from '@/utils/platform';
+const safePath = normalizePath(userProvidedPath);
+```
+
+### Version Compatibility
+
+**Check Lokus Version:**
+```javascript
+import { checkLokusVersion } from '@lokus/core';
+
+const isCompatible = checkLokusVersion('>=1.0.3');
+if (!isCompatible) {
+  throw new Error('This feature requires Lokus v1.0.3 or later');
+}
+```
+
+**Feature Availability:**
+```javascript
+import { isPlatformFeatureAvailable } from '@/utils/platform';
+
+const features = [
+  'fileManagerReveal',
+  'terminalLaunch', 
+  'nativeNotifications'
+];
+
+const availableFeatures = features.filter(isPlatformFeatureAvailable);
+console.log('Available features:', availableFeatures);
+```
+
+## Getting Help
+
+### Migration Support
+
+**Community Resources:**
+- [GitHub Discussions](https://github.com/lokus-ai/lokus/discussions) - Migration questions and community help
+- [Discord Community](https://discord.gg/lokus) - Real-time migration assistance
+- [Migration Issues](https://github.com/lokus-ai/lokus/issues?q=label%3Amigration) - Report migration problems
+
+**Documentation:**
+- [Cross-Platform Overview](/cross-platform) - Complete platform support information
+- [Developer Setup Guide](/developer-setup) - Development environment setup
+- [Build System Documentation](/build-system) - Build process details
+- [Platform Architecture](/platform-architecture) - Technical implementation details
+
+**Professional Support:**
+- Enterprise migration assistance available
+- Custom platform integration consulting
+- Training and workshops for development teams
+
+---
+
+*This migration guide is updated regularly as new cross-platform features are added. For the latest information, check the [changelog](/changelog) and [GitHub releases](https://github.com/lokus-ai/lokus/releases).*

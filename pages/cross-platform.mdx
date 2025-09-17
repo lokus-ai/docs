@@ -1,0 +1,360 @@
+# Cross-Platform Support
+
+Lokus is designed from the ground up to provide a consistent, high-quality experience across Windows, macOS, and Linux. This comprehensive guide covers everything you need to know about Lokus's cross-platform capabilities.
+
+## Supported Platforms
+
+### Platform Support Matrix
+
+| Platform | Minimum Version | Architecture | Status | Installer Types |
+|----------|----------------|--------------|---------|-----------------|
+| **Windows** | Windows 10 (1903+) | x64, ARM64 | ✅ Stable | MSI, Portable |
+| **macOS** | macOS 10.15 (Catalina) | x64, Apple Silicon | ✅ Stable | DMG, App Store |
+| **Linux** | Ubuntu 20.04+ | x64, ARM64 | ✅ Stable | AppImage, DEB, RPM |
+
+### What's Included
+
+Lokus provides full feature parity across all platforms, including:
+
+- **Rich Text Editor** - Complete TipTap-based editor with all formatting options
+- **Math Rendering** - KaTeX support for inline and block mathematics
+- **Graph Visualization** - Interactive knowledge graphs with physics simulation
+- **Wiki Links** - Bidirectional linking with autocomplete
+- **File Management** - Native file operations and workspace management
+- **Theme System** - Light, dark, and custom themes
+- **Plugin System** - Full plugin architecture support
+- **Performance** - Optimized for each platform's capabilities
+
+## Platform-Specific Features
+
+### Windows Integration
+
+**Native Features:**
+- WebView2 integration for modern web rendering
+- Windows-style context menus and dialogs
+- System tray integration
+- Windows notification system
+- File association support
+- Jump lists and taskbar integration
+
+**Installation Options:**
+- MSI installer with automatic updates
+- Portable executable for standalone use
+- Windows Store distribution (planned)
+
+**System Requirements:**
+- Windows 10 version 1903 or later
+- WebView2 runtime (automatically installed)
+- 4GB RAM minimum, 8GB recommended
+- 500MB available disk space
+
+### macOS Integration
+
+**Native Features:**
+- Native macOS menu bar integration
+- Touch Bar support (where available)
+- macOS-style window controls and behaviors
+- Native file dialogs and system integration
+- Spotlight integration for file search
+- Quick Look integration for previews
+
+**Installation Options:**
+- DMG installer with drag-and-drop installation
+- App Store distribution (planned)
+- Homebrew cask support
+
+**System Requirements:**
+- macOS 10.15 (Catalina) or later
+- Universal binary (Intel + Apple Silicon)
+- 4GB RAM minimum, 8GB recommended
+- 500MB available disk space
+
+### Linux Integration
+
+**Native Features:**
+- GTK3-based native UI components
+- XDG Desktop Portal integration
+- Support for major desktop environments (GNOME, KDE, XFCE)
+- Wayland and X11 compatibility
+- Native file manager integration
+- System-wide theme integration
+
+**Distribution Support:**
+- Ubuntu 20.04+ (LTS and latest)
+- Fedora 34+ (current releases)
+- Debian 11+ (stable and testing)
+- Arch Linux (rolling)
+- openSUSE Leap/Tumbleweed
+
+**Installation Options:**
+- AppImage (universal Linux binary)
+- DEB packages for Debian/Ubuntu
+- RPM packages for Fedora/RHEL
+- Flatpak distribution (planned)
+- Snap package (planned)
+
+## Installation Instructions
+
+### Windows Installation
+
+#### MSI Installer (Recommended)
+1. Download the latest MSI installer from the [releases page](https://github.com/lokus-ai/lokus/releases)
+2. Run the installer with administrator privileges
+3. Follow the installation wizard
+4. WebView2 will be automatically installed if not present
+
+#### Portable Version
+1. Download the portable ZIP archive
+2. Extract to your preferred location
+3. Run `Lokus.exe` directly
+4. No installation required, but WebView2 must be available
+
+### macOS Installation
+
+#### DMG Installer (Recommended)
+1. Download the DMG file from the [releases page](https://github.com/lokus-ai/lokus/releases)
+2. Open the DMG file
+3. Drag Lokus to your Applications folder
+4. Launch from Applications or Spotlight
+
+#### Homebrew Cask
+```bash
+brew install --cask lokus
+```
+
+### Linux Installation
+
+#### AppImage (Universal)
+```bash
+# Download and make executable
+wget https://github.com/lokus-ai/lokus/releases/latest/download/Lokus.AppImage
+chmod +x Lokus.AppImage
+./Lokus.AppImage
+```
+
+#### Ubuntu/Debian (DEB)
+```bash
+# Download and install DEB package
+wget https://github.com/lokus-ai/lokus/releases/latest/download/lokus_amd64.deb
+sudo dpkg -i lokus_amd64.deb
+sudo apt-get install -f  # Fix any missing dependencies
+```
+
+#### Fedora/RHEL (RPM)
+```bash
+# Download and install RPM package
+wget https://github.com/lokus-ai/lokus/releases/latest/download/lokus.x86_64.rpm
+sudo rpm -i lokus.x86_64.rpm
+```
+
+#### Arch Linux (AUR)
+```bash
+# Using yay AUR helper
+yay -S lokus-bin
+
+# Or build from source
+yay -S lokus
+```
+
+## System Requirements
+
+### Minimum Requirements
+
+| Component | Windows | macOS | Linux |
+|-----------|---------|-------|-------|
+| **OS Version** | Windows 10 1903+ | macOS 10.15+ | Ubuntu 20.04+ |
+| **RAM** | 4GB | 4GB | 4GB |
+| **Storage** | 500MB | 500MB | 500MB |
+| **Display** | 1024x768 | 1024x768 | 1024x768 |
+| **Network** | Optional | Optional | Optional |
+
+### Recommended Requirements
+
+| Component | Windows | macOS | Linux |
+|-----------|---------|-------|-------|
+| **OS Version** | Windows 11 | macOS 12+ | Ubuntu 22.04+ |
+| **RAM** | 8GB+ | 8GB+ | 8GB+ |
+| **Storage** | 2GB+ | 2GB+ | 2GB+ |
+| **Display** | 1920x1080+ | 1920x1080+ | 1920x1080+ |
+| **Network** | Broadband | Broadband | Broadband |
+
+## Cross-Platform Compatibility
+
+### File Format Compatibility
+
+Lokus uses a unified file format across all platforms:
+
+- **Document Format**: Markdown-based with metadata
+- **Workspace Format**: JSON configuration
+- **Theme Format**: CSS custom properties
+- **Plugin Format**: JavaScript/WebAssembly
+
+All files created on one platform work seamlessly on others with no conversion needed.
+
+### Settings Synchronization
+
+Settings and preferences are stored in platform-appropriate locations:
+
+- **Windows**: `%APPDATA%\Lokus\`
+- **macOS**: `~/Library/Application Support/Lokus/`
+- **Linux**: `~/.config/lokus/`
+
+Settings can be manually synchronized across devices by copying configuration files.
+
+### Plugin Compatibility
+
+Plugins written for Lokus work across all platforms without modification, as they use:
+- Standard web technologies (HTML, CSS, JavaScript)
+- Tauri's unified API layer
+- Platform-agnostic file operations
+
+## Performance Characteristics
+
+### Platform Performance Comparison
+
+| Metric | Windows | macOS | Linux |
+|--------|---------|-------|-------|
+| **Startup Time** | 2-3 seconds | 1-2 seconds | 1-3 seconds |
+| **Memory Usage** | 150-200MB | 120-180MB | 100-150MB |
+| **File Operations** | Fast | Very Fast | Fast |
+| **Rendering** | WebView2 | WKWebView | WebKitGTK |
+
+### Platform-Specific Optimizations
+
+**Windows Optimizations:**
+- WebView2 hardware acceleration
+- Windows-specific caching strategies
+- Optimized file system operations
+- Windows Registry integration
+
+**macOS Optimizations:**
+- Metal rendering acceleration
+- Cocoa framework optimizations
+- Memory pressure handling
+- Energy efficiency optimizations
+
+**Linux Optimizations:**
+- GTK theme integration
+- Wayland compositor optimizations
+- Efficient X11 operations
+- Lightweight resource usage
+
+## Keyboard Shortcuts
+
+Lokus adapts keyboard shortcuts to match platform conventions:
+
+### Universal Shortcuts
+
+| Action | Windows/Linux | macOS |
+|--------|---------------|-------|
+| **New Document** | Ctrl+N | ⌘+N |
+| **Open** | Ctrl+O | ⌘+O |
+| **Save** | Ctrl+S | ⌘+S |
+| **Undo** | Ctrl+Z | ⌘+Z |
+| **Redo** | Ctrl+Y | ⌘+Shift+Z |
+| **Bold** | Ctrl+B | ⌘+B |
+| **Italic** | Ctrl+I | ⌘+I |
+| **Find** | Ctrl+F | ⌘+F |
+| **Preferences** | Ctrl+, | ⌘+, |
+
+### Platform-Specific Features
+
+**Windows:**
+- Alt+F4 to close application
+- F11 for fullscreen
+- Windows key integration
+
+**macOS:**
+- ⌘+Q to quit application
+- ⌘+M to minimize
+- Control+⌘+F for fullscreen
+
+**Linux:**
+- Follows desktop environment conventions
+- Customizable shortcuts via system settings
+- Window manager integration
+
+## Troubleshooting
+
+### Common Issues and Solutions
+
+#### Windows Issues
+
+**"Application failed to start" error:**
+```powershell
+# Install/update WebView2
+winget install Microsoft.EdgeWebView2
+```
+
+**Permission denied errors:**
+- Run as administrator during first launch
+- Check Windows Defender exclusions
+- Verify user account permissions
+
+#### macOS Issues
+
+**"App is damaged" error:**
+```bash
+# Clear quarantine attribute
+xattr -cr /Applications/Lokus.app
+```
+
+**Notarization warnings:**
+- Download from official sources only
+- Verify code signature
+- Check System Preferences > Security & Privacy
+
+#### Linux Issues
+
+**Missing dependencies:**
+```bash
+# Ubuntu/Debian
+sudo apt install libgtk-3-0 libwebkit2gtk-4.1-0
+
+# Fedora
+sudo dnf install gtk3 webkit2gtk4.0
+
+# Arch
+sudo pacman -S gtk3 webkit2gtk
+```
+
+**Wayland compatibility:**
+```bash
+# Force X11 if needed
+GDK_BACKEND=x11 lokus
+```
+
+## Migration and Updates
+
+### Automatic Updates
+
+- **Windows**: MSI installer supports automatic updates via Windows Update mechanism
+- **macOS**: DMG-based updates with Sparkle framework
+- **Linux**: Package manager updates for repository-installed versions
+
+### Manual Migration
+
+When migrating between platforms:
+
+1. **Export Settings**: File > Export > Settings
+2. **Copy Documents**: Manually copy workspace directories
+3. **Import Settings**: File > Import > Settings on new platform
+4. **Verify Plugins**: Reinstall platform-specific plugins if needed
+
+## Getting Help
+
+### Platform-Specific Support
+
+- **Windows**: Check Windows Event Viewer for application logs
+- **macOS**: Use Console.app to view system logs
+- **Linux**: Check journald logs with `journalctl --user`
+
+### Community Resources
+
+- [GitHub Discussions](https://github.com/lokus-ai/lokus/discussions) - General questions and community support
+- [Discord Community](https://discord.gg/lokus) - Real-time help and discussions
+- [Documentation](/) - Comprehensive guides and tutorials
+
+---
+
+*Need help with cross-platform development? Check out our [Developer Setup Guide](/developer-setup) and [Build System Documentation](/build-system).*

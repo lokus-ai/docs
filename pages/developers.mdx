@@ -8,15 +8,21 @@ Whether you're contributing to Lokus core or building plugins, this section has 
 
 ### 🛠️ Development Setup
 Set up your development environment:
-- **Development Environment** - Complete setup guide (coming soon)
-- **Building & Testing** - Build processes and testing (coming soon)
+- **[Developer Setup Guide](/developer-setup)** - Complete cross-platform development setup
+- **[Build System Documentation](/build-system)** - Build processes and platform-specific configurations
 - **Contributing Guidelines** - How to contribute to Lokus (coming soon)
 
 ### 🏗️ Architecture  
 Understand how Lokus works:
-- **System Overview** - High-level architecture (coming soon)
+- **[Platform Architecture](/platform-architecture)** - Cross-platform abstraction layer and technical implementation
 - **Editor Architecture** - How the editor system works (coming soon)
 - **Plugin System** - Plugin architecture and APIs (coming soon)
+
+### 🌐 Cross-Platform Development
+Build for Windows, macOS, and Linux:
+- **[Cross-Platform Overview](/cross-platform)** - Platform support and capabilities
+- **[Migration Guide](/cross-platform-migration)** - Upgrading and migrating between platforms
+- **Platform-Specific Features** - Leveraging native capabilities on each platform
 
 ### 🔌 Plugin Development
 Create powerful extensions for Lokus:
@@ -29,8 +35,8 @@ Create powerful extensions for Lokus:
 
 ### For Contributors
 1. **Clone the repository**: `git clone https://github.com/lokus-ai/lokus`
-2. **Set up development**: Follow the development environment guide
-3. **Run in development**: `npm run tauri dev`
+2. **Set up development**: Follow the [Developer Setup Guide](/developer-setup)
+3. **Run in development**: `npm run tauri dev` (or platform-specific: `npm run dev:windows`, `npm run dev:macos`, `npm run dev:linux`)
 4. **Make changes**: Follow our contributing guidelines
 5. **Submit PR**: Create a pull request with your improvements
 
@@ -48,6 +54,7 @@ Create powerful extensions for Lokus:
 - **Backend**: Rust, Tauri 2.0
 - **Editor**: TipTap with custom extensions
 - **Build**: Vite, Vitest for testing
+- **Platform**: Cross-platform abstraction layer with Windows, macOS, and Linux support
 
 ### Key Libraries
 - **UI Framework**: React with modern hooks
@@ -58,9 +65,11 @@ Create powerful extensions for Lokus:
 
 ### Architecture Highlights
 - **Native Performance**: Rust backend for desktop-class performance
+- **Cross-Platform**: Unified codebase supporting Windows, macOS, and Linux
 - **Security**: Sandboxed plugin execution
 - **Extensibility**: Comprehensive plugin API
 - **Modern**: Latest web technologies with native integration
+- **Platform Abstraction**: Trait-based architecture for platform-specific operations
 
 ## Development Areas
 
@@ -70,6 +79,7 @@ Contribute to the main Lokus application:
 - **File Management**: Improve workspace navigation
 - **UI/UX**: Design and usability improvements
 - **Performance**: Optimization and efficiency
+- **Cross-Platform Features**: Platform-specific integrations and optimizations
 - **Testing**: Improve test coverage and quality
 
 ### Plugin Ecosystem
