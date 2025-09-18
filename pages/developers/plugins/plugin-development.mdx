@@ -209,7 +209,7 @@ const PomodoroTimer: StatusBarComponent = () => {
       resetTimer();
     }
   }, [
-    React.createElement('span', { key: 'icon' }, isBreak ? '🧘' : '🍅'),
+    React.createElement('span', { key: 'icon' }, isBreak ? 'Break' : 'Work'),
     React.createElement('span', { key: 'time' }, formatTime(time)),
     React.createElement('span', { 
       key: 'status', 
@@ -379,7 +379,7 @@ const CodeSnippetsPlugin: LokusPlugin = {
           cursor: 'pointer',
           fontSize: '12px'
         }
-      }, `📄 ${snippets.length} snippets`);
+      }, `${snippets.length} snippets`);
     };
 
     context.statusBar.register('snippets', SnippetsButton);
@@ -439,7 +439,7 @@ const CustomThemePlugin: LokusPlugin = {
           color: 'var(--lokus-text)',
           cursor: 'pointer'
         }
-      }, '🎨');
+      }, 'Theme');
     };
 
     context.statusBar.register('theme-selector', ThemeSelector);

@@ -1,21 +1,21 @@
 {
   "index": "Introduction",
-  "getting-started": "🚀 Getting Started", 
-  "essentials": "📖 Essentials",
-  "advanced": "🎯 Advanced",
-  "cross-platform": "🌐 Cross-Platform",
-  "developers": "🔧 Developers",
-  "reference": "📚 Reference", 
-  "tutorials": "📋 Tutorials",
-  "support": "🆘 Support",
+  "getting-started": "Getting Started", 
+  "essentials": "Essentials",
+  "advanced": "Advanced",
+  "cross-platform": "Cross-Platform",
+  "developers": "Developers",
+  "reference": "Reference", 
+  "tutorials": "Tutorials",
+  "support": "Support",
   "---": {
     "type": "separator"
   },
-  "developer-setup": "🛠️ Developer Setup",
-  "build-system": "🏗️ Build System",
-  "platform-architecture": "🏛️ Platform Architecture",
-  "cross-platform-migration": "🔄 Migration Guide",
-  "task-management": "📋 Task Management",
-  "shortcuts": "⌨️ Shortcuts",
-  "changelog": "📈 Changelog"
+  "developer-setup": "Developer Setup",
+  "build-system": "Build System",
+  "platform-architecture": "Platform Architecture",
+  "cross-platform-migration": "Migration Guide",
+  "task-management": "Task Management",
+  "shortcuts": "Shortcuts",
+  "changelog": "Changelog"
 }
