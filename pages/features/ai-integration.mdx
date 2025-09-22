@@ -1,0 +1,386 @@
+# AI Integration (MCP Server)
+
+Lokus features a comprehensive Model Context Protocol (MCP) server that provides 68 sophisticated tools for AI assistant integration, transforming your workspace into an AI-enhanced knowledge management platform.
+
+## Overview
+
+The MCP server implements the industry-standard Model Context Protocol, enabling seamless integration with AI assistants like Claude. This unlocks powerful AI-driven workflows for note management, content analysis, and workspace optimization.
+
+## Key Features
+
+### 68 AI Tools
+- **Note Management** - Create, update, organize, and link notes intelligently
+- **Content Analysis** - AI-powered insights and pattern detection
+- **Workspace Operations** - Automated cleanup and optimization
+- **Advanced Search** - Semantic search with relationship analysis
+- **File Operations** - Intelligent file management and organization
+- **Editor Enhancements** - Rich text formatting and content insertion
+
+### Production-Ready Architecture
+- **Standards Compliant** - Full MCP protocol implementation
+- **Stdio Communication** - Standard input/output for AI integration
+- **Error Handling** - Graceful failure management and recovery
+- **Performance Optimized** - Fast tool execution and minimal resource usage
+
+### Intelligent Features
+- **Knowledge Graph** - Understand relationships between your notes
+- **Content Suggestions** - AI-recommended connections and improvements
+- **Automated Organization** - Smart workspace structuring
+- **Pattern Recognition** - Identify trends and gaps in your knowledge
+
+## Tool Categories
+
+### Note Management Tools (11 tools)
+
+**Core Operations:**
+- `create_note` - Advanced note creation with templates and metadata
+- `update_note` - Intelligent note editing with backup creation
+- `duplicate_note` - Smart duplication with reference updates
+
+**Organization:**
+- `organize_note_sections` - Restructure content intelligently
+- `extract_note_outline` - Generate hierarchical outlines
+- `generate_note_summary` - AI-powered content summarization
+
+**Linking:**
+- `link_notes` - Create and manage WikiLinks
+- `resolve_wikilinks` - Fix broken links automatically
+- `convert_tasks_to_kanban` - Extract tasks to kanban boards
+
+### Workspace Management Tools (12 tools)
+
+**Setup & Configuration:**
+- `initialize_workspace` - Complete workspace setup
+- `get_workspace_info` - Comprehensive analysis
+- `update_workspace_config` - Dynamic configuration
+
+**Data Management:**
+- `backup_workspace` - Intelligent backup with versioning
+- `restore_workspace` - Conflict-resolution restore
+- `export_workspace` - Multi-format export (JSON, Markdown, Archive)
+- `import_content` - Flexible content import
+- `sync_workspace` - External synchronization
+
+**Maintenance:**
+- `clean_workspace` - Automated cleanup and optimization
+- `analyze_workspace_health` - Health monitoring and diagnostics
+
+### Advanced Search Tools (16 tools)
+
+**Content Discovery:**
+- `search_content` - Full-text search with regex and filtering
+- `search_wiki_links` - WikiLink relationship analysis
+- `search_by_tags` - Tag-based content discovery
+- `find_similar` - Content similarity detection
+
+**Graph Analysis:**
+- `get_graph_data` - Knowledge graph generation
+- `get_backlinks` - Backlink analysis and visualization
+- `find_broken_links` - Link integrity checking
+
+**Smart Search:**
+- `search_recent` - Recent activity tracking
+- `get_search_suggestions` - AI-powered recommendations
+- `search_favorites` - Bookmarked content management
+
+### AI Analysis Tools (10 tools)
+
+**Content Analysis:**
+- `analyze_content` - Deep content analysis and insights
+- `analyze_writing_patterns` - Writing style assessment
+- `analyze_content_quality` - Quality evaluation and improvement
+
+**Intelligence:**
+- `generate_insights` - Pattern detection and recommendations
+- `suggest_connections` - Intelligent content linking
+- `detect_knowledge_gaps` - Gap identification and suggestions
+- `predict_content_needs` - Predictive content planning
+
+**Optimization:**
+- `optimize_structure` - Content organization optimization
+- `analyze_collaboration_patterns` - Team workflow analysis
+
+### File Operations Tools (6 tools)
+
+- `read_file` - Advanced file reading with encoding detection
+- `write_file` - Secure file writing with validation
+- `list_files` - Directory enumeration with filtering
+- `get_file_metadata` - Comprehensive file analysis
+
+### Editor Enhancement Tools (10 tools)
+
+**Text Formatting:**
+- `format_text` - Rich text formatting (bold, italic, code, etc.)
+- `insert_heading` - Hierarchical heading management
+- `insert_list` - List creation and formatting
+
+**Content Insertion:**
+- `insert_link` - WikiLink and regular link insertion
+- `insert_math` - LaTeX/KaTeX equation insertion
+- `insert_table` - Dynamic table creation
+- `insert_code_block` - Code blocks with syntax highlighting
+- `create_task_list` - Interactive task list generation
+
+**Content Operations:**
+- `get_file_content` - Content reading with statistics
+- `replace_content` - Search and replace operations
+
+## Getting Started
+
+### Prerequisites
+
+To use AI integration, you need:
+1. **Lokus desktop app** with MCP server enabled
+2. **AI assistant** that supports MCP protocol (like Claude)
+3. **Active workspace** with content to analyze
+
+### Setup Process
+
+1. **Enable MCP Server** in Lokus preferences
+2. **Configure AI Assistant** to connect to Lokus MCP server
+3. **Verify Connection** by running a simple tool test
+4. **Start Using AI Tools** through your AI assistant
+
+### Basic Usage
+
+Once connected, you can ask your AI assistant to:
+
+```
+"Analyze my workspace and suggest improvements"
+"Create a summary of my recent notes"
+"Find broken links in my knowledge base"
+"Organize my notes by topic"
+"Generate a knowledge graph of my content"
+```
+
+## Tool Examples
+
+### Creating and Managing Notes
+
+```javascript
+// Create a new note with template
+await mcp.create_note({
+  title: "Project Planning",
+  template: "project",
+  tags: ["planning", "work"],
+  content: "Initial project outline..."
+});
+
+// Update existing note with backup
+await mcp.update_note({
+  path: "projects/planning.md",
+  appendContent: "\n## New Section\nAdditional content...",
+  createBackup: true
+});
+```
+
+### Content Analysis
+
+```javascript
+// Analyze content for insights
+const analysis = await mcp.analyze_content({
+  path: "research/findings.md",
+  analysisType: "comprehensive",
+  extractKeywords: true,
+  suggestConnections: true
+});
+
+// Generate content summary
+const summary = await mcp.generate_note_summary({
+  path: "meeting-notes.md",
+  summaryLength: "medium",
+  includeKeywords: true
+});
+```
+
+### Workspace Operations
+
+```javascript
+// Get comprehensive workspace info
+const workspaceInfo = await mcp.get_workspace_info({
+  includeStats: true,
+  includeHealth: true,
+  includeSummary: true
+});
+
+// Backup workspace with compression
+await mcp.backup_workspace({
+  name: "weekly-backup",
+  compression: true,
+  includeMetadata: true
+});
+```
+
+### Search and Discovery
+
+```javascript
+// Advanced content search
+const results = await mcp.search_content({
+  query: "machine learning",
+  fileTypes: [".md", ".txt"],
+  useRegex: false,
+  maxResults: 20,
+  contextLines: 3
+});
+
+// Find similar content
+const similar = await mcp.find_similar({
+  referencePath: "ai-research.md",
+  similarityType: "content",
+  threshold: 0.7,
+  maxResults: 10
+});
+```
+
+## Performance
+
+### Tool Execution Speed
+- **Basic Operations**: <100ms (read, list, search)
+- **Content Analysis**: 200-500ms (analysis, insights)
+- **File Operations**: 50-200ms (read, write, metadata)
+- **AI Analysis**: 300-1000ms (pattern analysis, complex insights)
+
+### Server Performance
+- **Startup Time**: ~200ms for full server initialization
+- **Memory Usage**: Efficient class-based architecture
+- **Concurrent Connections**: Supports multiple AI assistant sessions
+- **Tool Routing**: 100-150ms average response time
+
+## Configuration
+
+### Server Settings
+
+The MCP server can be configured through:
+
+```json
+{
+  "mcp": {
+    "enabled": true,
+    "port": 3000,
+    "logLevel": "info",
+    "maxConnections": 5,
+    "timeout": 30000
+  }
+}
+```
+
+### Tool Permissions
+
+Control which tools are available:
+
+```json
+{
+  "tools": {
+    "noteTools": true,
+    "searchTools": true,
+    "aiTools": true,
+    "fileTools": true,
+    "workspaceTools": true,
+    "editorTools": true
+  }
+}
+```
+
+## Development
+
+### Custom Tools
+
+Developers can extend the MCP server with custom tools:
+
+```javascript
+class CustomTool {
+  static getTools() {
+    return [{
+      name: "custom_analysis",
+      description: "Perform custom content analysis",
+      inputSchema: {
+        type: "object",
+        properties: {
+          content: { type: "string" },
+          analysisType: { type: "string" }
+        }
+      }
+    }];
+  }
+
+  static async executeTool(name, args) {
+    if (name === "custom_analysis") {
+      // Custom implementation
+      return await this.performCustomAnalysis(args);
+    }
+  }
+}
+```
+
+### Testing Tools
+
+Test individual tools:
+
+```bash
+# Test MCP server connection
+npm run test:mcp
+
+# Test specific tool
+node test-tool.js search_content '{"query": "test"}'
+
+# Run comprehensive tool tests
+npm run test:mcp:comprehensive
+```
+
+## Troubleshooting
+
+### Common Issues
+
+**Connection Failed**
+- Verify MCP server is running
+- Check port configuration
+- Ensure AI assistant MCP client is properly configured
+
+**Tool Execution Errors**
+- Check workspace path configuration
+- Verify file permissions
+- Review error logs for specific issues
+
+**Performance Issues**
+- Monitor memory usage
+- Check for large file operations
+- Consider enabling tool caching
+
+### Debug Mode
+
+Enable detailed logging:
+
+```json
+{
+  "debug": {
+    "mcp": true,
+    "tools": true,
+    "performance": true
+  }
+}
+```
+
+## Security
+
+### Access Control
+- **Workspace Boundaries** - Tools restricted to workspace directories
+- **Path Validation** - Prevents directory traversal attacks
+- **Input Sanitization** - Protection against malicious inputs
+- **Error Handling** - No sensitive information leakage
+
+### Best Practices
+- **Regular Updates** - Keep MCP server updated
+- **Monitor Usage** - Track tool execution and performance
+- **Backup Data** - Regular automated backups
+- **Access Logs** - Monitor AI assistant connections
+
+## Related Documentation
+
+- [Developer Setup](/developers/mcp-server)
+- [API Reference](/reference/mcp-api)
+- [Authentication](/features/authentication)
+- [Workspace Management](/features/workspace)
+
+---
+
+The MCP server integration represents a major leap forward in AI-enhanced knowledge management, providing unprecedented automation and intelligence for your workspace operations.

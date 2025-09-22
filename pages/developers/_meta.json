@@ -1,5 +1,7 @@
 {
   "setup": "Development Setup",
-  "architecture": "Architecture",
+  "architecture": "Architecture", 
+  "oauth-implementation": "OAuth 2.0 Implementation Guide",
+  "mcp-server": "MCP Server Development Guide",
   "plugins": "Plugin Development"
 }

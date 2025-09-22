@@ -1,0 +1,370 @@
+# Advanced Split Pane System
+
+Lokus features a comprehensive, production-ready split pane system that rivals VS Code and other professional editors. The system provides flexible, resizable panes with multiple layout options and advanced user controls.
+
+## Overview
+
+The split pane system allows you to work with multiple documents simultaneously, compare content side-by-side, and create flexible workspace layouts adapted to your specific needs. Whether you're writing documentation while referencing source material or comparing different versions of a document, split panes enhance your productivity significantly.
+
+## Key Features
+
+### Flexible Layouts
+- **Vertical Split** - Side-by-side panes for wide content
+- **Horizontal Split** - Top/bottom panes for long documents
+- **Dynamic Switching** - Change layouts seamlessly
+- **Responsive Design** - Adapts to all screen sizes
+
+### Resizable Panes
+- **Draggable Divider** - Smooth mouse interaction for resizing
+- **Dynamic Sizing** - Adjust pane ratios from 20% to 80%
+- **Double-click Reset** - Quickly return to 50/50 split
+- **Visual Feedback** - Hover effects and smooth transitions
+- **Smart Constraints** - Prevents panes from becoming too small
+
+### Advanced Controls
+- **Tab Bar Integration** - Professional controls in the tab bar
+- **Keyboard Shortcuts** - Efficient keyboard-driven operations
+- **Synchronized Scrolling** - Optional linked scrolling between panes
+- **Smart Visibility** - Controls appear only when relevant
+
+### Universal File Support
+- **Markdown Files** - Full rich text editor in both panes
+- **Kanban Boards** - Proper kanban component rendering
+- **Graph Views** - Knowledge graph visualization support
+- **Canvas Files** - Interactive canvas with save functionality
+- **Plugin Views** - Third-party plugin component support
+- **Mixed Content** - Different file types in each pane simultaneously
+
+## Getting Started
+
+### Enabling Split View
+
+**Method 1: Tab Bar Controls**
+1. Open any file in the editor
+2. Click the **Split View** button in the tab bar
+3. Choose your preferred layout (vertical or horizontal)
+
+**Method 2: Keyboard Shortcuts**
+- `Cmd/Ctrl + \\` - Toggle split view
+- `Cmd/Ctrl + Shift + \\` - Toggle split direction
+
+**Method 3: Context Menu**
+- Right-click on a tab
+- Select "Open in Split Pane"
+
+### Basic Usage
+
+Once split view is enabled:
+
+1. **Left/Top Pane** - Shows your current file
+2. **Right/Bottom Pane** - Initially empty, ready for content
+3. **Divider** - Drag to resize panes
+4. **Tab Bar Controls** - Additional options and settings
+
+## Pane Management
+
+### Opening Files in Panes
+
+**Drag and Drop:**
+- Drag any file from the sidebar to a pane
+- Drag tabs between panes to reorganize
+
+**Tab Bar Controls:**
+- Use the split controls to open files
+- Select specific panes for new content
+
+**Context Menu:**
+- Right-click files in sidebar
+- Choose "Open in Right/Bottom Pane"
+
+### Resizing Panes
+
+**Mouse Interaction:**
+- **Drag Divider** - Click and drag to resize
+- **Double-click Divider** - Reset to 50/50 split
+- **Hover Effects** - Visual feedback during resize
+
+**Keyboard Shortcuts:**
+- `Cmd/Ctrl + =` - Reset pane sizes to 50/50
+- `Cmd/Ctrl + [` - Make left/top pane larger
+- `Cmd/Ctrl + ]` - Make right/bottom pane larger
+
+**Tab Bar Button:**
+- Click the **Reset Size** button for instant 50/50 split
+
+### Layout Switching
+
+**Between Vertical and Horizontal:**
+- Use tab bar toggle button
+- Keyboard shortcut: `Cmd/Ctrl + Shift + \\`
+- Content and ratios are preserved during switch
+
+**Layout Persistence:**
+- Split state saved per workspace
+- Pane contents remembered across sessions
+- Layout preferences maintained
+
+## Advanced Features
+
+### Synchronized Scrolling
+
+Enable linked scrolling between panes:
+
+**Activation:**
+- Toggle button in tab bar
+- Keyboard shortcut: `Cmd/Ctrl + Shift + S`
+- Context menu option
+
+**Behavior:**
+- **Proportional Scrolling** - Scroll one pane, other follows proportionally
+- **Smart Calculation** - Handles different content lengths correctly
+- **Smooth Synchronization** - No jarring jumps or delays
+- **Toggle Control** - Easy enable/disable as needed
+
+### Independent Operations
+
+Each pane operates independently:
+
+**Scrolling:**
+- Separate scroll positions by default
+- No jumping when switching between panes
+- Scroll state preserved when changing tabs
+
+**Editing:**
+- Full editor functionality in both panes
+- Independent undo/redo history
+- Separate find/replace operations
+
+**File Operations:**
+- Save files independently
+- Different file types in each pane
+- Separate formatting and editing modes
+
+### Professional Workflows
+
+**Documentation Writing:**
+- Reference material in one pane
+- Writing in the other pane
+- Links and cross-references easily accessible
+
+**Code Review:**
+- Original version in left pane
+- Modified version in right pane
+- Side-by-side comparison workflow
+
+**Research and Analysis:**
+- Multiple sources open simultaneously
+- Compare different perspectives
+- Easy cross-referencing and note-taking
+
+**Multi-document Editing:**
+- Work on related files together
+- Copy content between documents
+- Maintain context across multiple files
+
+## Keyboard Shortcuts
+
+### Split View Management
+- `Cmd/Ctrl + \\` - Toggle split view on/off
+- `Cmd/Ctrl + Shift + \\` - Switch between vertical/horizontal
+- `Cmd/Ctrl + =` - Reset pane sizes to 50/50
+- `Cmd/Ctrl + Shift + S` - Toggle synchronized scrolling
+
+### Pane Navigation
+- `Cmd/Ctrl + 1` - Focus left/top pane
+- `Cmd/Ctrl + 2` - Focus right/bottom pane
+- `Cmd/Ctrl + Tab` - Switch between panes
+- `Cmd/Ctrl + Shift + Tab` - Switch panes reverse direction
+
+### Content Management
+- `Cmd/Ctrl + N` - New file in current pane
+- `Cmd/Ctrl + Shift + N` - New file in other pane
+- `Cmd/Ctrl + O` - Open file in current pane
+- `Cmd/Ctrl + Shift + O` - Open file in other pane
+
+## Customization
+
+### Layout Preferences
+
+Configure default split behavior:
+
+```json
+{
+  "splitPane": {
+    "defaultDirection": "vertical",
+    "defaultRatio": 0.5,
+    "enableSyncScrolling": false,
+    "rememberLayout": true,
+    "animationDuration": 200
+  }
+}
+```
+
+### Visual Customization
+
+Customize the appearance:
+
+```css
+/* Divider styling */
+.split-pane-divider {
+  background: var(--border-color);
+  width: 2px;
+  cursor: col-resize;
+}
+
+/* Pane borders */
+.split-pane-left,
+.split-pane-right {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+/* Hover effects */
+.split-pane-divider:hover {
+  background: var(--accent-color);
+  transition: background 0.2s ease;
+}
+```
+
+### Keyboard Shortcuts
+
+Customize keyboard shortcuts in preferences:
+
+```json
+{
+  "keybindings": {
+    "lokus:toggle-split-view": "Cmd+\\",
+    "lokus:toggle-split-direction": "Cmd+Shift+\\",
+    "lokus:reset-pane-size": "Cmd+=",
+    "lokus:toggle-sync-scrolling": "Cmd+Shift+S"
+  }
+}
+```
+
+## Technical Implementation
+
+### Architecture
+
+The split pane system uses modern React patterns:
+
+**State Management:**
+- `splitDirection` - Tracks vertical/horizontal orientation
+- `leftPaneSize` - Stores pane size percentage
+- `syncScrolling` - Manages scroll synchronization
+- `rightPaneFile/Content/Title` - Manages right pane content
+
+**Event Handling:**
+- Mouse drag events for resizing
+- Scroll event synchronization
+- Keyboard shortcut integration
+- Touch support for mobile devices
+
+**Performance Optimization:**
+- Efficient re-rendering with React.memo
+- Debounced resize operations
+- Lazy loading of pane content
+- Memory management for large files
+
+### Component Structure
+
+```tsx
+<SplitPaneContainer>
+  <LeftPane>
+    <Editor file={leftFile} />
+  </LeftPane>
+  <Divider onResize={handleResize} />
+  <RightPane>
+    <Editor file={rightFile} />
+  </RightPane>
+  <TabBar controls={splitControls} />
+</SplitPaneContainer>
+```
+
+### CSS Grid Implementation
+
+```css
+.split-container {
+  display: grid;
+  grid-template-columns: var(--left-size) 2px 1fr;
+  grid-template-rows: 1fr;
+  height: 100%;
+  gap: 0;
+}
+
+.split-container.horizontal {
+  grid-template-columns: 1fr;
+  grid-template-rows: var(--top-size) 2px 1fr;
+}
+```
+
+## Performance
+
+### Metrics
+- **Smooth Interactions** - 60fps animations and transitions
+- **Responsive Controls** - <50ms response time
+- **Memory Efficient** - Minimal overhead for split functionality
+- **Stable Performance** - No lag during pane operations
+
+### Optimization
+- **Lazy Loading** - Content loaded only when needed
+- **Virtual Scrolling** - Efficient handling of large documents
+- **Event Debouncing** - Optimized resize and scroll operations
+- **Memory Cleanup** - Proper disposal of event listeners
+
+## Accessibility
+
+### Keyboard Navigation
+- Full keyboard accessibility
+- Screen reader support
+- Focus management between panes
+- Accessible resize controls
+
+### Visual Accessibility
+- High contrast divider options
+- Keyboard focus indicators
+- Reduced motion support
+- Customizable visual feedback
+
+## Troubleshooting
+
+### Common Issues
+
+**Panes Not Resizing:**
+- Check if minimum size constraints are met
+- Verify mouse events are being captured
+- Try keyboard shortcuts as alternative
+
+**Synchronized Scrolling Issues:**
+- Disable and re-enable sync scrolling
+- Check if both panes have scrollable content
+- Verify content lengths support synchronization
+
+**Performance Problems:**
+- Reduce animation duration in preferences
+- Check for large files causing lag
+- Monitor memory usage in developer tools
+
+### Debug Mode
+
+Enable split pane debugging:
+
+```json
+{
+  "debug": {
+    "splitPane": true,
+    "logResize": true,
+    "logScrollSync": true
+  }
+}
+```
+
+## Related Features
+
+- [Rich Text Editor](/features/editor)
+- [File Management](/features/file-management)
+- [Workspace Navigation](/features/workspace)
+- [Keyboard Shortcuts](/reference/keyboard-shortcuts)
+
+---
+
+The advanced split pane system transforms Lokus into a powerful multi-document workspace, enabling professional workflows that rival the best IDEs and editors available today.

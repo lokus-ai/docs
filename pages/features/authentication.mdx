@@ -1,0 +1,205 @@
+# OAuth 2.0 Authentication
+
+Lokus features a comprehensive OAuth 2.0 authentication system that seamlessly integrates with the Lokus web platform, providing secure user authentication and synchronized workspaces.
+
+## Overview
+
+The authentication system uses industry-standard OAuth 2.0 with PKCE (Proof Key for Code Exchange) to ensure maximum security while maintaining a smooth user experience. Users can sign in once and maintain persistent sessions across app restarts.
+
+## Key Features
+
+### Secure Authentication
+- **OAuth 2.0 + PKCE** - Industry-standard security protocol
+- **Cross-platform token storage** - Secure keychain integration
+- **Automatic token refresh** - Seamless session management
+- **Deep link support** - Smooth browser-to-app flow
+
+### Web Platform Integration
+- **Unified accounts** - Same credentials for web and desktop
+- **Synchronized workspaces** - Access your data anywhere
+- **Real-time sync** - Changes sync across devices
+- **Cloud backup** - Secure data protection
+
+### Cross-Platform Support
+- **macOS** - Native keychain integration
+- **Windows** - Credential Manager support
+- **Linux** - Secret Service API
+- **Development mode** - File-based storage fallback
+
+## Getting Started
+
+### Signing In
+
+1. **Click the Sign In button** in the status bar
+2. **Browser opens** to the Lokus web platform
+3. **Complete authentication** using your existing account or create new
+4. **Automatic return** to the desktop app
+5. **Welcome message** confirms successful authentication
+
+![Authentication Flow](/images/auth-flow.png)
+
+### Status Indicators
+
+The status bar shows your current authentication state:
+
+- **Sign In button** - Not authenticated
+- **User profile** - Successfully authenticated with dropdown menu
+- **Sync status** - Real-time synchronization indicator
+
+## User Interface
+
+### AuthButton Component
+
+The authentication button dynamically adapts based on your current state:
+
+**Unauthenticated State:**
+- Shows "Sign In" button with login icon
+- Click to initiate OAuth flow
+- Hover effects provide visual feedback
+
+**Authenticated State:**
+- Displays user profile with avatar (if available)
+- Shows user name truncated for space
+- Dropdown menu with account options
+
+### Dropdown Menu Options
+
+When authenticated, click your profile to access:
+
+- **Account Information** - View your profile details
+- **Account Settings** - Manage your account (opens web platform)
+- **Sign Out** - Securely end your session
+
+## Security Features
+
+### OAuth 2.0 + PKCE
+- **Authorization Code Flow** - Secure token exchange
+- **PKCE Protection** - Prevents code interception attacks
+- **State Parameter** - CSRF protection
+- **Secure Redirects** - Validated callback URLs
+
+### Token Management
+- **Encrypted Storage** - Platform-specific secure storage
+- **Automatic Expiry** - Tokens expire and refresh automatically
+- **Revocable Access** - Tokens can be revoked from web platform
+- **Cross-session Persistence** - Stay signed in between app launches
+
+### Privacy Protection
+- **No Password Storage** - Passwords never stored locally
+- **Token-only Authentication** - Secure, revocable access tokens
+- **Minimal Data** - Only necessary user profile information
+- **User Control** - Complete control over authentication state
+
+## Troubleshooting
+
+### Common Issues
+
+**Authentication Failed**
+- Check internet connection
+- Verify browser allows redirects
+- Try signing out and back in
+
+**Token Expired**
+- Usually handled automatically
+- Manual sign out/in if issues persist
+- Check system clock accuracy
+
+**Sync Issues**
+- Verify authentication status
+- Check network connectivity
+- Restart app if problems continue
+
+### Development Mode
+
+For developers, authentication uses file-based storage:
+- Tokens stored in `~/.lokus/auth_token.json`
+- Profile data in `~/.lokus/user_profile.json`
+- Debug logging available in console
+
+## Advanced Usage
+
+### Authenticated API Calls
+
+When authenticated, the app can make secure API calls:
+
+```javascript
+// Using the AuthManager
+const response = await authManager.authenticatedFetch('/api/user/workspaces');
+
+// Using the React hook
+const { authenticatedFetch } = useAuth();
+const data = await authenticatedFetch('/api/data');
+```
+
+### Authentication Events
+
+Listen for authentication state changes:
+
+```javascript
+const unsubscribe = authManager.onAuthStateChange((authState) => {
+  console.log('Auth state changed:', authState.isAuthenticated);
+  console.log('User:', authState.user);
+});
+
+// Clean up when done
+unsubscribe();
+```
+
+### Token Access
+
+Get current access token for API calls:
+
+```javascript
+const token = await authManager.getAccessToken();
+if (token) {
+  // Make authenticated API calls
+  fetch('/api/protected', {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+}
+```
+
+## Migration Guide
+
+### Existing Users
+
+If you've been using Lokus without authentication:
+
+1. **No data loss** - All local data remains intact
+2. **Optional upgrade** - Authentication is completely optional
+3. **Enhanced features** - Gain access to sync and collaboration
+4. **Seamless transition** - Existing workflows unchanged
+
+### From Other Platforms
+
+Importing data with authentication:
+
+1. **Sign in first** to establish your account
+2. **Import data** using File → Import
+3. **Sync verification** confirms successful upload
+4. **Cross-device access** available immediately
+
+## Best Practices
+
+### Security
+- **Sign out on shared computers** - Always sign out when using public devices
+- **Regular token refresh** - Let the app handle automatic token management
+- **Account security** - Use strong passwords and enable 2FA on web platform
+
+### Workflow
+- **Stay signed in** - Maintain persistent session for best experience
+- **Regular sync** - Changes sync automatically when authenticated
+- **Network awareness** - App handles offline/online transitions gracefully
+
+## Related Features
+
+- [Workspace Synchronization](/features/workspace-sync)
+- [Collaboration Tools](/features/collaboration)
+- [Cloud Backup](/features/backup)
+- [MCP Server Integration](/developers/mcp-server)
+
+---
+
+The OAuth 2.0 authentication system transforms Lokus from a standalone application into a connected, cloud-integrated platform while maintaining the highest security standards and user privacy.

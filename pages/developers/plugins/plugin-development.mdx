@@ -1,15 +1,18 @@
 # Plugin Development Guide
 
-Learn how to create powerful plugins for Lokus using our comprehensive plugin architecture with React integration, status bar components, and secure API access.
+Learn how to create powerful plugins for Lokus using our comprehensive plugin architecture with modular APIs, UI panels, data providers, and advanced development tooling.
 
 ## Plugin Architecture Overview
 
-Lokus features a modular plugin system with:
-- **React Integration**: Full React component support with global React access
-- **Status Bar API**: Create custom status bar components
-- **Secure Runtime**: Plugin sandboxing and security management
-- **Plugin Registry**: Discovery and management system
-- **Inter-Plugin Communication**: Standardized messaging patterns
+Lokus features a professional-grade plugin system with:
+- **Modular API Design**: Separated Data, Editor, and UI APIs
+- **UI Panel System**: Flexible sidebar, bottom, and modal panels
+- **Data Provider Integration**: External service connections
+- **React Integration**: Full React component support with hot-reload
+- **TypeScript Support**: Complete type safety and IntelliSense
+- **CLI Tooling**: Enhanced development workflow with templates
+- **Testing Framework**: Plugin compatibility and validation
+- **Error Handling**: Robust debugging and recovery systems
 
 ## Getting Started
 
@@ -19,204 +22,502 @@ Lokus features a modular plugin system with:
 - TypeScript familiarity (recommended)
 - Lokus development environment
 
-### Plugin CLI
-Use the official Lokus Plugin CLI for scaffolding:
+### Enhanced Plugin CLI
+Use the enhanced Lokus Plugin CLI for comprehensive development workflow:
 
 ```bash
 npm install -g @lokus/plugin-cli
 
-# Create a new plugin
-lokus-plugin create my-awesome-plugin
+# Create a new plugin with templates
+lokus-plugin create-enhanced my-awesome-plugin --template=react-ui-panel
 cd my-awesome-plugin
 
-# Development mode
-npm run dev
+# Development mode with hot-reload
+lokus-plugin dev-enhanced
+
+# Run tests
+lokus-plugin test-enhanced
+
+# Generate documentation
+lokus-plugin docs-enhanced
+
+# Package for distribution
+lokus-plugin package-enhanced
 
 # Build for production
 npm run build
 ```
 
-### Plugin Structure
+#### Available Templates
+- **`basic-typescript`**: TypeScript plugin with utilities
+- **`react-ui-panel`**: React UI panel plugin with context management
+- **`data-provider`**: External data service integration
+- **`editor-extension`**: TipTap editor extension plugin
+
+### Enhanced Plugin Structure
 ```
 my-plugin/
 ├── src/
-│   ├── index.ts          # Main plugin entry
-│   ├── components/       # React components
-│   ├── hooks/           # Custom React hooks
-│   └── utils/           # Utility functions
-├── package.json         # Plugin manifest
-├── plugin.config.js     # Plugin configuration
-└── README.md           # Plugin documentation
+│   ├── index.ts              # Main plugin entry
+│   ├── api/                  # Plugin API implementations
+│   │   ├── DataProvider.ts   # Data integration
+│   │   ├── UIComponents.tsx  # UI panel components
+│   │   └── EditorExtension.ts # Editor extensions
+│   ├── components/           # React components
+│   ├── hooks/               # Custom React hooks
+│   ├── panels/              # UI panel implementations
+│   ├── utils/               # Utility functions
+│   └── types/               # TypeScript interfaces
+├── tests/                   # Plugin tests
+│   ├── unit/               # Unit tests
+│   ├── integration/        # Integration tests
+│   └── __mocks__/          # Test mocks
+├── docs/                   # Plugin documentation
+├── templates/              # Plugin templates (if applicable)
+├── package.json            # Plugin manifest with lokus config
+├── plugin.config.js        # Plugin configuration
+├── tsconfig.json           # TypeScript configuration
+└── README.md              # Plugin documentation
 ```
 
-## Basic Plugin Example
+## Plugin Examples
 
-### Simple Status Bar Plugin
+### 1. UI Panel Plugin with New Architecture
 
 ```typescript
-// src/index.ts
+// src/index.ts - Main plugin entry
 import React from 'react';
-import { LokusPlugin, StatusBarComponent } from '@lokus/plugin-api';
+import { LokusPlugin, LokusPluginAPI } from '@lokus/plugin-api';
+import { TaskManagementPanel } from './panels/TaskManagementPanel';
+import { TaskDataProvider } from './api/TaskDataProvider';
 
-interface WordCountState {
-  words: number;
-  characters: number;
+const TaskManagementPlugin: LokusPlugin = {
+  id: 'task-management',
+  name: 'Task Management',
+  version: '1.0.0',
+  description: 'Advanced task management with kanban boards',
+  
+  async activate(context: LokusPluginAPI) {
+    // Register data provider
+    const dataProvider = new TaskDataProvider();
+    context.data.registerProvider('tasks', dataProvider);
+
+    // Register UI panel
+    context.ui.registerPanel('task-management', {
+      title: 'Tasks',
+      icon: 'CheckSquare',
+      position: 'sidebar-right',
+      component: TaskManagementPanel,
+      defaultWidth: 300,
+      resizable: true
+    });
+
+    // Register editor commands
+    context.editor.addCommand('insert-task', (attrs) => {
+      return context.editor.insertContent(`!task ${attrs.title}`);
+    });
+
+    // Subscribe to editor changes for task detection
+    context.editor.onContentChange((content) => {
+      const tasks = dataProvider.extractTasks(content);
+      context.events.emit('tasks-updated', { tasks });
+    });
+  },
+
+  async deactivate(context: LokusPluginAPI) {
+    context.data.unregisterProvider('tasks');
+    context.ui.unregisterPanel('task-management');
+    context.editor.removeCommand('insert-task');
+  }
+};
+
+export default TaskManagementPlugin;
+```
+
+```typescript
+// src/panels/TaskManagementPanel.tsx - UI Panel Component
+import React, { useState, useEffect } from 'react';
+import { useLokusAPI } from '@lokus/plugin-api';
+
+interface Task {
+  id: string;
+  title: string;
+  status: 'todo' | 'in-progress' | 'done';
+  created: Date;
 }
 
-const WordCountComponent: StatusBarComponent = () => {
-  const [stats, setStats] = React.useState<WordCountState>({ 
-    words: 0, 
-    characters: 0 
-  });
+export const TaskManagementPanel: React.FC = () => {
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const lokus = useLokusAPI();
 
-  // Subscribe to editor changes
-  React.useEffect(() => {
-    const unsubscribe = lokus.editor.onContentChange((content: string) => {
-      const words = content.trim().split(/\s+/).filter(Boolean).length;
-      const characters = content.length;
-      setStats({ words, characters });
+  useEffect(() => {
+    const unsubscribe = lokus.events.on('tasks-updated', (data) => {
+      setTasks(data.tasks);
     });
 
     return unsubscribe;
-  }, []);
+  }, [lokus]);
 
-  return React.createElement('div', {
-    style: { 
-      display: 'flex', 
-      gap: '8px', 
-      fontSize: '12px',
-      color: 'var(--lokus-text-secondary)' 
-    }
-  }, [
-    React.createElement('span', { key: 'words' }, `${stats.words} words`),
-    React.createElement('span', { key: 'chars' }, `${stats.characters} chars`)
-  ]);
+  const moveTask = (taskId: string, newStatus: Task['status']) => {
+    setTasks(prev => prev.map(task => 
+      task.id === taskId ? { ...task, status: newStatus } : task
+    ));
+  };
+
+  const addTask = (title: string) => {
+    const newTask: Task = {
+      id: Date.now().toString(),
+      title,
+      status: 'todo',
+      created: new Date()
+    };
+    setTasks(prev => [...prev, newTask]);
+  };
+
+  return (
+    <div className="task-management-panel">
+      <div className="panel-header">
+        <h3>Task Management</h3>
+        <button onClick={() => addTask('New Task')}>
+          Add Task
+        </button>
+      </div>
+      
+      <div className="kanban-board">
+        {(['todo', 'in-progress', 'done'] as const).map(status => (
+          <div key={status} className="kanban-column">
+            <h4>{status.replace('-', ' ').toUpperCase()}</h4>
+            {tasks
+              .filter(task => task.status === status)
+              .map(task => (
+                <div 
+                  key={task.id} 
+                  className="task-card"
+                  onClick={() => lokus.editor.insertAtCursor(`[[${task.title}]]`)}
+                >
+                  {task.title}
+                </div>
+              ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 };
-
-const wordCountPlugin: LokusPlugin = {
-  id: 'word-count',
-  name: 'Word Count',
-  version: '1.0.0',
-  description: 'Display word and character count in status bar',
-  
-  activate(context) {
-    // Register status bar component
-    context.statusBar.register('word-count', WordCountComponent, {
-      position: 'right',
-      priority: 100
-    });
-  },
-
-  deactivate(context) {
-    // Cleanup
-    context.statusBar.unregister('word-count');
-  }
-};
-
-export default wordCountPlugin;
 ```
 
-### Plugin Manifest (package.json)
+```typescript
+// src/api/TaskDataProvider.ts - Data Provider
+import { DataProvider } from '@lokus/plugin-api';
+
+export class TaskDataProvider implements DataProvider {
+  id = 'tasks';
+  name = 'Task Data Provider';
+
+  async search(query: string): Promise<any[]> {
+    // Search through tasks
+    const tasks = await this.getAllTasks();
+    return tasks.filter(task => 
+      task.title.toLowerCase().includes(query.toLowerCase())
+    );
+  }
+
+  async getAllTasks(): Promise<any[]> {
+    // Fetch tasks from storage or external API
+    return [];
+  }
+
+  extractTasks(content: string): any[] {
+    // Extract !task markers from content
+    const taskPattern = /!task\s+(.+?)(?:\n|$)/g;
+    const tasks = [];
+    let match;
+
+    while ((match = taskPattern.exec(content)) !== null) {
+      tasks.push({
+        id: Date.now().toString() + Math.random(),
+        title: match[1].trim(),
+        status: 'todo',
+        created: new Date()
+      });
+    }
+
+    return tasks;
+  }
+}
+
+### Enhanced Plugin Manifest (package.json)
 ```json
 {
-  "name": "@lokus/word-count-plugin",
+  "name": "@lokus/task-management-plugin",
   "version": "1.0.0",
-  "description": "Word and character counter for Lokus",
+  "description": "Advanced task management with kanban boards and data providers",
   "main": "dist/index.js",
-  "keywords": ["lokus", "plugin", "productivity"],
+  "types": "dist/index.d.ts",
+  "keywords": ["lokus", "plugin", "task-management", "kanban"],
   "lokus": {
-    "id": "word-count",
-    "displayName": "Word Count",
-    "categories": ["productivity", "editor"],
-    "activationEvents": ["onStartup"],
+    "id": "task-management",
+    "displayName": "Task Management",
+    "categories": ["productivity", "organization"],
+    "activationEvents": ["onStartup", "onFileOpen"],
     "contributes": {
-      "statusBar": ["word-count"]
+      "panels": {
+        "task-management": {
+          "title": "Tasks",
+          "when": "editorTextFocus"
+        }
+      },
+      "commands": {
+        "insert-task": {
+          "title": "Insert Task",
+          "category": "Tasks"
+        }
+      },
+      "dataProviders": ["tasks"],
+      "themes": ["task-board-dark", "task-board-light"]
+    },
+    "engines": {
+      "lokus": "^1.0.0"
+    },
+    "capabilities": {
+      "ui": ["panels", "modals"],
+      "data": ["providers", "storage"],
+      "editor": ["commands", "extensions"]
     }
   },
   "dependencies": {
-    "@lokus/plugin-api": "^1.0.0"
+    "@lokus/plugin-api": "^2.0.0",
+    "react": "^18.2.0"
+  },
+  "devDependencies": {
+    "@lokus/plugin-testing": "^1.0.0",
+    "@types/react": "^18.2.0",
+    "typescript": "^5.0.0"
   }
 }
 ```
 
-## Status Bar Plugin Development
+## Core Plugin APIs
 
-### Creating Status Bar Components
+### 1. Data API - External Integration
 
-Status bar plugins can display real-time information and interactive elements:
+The Data API allows plugins to integrate with external services and provide searchable data:
 
 ```typescript
-import React from 'react';
-import { StatusBarComponent } from '@lokus/plugin-api';
+// src/api/GoogleDriveProvider.ts
+import { DataProvider } from '@lokus/plugin-api';
 
-const PomodoroTimer: StatusBarComponent = () => {
-  const [time, setTime] = React.useState(25 * 60); // 25 minutes
-  const [isRunning, setIsRunning] = React.useState(false);
-  const [isBreak, setIsBreak] = React.useState(false);
+export class GoogleDriveProvider implements DataProvider {
+  id = 'google-drive';
+  name = 'Google Drive';
 
-  React.useEffect(() => {
-    let interval: NodeJS.Timeout;
-    
-    if (isRunning && time > 0) {
-      interval = setInterval(() => {
-        setTime(time => time - 1);
-      }, 1000);
-    } else if (time === 0) {
-      // Timer finished
-      setIsRunning(false);
-      setIsBreak(!isBreak);
-      setTime(isBreak ? 25 * 60 : 5 * 60); // 25min work, 5min break
-      
-      // Show notification
-      lokus.notifications.show({
-        title: isBreak ? 'Break time!' : 'Back to work!',
-        type: 'info'
+  async authenticate(): Promise<boolean> {
+    // OAuth flow implementation
+    return true;
+  }
+
+  async search(query: string): Promise<DriveFile[]> {
+    const response = await fetch(`https://www.googleapis.com/drive/v3/files?q=${query}`, {
+      headers: { Authorization: `Bearer ${this.accessToken}` }
+    });
+    return response.json();
+  }
+
+  async getFile(fileId: string): Promise<string> {
+    // Fetch file content from Google Drive
+    return fileContent;
+  }
+}
+```
+
+### 2. Editor API - TipTap Extensions
+
+Extend the editor with custom functionality:
+
+```typescript
+// src/api/DiagramExtension.ts
+import { Node } from '@tiptap/core';
+import { EditorExtension } from '@lokus/plugin-api';
+
+export class DiagramExtension implements EditorExtension {
+  createExtension() {
+    return Node.create({
+      name: 'diagram',
+      group: 'block',
+      atom: true,
+
+      addAttributes() {
+        return {
+          type: { default: 'flowchart' },
+          code: { default: '' }
+        };
+      },
+
+      parseHTML() {
+        return [{ tag: 'div[data-type="diagram"]' }];
+      },
+
+      renderHTML({ HTMLAttributes }) {
+        return ['div', { 'data-type': 'diagram', ...HTMLAttributes }];
+      },
+
+      addNodeView() {
+        return ({ node, editor }) => {
+          const container = document.createElement('div');
+          container.className = 'diagram-container';
+          
+          // Render Mermaid diagram
+          this.renderDiagram(container, node.attrs.code);
+          
+          return { dom: container };
+        };
+      },
+
+      addCommands() {
+        return {
+          insertDiagram: (attrs) => ({ commands }) => {
+            return commands.insertContent({
+              type: this.name,
+              attrs
+            });
+          }
+        };
+      }
+    });
+  }
+
+  renderDiagram(container: HTMLElement, code: string) {
+    // Use Mermaid or other diagram library
+    import('mermaid').then(mermaid => {
+      mermaid.default.render('diagram', code, (svg) => {
+        container.innerHTML = svg;
       });
+    });
+  }
+}
+```
+
+### 3. UI API - Panel Management
+
+Create flexible UI panels for custom interfaces:
+
+```typescript
+// src/panels/FileExplorerPanel.tsx
+import React, { useState, useEffect } from 'react';
+import { UIPanel, useLokusAPI } from '@lokus/plugin-api';
+
+interface FileExplorerPanelProps {
+  onClose?: () => void;
+}
+
+export const FileExplorerPanel: React.FC<FileExplorerPanelProps> = ({ onClose }) => {
+  const [files, setFiles] = useState<FileEntry[]>([]);
+  const [currentPath, setCurrentPath] = useState('/');
+  const lokus = useLokusAPI();
+
+  useEffect(() => {
+    loadDirectory(currentPath);
+  }, [currentPath]);
+
+  const loadDirectory = async (path: string) => {
+    try {
+      const entries = await lokus.fs.readDir(path);
+      setFiles(entries);
+    } catch (error) {
+      lokus.notifications.error(`Failed to load directory: ${error.message}`);
     }
-
-    return () => clearInterval(interval);
-  }, [isRunning, time, isBreak]);
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const toggleTimer = () => setIsRunning(!isRunning);
-  const resetTimer = () => {
-    setIsRunning(false);
-    setTime(25 * 60);
-    setIsBreak(false);
+  const handleFileClick = async (file: FileEntry) => {
+    if (file.is_directory) {
+      setCurrentPath(file.path);
+    } else {
+      // Open file in editor
+      const content = await lokus.fs.readFile(file.path);
+      lokus.editor.setContent(content);
+      lokus.workspace.setActiveFile(file.path);
+    }
   };
 
-  return React.createElement('div', {
-    style: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '4px',
-      cursor: 'pointer',
-      padding: '4px 8px',
-      borderRadius: '4px',
-      backgroundColor: isBreak ? 'var(--lokus-success)' : 'var(--lokus-primary)',
-      color: 'white',
-      fontSize: '11px',
-      fontFamily: 'monospace'
-    },
-    onClick: toggleTimer,
-    onContextMenu: (e: React.MouseEvent) => {
-      e.preventDefault();
-      resetTimer();
+  const handleCreateFile = async () => {
+    const fileName = await lokus.ui.showInputBox({
+      placeholder: 'Enter file name...',
+      title: 'Create New File'
+    });
+
+    if (fileName) {
+      const filePath = `${currentPath}/${fileName}`;
+      await lokus.fs.writeFile(filePath, '');
+      await loadDirectory(currentPath);
     }
-  }, [
-    React.createElement('span', { key: 'icon' }, isBreak ? 'Break' : 'Work'),
-    React.createElement('span', { key: 'time' }, formatTime(time)),
-    React.createElement('span', { 
-      key: 'status', 
-      style: { fontSize: '8px', opacity: 0.8 } 
-    }, isRunning ? '⏸' : '▶')
-  ]);
+  };
+
+  return (
+    <div className="file-explorer-panel">
+      <div className="panel-header">
+        <h3>File Explorer</h3>
+        <div className="panel-actions">
+          <button onClick={handleCreateFile} title="New File">
+            📄
+          </button>
+          <button onClick={() => loadDirectory(currentPath)} title="Refresh">
+            🔄
+          </button>
+          {onClose && (
+            <button onClick={onClose} title="Close">
+              ✕
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="current-path">
+        <span>{currentPath}</span>
+        {currentPath !== '/' && (
+          <button 
+            onClick={() => setCurrentPath(path.dirname(currentPath))}
+            title="Go up"
+          >
+            ⬆️
+          </button>
+        )}
+      </div>
+
+      <div className="file-list">
+        {files.map(file => (
+          <div 
+            key={file.path}
+            className={`file-item ${file.is_directory ? 'directory' : 'file'}`}
+            onClick={() => handleFileClick(file)}
+          >
+            <span className="file-icon">
+              {file.is_directory ? '📁' : '📄'}
+            </span>
+            <span className="file-name">{file.name}</span>
+            {!file.is_directory && (
+              <span className="file-size">
+                {formatFileSize(file.size)}
+              </span>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 };
+
+// Register the panel
+export function registerFileExplorerPanel(context: LokusPluginAPI) {
+  context.ui.registerPanel('file-explorer', {
+    title: 'Files',
+    icon: 'Folder',
+    position: 'sidebar-left',
+    component: FileExplorerPanel,
+    defaultWidth: 250,
+    resizable: true,
+    collapsible: true
+  });
+}
 ```
 
 ### Status Bar Registration Options
@@ -230,58 +531,156 @@ context.statusBar.register('component-id', Component, {
 });
 ```
 
-## Advanced Plugin Features
+## Advanced Plugin Development
 
-### React Integration
+### Error Handling and Debugging
 
-Lokus provides full React integration for plugins:
+The new plugin architecture includes comprehensive error handling:
 
 ```typescript
-// Global React is available
-const { useState, useEffect, useMemo } = React;
+// src/utils/ErrorHandler.ts
+import { PluginErrorHandler } from '@lokus/plugin-api';
 
-// Custom hooks
-const useEditorContent = () => {
-  const [content, setContent] = useState('');
-  
-  useEffect(() => {
-    const unsubscribe = lokus.editor.onContentChange(setContent);
-    return unsubscribe;
-  }, []);
-  
-  return content;
+export class CustomErrorHandler implements PluginErrorHandler {
+  handleError(error: Error, context: string): void {
+    // Log error with context
+    console.error(`Plugin Error in ${context}:`, error);
+    
+    // Report to error tracking service
+    this.reportError(error, context);
+    
+    // Show user-friendly notification
+    lokus.notifications.error(`Plugin error: ${error.message}`);
+  }
+
+  async reportError(error: Error, context: string): Promise<void> {
+    // Send to analytics or error tracking
+    await fetch('/api/errors', {
+      method: 'POST',
+      body: JSON.stringify({
+        error: error.message,
+        stack: error.stack,
+        context,
+        timestamp: new Date().toISOString()
+      })
+    });
+  }
+}
+
+// Use in plugin
+export default {
+  activate(context: LokusPluginAPI) {
+    const errorHandler = new CustomErrorHandler();
+    context.errors.setHandler(errorHandler);
+  }
 };
+```
 
-// Complex components
-const AdvancedPlugin: StatusBarComponent = () => {
-  const content = useEditorContent();
-  const wordCount = useMemo(() => 
-    content.trim().split(/\s+/).filter(Boolean).length, 
-    [content]
-  );
+### Plugin Testing Framework
 
-  return React.createElement('div', null, `${wordCount} words`);
-};
+Test your plugins with the new testing utilities:
+
+```typescript
+// tests/plugin.test.ts
+import { describe, it, expect } from 'vitest';
+import { createTestEnvironment, PluginCompatibilityTester } from '@lokus/plugin-testing';
+import TaskManagementPlugin from '../src/index';
+
+describe('Task Management Plugin', () => {
+  it('should pass compatibility tests', async () => {
+    const tester = new PluginCompatibilityTester();
+    const result = await tester.testPlugin(TaskManagementPlugin);
+    
+    expect(result.compatible).toBe(true);
+    expect(result.issues).toHaveLength(0);
+  });
+
+  it('should register UI panels correctly', async () => {
+    const env = await createTestEnvironment();
+    await env.loadPlugin(TaskManagementPlugin);
+    
+    const panel = env.ui.getPanel('task-management');
+    expect(panel).toBeDefined();
+    expect(panel.title).toBe('Tasks');
+  });
+
+  it('should handle task extraction', async () => {
+    const env = await createTestEnvironment();
+    await env.loadPlugin(TaskManagementPlugin);
+    
+    const content = '!task Write documentation\n!task Test plugin';
+    await env.editor.setContent(content);
+    
+    const tasks = env.getPlugin('task-management').dataProvider.extractTasks(content);
+    expect(tasks).toHaveLength(2);
+    expect(tasks[0].title).toBe('Write documentation');
+  });
+});
+```
+
+### Hot Reload Development
+
+Develop with instant feedback using hot reload:
+
+```bash
+# Start development server with hot reload
+lokus-plugin dev-enhanced --hot-reload
+
+# Watch specific files
+lokus-plugin dev-enhanced --watch="src/**/*.tsx"
+
+# Enable verbose logging
+lokus-plugin dev-enhanced --verbose
 ```
 
 ### Plugin Communication
 
-Plugins can communicate with each other through the event system:
+Enhanced event system for inter-plugin communication:
 
 ```typescript
-// Publishing events
-lokus.events.emit('plugin.word-count.updated', { count: wordCount });
+// Enhanced event system with namespacing
+class PluginEventManager {
+  private namespace: string;
 
-// Subscribing to events
-lokus.events.on('plugin.*.updated', (event, data) => {
-  console.log(`Plugin ${event.source} updated:`, data);
+  constructor(pluginId: string) {
+    this.namespace = `plugin.${pluginId}`;
+  }
+
+  emit(event: string, data: any): void {
+    lokus.events.emit(`${this.namespace}.${event}`, data);
+  }
+
+  on(event: string, callback: (data: any) => void): () => void {
+    return lokus.events.on(`${this.namespace}.${event}`, callback);
+  }
+
+  onAny(callback: (event: string, data: any) => void): () => void {
+    return lokus.events.on(`${this.namespace}.*`, callback);
+  }
+
+  // Cross-plugin communication
+  subscribe(pluginId: string, event: string, callback: (data: any) => void): () => void {
+    return lokus.events.on(`plugin.${pluginId}.${event}`, callback);
+  }
+}
+
+// Usage in plugin
+const events = new PluginEventManager('task-management');
+
+// Emit events
+events.emit('task-created', { id: '123', title: 'New Task' });
+events.emit('task-updated', { id: '123', status: 'completed' });
+
+// Listen to own events
+events.on('task-created', (data) => {
+  console.log('New task created:', data);
 });
 
-// Direct plugin communication
-const otherPlugin = lokus.plugins.get('other-plugin-id');
-if (otherPlugin && otherPlugin.api) {
-  otherPlugin.api.doSomething();
-}
+// Listen to other plugins
+events.subscribe('calendar', 'event-created', (data) => {
+  // Create task from calendar event
+  createTaskFromEvent(data);
+});
 ```
 
 ### File System Access
@@ -327,251 +726,224 @@ lokus.editor.addCommand('my-command', () => {
 });
 ```
 
-## Plugin Examples
+## Advanced Features
 
-### Code Snippets Plugin
+### Theme Integration
+
+Plugins can provide custom themes and respect global theme changes:
 
 ```typescript
-interface Snippet {
-  id: string;
-  name: string;
-  language: string;
-  code: string;
-  description?: string;
+// src/themes/PluginTheme.ts
+export const taskBoardTheme = {
+  id: 'task-board-dark',
+  name: 'Task Board Dark',
+  colors: {
+    '--task-todo': '#ff6b6b',
+    '--task-progress': '#feca57',
+    '--task-done': '#48dbfb',
+    '--task-board-bg': '#2f3542'
+  }
+};
+
+// Register theme in plugin
+export default {
+  activate(context: LokusPluginAPI) {
+    context.themes.register(taskBoardTheme);
+    
+    // Listen for theme changes
+    context.themes.onChanged((newTheme) => {
+      updatePluginColors(newTheme);
+    });
+  }
+};
+```
+
+### Plugin Templates
+
+Create reusable templates with the new template system:
+
+```typescript
+// templates/task-template.md
+export const taskTemplate = {
+  id: 'task-template',
+  name: 'Task Template',
+  content: `# {{title}}
+
+**Status**: {{status}}
+**Priority**: {{priority}}
+**Due Date**: {{dueDate}}
+
+## Description
+{{description}}
+
+## Checklist
+- [ ] {{subtask1}}
+- [ ] {{subtask2}}
+
+## Notes
+{{notes}}
+`,
+  variables: {
+    title: { type: 'string', required: true },
+    status: { type: 'select', options: ['Todo', 'In Progress', 'Done'] },
+    priority: { type: 'select', options: ['Low', 'Medium', 'High'] },
+    dueDate: { type: 'date' },
+    description: { type: 'text' },
+    subtask1: { type: 'string' },
+    subtask2: { type: 'string' },
+    notes: { type: 'text' }
+  }
+};
+```
+
+## Real-World Plugin Examples
+
+### Calendar Integration Plugin
+
+```typescript
+// Real-world example from the development session
+import { LokusPlugin, LokusPluginAPI, DataProvider } from '@lokus/plugin-api';
+
+class CalendarDataProvider implements DataProvider {
+  id = 'calendar';
+  name = 'Calendar Events';
+
+  async authenticate(): Promise<boolean> {
+    // Google Calendar OAuth
+    return await this.googleAuth();
+  }
+
+  async search(query: string): Promise<CalendarEvent[]> {
+    const events = await this.fetchEvents();
+    return events.filter(event => 
+      event.title.toLowerCase().includes(query.toLowerCase())
+    );
+  }
+
+  async getUpcomingEvents(days: number = 7): Promise<CalendarEvent[]> {
+    const start = new Date();
+    const end = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+    return await this.fetchEventsInRange(start, end);
+  }
 }
 
-const CodeSnippetsPlugin: LokusPlugin = {
-  id: 'code-snippets',
-  name: 'Code Snippets',
+const CalendarTimelinePlugin: LokusPlugin = {
+  id: 'calendar-timeline',
+  name: 'Calendar Timeline',
   version: '1.0.0',
 
-  activate(context) {
-    // Load snippets from storage
-    const snippets: Snippet[] = context.storage.get('snippets', []);
+  async activate(context: LokusPluginAPI) {
+    const provider = new CalendarDataProvider();
+    context.data.registerProvider('calendar', provider);
 
-    // Register command palette command
-    context.commands.register('insert-snippet', {
-      title: 'Insert Code Snippet',
-      async execute() {
-        const selected = await lokus.ui.showQuickPick(
-          snippets.map(s => ({
-            label: s.name,
-            description: s.description,
-            detail: s.language,
-            value: s
-          }))
-        );
-
-        if (selected) {
-          lokus.editor.insertAtCursor(`\`\`\`${selected.language}\n${selected.code}\n\`\`\``);
-        }
-      }
+    // Register timeline panel
+    context.ui.registerPanel('calendar-timeline', {
+      title: 'Calendar',
+      icon: 'Calendar',
+      position: 'sidebar-right',
+      component: CalendarTimelinePanel,
+      defaultWidth: 350
     });
 
-    // Status bar component
-    const SnippetsButton: StatusBarComponent = () => {
-      return React.createElement('button', {
-        onClick: () => context.commands.execute('insert-snippet'),
-        style: {
-          background: 'none',
-          border: 'none',
-          color: 'var(--lokus-text)',
-          cursor: 'pointer',
-          fontSize: '12px'
-        }
-      }, `${snippets.length} snippets`);
-    };
-
-    context.statusBar.register('snippets', SnippetsButton);
+    // Register editor commands
+    context.editor.addCommand('insert-event', (event) => {
+      const eventText = `## ${event.title}\n**Time**: ${event.start} - ${event.end}\n**Location**: ${event.location}\n\n${event.description}`;
+      return context.editor.insertAtCursor(eventText);
+    });
   }
 };
 ```
 
-### Custom Theme Plugin
+## Plugin Distribution and Best Practices
 
-```typescript
-const CustomThemePlugin: LokusPlugin = {
-  id: 'custom-theme',
-  name: 'Custom Theme Manager',
-  version: '1.0.0',
-
-  activate(context) {
-    const themes = new Map<string, any>();
-
-    // Register theme
-    const registerTheme = (id: string, theme: any) => {
-      themes.set(id, theme);
-      lokus.themes.register(id, theme);
-    };
-
-    // Built-in themes
-    registerTheme('ocean-blue', {
-      name: 'Ocean Blue',
-      colors: {
-        primary: '#0066cc',
-        secondary: '#004499',
-        background: '#f0f8ff',
-        text: '#333333'
-      }
-    });
-
-    // Theme selector component
-    const ThemeSelector: StatusBarComponent = () => {
-      const [currentTheme, setCurrentTheme] = React.useState(
-        lokus.themes.getCurrent()
-      );
-
-      const cycleTheme = () => {
-        const themeIds = Array.from(themes.keys());
-        const currentIndex = themeIds.indexOf(currentTheme);
-        const nextIndex = (currentIndex + 1) % themeIds.length;
-        const nextTheme = themeIds[nextIndex];
-        
-        lokus.themes.apply(nextTheme);
-        setCurrentTheme(nextTheme);
-      };
-
-      return React.createElement('button', {
-        onClick: cycleTheme,
-        style: {
-          background: 'none',
-          border: 'none',
-          color: 'var(--lokus-text)',
-          cursor: 'pointer'
-        }
-      }, 'Theme');
-    };
-
-    context.statusBar.register('theme-selector', ThemeSelector);
-  }
-};
-```
-
-## Testing Plugins
-
-### Unit Testing
-
-```typescript
-// tests/plugin.test.ts
-import { describe, it, expect, vi } from 'vitest';
-import wordCountPlugin from '../src/index';
-
-describe('Word Count Plugin', () => {
-  it('should register status bar component', () => {
-    const mockContext = {
-      statusBar: {
-        register: vi.fn()
-      }
-    };
-
-    wordCountPlugin.activate(mockContext);
-    
-    expect(mockContext.statusBar.register).toHaveBeenCalledWith(
-      'word-count',
-      expect.any(Function),
-      expect.objectContaining({
-        position: 'right'
-      })
-    );
-  });
-
-  it('should count words correctly', () => {
-    const testText = 'Hello world this is a test';
-    const expectedWords = 6;
-    
-    // Test word counting logic
-    const words = testText.trim().split(/\s+/).filter(Boolean).length;
-    expect(words).toBe(expectedWords);
-  });
-});
-```
-
-### Integration Testing
-
-```typescript
-// tests/integration.test.ts
-import { describe, it, expect } from 'vitest';
-import { createTestEnvironment } from '@lokus/plugin-testing';
-
-describe('Plugin Integration', () => {
-  it('should integrate with editor', async () => {
-    const env = await createTestEnvironment();
-    await env.loadPlugin('word-count');
-    
-    // Simulate editor content change
-    await env.editor.setContent('Hello world');
-    
-    // Check status bar update
-    const statusBar = env.statusBar.getComponent('word-count');
-    expect(statusBar.textContent).toContain('2 words');
-  });
-});
-```
-
-## Plugin Distribution
-
-### Publishing to NPM
+### Building for Production
 
 ```bash
-# Build plugin
-npm run build
+# Enhanced build process
+lokus-plugin package-enhanced --target=production
 
-# Publish to NPM
-npm publish
+# Generate documentation
+lokus-plugin docs-enhanced --output=dist/docs
 
-# Or publish scoped package
-npm publish --access public
+# Validate plugin compatibility
+lokus-plugin test-enhanced --compatibility
+
+# Create distributable package
+npm pack
 ```
 
-### Plugin Registry
-
-Register your plugin in the Lokus Plugin Registry:
+### Plugin Marketplace Submission
 
 ```json
+// Enhanced package.json for marketplace
 {
-  "name": "@your-org/plugin-name",
   "lokus": {
-    "registry": {
-      "categories": ["productivity", "editor"],
-      "tags": ["word-count", "statistics"],
-      "screenshots": ["screenshot1.png", "screenshot2.png"],
-      "homepage": "https://github.com/your-org/plugin-name",
-      "repository": "https://github.com/your-org/plugin-name"
+    "marketplace": {
+      "category": "productivity",
+      "tags": ["task-management", "kanban", "productivity"],
+      "screenshots": [
+        "screenshots/main-panel.png",
+        "screenshots/kanban-board.png"
+      ],
+      "demo": {
+        "url": "https://demo.myplugin.com",
+        "video": "https://youtube.com/watch?v=demo"
+      },
+      "compatibility": {
+        "minLokusVersion": "1.0.0",
+        "platforms": ["darwin", "win32", "linux"]
+      },
+      "pricing": {
+        "type": "free", // or "paid", "freemium"
+        "price": 0
+      }
     }
   }
 }
 ```
 
-## Best Practices
+## Next Steps and Resources
 
-### Performance
-- **Lazy Loading**: Load heavy dependencies only when needed
-- **Debouncing**: Debounce frequent events like content changes
-- **Memory Management**: Clean up subscriptions and intervals
-- **Efficient Rendering**: Use React.memo for expensive components
+### Enhanced Documentation
 
-### Security
-- **Input Validation**: Validate all user inputs and external data
-- **API Limits**: Respect rate limits and resource constraints
-- **Error Handling**: Graceful handling of errors and edge cases
-- **Permissions**: Request only necessary permissions
+For comprehensive information about the new plugin architecture:
 
-### User Experience
-- **Progressive Enhancement**: Work without breaking core functionality
-- **Accessibility**: Follow accessibility best practices
-- **Internationalization**: Support multiple languages where applicable
-- **Documentation**: Provide clear usage instructions
+- **[CLI Tooling Guide](./cli-guide)** - Complete CLI development workflow
+- **[UI Panels Guide](./ui-panels)** - Advanced panel development
+- **[Data Providers Guide](./data-providers)** - External service integration
+- **[Plugin Examples](./examples)** - Real-world plugin implementations
+- **[Plugin Testing](./testing)** - Testing framework and best practices
 
-### Development
-- **TypeScript**: Use TypeScript for better development experience
-- **Testing**: Write comprehensive tests for your plugin
-- **Versioning**: Follow semantic versioning for releases
-- **Code Quality**: Use linting and formatting tools
+### Development Workflow
 
-## Plugin API Reference
+1. **Start with Templates**: Use `lokus-plugin create-enhanced` with appropriate templates
+2. **Develop with Hot Reload**: Use `lokus-plugin dev-enhanced --hot-reload`
+3. **Test Thoroughly**: Run `lokus-plugin test-enhanced` regularly
+4. **Package for Distribution**: Use `lokus-plugin package-enhanced`
+5. **Submit to Marketplace**: Follow marketplace guidelines for publication
 
-> **Complete API Documentation**: See [Plugin API Reference](../../reference/api/plugin-api.md) for the complete API documentation.
+### Community and Support
+
+- **Plugin Development Discord**: Join our dedicated plugin development channel
+- **GitHub Discussions**: Share your plugins and get feedback
+- **Plugin Showcase**: Contribute to the official plugin showcase
+- **Documentation**: Help improve plugin documentation
+
+### Key Improvements in New Architecture
+
+✅ **Modular APIs**: Separated Data, Editor, and UI APIs for better organization  
+✅ **Enhanced CLI**: Professional development workflow with templates and testing  
+✅ **UI Panel System**: Flexible panel management for custom interfaces  
+✅ **Data Providers**: Seamless external service integration  
+✅ **Error Handling**: Robust debugging and recovery systems  
+✅ **Testing Framework**: Comprehensive plugin validation  
+✅ **Hot Reload**: Instant feedback during development  
+✅ **TypeScript Support**: Complete type safety and IntelliSense  
+
+The new plugin architecture transforms Lokus into a truly extensible platform, enabling developers to create professional-grade plugins with comprehensive tooling and APIs.
+
+> **Getting Started**: Begin with `lokus-plugin create-enhanced` to scaffold your first plugin using the new architecture.
 > 
-> **Example Plugins**: Check out [Plugin Examples](./examples/) for more comprehensive examples.
+> **API Reference**: See [Complete Plugin API Reference](../../reference/api) for detailed API documentation.
 > 
-> **Plugin Testing**: Learn about [Plugin Testing](./testing.md) for thorough testing strategies.
+> **Real Examples**: Explore [Plugin Examples Repository](https://github.com/lokus-ai/plugin-examples) for production-ready plugins.

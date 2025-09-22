@@ -1,0 +1,1489 @@
+# MCP Server Development Guide
+
+This comprehensive guide covers the development, architecture, and implementation details of Lokus's Model Context Protocol (MCP) server, which provides 68 sophisticated tools for AI assistant integration.
+
+## Architecture Overview
+
+### MCP Protocol Implementation
+
+The Lokus MCP server implements the industry-standard Model Context Protocol specification, enabling seamless integration with AI assistants like Claude, GPT-4, and other MCP-compatible clients.
+
+```
+AI Assistant ←→ MCP Client ←→ stdio ←→ MCP Server ←→ Lokus Core
+```
+
+### Server Structure
+
+```
+src/mcp/
+├── server.js              # Main MCP server implementation
+├── tools/                 # Tool category implementations
+│   ├── noteTools.js       # Note management (11 tools)
+│   ├── workspaceTools.js  # Workspace operations (12 tools)
+│   ├── searchTools.js     # Advanced search (16 tools)
+│   ├── aiTools.js         # AI analysis (10 tools)
+│   ├── fileTools.js       # File operations (6 tools)
+│   ├── editorTools.js     # Editor enhancements (10 tools)
+│   └── systemTools.js     # System utilities (3 tools)
+├── utils/                 # Shared utilities
+│   ├── workspace.js       # Workspace management
+│   ├── logger.js          # Structured logging
+│   └── validation.js      # Input validation
+└── config/
+    └── server.json        # Server configuration
+```
+
+## Core Server Implementation
+
+### Main Server (`server.js`)
+
+```javascript
+#!/usr/bin/env node
+
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { 
+  ListToolsRequestSchema,
+  CallToolRequestSchema,
+  ErrorCode,
+  McpError 
+} from '@modelcontextprotocol/sdk/types.js';
+
+// Import all tool categories
+import { NoteTools } from './tools/noteTools.js';
+import { WorkspaceTools } from './tools/workspaceTools.js';
+import { SearchTools } from './tools/searchTools.js';
+import { AITools } from './tools/aiTools.js';
+import { FileTools } from './tools/fileTools.js';
+import { EditorTools } from './tools/editorTools.js';
+import { SystemTools } from './tools/systemTools.js';
+
+class LokusMCPServer {
+  constructor() {
+    this.server = new Server(
+      {
+        name: 'lokus-mcp-server',
+        version: '1.0.0',
+      },
+      {
+        capabilities: {
+          tools: {},
+        },
+      }
+    );
+
+    this.toolCategories = [
+      new NoteTools(),
+      new WorkspaceTools(),
+      new SearchTools(),
+      new AITools(),
+      new FileTools(),
+      new EditorTools(),
+      new SystemTools()
+    ];
+
+    this.setupHandlers();
+    this.registerTools();
+  }
+
+  setupHandlers() {
+    // List available tools
+    this.server.setRequestHandler(ListToolsRequestSchema, async () => {
+      const allTools = [];
+      
+      for (const category of this.toolCategories) {
+        const tools = await category.getTools();
+        allTools.push(...tools);
+      }
+
+      return { tools: allTools };
+    });
+
+    // Execute tool calls
+    this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
+      const { name, arguments: args } = request.params;
+
+      try {
+        // Find the category that handles this tool
+        for (const category of this.toolCategories) {
+          const tools = await category.getTools();
+          const tool = tools.find(t => t.name === name);
+          
+          if (tool) {
+            const result = await category.executeTool(name, args || {});
+            return {
+              content: [
+                {
+                  type: 'text',
+                  text: typeof result === 'string' ? result : JSON.stringify(result, null, 2)
+                }
+              ]
+            };
+          }
+        }
+
+        throw new McpError(
+          ErrorCode.MethodNotFound,
+          `Tool not found: ${name}`
+        );
+      } catch (error) {
+        if (error instanceof McpError) {
+          throw error;
+        }
+
+        throw new McpError(
+          ErrorCode.InternalError,
+          `Tool execution failed: ${error.message}`
+        );
+      }
+    });
+  }
+
+  async registerTools() {
+    // Initialize all tool categories
+    for (const category of this.toolCategories) {
+      await category.initialize();
+    }
+  }
+
+  async start() {
+    const transport = new StdioServerTransport();
+    await this.server.connect(transport);
+    
+    console.error('Lokus MCP Server started successfully');
+    console.error(`Loaded ${this.toolCategories.length} tool categories`);
+    
+    // Count total tools
+    let totalTools = 0;
+    for (const category of this.toolCategories) {
+      const tools = await category.getTools();
+      totalTools += tools.length;
+    }
+    console.error(`Total tools available: ${totalTools}`);
+  }
+}
+
+// Start the server
+const server = new LokusMCPServer();
+server.start().catch(error => {
+  console.error('Failed to start MCP server:', error);
+  process.exit(1);
+});
+```
+
+## Tool Category Implementation
+
+### Base Tool Class
+
+```javascript
+// tools/base/BaseTool.js
+export class BaseTool {
+  constructor(categoryName) {
+    this.categoryName = categoryName;
+    this.workspace = null;
+  }
+
+  async initialize() {
+    // Override in subclasses
+  }
+
+  async getTools() {
+    // Must be implemented by subclasses
+    throw new Error('getTools() must be implemented');
+  }
+
+  async executeTool(name, args) {
+    // Must be implemented by subclasses
+    throw new Error('executeTool() must be implemented');
+  }
+
+  validateArgs(args, schema) {
+    // Basic validation - can be enhanced with JSON schema
+    for (const [key, requirements] of Object.entries(schema)) {
+      if (requirements.required && !(key in args)) {
+        throw new Error(`Missing required parameter: ${key}`);
+      }
+      
+      if (key in args && requirements.type) {
+        const actualType = typeof args[key];
+        if (actualType !== requirements.type) {
+          throw new Error(`Parameter ${key} must be of type ${requirements.type}, got ${actualType}`);
+        }
+      }
+    }
+  }
+
+  createToolSchema(name, description, properties, required = []) {
+    return {
+      name,
+      description,
+      inputSchema: {
+        type: 'object',
+        properties,
+        required
+      }
+    };
+  }
+}
+```
+
+### Note Tools Implementation
+
+```javascript
+// tools/noteTools.js
+import { BaseTool } from './base/BaseTool.js';
+import { WorkspaceManager } from '../utils/workspace.js';
+import path from 'path';
+import fs from 'fs/promises';
+
+export class NoteTools extends BaseTool {
+  constructor() {
+    super('noteTools');
+    this.workspaceManager = new WorkspaceManager();
+  }
+
+  async initialize() {
+    this.workspace = await this.workspaceManager.getCurrentWorkspace();
+  }
+
+  async getTools() {
+    return [
+      this.createToolSchema(
+        'create_note',
+        'Create a new note with optional template and metadata',
+        {
+          title: { type: 'string', description: 'Title for the new note' },
+          content: { type: 'string', description: 'Initial content for the note' },
+          template: { 
+            type: 'string', 
+            description: 'Template to use',
+            enum: ['basic', 'daily', 'meeting', 'project', 'research', 'review', 'empty']
+          },
+          tags: { 
+            type: 'array', 
+            items: { type: 'string' },
+            description: 'Tags to add to the note'
+          },
+          path: { type: 'string', description: 'Optional custom path for the note' },
+          frontmatter: { type: 'object', description: 'Additional frontmatter metadata' }
+        },
+        ['title']
+      ),
+
+      this.createToolSchema(
+        'update_note',
+        'Update an existing note with new content or metadata',
+        {
+          path: { type: 'string', description: 'Path to the note to update' },
+          content: { type: 'string', description: 'New content for the note' },
+          appendContent: { type: 'string', description: 'Content to append' },
+          prependContent: { type: 'string', description: 'Content to prepend' },
+          addTags: { 
+            type: 'array', 
+            items: { type: 'string' },
+            description: 'Tags to add'
+          },
+          removeTags: { 
+            type: 'array', 
+            items: { type: 'string' },
+            description: 'Tags to remove'
+          },
+          updateFrontmatter: { type: 'object', description: 'Frontmatter to update' },
+          createBackup: { type: 'boolean', description: 'Create backup before updating' }
+        },
+        ['path']
+      ),
+
+      this.createToolSchema(
+        'generate_note_summary',
+        'Generate AI-powered summary of note content',
+        {
+          path: { type: 'string', description: 'Path to the note' },
+          summaryLength: { 
+            type: 'string', 
+            enum: ['short', 'medium', 'long'],
+            description: 'Length of summary to generate'
+          },
+          includeKeywords: { type: 'boolean', description: 'Include extracted keywords' },
+          includeTags: { type: 'boolean', description: 'Include note tags in summary' }
+        },
+        ['path']
+      ),
+
+      this.createToolSchema(
+        'link_notes',
+        'Create WikiLinks between notes',
+        {
+          sourcePath: { type: 'string', description: 'Path to the source note' },
+          targetPath: { type: 'string', description: 'Path to the target note' },
+          linkText: { type: 'string', description: 'Custom text for the link' },
+          alias: { type: 'string', description: 'Alias for the WikiLink' },
+          insertLocation: { 
+            type: 'string', 
+            enum: ['end', 'beginning', 'cursor', 'section'],
+            description: 'Where to insert the link'
+          },
+          sectionTitle: { type: 'string', description: 'Section title to insert under' },
+          createTargetIfMissing: { type: 'boolean', description: 'Create target note if missing' }
+        },
+        ['sourcePath', 'targetPath']
+      ),
+
+      this.createToolSchema(
+        'resolve_wikilinks',
+        'Resolve and fix broken WikiLinks in a note',
+        {
+          path: { type: 'string', description: 'Path to the note to process' },
+          autoCreate: { type: 'boolean', description: 'Automatically create missing targets' },
+          suggestAlternatives: { type: 'boolean', description: 'Suggest alternative targets' }
+        },
+        ['path']
+      ),
+
+      this.createToolSchema(
+        'extract_note_outline',
+        'Extract hierarchical outline from note headings',
+        {
+          path: { type: 'string', description: 'Path to the note' },
+          maxDepth: { type: 'integer', description: 'Maximum heading depth to include' },
+          includeContent: { type: 'boolean', description: 'Include content snippets' }
+        },
+        ['path']
+      ),
+
+      this.createToolSchema(
+        'organize_note_sections',
+        'Reorganize note sections and content',
+        {
+          path: { type: 'string', description: 'Path to the note' },
+          operation: { 
+            type: 'string', 
+            enum: ['sort_headings', 'merge_sections', 'split_section', 'reorder_sections'],
+            description: 'Organization operation'
+          },
+          sectionTitle: { type: 'string', description: 'Section title for operations' },
+          newOrder: { 
+            type: 'array', 
+            items: { type: 'string' },
+            description: 'New order of sections'
+          }
+        },
+        ['path']
+      ),
+
+      this.createToolSchema(
+        'convert_tasks_to_kanban',
+        'Extract tasks from notes and add to kanban board',
+        {
+          path: { type: 'string', description: 'Path to the note containing tasks' },
+          boardType: { 
+            type: 'string', 
+            enum: ['default', 'simple', 'priority'],
+            description: 'Type of kanban board'
+          },
+          preserveInNote: { type: 'boolean', description: 'Keep tasks in original note' }
+        },
+        ['path']
+      ),
+
+      this.createToolSchema(
+        'duplicate_note',
+        'Create a copy of an existing note',
+        {
+          sourcePath: { type: 'string', description: 'Path to the note to duplicate' },
+          newTitle: { type: 'string', description: 'Title for the new note' },
+          newPath: { type: 'string', description: 'Custom path for duplicated note' },
+          updateReferences: { type: 'boolean', description: 'Update internal references' }
+        },
+        ['sourcePath', 'newTitle']
+      ),
+
+      this.createToolSchema(
+        'get_note_templates',
+        'Get available note templates',
+        {
+          includeCustom: { type: 'boolean', description: 'Include custom templates' }
+        }
+      ),
+
+      this.createToolSchema(
+        'get_note_history',
+        'Get operation history for note tools',
+        {
+          limit: { type: 'integer', description: 'Maximum number of entries' },
+          operation: { type: 'string', description: 'Filter by operation type' }
+        }
+      )
+    ];
+  }
+
+  async executeTool(name, args) {
+    this.validateWorkspace();
+
+    switch (name) {
+      case 'create_note':
+        return await this.createNote(args);
+      case 'update_note':
+        return await this.updateNote(args);
+      case 'generate_note_summary':
+        return await this.generateNoteSummary(args);
+      case 'link_notes':
+        return await this.linkNotes(args);
+      case 'resolve_wikilinks':
+        return await this.resolveWikiLinks(args);
+      case 'extract_note_outline':
+        return await this.extractNoteOutline(args);
+      case 'organize_note_sections':
+        return await this.organizeNoteSections(args);
+      case 'convert_tasks_to_kanban':
+        return await this.convertTasksToKanban(args);
+      case 'duplicate_note':
+        return await this.duplicateNote(args);
+      case 'get_note_templates':
+        return await this.getNoteTemplates(args);
+      case 'get_note_history':
+        return await this.getNoteHistory(args);
+      default:
+        throw new Error(`Unknown tool: ${name}`);
+    }
+  }
+
+  async createNote(args) {
+    this.validateArgs(args, {
+      title: { required: true, type: 'string' },
+      content: { type: 'string' },
+      template: { type: 'string' },
+      tags: { type: 'object' },
+      path: { type: 'string' },
+      frontmatter: { type: 'object' }
+    });
+
+    const { title, content, template = 'basic', tags = [], path: customPath, frontmatter = {} } = args;
+
+    // Generate file path
+    const fileName = customPath || this.sanitizeFileName(title) + '.md';
+    const fullPath = path.join(this.workspace.path, fileName);
+
+    // Load template content
+    const templateContent = await this.loadTemplate(template);
+
+    // Generate frontmatter
+    const noteMetadata = {
+      title,
+      created: new Date().toISOString(),
+      tags,
+      ...frontmatter
+    };
+
+    // Combine content
+    const frontmatterYaml = this.generateFrontmatter(noteMetadata);
+    const finalContent = content || templateContent;
+    const fullContent = `${frontmatterYaml}\n\n${finalContent}`;
+
+    // Ensure directory exists
+    await fs.mkdir(path.dirname(fullPath), { recursive: true });
+
+    // Write file
+    await fs.writeFile(fullPath, fullContent, 'utf8');
+
+    return {
+      success: true,
+      path: fileName,
+      fullPath,
+      title,
+      created: noteMetadata.created
+    };
+  }
+
+  async updateNote(args) {
+    this.validateArgs(args, {
+      path: { required: true, type: 'string' }
+    });
+
+    const { 
+      path: notePath, 
+      content, 
+      appendContent, 
+      prependContent,
+      addTags = [],
+      removeTags = [],
+      updateFrontmatter = {},
+      createBackup = true
+    } = args;
+
+    const fullPath = path.join(this.workspace.path, notePath);
+
+    // Check if file exists
+    try {
+      await fs.access(fullPath);
+    } catch {
+      throw new Error(`Note not found: ${notePath}`);
+    }
+
+    // Create backup if requested
+    if (createBackup) {
+      const backupPath = `${fullPath}.backup.${Date.now()}`;
+      await fs.copyFile(fullPath, backupPath);
+    }
+
+    // Read current content
+    const currentContent = await fs.readFile(fullPath, 'utf8');
+    const { frontmatter, body } = this.parseFrontmatter(currentContent);
+
+    // Update frontmatter
+    let newFrontmatter = { ...frontmatter, ...updateFrontmatter };
+    
+    // Handle tags
+    let currentTags = newFrontmatter.tags || [];
+    currentTags = [...currentTags, ...addTags];
+    currentTags = currentTags.filter(tag => !removeTags.includes(tag));
+    newFrontmatter.tags = [...new Set(currentTags)]; // Remove duplicates
+
+    // Update modified time
+    newFrontmatter.modified = new Date().toISOString();
+
+    // Update content
+    let newBody = body;
+    if (content !== undefined) {
+      newBody = content;
+    }
+    if (prependContent) {
+      newBody = prependContent + '\n\n' + newBody;
+    }
+    if (appendContent) {
+      newBody = newBody + '\n\n' + appendContent;
+    }
+
+    // Generate final content
+    const frontmatterYaml = this.generateFrontmatter(newFrontmatter);
+    const finalContent = `${frontmatterYaml}\n\n${newBody}`;
+
+    // Write updated content
+    await fs.writeFile(fullPath, finalContent, 'utf8');
+
+    return {
+      success: true,
+      path: notePath,
+      modified: newFrontmatter.modified,
+      changes: {
+        contentUpdated: content !== undefined || appendContent || prependContent,
+        tagsAdded: addTags.length > 0,
+        tagsRemoved: removeTags.length > 0,
+        frontmatterUpdated: Object.keys(updateFrontmatter).length > 0
+      }
+    };
+  }
+
+  // Helper methods
+  validateWorkspace() {
+    if (!this.workspace) {
+      throw new Error('No active workspace found');
+    }
+  }
+
+  sanitizeFileName(title) {
+    return title
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .substring(0, 50);
+  }
+
+  async loadTemplate(templateName) {
+    const templateMap = {
+      basic: '# {{title}}\n\n',
+      daily: '# Daily Note - {{date}}\n\n## Tasks\n\n## Notes\n\n## Reflections\n\n',
+      meeting: '# {{title}}\n\n**Date:** {{date}}\n**Attendees:** \n\n## Agenda\n\n## Discussion\n\n## Action Items\n\n',
+      project: '# {{title}}\n\n## Overview\n\n## Goals\n\n## Timeline\n\n## Resources\n\n## Progress\n\n',
+      research: '# {{title}}\n\n## Research Question\n\n## Methodology\n\n## Findings\n\n## Sources\n\n## Conclusions\n\n',
+      review: '# {{title}} - Review\n\n## Summary\n\n## What Worked\n\n## What Didn\'t Work\n\n## Lessons Learned\n\n## Next Steps\n\n',
+      empty: ''
+    };
+
+    return templateMap[templateName] || templateMap.basic;
+  }
+
+  generateFrontmatter(metadata) {
+    const yaml = Object.entries(metadata)
+      .map(([key, value]) => {
+        if (Array.isArray(value)) {
+          return `${key}:\n${value.map(v => `  - ${v}`).join('\n')}`;
+        }
+        return `${key}: ${JSON.stringify(value)}`;
+      })
+      .join('\n');
+
+    return `---\n${yaml}\n---`;
+  }
+
+  parseFrontmatter(content) {
+    const frontmatterRegex = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/;
+    const match = content.match(frontmatterRegex);
+
+    if (!match) {
+      return { frontmatter: {}, body: content };
+    }
+
+    const frontmatterText = match[1];
+    const body = match[2];
+
+    // Simple YAML parsing (in production, use a proper YAML parser)
+    const frontmatter = {};
+    frontmatterText.split('\n').forEach(line => {
+      const [key, ...valueParts] = line.split(':');
+      if (key && valueParts.length > 0) {
+        const value = valueParts.join(':').trim();
+        try {
+          frontmatter[key.trim()] = JSON.parse(value);
+        } catch {
+          frontmatter[key.trim()] = value.replace(/^["']|["']$/g, '');
+        }
+      }
+    });
+
+    return { frontmatter, body };
+  }
+
+  // Additional methods for other note operations...
+}
+```
+
+### Search Tools Implementation
+
+```javascript
+// tools/searchTools.js
+import { BaseTool } from './base/BaseTool.js';
+import { WorkspaceManager } from '../utils/workspace.js';
+import fs from 'fs/promises';
+import path from 'path';
+
+export class SearchTools extends BaseTool {
+  constructor() {
+    super('searchTools');
+    this.workspaceManager = new WorkspaceManager();
+  }
+
+  async initialize() {
+    this.workspace = await this.workspaceManager.getCurrentWorkspace();
+  }
+
+  async getTools() {
+    return [
+      this.createToolSchema(
+        'search_content',
+        'Full-text search across all workspace files',
+        {
+          query: { type: 'string', description: 'Search query text' },
+          fileTypes: { 
+            type: 'array', 
+            items: { type: 'string' },
+            description: 'Filter by file extensions'
+          },
+          caseSensitive: { type: 'boolean', description: 'Case-sensitive search' },
+          useRegex: { type: 'boolean', description: 'Treat query as regex' },
+          wholeWord: { type: 'boolean', description: 'Match whole words only' },
+          maxResults: { type: 'integer', description: 'Maximum results to return' },
+          contextLines: { type: 'integer', description: 'Context lines around matches' },
+          excludePaths: { 
+            type: 'array', 
+            items: { type: 'string' },
+            description: 'Paths to exclude'
+          }
+        },
+        ['query']
+      ),
+
+      this.createToolSchema(
+        'search_wiki_links',
+        'Find wiki link references and backlinks',
+        {
+          target: { type: 'string', description: 'WikiLink target to search for' },
+          mode: { 
+            type: 'string', 
+            enum: ['references', 'backlinks', 'all'],
+            description: 'Search mode'
+          },
+          includeContext: { type: 'boolean', description: 'Include surrounding context' }
+        }
+      ),
+
+      this.createToolSchema(
+        'find_broken_links',
+        'Identify broken wiki links and file references',
+        {
+          autoSuggestFixes: { type: 'boolean', description: 'Suggest potential fixes' },
+          includeImages: { type: 'boolean', description: 'Include broken image refs' }
+        }
+      ),
+
+      this.createToolSchema(
+        'get_graph_data',
+        'Generate knowledge graph data for visualization',
+        {
+          maxNodes: { type: 'integer', description: 'Maximum nodes to return' },
+          filterByType: { 
+            type: 'array', 
+            items: { type: 'string' },
+            description: 'Filter nodes by type'
+          },
+          includeMetrics: { type: 'boolean', description: 'Include centrality metrics' }
+        }
+      ),
+
+      this.createToolSchema(
+        'search_by_tags',
+        'Search by hashtags or metadata tags',
+        {
+          tags: { 
+            type: 'array', 
+            items: { type: 'string' },
+            description: 'Tags to search for'
+          },
+          mode: { 
+            type: 'string', 
+            enum: ['any', 'all', 'exact'],
+            description: 'Tag search mode'
+          },
+          includeRelated: { type: 'boolean', description: 'Include related tags' }
+        },
+        ['tags']
+      ),
+
+      this.createToolSchema(
+        'search_recent',
+        'Find recently accessed or modified files',
+        {
+          timeRange: { 
+            type: 'string', 
+            enum: ['1h', '1d', '1w', '1m'],
+            description: 'Time range for recency'
+          },
+          sortBy: { 
+            type: 'string', 
+            enum: ['modified', 'accessed', 'created'],
+            description: 'Sort criteria'
+          },
+          maxResults: { type: 'integer', description: 'Maximum results' }
+        }
+      ),
+
+      this.createToolSchema(
+        'get_file_links',
+        'Get all outgoing links from a specific file',
+        {
+          filePath: { type: 'string', description: 'Path to analyze' },
+          linkTypes: { 
+            type: 'array', 
+            items: { type: 'string' },
+            description: 'Types of links to include'
+          }
+        },
+        ['filePath']
+      ),
+
+      this.createToolSchema(
+        'get_backlinks',
+        'Get all files linking to a specific file',
+        {
+          filePath: { type: 'string', description: 'Path to target file' },
+          depth: { type: 'integer', description: 'Depth of backlink analysis' },
+          includeContext: { type: 'boolean', description: 'Include link context' }
+        },
+        ['filePath']
+      ),
+
+      this.createToolSchema(
+        'find_similar',
+        'Find files similar to a given file',
+        {
+          referencePath: { type: 'string', description: 'Path to reference file' },
+          similarityType: { 
+            type: 'string', 
+            enum: ['content', 'tags', 'links', 'structure', 'combined'],
+            description: 'Type of similarity'
+          },
+          threshold: { type: 'number', description: 'Similarity threshold' },
+          maxResults: { type: 'integer', description: 'Maximum results' }
+        },
+        ['referencePath']
+      ),
+
+      // Additional search tools...
+      this.createToolSchema(
+        'get_search_suggestions',
+        'Get search suggestions based on workspace content',
+        {
+          partial: { type: 'string', description: 'Partial search term' },
+          type: { 
+            type: 'string', 
+            enum: ['content', 'files', 'tags', 'wikilinks'],
+            description: 'Type of suggestions'
+          },
+          limit: { type: 'integer', description: 'Maximum suggestions' }
+        }
+      )
+    ];
+  }
+
+  async executeTool(name, args) {
+    this.validateWorkspace();
+
+    switch (name) {
+      case 'search_content':
+        return await this.searchContent(args);
+      case 'search_wiki_links':
+        return await this.searchWikiLinks(args);
+      case 'find_broken_links':
+        return await this.findBrokenLinks(args);
+      case 'get_graph_data':
+        return await this.getGraphData(args);
+      case 'search_by_tags':
+        return await this.searchByTags(args);
+      case 'search_recent':
+        return await this.searchRecent(args);
+      case 'get_file_links':
+        return await this.getFileLinks(args);
+      case 'get_backlinks':
+        return await this.getBacklinks(args);
+      case 'find_similar':
+        return await this.findSimilar(args);
+      case 'get_search_suggestions':
+        return await this.getSearchSuggestions(args);
+      default:
+        throw new Error(`Unknown tool: ${name}`);
+    }
+  }
+
+  async searchContent(args) {
+    const {
+      query,
+      fileTypes = ['.md', '.txt'],
+      caseSensitive = false,
+      useRegex = false,
+      wholeWord = false,
+      maxResults = 50,
+      contextLines = 3,
+      excludePaths = []
+    } = args;
+
+    const results = [];
+    const searchRegex = this.buildSearchRegex(query, { caseSensitive, useRegex, wholeWord });
+    
+    // Get all files in workspace
+    const files = await this.getAllFiles(this.workspace.path);
+    
+    for (const filePath of files) {
+      // Skip excluded paths
+      if (excludePaths.some(exclude => filePath.includes(exclude))) {
+        continue;
+      }
+
+      // Filter by file type
+      if (fileTypes.length > 0 && !fileTypes.some(ext => filePath.endsWith(ext))) {
+        continue;
+      }
+
+      try {
+        const content = await fs.readFile(filePath, 'utf8');
+        const lines = content.split('\n');
+        
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          const match = line.match(searchRegex);
+          
+          if (match) {
+            const startLine = Math.max(0, i - contextLines);
+            const endLine = Math.min(lines.length - 1, i + contextLines);
+            const context = lines.slice(startLine, endLine + 1);
+            
+            results.push({
+              file: path.relative(this.workspace.path, filePath),
+              line: i + 1,
+              match: match[0],
+              context: context.join('\n'),
+              excerpt: line.trim()
+            });
+
+            if (results.length >= maxResults) {
+              break;
+            }
+          }
+        }
+
+        if (results.length >= maxResults) {
+          break;
+        }
+      } catch (error) {
+        // Skip files that can't be read
+        continue;
+      }
+    }
+
+    return {
+      query,
+      totalResults: results.length,
+      results,
+      searchOptions: { caseSensitive, useRegex, wholeWord, fileTypes }
+    };
+  }
+
+  async getGraphData(args) {
+    const {
+      maxNodes = 500,
+      filterByType = ['document', 'placeholder'],
+      includeMetrics = true
+    } = args;
+
+    const nodes = new Map();
+    const edges = [];
+    
+    // Scan all markdown files
+    const files = await this.getAllFiles(this.workspace.path, ['.md']);
+    
+    for (const filePath of files.slice(0, maxNodes)) {
+      const relativePath = path.relative(this.workspace.path, filePath);
+      const fileName = path.basename(filePath, '.md');
+      
+      // Add document node
+      nodes.set(relativePath, {
+        id: relativePath,
+        label: fileName,
+        type: 'document',
+        path: relativePath
+      });
+
+      try {
+        const content = await fs.readFile(filePath, 'utf8');
+        
+        // Extract wiki links
+        const wikiLinkRegex = /\[\[([^\]]+)\]\]/g;
+        let match;
+        
+        while ((match = wikiLinkRegex.exec(content)) !== null) {
+          const linkTarget = match[1];
+          const targetPath = this.resolveWikiLink(linkTarget);
+          
+          // Add target node if not exists
+          if (!nodes.has(targetPath)) {
+            nodes.set(targetPath, {
+              id: targetPath,
+              label: linkTarget,
+              type: 'placeholder',
+              path: targetPath
+            });
+          }
+          
+          // Add edge
+          edges.push({
+            source: relativePath,
+            target: targetPath,
+            type: 'wikilink'
+          });
+        }
+      } catch (error) {
+        // Skip files that can't be read
+        continue;
+      }
+    }
+
+    // Filter nodes by type
+    const filteredNodes = Array.from(nodes.values())
+      .filter(node => filterByType.includes(node.type));
+
+    // Calculate metrics if requested
+    if (includeMetrics) {
+      for (const node of filteredNodes) {
+        const inDegree = edges.filter(e => e.target === node.id).length;
+        const outDegree = edges.filter(e => e.source === node.id).length;
+        
+        node.metrics = {
+          inDegree,
+          outDegree,
+          totalDegree: inDegree + outDegree
+        };
+      }
+    }
+
+    return {
+      nodes: filteredNodes,
+      edges,
+      metrics: {
+        totalNodes: filteredNodes.length,
+        totalEdges: edges.length,
+        nodeTypes: this.countByProperty(filteredNodes, 'type')
+      }
+    };
+  }
+
+  // Helper methods
+  buildSearchRegex(query, options) {
+    let pattern = query;
+    
+    if (!options.useRegex) {
+      // Escape special regex characters
+      pattern = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+    
+    if (options.wholeWord) {
+      pattern = `\\b${pattern}\\b`;
+    }
+    
+    const flags = options.caseSensitive ? 'g' : 'gi';
+    return new RegExp(pattern, flags);
+  }
+
+  async getAllFiles(dirPath, extensions = null) {
+    const files = [];
+    
+    async function scan(currentPath) {
+      const entries = await fs.readdir(currentPath, { withFileTypes: true });
+      
+      for (const entry of entries) {
+        const fullPath = path.join(currentPath, entry.name);
+        
+        if (entry.isDirectory()) {
+          await scan(fullPath);
+        } else if (entry.isFile()) {
+          if (!extensions || extensions.some(ext => entry.name.endsWith(ext))) {
+            files.push(fullPath);
+          }
+        }
+      }
+    }
+    
+    await scan(dirPath);
+    return files;
+  }
+
+  resolveWikiLink(linkText) {
+    // Simple resolution - in practice, this would be more sophisticated
+    return linkText.toLowerCase().replace(/\s+/g, '-') + '.md';
+  }
+
+  countByProperty(array, property) {
+    return array.reduce((counts, item) => {
+      const value = item[property];
+      counts[value] = (counts[value] || 0) + 1;
+      return counts;
+    }, {});
+  }
+
+  validateWorkspace() {
+    if (!this.workspace) {
+      throw new Error('No active workspace found');
+    }
+  }
+}
+```
+
+## Workspace Management
+
+### WorkspaceManager Utility
+
+```javascript
+// utils/workspace.js
+import fs from 'fs/promises';
+import path from 'path';
+import os from 'os';
+
+export class WorkspaceManager {
+  constructor() {
+    this.configPath = path.join(os.homedir(), '.lokus', 'workspace.json');
+  }
+
+  async getCurrentWorkspace() {
+    try {
+      const configData = await fs.readFile(this.configPath, 'utf8');
+      const config = JSON.parse(configData);
+      
+      if (config.currentWorkspace) {
+        return {
+          name: config.currentWorkspace.name,
+          path: config.currentWorkspace.path
+        };
+      }
+    } catch (error) {
+      // Config doesn't exist or is invalid
+    }
+
+    // Fallback to default workspace
+    return {
+      name: 'Default',
+      path: path.join(os.homedir(), 'Documents', 'Lokus-Workspace')
+    };
+  }
+
+  async setCurrentWorkspace(workspacePath) {
+    const config = {
+      currentWorkspace: {
+        name: path.basename(workspacePath),
+        path: workspacePath,
+        lastAccessed: new Date().toISOString()
+      }
+    };
+
+    await fs.mkdir(path.dirname(this.configPath), { recursive: true });
+    await fs.writeFile(this.configPath, JSON.stringify(config, null, 2), 'utf8');
+  }
+
+  async listWorkspaces() {
+    // Implementation for listing available workspaces
+    // Could scan common locations, read from config, etc.
+    return [];
+  }
+}
+```
+
+## Configuration and Deployment
+
+### Server Configuration
+
+```json
+// config/server.json
+{
+  "server": {
+    "name": "lokus-mcp-server",
+    "version": "1.0.0",
+    "timeout": 30000,
+    "maxConcurrentRequests": 10
+  },
+  "tools": {
+    "noteTools": {
+      "enabled": true,
+      "maxFileSize": "10MB",
+      "allowedExtensions": [".md", ".txt"]
+    },
+    "searchTools": {
+      "enabled": true,
+      "maxResults": 100,
+      "indexingEnabled": true
+    },
+    "workspaceTools": {
+      "enabled": true,
+      "backupRetention": 30
+    },
+    "aiTools": {
+      "enabled": true,
+      "analysisTimeout": 60000
+    }
+  },
+  "security": {
+    "allowedPaths": ["~/Documents/Lokus-Workspace"],
+    "enableSandbox": true,
+    "maxExecutionTime": 30000
+  },
+  "logging": {
+    "level": "info",
+    "enableFileLogging": true,
+    "logPath": "~/.lokus/logs"
+  }
+}
+```
+
+### Package.json Configuration
+
+```json
+{
+  "name": "lokus-mcp-server",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/mcp/server.js",
+  "bin": {
+    "lokus-mcp-server": "./src/mcp/server.js"
+  },
+  "scripts": {
+    "start": "node src/mcp/server.js",
+    "dev": "node --inspect src/mcp/server.js",
+    "test": "jest",
+    "test:tools": "node test/test-tools.js",
+    "build": "npm run test && npm run package",
+    "package": "pkg . --output dist/lokus-mcp-server"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "yaml": "^2.3.4",
+    "glob": "^10.3.10",
+    "fuse.js": "^7.0.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "pkg": "^5.8.1"
+  }
+}
+```
+
+## Testing Framework
+
+### Tool Testing
+
+```javascript
+// test/test-tools.js
+import { LokusMCPServer } from '../src/mcp/server.js';
+
+class MCPTester {
+  constructor() {
+    this.server = new LokusMCPServer();
+  }
+
+  async testTool(toolName, args) {
+    try {
+      console.log(`Testing tool: ${toolName}`);
+      console.log(`Args:`, JSON.stringify(args, null, 2));
+      
+      const result = await this.server.callTool(toolName, args);
+      
+      console.log(`Result:`, JSON.stringify(result, null, 2));
+      console.log(`✅ Tool test passed\n`);
+      
+      return result;
+    } catch (error) {
+      console.log(`❌ Tool test failed: ${error.message}\n`);
+      throw error;
+    }
+  }
+
+  async runAllTests() {
+    const tests = [
+      // Note tools
+      ['create_note', { title: 'Test Note', template: 'basic' }],
+      ['search_content', { query: 'test', maxResults: 5 }],
+      ['get_workspace_info', { includeStats: true }],
+      
+      // Search tools
+      ['get_graph_data', { maxNodes: 10 }],
+      ['search_recent', { timeRange: '1d' }],
+      
+      // AI tools
+      ['analyze_workspace', { analysisType: 'overview' }]
+    ];
+
+    let passed = 0;
+    let failed = 0;
+
+    for (const [toolName, args] of tests) {
+      try {
+        await this.testTool(toolName, args);
+        passed++;
+      } catch {
+        failed++;
+      }
+    }
+
+    console.log(`\nTest Results: ${passed} passed, ${failed} failed`);
+  }
+}
+
+// Run tests if called directly
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const tester = new MCPTester();
+  tester.runAllTests().catch(console.error);
+}
+```
+
+### Integration Testing
+
+```javascript
+// test/integration.test.js
+import { spawn } from 'child_process';
+import { promises as fs } from 'fs';
+
+describe('MCP Server Integration', () => {
+  let serverProcess;
+
+  beforeAll(async () => {
+    // Start MCP server
+    serverProcess = spawn('node', ['src/mcp/server.js'], {
+      stdio: ['pipe', 'pipe', 'pipe']
+    });
+
+    // Wait for server to start
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  });
+
+  afterAll(() => {
+    if (serverProcess) {
+      serverProcess.kill();
+    }
+  });
+
+  test('should list all available tools', async () => {
+    const request = {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'tools/list'
+    };
+
+    serverProcess.stdin.write(JSON.stringify(request) + '\n');
+    
+    // Read response (simplified)
+    const response = await new Promise(resolve => {
+      serverProcess.stdout.once('data', data => {
+        resolve(JSON.parse(data.toString()));
+      });
+    });
+
+    expect(response.result.tools).toBeDefined();
+    expect(response.result.tools.length).toBeGreaterThan(60);
+  });
+
+  test('should execute create_note tool', async () => {
+    const request = {
+      jsonrpc: '2.0',
+      id: 2,
+      method: 'tools/call',
+      params: {
+        name: 'create_note',
+        arguments: {
+          title: 'Integration Test Note',
+          content: 'This is a test note created during integration testing.'
+        }
+      }
+    };
+
+    serverProcess.stdin.write(JSON.stringify(request) + '\n');
+    
+    const response = await new Promise(resolve => {
+      serverProcess.stdout.once('data', data => {
+        resolve(JSON.parse(data.toString()));
+      });
+    });
+
+    expect(response.result.content[0].text).toContain('"success": true');
+  });
+});
+```
+
+## Performance Optimization
+
+### Caching Strategy
+
+```javascript
+// utils/cache.js
+export class ToolCache {
+  constructor(maxSize = 1000, ttl = 300000) { // 5 minutes
+    this.cache = new Map();
+    this.maxSize = maxSize;
+    this.ttl = ttl;
+  }
+
+  get(key) {
+    const item = this.cache.get(key);
+    
+    if (!item) return null;
+    
+    if (Date.now() - item.timestamp > this.ttl) {
+      this.cache.delete(key);
+      return null;
+    }
+    
+    return item.value;
+  }
+
+  set(key, value) {
+    if (this.cache.size >= this.maxSize) {
+      const firstKey = this.cache.keys().next().value;
+      this.cache.delete(firstKey);
+    }
+    
+    this.cache.set(key, {
+      value,
+      timestamp: Date.now()
+    });
+  }
+
+  clear() {
+    this.cache.clear();
+  }
+}
+```
+
+### Async Processing
+
+```javascript
+// For large operations, use streaming responses
+async function* streamingSearch(query, options) {
+  const files = await getAllFiles(workspace.path);
+  
+  for (const filePath of files) {
+    const results = await searchFile(filePath, query, options);
+    
+    if (results.length > 0) {
+      yield {
+        file: filePath,
+        results
+      };
+    }
+  }
+}
+```
+
+## Security Considerations
+
+### Input Validation
+
+```javascript
+// utils/validation.js
+export class InputValidator {
+  static validatePath(inputPath, basePath) {
+    const resolved = path.resolve(basePath, inputPath);
+    
+    // Ensure path is within workspace
+    if (!resolved.startsWith(path.resolve(basePath))) {
+      throw new Error('Path traversal attempt detected');
+    }
+    
+    return resolved;
+  }
+
+  static sanitizeContent(content) {
+    // Remove or escape potentially dangerous content
+    return content
+      .replace(/<script[^>]*>.*?<\/script>/gi, '')
+      .replace(/javascript:/gi, '');
+  }
+
+  static validateFileSize(size, maxSize = 10 * 1024 * 1024) { // 10MB
+    if (size > maxSize) {
+      throw new Error(`File size exceeds maximum allowed size of ${maxSize} bytes`);
+    }
+  }
+}
+```
+
+### Rate Limiting
+
+```javascript
+// utils/rateLimit.js
+export class RateLimiter {
+  constructor(maxRequests = 100, windowMs = 60000) {
+    this.requests = new Map();
+    this.maxRequests = maxRequests;
+    this.windowMs = windowMs;
+  }
+
+  isAllowed(clientId) {
+    const now = Date.now();
+    const windowStart = now - this.windowMs;
+    
+    if (!this.requests.has(clientId)) {
+      this.requests.set(clientId, []);
+    }
+    
+    const clientRequests = this.requests.get(clientId);
+    
+    // Remove old requests
+    while (clientRequests.length > 0 && clientRequests[0] < windowStart) {
+      clientRequests.shift();
+    }
+    
+    if (clientRequests.length >= this.maxRequests) {
+      return false;
+    }
+    
+    clientRequests.push(now);
+    return true;
+  }
+}
+```
+
+This MCP server implementation provides a robust, scalable foundation for AI assistant integration with comprehensive tool categories, security measures, and performance optimizations.

@@ -673,6 +673,281 @@ export const mockConfig = {
 }
 ```
 
+## Plugin APIs
+
+### LokusPluginAPI
+
+The main plugin interface providing access to all Lokus functionality:
+
+```typescript
+interface LokusPluginAPI {
+  // Data integration
+  data: DataAPI;
+  // Editor functionality
+  editor: EditorAPI;
+  // UI components and panels
+  ui: UIAPI;
+  // Event system
+  events: EventAPI;
+  // File system access
+  fs: FileSystemAPI;
+  // Theme management
+  themes: ThemeAPI;
+  // Error handling
+  errors: ErrorAPI;
+  // Storage
+  storage: StorageAPI;
+  // Notifications
+  notifications: NotificationAPI;
+}
+```
+
+### DataAPI - External Service Integration
+
+Register and manage data providers for external services:
+
+```typescript
+interface DataAPI {
+  // Register data provider
+  registerProvider(id: string, provider: DataProvider): void;
+  
+  // Unregister data provider
+  unregisterProvider(id: string): void;
+  
+  // Get registered provider
+  getProvider(id: string): DataProvider | undefined;
+  
+  // Search across all providers
+  search(query: string, providers?: string[]): Promise<SearchResult[]>;
+}
+
+interface DataProvider {
+  id: string;
+  name: string;
+  search(query: string): Promise<any[]>;
+  authenticate?(): Promise<boolean>;
+  getFile?(id: string): Promise<string>;
+}
+```
+
+### EditorAPI - TipTap Integration
+
+Extend and interact with the editor:
+
+```typescript
+interface EditorAPI {
+  // Content management
+  getContent(): string;
+  setContent(content: string): void;
+  insertAtCursor(text: string): void;
+  insertContent(content: any): void;
+  
+  // Selection management
+  getSelection(): Selection;
+  setSelection(selection: Selection): void;
+  
+  // Commands
+  addCommand(name: string, command: EditorCommand): void;
+  removeCommand(name: string): void;
+  executeCommand(name: string, params?: any): boolean;
+  
+  // Extensions
+  addExtension(extension: Extension): void;
+  removeExtension(name: string): void;
+  
+  // Events
+  onContentChange(callback: (content: string) => void): () => void;
+  onSelectionChange(callback: (selection: Selection) => void): () => void;
+}
+
+interface EditorCommand {
+  (params?: any): boolean;
+}
+```
+
+### UIAPI - Panel and Component Management
+
+Create and manage UI components:
+
+```typescript
+interface UIAPI {
+  // Panel management
+  registerPanel(id: string, config: PanelConfig): void;
+  unregisterPanel(id: string): void;
+  showPanel(id: string): void;
+  hidePanel(id: string): void;
+  togglePanel(id: string): void;
+  
+  // Modal management
+  showModal(config: ModalConfig): Promise<any>;
+  hideModal(id: string): void;
+  
+  // Input dialogs
+  showInputBox(config: InputBoxConfig): Promise<string>;
+  showQuickPick(items: QuickPickItem[]): Promise<any>;
+  
+  // Status bar
+  addStatusBarItem(id: string, config: StatusBarConfig): void;
+  removeStatusBarItem(id: string): void;
+}
+
+interface PanelConfig {
+  title: string;
+  icon?: string;
+  position: 'sidebar-left' | 'sidebar-right' | 'bottom';
+  component: React.ComponentType;
+  defaultWidth?: number;
+  defaultHeight?: number;
+  resizable?: boolean;
+  collapsible?: boolean;
+}
+```
+
+### ErrorAPI - Error Handling
+
+Comprehensive error handling and debugging:
+
+```typescript
+interface ErrorAPI {
+  // Set custom error handler
+  setHandler(handler: PluginErrorHandler): void;
+  
+  // Report errors
+  report(error: Error, context: string): void;
+  
+  // Handle errors gracefully
+  handleAsync<T>(promise: Promise<T>, fallback?: T): Promise<T>;
+}
+
+interface PluginErrorHandler {
+  handleError(error: Error, context: string): void;
+}
+```
+
+### EventAPI - Plugin Communication
+
+Enhanced event system for plugin communication:
+
+```typescript
+interface EventAPI {
+  // Emit events
+  emit(event: string, data?: any): void;
+  
+  // Listen to events
+  on(event: string, callback: (data: any) => void): () => void;
+  
+  // One-time listeners
+  once(event: string, callback: (data: any) => void): () => void;
+  
+  // Remove listeners
+  off(event: string, callback?: Function): void;
+  
+  // Namespaced events
+  namespace(pluginId: string): NamespacedEventAPI;
+}
+
+interface NamespacedEventAPI {
+  emit(event: string, data?: any): void;
+  on(event: string, callback: (data: any) => void): () => void;
+  subscribe(pluginId: string, event: string, callback: (data: any) => void): () => void;
+}
+```
+
+### Plugin Testing Framework
+
+Test utilities for plugin development:
+
+```typescript
+// @lokus/plugin-testing
+export function createTestEnvironment(): Promise<TestEnvironment>;
+
+export class PluginCompatibilityTester {
+  async testPlugin(plugin: LokusPlugin): Promise<CompatibilityResult>;
+}
+
+interface TestEnvironment {
+  // Load plugin for testing
+  loadPlugin(plugin: LokusPlugin): Promise<void>;
+  
+  // Mock APIs
+  editor: MockEditorAPI;
+  ui: MockUIAPI;
+  fs: MockFileSystemAPI;
+  
+  // Get plugin instance
+  getPlugin(id: string): any;
+}
+
+interface CompatibilityResult {
+  compatible: boolean;
+  issues: CompatibilityIssue[];
+  warnings: string[];
+}
+```
+
+### Plugin CLI APIs
+
+Enhanced CLI tooling interfaces:
+
+```typescript
+// CLI Command Interfaces
+interface CreateEnhancedOptions {
+  template: 'basic-typescript' | 'react-ui-panel' | 'data-provider' | 'editor-extension';
+  name: string;
+  description?: string;
+  author?: string;
+}
+
+interface DevEnhancedOptions {
+  hotReload?: boolean;
+  watch?: string;
+  verbose?: boolean;
+  port?: number;
+}
+
+interface TestEnhancedOptions {
+  compatibility?: boolean;
+  coverage?: boolean;
+  watch?: boolean;
+}
+
+interface PackageEnhancedOptions {
+  target?: 'development' | 'production';
+  minify?: boolean;
+  generateDocs?: boolean;
+}
+```
+
+### Theme System Bug Fixes
+
+The theme system has been enhanced to fix CSS variable mapping issues:
+
+```typescript
+interface ThemeAPI {
+  // Apply theme with proper token mapping
+  apply(themeId: string): void;
+  
+  // Register custom themes
+  register(theme: ThemeDefinition): void;
+  
+  // Get current theme
+  getCurrent(): string;
+  
+  // Listen for theme changes
+  onChanged(callback: (theme: string) => void): () => void;
+}
+
+// Fixed token mapping system
+interface ThemeTokens {
+  // App-prefixed tokens are automatically mapped
+  '--app-primary': string;     // Maps to --primary
+  '--app-secondary': string;   // Maps to --secondary
+  '--app-background': string;  // Maps to --background
+  // Direct tokens remain unchanged
+  '--custom-property': string;
+}
+```
+
 ---
 
-This API reference provides the foundation for extending and integrating with Lokus. For more detailed examples and advanced usage, see the [Development Guide](/development).
+This comprehensive API reference reflects the new plugin architecture with modular APIs, enhanced CLI tooling, UI panel management, data providers, error handling, and testing framework. For practical examples, see the [Plugin Development Guide](/developers/plugins/plugin-development).

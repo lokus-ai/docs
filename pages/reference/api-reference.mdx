@@ -1,0 +1,916 @@
+# API Reference
+
+Comprehensive API documentation for Lokus, covering authentication endpoints, MCP tools, Tauri commands, and integration interfaces.
+
+## Authentication API
+
+The authentication system provides OAuth 2.0 endpoints for secure user authentication and session management.
+
+### Base URL
+- **Development:** `http://localhost:3000/api/auth`
+- **Production:** `https://app.lokus.ai/api/auth`
+
+### Authorization Flow
+
+#### 1. Authorization Request
+
+```http
+GET /authorize?response_type=code&client_id=lokus-desktop&redirect_uri=http://localhost:3333/callback&code_challenge=CHALLENGE&code_challenge_method=S256&state=STATE&scope=openid%20profile%20email
+```
+
+**Parameters:**
+- `response_type` (required): Must be `code`
+- `client_id` (required): Application identifier (`lokus-desktop`)
+- `redirect_uri` (required): Callback URL (must be localhost for desktop app)
+- `code_challenge` (required): PKCE code challenge (base64url-encoded SHA256 hash)
+- `code_challenge_method` (required): Must be `S256`
+- `state` (required): Random string for CSRF protection
+- `scope` (optional): Requested permissions (`openid profile email`)
+
+**Response:**
+Redirects to login page or directly to callback with authorization code.
+
+#### 2. Token Exchange
+
+```http
+POST /token
+Content-Type: application/json
+
+{
+  "grant_type": "authorization_code",
+  "client_id": "lokus-desktop",
+  "code": "AUTHORIZATION_CODE",
+  "redirect_uri": "http://localhost:3333/callback",
+  "code_verifier": "CODE_VERIFIER"
+}
+```
+
+**Request Body:**
+```typescript
+interface TokenRequest {
+  grant_type: 'authorization_code';
+  client_id: string;
+  code: string;
+  redirect_uri: string;
+  code_verifier: string;
+}
+```
+
+**Response:**
+```typescript
+interface TokenResponse {
+  access_token: string;
+  token_type: 'Bearer';
+  expires_in: number;
+  refresh_token?: string;
+  scope: string;
+}
+```
+
+**Example Response:**
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "Bearer",
+  "expires_in": 3600,
+  "refresh_token": "def50200f3a...",
+  "scope": "openid profile email"
+}
+```
+
+#### 3. User Profile
+
+```http
+GET /profile
+Authorization: Bearer ACCESS_TOKEN
+```
+
+**Response:**
+```typescript
+interface UserProfile {
+  id: string;
+  email: string;
+  name: string;
+  avatar_url?: string;
+  created_at: string;
+  updated_at: string;
+}
+```
+
+**Example Response:**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "email": "user@example.com",
+  "name": "John Doe",
+  "avatar_url": "https://example.com/avatar.jpg",
+  "created_at": "2024-01-15T10:30:00Z",
+  "updated_at": "2024-03-20T15:45:00Z"
+}
+```
+
+#### 4. Token Refresh
+
+```http
+POST /refresh
+Content-Type: application/json
+
+{
+  "grant_type": "refresh_token",
+  "refresh_token": "REFRESH_TOKEN",
+  "client_id": "lokus-desktop"
+}
+```
+
+#### 5. Revoke Token
+
+```http
+POST /revoke
+Content-Type: application/json
+Authorization: Bearer ACCESS_TOKEN
+
+{
+  "token": "ACCESS_TOKEN",
+  "token_type_hint": "access_token"
+}
+```
+
+### Error Responses
+
+All endpoints return consistent error formats:
+
+```typescript
+interface ErrorResponse {
+  error: string;
+  error_description?: string;
+  error_uri?: string;
+}
+```
+
+**Common Errors:**
+- `invalid_request`: Malformed request
+- `invalid_client`: Invalid client credentials
+- `invalid_grant`: Invalid authorization grant
+- `unauthorized_client`: Client not authorized
+- `unsupported_grant_type`: Grant type not supported
+- `invalid_scope`: Invalid scope requested
+
+## Tauri Commands API
+
+The desktop application exposes Rust functions through Tauri commands for secure system operations.
+
+### Authentication Commands
+
+#### `start_oauth_flow`
+
+Initiates the OAuth 2.0 authentication flow.
+
+```javascript
+import { invoke } from '@tauri-apps/api/tauri';
+
+const result = await invoke('start_oauth_flow');
+```
+
+**Returns:** `Promise<string>`
+- Success message or error description
+
+**Events Emitted:**
+- `auth-success`: Authentication completed successfully
+- `auth-error`: Authentication failed
+
+#### `get_auth_status`
+
+Retrieves current authentication status and user information.
+
+```javascript
+const status = await invoke('get_auth_status');
+```
+
+**Returns:** `Promise<AuthStatus>`
+```typescript
+interface AuthStatus {
+  is_authenticated: boolean;
+  user?: UserProfile;
+  needs_refresh: boolean;
+}
+```
+
+#### `get_access_token`
+
+Retrieves the current access token for API calls.
+
+```javascript
+const token = await invoke('get_access_token');
+```
+
+**Returns:** `Promise<string | null>`
+
+#### `refresh_token`
+
+Refreshes the access token using the refresh token.
+
+```javascript
+const newToken = await invoke('refresh_token');
+```
+
+**Returns:** `Promise<string>`
+
+#### `sign_out`
+
+Signs out the current user and clears stored credentials.
+
+```javascript
+await invoke('sign_out');
+```
+
+**Returns:** `Promise<string>`
+
+### File System Commands
+
+#### `read_file`
+
+Reads file content from the workspace.
+
+```javascript
+const content = await invoke('read_file', { path: 'notes/example.md' });
+```
+
+**Parameters:**
+```typescript
+interface ReadFileParams {
+  path: string;
+}
+```
+
+**Returns:** `Promise<string>`
+
+#### `write_file`
+
+Writes content to a file in the workspace.
+
+```javascript
+await invoke('write_file', {
+  path: 'notes/new-note.md',
+  content: '# New Note\n\nContent here...'
+});
+```
+
+**Parameters:**
+```typescript
+interface WriteFileParams {
+  path: string;
+  content: string;
+}
+```
+
+#### `delete_file`
+
+Deletes a file from the workspace.
+
+```javascript
+await invoke('delete_file', { path: 'notes/old-note.md' });
+```
+
+#### `list_files`
+
+Lists files in a directory.
+
+```javascript
+const files = await invoke('list_files', { path: 'notes/' });
+```
+
+**Returns:** `Promise<FileInfo[]>`
+```typescript
+interface FileInfo {
+  name: string;
+  path: string;
+  is_dir: boolean;
+  size: number;
+  modified: string;
+  created: string;
+}
+```
+
+#### `create_directory`
+
+Creates a new directory.
+
+```javascript
+await invoke('create_directory', { path: 'notes/projects' });
+```
+
+### Workspace Commands
+
+#### `get_workspace_info`
+
+Retrieves comprehensive workspace information.
+
+```javascript
+const info = await invoke('get_workspace_info');
+```
+
+**Returns:** `Promise<WorkspaceInfo>`
+```typescript
+interface WorkspaceInfo {
+  path: string;
+  name: string;
+  created: string;
+  modified: string;
+  file_count: number;
+  total_size: number;
+  settings: WorkspaceSettings;
+}
+```
+
+#### `set_workspace_path`
+
+Changes the active workspace directory.
+
+```javascript
+await invoke('set_workspace_path', { path: '/Users/username/MyWorkspace' });
+```
+
+#### `backup_workspace`
+
+Creates a backup of the current workspace.
+
+```javascript
+const backup = await invoke('backup_workspace', {
+  name: 'manual-backup',
+  compression: true
+});
+```
+
+**Returns:** `Promise<BackupInfo>`
+```typescript
+interface BackupInfo {
+  path: string;
+  size: number;
+  created: string;
+  checksum: string;
+}
+```
+
+### Search Commands
+
+#### `search_files`
+
+Performs full-text search across workspace files.
+
+```javascript
+const results = await invoke('search_files', {
+  query: 'machine learning',
+  file_types: ['.md', '.txt'],
+  case_sensitive: false
+});
+```
+
+**Parameters:**
+```typescript
+interface SearchParams {
+  query: string;
+  file_types?: string[];
+  case_sensitive?: boolean;
+  max_results?: number;
+}
+```
+
+**Returns:** `Promise<SearchResult[]>`
+```typescript
+interface SearchResult {
+  file_path: string;
+  matches: SearchMatch[];
+  score: number;
+}
+
+interface SearchMatch {
+  line_number: number;
+  line_content: string;
+  match_start: number;
+  match_end: number;
+}
+```
+
+## MCP Tools API
+
+The Model Context Protocol server provides 68 tools for AI assistant integration. All tools follow the MCP specification.
+
+### Tool Categories
+
+#### Note Management Tools (11 tools)
+
+##### `create_note`
+
+Creates a new note with optional template and metadata.
+
+```typescript
+interface CreateNoteArgs {
+  title: string;
+  content?: string;
+  template?: 'basic' | 'daily' | 'meeting' | 'project' | 'research' | 'review' | 'empty';
+  tags?: string[];
+  path?: string;
+  frontmatter?: Record<string, any>;
+}
+```
+
+**Example:**
+```json
+{
+  "name": "create_note",
+  "arguments": {
+    "title": "Research Notes",
+    "template": "research",
+    "tags": ["ai", "machine-learning"],
+    "content": "Initial research findings..."
+  }
+}
+```
+
+##### `update_note`
+
+Updates an existing note with new content or metadata.
+
+```typescript
+interface UpdateNoteArgs {
+  path: string;
+  content?: string;
+  appendContent?: string;
+  prependContent?: string;
+  addTags?: string[];
+  removeTags?: string[];
+  updateFrontmatter?: Record<string, any>;
+  createBackup?: boolean;
+}
+```
+
+##### `generate_note_summary`
+
+Generates AI-powered summary of note content.
+
+```typescript
+interface GenerateNoteSummaryArgs {
+  path: string;
+  summaryLength?: 'short' | 'medium' | 'long';
+  includeKeywords?: boolean;
+  includeTags?: boolean;
+}
+```
+
+##### `link_notes`
+
+Creates WikiLinks between notes.
+
+```typescript
+interface LinkNotesArgs {
+  sourcePath: string;
+  targetPath: string;
+  linkText?: string;
+  alias?: string;
+  insertLocation?: 'end' | 'beginning' | 'cursor' | 'section';
+  sectionTitle?: string;
+  createTargetIfMissing?: boolean;
+}
+```
+
+##### `resolve_wikilinks`
+
+Resolves and fixes broken WikiLinks in a note.
+
+```typescript
+interface ResolveWikiLinksArgs {
+  path: string;
+  autoCreate?: boolean;
+  suggestAlternatives?: boolean;
+}
+```
+
+#### Search Tools (16 tools)
+
+##### `search_content`
+
+Full-text search across all workspace files.
+
+```typescript
+interface SearchContentArgs {
+  query: string;
+  fileTypes?: string[];
+  caseSensitive?: boolean;
+  useRegex?: boolean;
+  wholeWord?: boolean;
+  maxResults?: number;
+  contextLines?: number;
+  excludePaths?: string[];
+}
+```
+
+##### `search_wiki_links`
+
+Find wiki link references and backlinks.
+
+```typescript
+interface SearchWikiLinksArgs {
+  target?: string;
+  mode?: 'references' | 'backlinks' | 'all';
+  includeContext?: boolean;
+}
+```
+
+##### `get_graph_data`
+
+Generate knowledge graph data for visualization.
+
+```typescript
+interface GetGraphDataArgs {
+  maxNodes?: number;
+  filterByType?: string[];
+  includeMetrics?: boolean;
+}
+```
+
+**Response:**
+```typescript
+interface GraphData {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  metrics: GraphMetrics;
+}
+
+interface GraphNode {
+  id: string;
+  label: string;
+  type: string;
+  metrics?: {
+    inDegree: number;
+    outDegree: number;
+    betweenness?: number;
+  };
+}
+
+interface GraphEdge {
+  source: string;
+  target: string;
+  type: string;
+  weight?: number;
+}
+```
+
+#### Workspace Tools (12 tools)
+
+##### `get_workspace_info`
+
+Get comprehensive workspace information.
+
+```typescript
+interface GetWorkspaceInfoArgs {
+  includeStats?: boolean;
+  includeHealth?: boolean;
+  includeSummary?: boolean;
+}
+```
+
+##### `backup_workspace`
+
+Create workspace backup with versioning.
+
+```typescript
+interface BackupWorkspaceArgs {
+  name?: string;
+  compression?: boolean;
+  includeConfig?: boolean;
+  includeMetadata?: boolean;
+  excludePatterns?: string[];
+}
+```
+
+##### `clean_workspace`
+
+Clean up workspace by removing temporary files.
+
+```typescript
+interface CleanWorkspaceArgs {
+  cleanupType?: 'temp' | 'duplicates' | 'empty' | 'orphans' | 'all';
+  dryRun?: boolean;
+  createBackup?: boolean;
+}
+```
+
+#### AI Analysis Tools (10 tools)
+
+##### `analyze_content`
+
+Analyze content for key themes and insights.
+
+```typescript
+interface AnalyzeContentArgs {
+  path: string;
+  analysisType?: 'themes' | 'concepts' | 'sentiment' | 'structure' | 'comprehensive';
+  extractKeywords?: boolean;
+  generateSummary?: boolean;
+  suggestConnections?: boolean;
+}
+```
+
+##### `generate_insights`
+
+Generate insights and patterns from workspace content.
+
+```typescript
+interface GenerateInsightsArgs {
+  scope?: 'workspace' | 'notes' | 'recent' | 'tag-based';
+  insightTypes?: ('trends' | 'gaps' | 'clusters' | 'outliers' | 'recommendations')[];
+  timeframe?: 'week' | 'month' | 'quarter' | 'year' | 'all';
+  includeMetrics?: boolean;
+}
+```
+
+##### `suggest_connections`
+
+Suggest meaningful connections between content.
+
+```typescript
+interface SuggestConnectionsArgs {
+  sourcePath: string;
+  connectionType?: 'semantic' | 'topical' | 'structural' | 'temporal' | 'all';
+  maxSuggestions?: number;
+  minConfidence?: number;
+}
+```
+
+#### Editor Tools (10 tools)
+
+##### `format_text`
+
+Apply markdown formatting to content.
+
+```typescript
+interface FormatTextArgs {
+  filePath: string;
+  format: 'bold' | 'italic' | 'strikethrough' | 'highlight' | 'superscript' | 'subscript' | 'code' | 'clear';
+  text?: string;
+  searchText?: string;
+  insertPosition?: 'append' | 'prepend' | 'replace' | 'cursor';
+}
+```
+
+##### `insert_link`
+
+Insert wiki links or regular markdown links.
+
+```typescript
+interface InsertLinkArgs {
+  filePath: string;
+  type: 'wiki' | 'regular';
+  target: string;
+  text?: string;
+  insertPosition?: 'append' | 'prepend' | 'section';
+  sectionTitle?: string;
+  embed?: boolean;
+}
+```
+
+##### `insert_math`
+
+Insert KaTeX math equations.
+
+```typescript
+interface InsertMathArgs {
+  filePath: string;
+  formula: string;
+  display?: 'inline' | 'block';
+  insertPosition?: 'append' | 'prepend' | 'section';
+  sectionTitle?: string;
+}
+```
+
+##### `create_task_list`
+
+Create markdown checkbox task lists.
+
+```typescript
+interface CreateTaskListArgs {
+  filePath: string;
+  tasks: Array<{
+    text: string;
+    checked?: boolean;
+  }>;
+  insertPosition?: 'append' | 'prepend' | 'section';
+  sectionTitle?: string;
+}
+```
+
+#### File Operations Tools (6 tools)
+
+##### `read_file`
+
+Read file content with encoding detection.
+
+```typescript
+interface ReadFileArgs {
+  path: string;
+}
+```
+
+##### `write_file`
+
+Write content to file with validation.
+
+```typescript
+interface WriteFileArgs {
+  path: string;
+  content: string;
+  createDirectories?: boolean;
+}
+```
+
+##### `list_files`
+
+List files and directories with filtering.
+
+```typescript
+interface ListFilesArgs {
+  path?: string;
+  recursive?: boolean;
+  includeHidden?: boolean;
+}
+```
+
+### Error Handling
+
+All MCP tools return consistent error formats:
+
+```typescript
+interface MCPError {
+  code: number;
+  message: string;
+  data?: any;
+}
+```
+
+**Common Error Codes:**
+- `-32700`: Parse error
+- `-32600`: Invalid request
+- `-32601`: Method not found
+- `-32602`: Invalid parameters
+- `-32603`: Internal error
+
+### Rate Limiting
+
+The MCP server implements rate limiting to prevent abuse:
+
+- **Default limit:** 100 requests per minute per client
+- **Burst allowance:** 20 requests in 10 seconds
+- **Tool-specific limits:** Some tools have lower limits due to computational cost
+
+### Authentication
+
+MCP tools require valid authentication for workspace access:
+
+```typescript
+interface MCPContext {
+  workspacePath: string;
+  userId?: string;
+  permissions: string[];
+}
+```
+
+## WebSocket Events API
+
+Real-time events for live collaboration and synchronization.
+
+### Connection
+
+```javascript
+const ws = new WebSocket('ws://localhost:3001/ws');
+
+ws.on('open', () => {
+  // Send authentication
+  ws.send(JSON.stringify({
+    type: 'authenticate',
+    token: 'ACCESS_TOKEN'
+  }));
+});
+```
+
+### Event Types
+
+#### File Events
+
+```typescript
+interface FileChangeEvent {
+  type: 'file_changed' | 'file_created' | 'file_deleted';
+  path: string;
+  timestamp: string;
+  userId?: string;
+  changes?: FileDiff[];
+}
+```
+
+#### Collaboration Events
+
+```typescript
+interface CollaborationEvent {
+  type: 'user_joined' | 'user_left' | 'cursor_moved' | 'selection_changed';
+  userId: string;
+  data: any;
+}
+```
+
+#### Sync Events
+
+```typescript
+interface SyncEvent {
+  type: 'sync_started' | 'sync_completed' | 'sync_failed';
+  operation: string;
+  progress?: number;
+  error?: string;
+}
+```
+
+## Integration APIs
+
+### Plugin System
+
+#### Plugin Registration
+
+```typescript
+interface PluginManifest {
+  name: string;
+  version: string;
+  description: string;
+  author: string;
+  main: string;
+  permissions: string[];
+  dependencies?: Record<string, string>;
+}
+```
+
+#### Plugin API
+
+```typescript
+interface PluginAPI {
+  registerCommand(name: string, handler: Function): void;
+  registerView(name: string, component: Component): void;
+  onFileChange(callback: (event: FileChangeEvent) => void): void;
+  workspace: WorkspaceAPI;
+  ui: UIAPI;
+  storage: StorageAPI;
+}
+```
+
+### Theme System
+
+#### Theme Definition
+
+```typescript
+interface Theme {
+  name: string;
+  displayName: string;
+  dark: boolean;
+  colors: {
+    primary: string;
+    secondary: string;
+    background: string;
+    surface: string;
+    text: string;
+    accent: string;
+    [key: string]: string;
+  };
+  typography: {
+    fontFamily: string;
+    fontSize: number;
+    lineHeight: number;
+  };
+  spacing: {
+    unit: number;
+    scale: number[];
+  };
+}
+```
+
+### Custom Extensions
+
+#### Editor Extensions
+
+```typescript
+interface EditorExtension {
+  name: string;
+  priority: number;
+  configure(editor: Editor): Extension;
+}
+```
+
+#### Command Extensions
+
+```typescript
+interface CommandExtension {
+  id: string;
+  title: string;
+  category: string;
+  shortcut?: string;
+  when?: string;
+  handler(context: CommandContext): Promise<void>;
+}
+```
+
+This comprehensive API reference provides complete documentation for integrating with and extending Lokus across all its major systems and interfaces.

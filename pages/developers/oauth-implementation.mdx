@@ -1,0 +1,1037 @@
+# OAuth 2.0 Implementation Guide
+
+This guide provides comprehensive technical documentation for implementing and maintaining OAuth 2.0 authentication in Lokus, covering both the desktop application and web platform integration.
+
+## Architecture Overview
+
+### Components
+
+The OAuth implementation consists of three main components:
+
+1. **Desktop Application (Tauri + Rust)** - OAuth client with PKCE flow
+2. **Web Platform (Next.js + Supabase)** - Authorization server
+3. **Localhost Redirect Server** - Handles OAuth callbacks
+
+### Flow Diagram
+
+```
+Desktop App → Web Platform → User Auth → Callback → Desktop App
+     ↓             ↓            ↓          ↓           ↓
+   PKCE         Authorization  User       Auth Code   Token Exchange
+  Generate       Endpoint      Login      Redirect    + Profile Fetch
+```
+
+## Desktop Application Implementation
+
+### File Structure
+
+```
+src-tauri/src/
+├── auth.rs              # Core OAuth implementation
+├── main.rs              # Tauri app setup and command registration
+└── Cargo.toml           # Dependencies configuration
+
+src/core/auth/
+├── AuthManager.js       # Frontend auth management
+└── AuthContext.jsx     # React context provider
+
+src/components/Auth/
+└── AuthButton.jsx      # Authentication UI component
+```
+
+### Core Implementation (`auth.rs`)
+
+#### Dependencies
+
+```toml
+[dependencies]
+# OAuth and HTTP
+reqwest = { version = "0.12", features = ["json"] }
+url = "2.5"
+base64 = "0.22"
+sha2 = "0.10"
+
+# Server and networking
+tokio = { version = "1", features = ["full"] }
+hyper = { version = "1.0", features = ["full"] }
+hyper-util = { version = "0.1", features = ["tokio"] }
+http-body-util = "0.1"
+
+# Credential storage
+keyring = "3.0"
+
+# Serialization and utilities
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+uuid = { version = "1.0", features = ["v4"] }
+dirs = "5.0"
+
+# Tauri integration
+tauri = { version = "2.0", features = ["shell-open"] }
+```
+
+#### PKCE Implementation
+
+```rust
+use sha2::{Digest, Sha256};
+use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine as _};
+
+fn generate_pkce_pair() -> (String, String) {
+    // Generate code verifier (43-128 characters)
+    let code_verifier: String = (0..43)
+        .map(|_| {
+            let chars = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
+            chars[fastrand::usize(..chars.len())] as char
+        })
+        .collect();
+
+    // Generate code challenge (SHA256 hash of verifier)
+    let mut hasher = Sha256::new();
+    hasher.update(code_verifier.as_bytes());
+    let challenge_bytes = hasher.finalize();
+    let code_challenge = URL_SAFE_NO_PAD.encode(&challenge_bytes);
+
+    (code_verifier, code_challenge)
+}
+```
+
+#### Authorization URL Generation
+
+```rust
+pub fn build_authorization_url(base_url: &str, client_id: &str, redirect_uri: &str, code_challenge: &str, state: &str) -> String {
+    format!(
+        "{}?response_type=code&client_id={}&redirect_uri={}&code_challenge={}&code_challenge_method=S256&state={}&scope=openid%20profile%20email",
+        base_url,
+        urlencoding::encode(client_id),
+        urlencoding::encode(redirect_uri),
+        urlencoding::encode(code_challenge),
+        urlencoding::encode(state)
+    )
+}
+```
+
+#### Localhost Redirect Server
+
+```rust
+use std::net::TcpListener;
+use hyper::server::conn::http1;
+use hyper::service::service_fn;
+use hyper::{Request, Response, StatusCode};
+use http_body_util::Full;
+use hyper::body::Bytes;
+use tokio::net::TcpStream;
+
+async fn start_callback_server(
+    sender: tokio::sync::oneshot::Sender<CallbackResult>,
+    state: String,
+) -> Result<u16, String> {
+    // Find available port in range 3333-3400
+    let port = find_available_port(3333, 3400)?;
+    
+    let addr = format!("127.0.0.1:{}", port);
+    let listener = TcpListener::bind(&addr)
+        .map_err(|e| format!("Failed to bind to {}: {}", addr, e))?;
+    
+    println!("Starting callback server on {}", addr);
+    
+    tokio::spawn(async move {
+        let listener = tokio::net::TcpListener::from_std(listener).unwrap();
+        
+        loop {
+            if let Ok((stream, _)) = listener.accept().await {
+                let sender = sender.clone();
+                let state = state.clone();
+                
+                tokio::spawn(async move {
+                    if let Err(err) = handle_connection(stream, sender, state).await {
+                        eprintln!("Error handling connection: {}", err);
+                    }
+                });
+                break;
+            }
+        }
+    });
+    
+    Ok(port)
+}
+
+async fn handle_connection(
+    stream: TcpStream,
+    sender: tokio::sync::oneshot::Sender<CallbackResult>,
+    expected_state: String,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let service = service_fn(move |req: Request<hyper::body::Incoming>| {
+        let sender = sender.clone();
+        let expected_state = expected_state.clone();
+        
+        async move {
+            let uri = req.uri();
+            let query = uri.query().unwrap_or("");
+            
+            // Parse query parameters
+            let params: std::collections::HashMap<String, String> = 
+                url::form_urlencoded::parse(query.as_bytes())
+                    .into_owned()
+                    .collect();
+            
+            let result = if let Some(code) = params.get("code") {
+                if let Some(state) = params.get("state") {
+                    if state == &expected_state {
+                        CallbackResult::Success {
+                            code: code.clone(),
+                            state: state.clone(),
+                        }
+                    } else {
+                        CallbackResult::Error("State parameter mismatch".to_string())
+                    }
+                } else {
+                    CallbackResult::Error("Missing state parameter".to_string())
+                }
+            } else if let Some(error) = params.get("error") {
+                CallbackResult::Error(format!("OAuth error: {}", error))
+            } else {
+                CallbackResult::Error("Invalid callback parameters".to_string())
+            };
+            
+            // Send result and close server
+            let _ = sender.send(result);
+            
+            // Return success response to browser
+            let response_body = r#"
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lokus Authentication</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+               text-align: center; padding: 50px; background: #f5f5f5; }
+        .container { background: white; padding: 40px; border-radius: 12px; 
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 400px; 
+                    margin: 0 auto; }
+        .success { color: #16a34a; }
+        .error { color: #dc2626; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="success">✓ Authentication Successful</h1>
+        <p>You can now close this tab and return to Lokus.</p>
+    </div>
+</body>
+</html>"#;
+
+            Ok::<_, hyper::Error>(
+                Response::builder()
+                    .status(StatusCode::OK)
+                    .header("Content-Type", "text/html")
+                    .body(Full::new(Bytes::from(response_body)))
+                    .unwrap()
+            )
+        }
+    });
+    
+    if let Err(err) = http1::Builder::new().serve_connection(stream, service).await {
+        eprintln!("Error serving connection: {:?}", err);
+    }
+    
+    Ok(())
+}
+```
+
+#### Token Exchange
+
+```rust
+#[derive(Debug, Serialize)]
+struct TokenRequest {
+    grant_type: String,
+    client_id: String,
+    code: String,
+    redirect_uri: String,
+    code_verifier: String,
+}
+
+async fn exchange_code_for_token(
+    token_url: &str,
+    client_id: &str,
+    code: &str,
+    redirect_uri: &str,
+    code_verifier: &str,
+) -> Result<TokenResponse, String> {
+    let client = reqwest::Client::new();
+    
+    let token_request = TokenRequest {
+        grant_type: "authorization_code".to_string(),
+        client_id: client_id.to_string(),
+        code: code.to_string(),
+        redirect_uri: redirect_uri.to_string(),
+        code_verifier: code_verifier.to_string(),
+    };
+    
+    let response = client
+        .post(token_url)
+        .header("Content-Type", "application/json")
+        .json(&token_request)
+        .send()
+        .await
+        .map_err(|e| format!("Failed to send token request: {}", e))?;
+    
+    if !response.status().is_success() {
+        let error_text = response.text().await.unwrap_or_default();
+        return Err(format!("Token exchange failed: {} - {}", response.status(), error_text));
+    }
+    
+    response
+        .json::<TokenResponse>()
+        .await
+        .map_err(|e| format!("Failed to parse token response: {}", e))
+}
+```
+
+#### Cross-Platform Storage
+
+```rust
+// Keychain storage for production
+fn store_token_keychain(access_token: &str, refresh_token: Option<&str>) -> Result<(), String> {
+    let entry = keyring::Entry::new("lokus-app", "oauth-token")
+        .map_err(|e| format!("Failed to create keychain entry: {}", e))?;
+    
+    let token_data = TokenData {
+        access_token: access_token.to_string(),
+        refresh_token: refresh_token.map(|s| s.to_string()),
+        stored_at: chrono::Utc::now().timestamp(),
+    };
+    
+    let token_json = serde_json::to_string(&token_data)
+        .map_err(|e| format!("Failed to serialize token: {}", e))?;
+    
+    entry.set_password(&token_json)
+        .map_err(|e| format!("Failed to store token in keychain: {}", e))
+}
+
+// File-based storage for development
+fn get_dev_token_path() -> Result<std::path::PathBuf, String> {
+    let home_dir = dirs::home_dir().ok_or("Failed to get home directory")?;
+    let app_dir = home_dir.join(".lokus");
+    if !app_dir.exists() {
+        std::fs::create_dir_all(&app_dir)
+            .map_err(|e| format!("Failed to create app directory: {}", e))?;
+    }
+    Ok(app_dir.join("auth_token.json"))
+}
+
+fn store_token_file(access_token: &str, refresh_token: Option<&str>) -> Result<(), String> {
+    let token_path = get_dev_token_path()?;
+    
+    let token_data = TokenData {
+        access_token: access_token.to_string(),
+        refresh_token: refresh_token.map(|s| s.to_string()),
+        stored_at: chrono::Utc::now().timestamp(),
+    };
+    
+    let token_json = serde_json::to_string_pretty(&token_data)
+        .map_err(|e| format!("Failed to serialize token: {}", e))?;
+    
+    std::fs::write(&token_path, token_json)
+        .map_err(|e| format!("Failed to write token to file: {}", e))
+}
+```
+
+#### Tauri Commands
+
+```rust
+#[tauri::command]
+pub async fn start_oauth_flow(app: tauri::AppHandle) -> Result<String, String> {
+    let client_id = "lokus-desktop";
+    let auth_base_url = "http://localhost:3000/api/auth/authorize";
+    
+    // Generate PKCE pair and state
+    let (code_verifier, code_challenge) = generate_pkce_pair();
+    let state = uuid::Uuid::new_v4().to_string();
+    
+    // Start callback server
+    let (sender, receiver) = tokio::sync::oneshot::channel();
+    let callback_port = start_callback_server(sender, state.clone()).await?;
+    let redirect_uri = format!("http://localhost:{}/callback", callback_port);
+    
+    // Build authorization URL
+    let auth_url = build_authorization_url(
+        auth_base_url,
+        client_id,
+        &redirect_uri,
+        &code_challenge,
+        &state,
+    );
+    
+    // Open browser
+    let _ = app.shell().open(&auth_url, None);
+    
+    // Wait for callback
+    let result = tokio::time::timeout(
+        std::time::Duration::from_secs(300), // 5 minute timeout
+        receiver
+    ).await;
+    
+    match result {
+        Ok(Ok(CallbackResult::Success { code, state: returned_state })) => {
+            if returned_state != state {
+                return Err("State parameter mismatch".to_string());
+            }
+            
+            // Exchange code for token
+            let token_url = "http://localhost:3000/api/auth/token";
+            let token_response = exchange_code_for_token(
+                token_url,
+                client_id,
+                &code,
+                &redirect_uri,
+                &code_verifier,
+            ).await?;
+            
+            // Store tokens
+            store_token(&token_response.access_token, token_response.refresh_token.as_deref())?;
+            
+            // Fetch user profile
+            let profile = fetch_user_profile(&token_response.access_token).await?;
+            store_user_profile(&profile)?;
+            
+            // Emit success event
+            let _ = app.emit("auth-success", &profile);
+            
+            Ok("Authentication successful".to_string())
+        },
+        Ok(Ok(CallbackResult::Error(error))) => Err(error),
+        Ok(Err(_)) => Err("Callback channel error".to_string()),
+        Err(_) => Err("Authentication timeout".to_string()),
+    }
+}
+
+#[tauri::command]
+pub async fn get_auth_status() -> Result<AuthStatus, String> {
+    let token = get_stored_token()?;
+    if token.is_empty() {
+        return Ok(AuthStatus {
+            is_authenticated: false,
+            user: None,
+            needs_refresh: false,
+        });
+    }
+    
+    let user_profile = get_stored_user_profile().ok();
+    
+    // Check if token needs refresh (optional)
+    let needs_refresh = should_refresh_token(&token);
+    
+    Ok(AuthStatus {
+        is_authenticated: true,
+        user: user_profile,
+        needs_refresh,
+    })
+}
+
+#[tauri::command]
+pub async fn sign_out() -> Result<String, String> {
+    clear_stored_token()?;
+    clear_stored_user_profile()?;
+    Ok("Signed out successfully".to_string())
+}
+```
+
+## Web Platform Implementation
+
+### API Endpoints
+
+#### Authorization Endpoint (`/api/auth/authorize`)
+
+```javascript
+import { createClient } from '@supabase/supabase-js'
+
+export default async function handler(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
+  try {
+    const {
+      response_type,
+      client_id,
+      redirect_uri,
+      code_challenge,
+      code_challenge_method,
+      state,
+      scope
+    } = req.query
+
+    // Validate required parameters
+    if (!response_type || response_type !== 'code') {
+      return res.status(400).json({ error: 'Invalid response_type' })
+    }
+
+    if (!client_id || client_id !== 'lokus-desktop') {
+      return res.status(400).json({ error: 'Invalid client_id' })
+    }
+
+    if (!redirect_uri || !redirect_uri.startsWith('http://localhost:')) {
+      return res.status(400).json({ error: 'Invalid redirect_uri' })
+    }
+
+    if (!code_challenge || !code_challenge_method || code_challenge_method !== 'S256') {
+      return res.status(400).json({ error: 'Invalid PKCE parameters' })
+    }
+
+    if (!state) {
+      return res.status(400).json({ error: 'Missing state parameter' })
+    }
+
+    // Store PKCE challenge and redirect info in session
+    req.session.oauth = {
+      client_id,
+      redirect_uri,
+      code_challenge,
+      code_challenge_method,
+      state,
+      scope
+    }
+
+    // Redirect to login page with OAuth context
+    const loginUrl = new URL('/login', process.env.NEXTAUTH_URL || 'http://localhost:3000')
+    loginUrl.searchParams.set('oauth', 'true')
+    loginUrl.searchParams.set('state', state)
+
+    res.redirect(loginUrl.toString())
+  } catch (error) {
+    console.error('Authorization error:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+}
+```
+
+#### Token Exchange Endpoint (`/api/auth/token`)
+
+```javascript
+import { createClient } from '@supabase/supabase-js'
+import crypto from 'crypto'
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
+  try {
+    const {
+      grant_type,
+      client_id,
+      code,
+      redirect_uri,
+      code_verifier
+    } = req.body
+
+    // Validate grant type
+    if (grant_type !== 'authorization_code') {
+      return res.status(400).json({ error: 'Invalid grant_type' })
+    }
+
+    // Validate client
+    if (client_id !== 'lokus-desktop') {
+      return res.status(400).json({ error: 'Invalid client_id' })
+    }
+
+    // Retrieve stored authorization data
+    const authData = await getStoredAuthCode(code)
+    if (!authData) {
+      return res.status(400).json({ error: 'Invalid authorization code' })
+    }
+
+    // Verify PKCE challenge
+    const codeChallenge = crypto
+      .createHash('sha256')
+      .update(code_verifier)
+      .digest('base64url')
+
+    if (codeChallenge !== authData.code_challenge) {
+      return res.status(400).json({ error: 'Invalid code_verifier' })
+    }
+
+    // Verify redirect URI
+    if (redirect_uri !== authData.redirect_uri) {
+      return res.status(400).json({ error: 'Invalid redirect_uri' })
+    }
+
+    // Generate access token
+    const accessToken = generateAccessToken(authData.user_id)
+    const refreshToken = generateRefreshToken(authData.user_id)
+
+    // Store tokens
+    await storeTokens(authData.user_id, accessToken, refreshToken)
+
+    // Clean up authorization code
+    await deleteAuthCode(code)
+
+    res.json({
+      access_token: accessToken,
+      token_type: 'Bearer',
+      expires_in: 3600,
+      refresh_token: refreshToken,
+      scope: authData.scope
+    })
+  } catch (error) {
+    console.error('Token exchange error:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+}
+```
+
+#### Profile Endpoint (`/api/auth/profile`)
+
+```javascript
+export default async function handler(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
+  try {
+    const authorization = req.headers.authorization
+    if (!authorization || !authorization.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Missing or invalid authorization header' })
+    }
+
+    const accessToken = authorization.substring(7)
+    
+    // Verify and decode access token
+    const tokenData = await verifyAccessToken(accessToken)
+    if (!tokenData) {
+      return res.status(401).json({ error: 'Invalid access token' })
+    }
+
+    // Fetch user profile
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    )
+
+    const { data: user, error } = await supabase
+      .from('profiles')
+      .select('id, email, full_name, avatar_url')
+      .eq('id', tokenData.user_id)
+      .single()
+
+    if (error || !user) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+
+    res.json({
+      id: user.id,
+      email: user.email,
+      name: user.full_name,
+      avatar_url: user.avatar_url
+    })
+  } catch (error) {
+    console.error('Profile fetch error:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+}
+```
+
+## Frontend Integration
+
+### AuthManager Class
+
+```javascript
+// src/core/auth/AuthManager.js
+import { invoke } from '@tauri/api/core'
+
+class AuthManager {
+  constructor() {
+    this.authState = {
+      isAuthenticated: false,
+      user: null,
+      loading: true
+    }
+    this.listeners = new Set()
+    this.authBaseUrl = 'http://localhost:3000/api/auth'
+  }
+
+  async initialize() {
+    try {
+      const status = await invoke('get_auth_status')
+      this.updateAuthState({
+        isAuthenticated: status.is_authenticated,
+        user: status.user,
+        loading: false
+      })
+    } catch (error) {
+      console.error('Failed to initialize auth state:', error)
+      this.updateAuthState({
+        isAuthenticated: false,
+        user: null,
+        loading: false
+      })
+    }
+  }
+
+  async signIn() {
+    try {
+      this.updateAuthState({ loading: true })
+      const result = await invoke('start_oauth_flow')
+      console.log('OAuth flow result:', result)
+      return result
+    } catch (error) {
+      console.error('Sign in failed:', error)
+      this.updateAuthState({ loading: false })
+      throw error
+    }
+  }
+
+  async signOut() {
+    try {
+      await invoke('sign_out')
+      this.updateAuthState({
+        isAuthenticated: false,
+        user: null,
+        loading: false
+      })
+    } catch (error) {
+      console.error('Sign out failed:', error)
+      throw error
+    }
+  }
+
+  async getAccessToken() {
+    try {
+      return await invoke('get_access_token')
+    } catch (error) {
+      console.error('Failed to get access token:', error)
+      return null
+    }
+  }
+
+  async authenticatedFetch(url, options = {}) {
+    const token = await this.getAccessToken()
+    if (!token) {
+      throw new Error('No access token available')
+    }
+
+    return fetch(url, {
+      ...options,
+      headers: {
+        ...options.headers,
+        'Authorization': `Bearer ${token}`
+      }
+    })
+  }
+
+  updateAuthState(updates) {
+    this.authState = { ...this.authState, ...updates }
+    this.notifyListeners()
+  }
+
+  onAuthStateChange(callback) {
+    this.listeners.add(callback)
+    callback(this.authState) // Call immediately with current state
+
+    return () => {
+      this.listeners.delete(callback)
+    }
+  }
+
+  notifyListeners() {
+    this.listeners.forEach(callback => {
+      try {
+        callback(this.authState)
+      } catch (error) {
+        console.error('Auth state listener error:', error)
+      }
+    })
+  }
+}
+
+export const authManager = new AuthManager()
+```
+
+### React Integration
+
+```jsx
+// src/core/auth/AuthContext.jsx
+import React, { createContext, useContext, useEffect, useState } from 'react'
+import { authManager } from './AuthManager'
+
+const AuthContext = createContext()
+
+export function AuthProvider({ children }) {
+  const [authState, setAuthState] = useState(authManager.authState)
+
+  useEffect(() => {
+    const unsubscribe = authManager.onAuthStateChange(setAuthState)
+    authManager.initialize()
+    return unsubscribe
+  }, [])
+
+  const contextValue = {
+    ...authState,
+    signIn: authManager.signIn.bind(authManager),
+    signOut: authManager.signOut.bind(authManager),
+    getAccessToken: authManager.getAccessToken.bind(authManager),
+    authenticatedFetch: authManager.authenticatedFetch.bind(authManager)
+  }
+
+  return (
+    <AuthContext.Provider value={contextValue}>
+      {children}
+    </AuthContext.Provider>
+  )
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext)
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider')
+  }
+  return context
+}
+```
+
+### AuthButton Component
+
+```jsx
+// src/components/Auth/AuthButton.jsx
+import React, { useState } from 'react'
+import { LogIn, User, Settings, LogOut } from 'lucide-react'
+import { useAuth } from '../../core/auth/AuthContext'
+
+export function AuthButton() {
+  const { isAuthenticated, user, loading, signIn, signOut } = useAuth()
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+
+  const handleSignIn = async () => {
+    try {
+      await signIn()
+    } catch (error) {
+      console.error('Sign in error:', error)
+    }
+  }
+
+  const handleSignOut = async () => {
+    try {
+      await signOut()
+      setIsDropdownOpen(false)
+    } catch (error) {
+      console.error('Sign out error:', error)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center gap-2 px-3 py-2">
+        <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
+        <span className="text-sm text-gray-600">Loading...</span>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated || !user) {
+    return (
+      <button
+        onClick={handleSignIn}
+        className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+      >
+        <LogIn className="w-4 h-4" />
+        <span className="hidden sm:inline">Sign In</span>
+      </button>
+    )
+  }
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+        className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+      >
+        {user.avatar_url ? (
+          <img
+            src={user.avatar_url}
+            alt={user.name}
+            className="w-4 h-4 rounded-full"
+          />
+        ) : (
+          <User className="w-4 h-4" />
+        )}
+        <span className="hidden sm:inline max-w-24 truncate">
+          {user.name || user.email}
+        </span>
+      </button>
+
+      {isDropdownOpen && (
+        <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50">
+          <div className="py-1">
+            <div className="px-4 py-2 text-sm text-gray-900 border-b">
+              <div className="font-medium">{user.name}</div>
+              <div className="text-gray-500">{user.email}</div>
+            </div>
+            <button
+              onClick={() => {
+                // Open account settings in web platform
+                window.open('http://localhost:3000/settings', '_blank')
+                setIsDropdownOpen(false)
+              }}
+              className="flex w-full items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            >
+              <Settings className="w-4 h-4" />
+              Account Settings
+            </button>
+            <button
+              onClick={handleSignOut}
+              className="flex w-full items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            >
+              <LogOut className="w-4 h-4" />
+              Sign Out
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+```
+
+## Testing and Debugging
+
+### Development Setup
+
+1. **Environment Variables**
+```bash
+# .env.local (web platform)
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+SUPABASE_SERVICE_ROLE_KEY=your_service_key
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your_secret_key
+```
+
+2. **Run Development Servers**
+```bash
+# Terminal 1: Web platform
+cd lokus-web
+npm run dev
+
+# Terminal 2: Desktop app
+cd lokus
+npm run tauri dev
+```
+
+### Debug Logging
+
+Enable comprehensive debug logging in the Rust implementation:
+
+```rust
+// Add to auth.rs
+fn log_debug(message: &str) {
+    if cfg!(debug_assertions) {
+        println!("[AUTH DEBUG] {}", message);
+    }
+}
+
+// Use throughout the OAuth flow
+log_debug(&format!("Starting OAuth flow with challenge: {}", code_challenge));
+log_debug(&format!("Received callback with code: {}", code));
+log_debug(&format!("Token exchange successful: {}", token_response.access_token));
+```
+
+### Testing OAuth Flow
+
+```bash
+# Test individual components
+npm run test:oauth
+
+# Test complete flow
+npm run test:e2e:auth
+
+# Manual testing checklist
+# 1. Click Sign In button
+# 2. Browser opens to localhost:3000
+# 3. Complete authentication on web
+# 4. Redirect back to desktop app
+# 5. UI updates to show user profile
+# 6. Token stored securely
+# 7. Sign out clears tokens
+```
+
+### Common Issues and Solutions
+
+#### Port Conflicts
+```rust
+// Use port range to avoid conflicts
+fn find_available_port(start: u16, end: u16) -> Result<u16, String> {
+    for port in start..=end {
+        if let Ok(listener) = TcpListener::bind(("127.0.0.1", port)) {
+            drop(listener);
+            return Ok(port);
+        }
+    }
+    Err("No available ports in range".to_string())
+}
+```
+
+#### Keychain Permission Issues
+```rust
+// Fall back to file storage in development
+fn store_token(access_token: &str, refresh_token: Option<&str>) -> Result<(), String> {
+    if cfg!(debug_assertions) {
+        store_token_file(access_token, refresh_token)
+    } else {
+        store_token_keychain(access_token, refresh_token)
+            .or_else(|_| store_token_file(access_token, refresh_token))
+    }
+}
+```
+
+#### State Parameter Validation
+```rust
+// Always validate state parameter
+if returned_state != expected_state {
+    return Err("CSRF attack detected: state parameter mismatch".to_string());
+}
+```
+
+## Security Considerations
+
+### PKCE Implementation
+- Code verifier: 43-128 characters, cryptographically random
+- Code challenge: SHA256 hash, base64url encoded
+- Method: Always use S256, never plain
+
+### Token Storage
+- Production: OS keychain/credential manager
+- Development: File-based with appropriate permissions
+- Never log tokens or sensitive data
+
+### Network Security
+- HTTPS in production (localhost HTTP acceptable for development)
+- Validate all redirect URIs
+- Short-lived authorization codes (5 minutes)
+- Implement token rotation
+
+### Error Handling
+- Generic error messages to users
+- Detailed logging for developers
+- No sensitive data in error responses
+- Graceful degradation for network issues
+
+## Deployment Considerations
+
+### Production Configuration
+```rust
+const AUTH_CONFIG: AuthConfig = AuthConfig {
+    client_id: "lokus-desktop",
+    auth_base_url: "https://app.lokus.ai/api/auth/authorize",
+    token_url: "https://app.lokus.ai/api/auth/token",
+    profile_url: "https://app.lokus.ai/api/auth/profile",
+    redirect_port_range: (3333, 3400),
+    timeout_seconds: 300,
+};
+```
+
+### Build Optimization
+- Strip debug symbols in release builds
+- Minimize bundle size with feature flags
+- Enable LTO for performance
+- Use release profiles for crypto operations
+
+This implementation provides a robust, secure OAuth 2.0 flow that integrates seamlessly between the Lokus desktop application and web platform while maintaining the highest security standards.

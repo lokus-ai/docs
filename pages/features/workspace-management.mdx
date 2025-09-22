@@ -1,0 +1,975 @@
+# Advanced Workspace Management
+
+Lokus provides a comprehensive workspace management system that enables efficient organization, backup, synchronization, and collaborative workflows for your knowledge bases.
+
+## Overview
+
+The workspace management system is designed around the concept of self-contained knowledge environments. Each workspace represents a complete project, research area, or knowledge domain with its own files, configuration, and metadata.
+
+### Key Concepts
+
+- **Workspace Root** - The main directory containing all workspace files
+- **Configuration** - Workspace-specific settings and metadata
+- **Index System** - Fast search and navigation across workspace content
+- **Backup System** - Automated and manual backup with versioning
+- **Sync Engine** - Real-time synchronization across devices and platforms
+
+## Workspace Structure
+
+### Standard Layout
+
+```
+workspace-name/
+├── .lokus/                 # Workspace configuration
+│   ├── config.json         # Workspace settings
+│   ├── index.db           # Search index
+│   ├── metadata.json      # Workspace metadata
+│   └── backups/           # Local backup storage
+├── assets/                # Media and attachments
+│   ├── images/
+│   ├── documents/
+│   └── attachments/
+├── templates/             # Custom note templates
+├── notes/                 # Main content directory
+│   ├── daily/
+│   ├── projects/
+│   ├── research/
+│   └── meetings/
+├── kanban/               # Kanban board files
+└── canvas/               # Canvas files
+```
+
+### Configuration System
+
+#### Workspace Configuration (`config.json`)
+
+```json
+{
+  "workspace": {
+    "name": "Research Project",
+    "description": "AI and Machine Learning Research",
+    "version": "1.0.0",
+    "created": "2024-01-15T10:30:00Z",
+    "lastModified": "2024-03-20T15:45:00Z"
+  },
+  "settings": {
+    "defaultNoteTemplate": "research",
+    "autoSave": true,
+    "autoBackup": true,
+    "syncEnabled": true,
+    "indexingEnabled": true
+  },
+  "editor": {
+    "theme": "default",
+    "fontSize": 14,
+    "lineHeight": 1.6,
+    "showWordCount": true,
+    "enableMath": true,
+    "enableWikiLinks": true
+  },
+  "search": {
+    "indexFiles": [".md", ".txt", ".canvas"],
+    "excludeDirectories": [".lokus", "node_modules", ".git"],
+    "enableFullText": true,
+    "enableSemanticSearch": false
+  },
+  "backup": {
+    "enabled": true,
+    "frequency": "daily",
+    "retention": 30,
+    "compression": true,
+    "location": "local"
+  },
+  "sync": {
+    "enabled": false,
+    "provider": null,
+    "endpoint": null,
+    "lastSync": null
+  }
+}
+```
+
+#### Metadata System (`metadata.json`)
+
+```json
+{
+  "stats": {
+    "totalFiles": 245,
+    "totalSize": "15.8MB",
+    "noteCount": 189,
+    "canvasCount": 12,
+    "kanbanCount": 8,
+    "lastIndexed": "2024-03-20T14:30:00Z"
+  },
+  "tags": {
+    "research": 45,
+    "ai": 32,
+    "machine-learning": 28,
+    "deep-learning": 15,
+    "nlp": 12
+  },
+  "links": {
+    "wikiLinks": 156,
+    "brokenLinks": 3,
+    "externalLinks": 42
+  },
+  "activity": {
+    "lastAccessed": "2024-03-20T15:45:00Z",
+    "recentFiles": [
+      "research/transformer-architecture.md",
+      "notes/daily/2024-03-20.md",
+      "projects/gpt-analysis.md"
+    ]
+  }
+}
+```
+
+## Core Features
+
+### 1. Workspace Creation and Initialization
+
+#### Creating a New Workspace
+
+```javascript
+// Programmatic workspace creation
+const workspace = await createWorkspace({
+  name: "Machine Learning Research",
+  path: "/Users/username/Documents/ML-Research",
+  template: "research", // basic, research, project, knowledge-base, journal
+  description: "Advanced ML research and experiments",
+  settings: {
+    enableMath: true,
+    enableCanvas: true,
+    autoBackup: true
+  }
+});
+```
+
+#### Workspace Templates
+
+**Research Template**
+- Pre-configured for academic research
+- Includes paper review templates
+- Bibliography management setup
+- Experiment tracking structure
+
+**Project Template**
+- Task and milestone tracking
+- Timeline management
+- Resource organization
+- Team collaboration features
+
+**Knowledge Base Template**
+- Topic-based organization
+- Cross-referencing system
+- FAQ and documentation structure
+- Learning path templates
+
+**Journal Template**
+- Daily note structure
+- Reflection prompts
+- Goal tracking
+- Habit monitoring
+
+### 2. File Management System
+
+#### Intelligent File Organization
+
+```javascript
+// Auto-organization based on content analysis
+const organizeFiles = async (workspacePath) => {
+  const files = await scanWorkspace(workspacePath);
+  
+  for (const file of files) {
+    const analysis = await analyzeFileContent(file);
+    const suggestedLocation = await suggestFileLocation(analysis);
+    
+    if (suggestedLocation !== file.currentPath) {
+      await moveFileWithLinks(file, suggestedLocation);
+    }
+  }
+};
+```
+
+#### Smart Duplicate Detection
+
+```javascript
+// Advanced duplicate detection
+const findDuplicates = async (workspace) => {
+  const duplicates = await scanForDuplicates({
+    contentSimilarity: 0.85,
+    titleSimilarity: 0.9,
+    structureSimilarity: 0.8,
+    ignoreDates: true
+  });
+  
+  return duplicates.map(group => ({
+    files: group,
+    similarity: group.similarity,
+    suggestedAction: group.action // merge, keep_newest, manual_review
+  }));
+};
+```
+
+### 3. Backup and Versioning
+
+#### Automated Backup System
+
+```javascript
+// Comprehensive backup configuration
+const backupConfig = {
+  frequency: {
+    full: "weekly",      // Complete workspace backup
+    incremental: "daily", // Changed files only
+    continuous: true     // Real-time change tracking
+  },
+  retention: {
+    daily: 7,
+    weekly: 4,
+    monthly: 12,
+    yearly: 5
+  },
+  compression: {
+    algorithm: "gzip",
+    level: 6
+  },
+  verification: {
+    checksum: true,
+    integrity: true
+  }
+};
+```
+
+#### Version Control Integration
+
+```javascript
+// Git integration for version tracking
+const gitIntegration = {
+  autoCommit: true,
+  commitMessage: "Auto-save: {timestamp} - {filesChanged} files",
+  branchStrategy: "feature-per-topic",
+  hooks: {
+    preCommit: ["lint-markdown", "update-index"],
+    postCommit: ["backup-to-cloud", "notify-team"]
+  }
+};
+```
+
+### 4. Synchronization Engine
+
+#### Multi-Device Sync
+
+```javascript
+// Real-time synchronization
+class WorkspaceSync {
+  constructor(workspace, config) {
+    this.workspace = workspace;
+    this.config = config;
+    this.conflictResolver = new ConflictResolver();
+  }
+
+  async startSync() {
+    // Watch for file changes
+    this.watcher = chokidar.watch(this.workspace.path, {
+      ignored: /\.lokus/,
+      persistent: true,
+      ignoreInitial: false
+    });
+
+    this.watcher.on('change', this.handleFileChange.bind(this));
+    this.watcher.on('add', this.handleFileAdd.bind(this));
+    this.watcher.on('unlink', this.handleFileDelete.bind(this));
+  }
+
+  async handleFileChange(filePath) {
+    const fileData = await this.prepareFileForSync(filePath);
+    
+    try {
+      await this.uploadFile(fileData);
+      await this.updateLocalIndex(fileData);
+    } catch (error) {
+      if (error.type === 'CONFLICT') {
+        await this.resolveConflict(error.details);
+      }
+    }
+  }
+
+  async resolveConflict(conflictData) {
+    const resolution = await this.conflictResolver.resolve({
+      localVersion: conflictData.local,
+      remoteVersion: conflictData.remote,
+      strategy: this.config.conflictResolution // auto, manual, keep_newest
+    });
+
+    await this.applyResolution(resolution);
+  }
+}
+```
+
+#### Conflict Resolution
+
+```javascript
+class ConflictResolver {
+  async resolve(conflictData) {
+    const { localVersion, remoteVersion, strategy } = conflictData;
+
+    switch (strategy) {
+      case 'auto':
+        return await this.autoResolve(localVersion, remoteVersion);
+      
+      case 'keep_newest':
+        return localVersion.modified > remoteVersion.modified 
+          ? localVersion : remoteVersion;
+      
+      case 'manual':
+        return await this.requestManualResolution(conflictData);
+      
+      case 'merge':
+        return await this.attemptMerge(localVersion, remoteVersion);
+    }
+  }
+
+  async autoResolve(local, remote) {
+    // Intelligent auto-resolution
+    const localChanges = await this.analyzeChanges(local);
+    const remoteChanges = await this.analyzeChanges(remote);
+
+    if (this.canMergeChanges(localChanges, remoteChanges)) {
+      return await this.mergeChanges(local, remote);
+    }
+
+    // Fall back to newest version
+    return local.modified > remote.modified ? local : remote;
+  }
+
+  async mergeChanges(local, remote) {
+    // Three-way merge for text content
+    const commonAncestor = await this.findCommonAncestor(local, remote);
+    
+    return await this.threeWayMerge({
+      base: commonAncestor,
+      ours: local,
+      theirs: remote
+    });
+  }
+}
+```
+
+### 5. Search and Indexing
+
+#### Advanced Search Index
+
+```javascript
+// Full-text search with semantic understanding
+class WorkspaceIndex {
+  constructor(workspace) {
+    this.workspace = workspace;
+    this.index = new FlexSearch.Document({
+      document: {
+        id: 'path',
+        index: ['title', 'content', 'tags']
+      },
+      tokenize: 'full',
+      context: {
+        resolution: 9,
+        depth: 2,
+        bidirectional: true
+      }
+    });
+  }
+
+  async buildIndex() {
+    const files = await this.getAllFiles();
+    
+    for (const file of files) {
+      const content = await this.extractContent(file);
+      const metadata = await this.extractMetadata(file);
+      
+      this.index.add({
+        path: file.path,
+        title: metadata.title,
+        content: content.text,
+        tags: metadata.tags.join(' '),
+        links: content.links,
+        created: metadata.created,
+        modified: metadata.modified
+      });
+    }
+  }
+
+  async search(query, options = {}) {
+    const searchOptions = {
+      limit: options.limit || 50,
+      suggest: options.suggest || true,
+      bool: options.bool || 'or'
+    };
+
+    // Perform search
+    const results = await this.index.search(query, searchOptions);
+    
+    // Enhance results with context and relevance scoring
+    return await this.enhanceResults(results, query);
+  }
+
+  async enhanceResults(results, query) {
+    return Promise.all(results.map(async (result) => {
+      const file = await this.getFile(result.path);
+      const context = await this.extractContext(file, query);
+      const relevance = await this.calculateRelevance(file, query);
+      
+      return {
+        ...result,
+        context,
+        relevance,
+        preview: context.preview,
+        highlights: context.highlights
+      };
+    }));
+  }
+}
+```
+
+#### Semantic Search Integration
+
+```javascript
+// AI-powered semantic search
+class SemanticSearch {
+  constructor(workspace) {
+    this.workspace = workspace;
+    this.embeddings = new Map();
+  }
+
+  async generateEmbeddings() {
+    const files = await this.workspace.getAllFiles();
+    
+    for (const file of files) {
+      const content = await this.extractContent(file);
+      const embedding = await this.generateEmbedding(content);
+      this.embeddings.set(file.path, embedding);
+    }
+  }
+
+  async semanticSearch(query, options = {}) {
+    const queryEmbedding = await this.generateEmbedding(query);
+    const similarities = [];
+
+    for (const [path, embedding] of this.embeddings) {
+      const similarity = this.cosineSimilarity(queryEmbedding, embedding);
+      
+      if (similarity > (options.threshold || 0.6)) {
+        similarities.push({ path, similarity });
+      }
+    }
+
+    return similarities
+      .sort((a, b) => b.similarity - a.similarity)
+      .slice(0, options.limit || 20);
+  }
+
+  cosineSimilarity(a, b) {
+    const dotProduct = a.reduce((sum, val, i) => sum + val * b[i], 0);
+    const magnitudeA = Math.sqrt(a.reduce((sum, val) => sum + val * val, 0));
+    const magnitudeB = Math.sqrt(b.reduce((sum, val) => sum + val * val, 0));
+    
+    return dotProduct / (magnitudeA * magnitudeB);
+  }
+}
+```
+
+### 6. Collaboration Features
+
+#### Real-time Collaboration
+
+```javascript
+// Multi-user collaboration system
+class CollaborationEngine {
+  constructor(workspace) {
+    this.workspace = workspace;
+    this.activeUsers = new Map();
+    this.changeBuffer = new OperationalTransform();
+  }
+
+  async joinCollaboration(userId, userInfo) {
+    this.activeUsers.set(userId, {
+      ...userInfo,
+      joinedAt: Date.now(),
+      currentFile: null,
+      cursor: null
+    });
+
+    // Broadcast user joined
+    await this.broadcast('user_joined', { userId, userInfo });
+    
+    // Send current workspace state
+    await this.sendWorkspaceState(userId);
+  }
+
+  async handleEdit(userId, edit) {
+    // Apply operational transformation
+    const transformedEdit = await this.changeBuffer.transform(edit);
+    
+    // Apply edit to workspace
+    await this.applyEdit(transformedEdit);
+    
+    // Broadcast to other users
+    await this.broadcast('edit_applied', {
+      userId,
+      edit: transformedEdit
+    }, [userId]); // Exclude sender
+  }
+
+  async handleCursorMove(userId, position) {
+    const user = this.activeUsers.get(userId);
+    if (user) {
+      user.cursor = position;
+      
+      await this.broadcast('cursor_moved', {
+        userId,
+        position
+      }, [userId]);
+    }
+  }
+}
+```
+
+#### Permission System
+
+```javascript
+// Fine-grained permission control
+class PermissionManager {
+  constructor() {
+    this.permissions = new Map();
+  }
+
+  definePermissions(workspaceId, permissions) {
+    this.permissions.set(workspaceId, {
+      owner: permissions.owner,
+      admins: permissions.admins || [],
+      editors: permissions.editors || [],
+      viewers: permissions.viewers || [],
+      rules: permissions.rules || {}
+    });
+  }
+
+  async checkPermission(userId, workspaceId, action, resource = null) {
+    const perms = this.permissions.get(workspaceId);
+    if (!perms) return false;
+
+    // Owner has all permissions
+    if (perms.owner === userId) return true;
+
+    // Check role-based permissions
+    if (perms.admins.includes(userId)) {
+      return this.checkAdminPermission(action);
+    }
+
+    if (perms.editors.includes(userId)) {
+      return this.checkEditorPermission(action, resource);
+    }
+
+    if (perms.viewers.includes(userId)) {
+      return this.checkViewerPermission(action);
+    }
+
+    return false;
+  }
+
+  checkEditorPermission(action, resource) {
+    const allowedActions = [
+      'read', 'write', 'create', 'edit',
+      'comment', 'suggest'
+    ];
+    
+    if (!allowedActions.includes(action)) {
+      return false;
+    }
+
+    // Resource-specific checks
+    if (resource && resource.protected) {
+      return false;
+    }
+
+    return true;
+  }
+}
+```
+
+## Advanced Features
+
+### 1. Workspace Health Monitoring
+
+```javascript
+// Comprehensive health analysis
+class WorkspaceHealthAnalyzer {
+  async analyzeHealth(workspace) {
+    const analysis = {
+      structure: await this.analyzeStructure(workspace),
+      content: await this.analyzeContent(workspace),
+      links: await this.analyzeLinks(workspace),
+      performance: await this.analyzePerformance(workspace),
+      security: await this.analyzeSecurity(workspace)
+    };
+
+    return {
+      score: this.calculateHealthScore(analysis),
+      issues: this.identifyIssues(analysis),
+      recommendations: this.generateRecommendations(analysis),
+      details: analysis
+    };
+  }
+
+  async analyzeStructure(workspace) {
+    return {
+      directoryDepth: await this.calculateDirectoryDepth(workspace),
+      fileDistribution: await this.analyzeFileDistribution(workspace),
+      namingConsistency: await this.checkNamingConsistency(workspace),
+      organizationScore: await this.scoreOrganization(workspace)
+    };
+  }
+
+  async analyzeContent(workspace) {
+    return {
+      duplicateContent: await this.findDuplicateContent(workspace),
+      orphanedFiles: await this.findOrphanedFiles(workspace),
+      emptyFiles: await this.findEmptyFiles(workspace),
+      qualityScore: await this.assessContentQuality(workspace)
+    };
+  }
+
+  async analyzeLinks(workspace) {
+    return {
+      brokenLinks: await this.findBrokenLinks(workspace),
+      circularReferences: await this.findCircularReferences(workspace),
+      linkDensity: await this.calculateLinkDensity(workspace),
+      connectivityScore: await this.scoreConnectivity(workspace)
+    };
+  }
+}
+```
+
+### 2. Automated Cleanup and Optimization
+
+```javascript
+// Intelligent workspace cleanup
+class WorkspaceOptimizer {
+  async optimizeWorkspace(workspace, options = {}) {
+    const optimizations = [];
+
+    if (options.removeEmptyFiles !== false) {
+      optimizations.push(await this.removeEmptyFiles(workspace));
+    }
+
+    if (options.fixBrokenLinks !== false) {
+      optimizations.push(await this.fixBrokenLinks(workspace));
+    }
+
+    if (options.organizeDuplicates !== false) {
+      optimizations.push(await this.organizeDuplicates(workspace));
+    }
+
+    if (options.optimizeAssets !== false) {
+      optimizations.push(await this.optimizeAssets(workspace));
+    }
+
+    if (options.rebuildIndex !== false) {
+      optimizations.push(await this.rebuildSearchIndex(workspace));
+    }
+
+    return {
+      optimizations: optimizations.filter(Boolean),
+      summary: this.generateOptimizationSummary(optimizations)
+    };
+  }
+
+  async organizeDuplicates(workspace) {
+    const duplicates = await this.findDuplicates(workspace);
+    const actions = [];
+
+    for (const duplicateGroup of duplicates) {
+      const action = await this.decideDuplicateAction(duplicateGroup);
+      
+      switch (action.type) {
+        case 'merge':
+          await this.mergeFiles(duplicateGroup.files);
+          actions.push({ type: 'merge', files: duplicateGroup.files });
+          break;
+          
+        case 'archive':
+          await this.archiveOlderVersions(duplicateGroup.files);
+          actions.push({ type: 'archive', files: duplicateGroup.files });
+          break;
+          
+        case 'keep_newest':
+          await this.removeOlderVersions(duplicateGroup.files);
+          actions.push({ type: 'remove', files: duplicateGroup.files });
+          break;
+      }
+    }
+
+    return actions;
+  }
+}
+```
+
+### 3. Export and Import System
+
+```javascript
+// Comprehensive export/import
+class DataPortability {
+  async exportWorkspace(workspace, format, options = {}) {
+    const exporters = {
+      'json': this.exportToJSON,
+      'markdown': this.exportToMarkdown,
+      'zip': this.exportToZip,
+      'epub': this.exportToEPUB,
+      'pdf': this.exportToPDF
+    };
+
+    const exporter = exporters[format];
+    if (!exporter) {
+      throw new Error(`Unsupported export format: ${format}`);
+    }
+
+    return await exporter.call(this, workspace, options);
+  }
+
+  async exportToJSON(workspace, options) {
+    const data = {
+      metadata: await this.extractMetadata(workspace),
+      files: await this.exportFiles(workspace, options),
+      structure: await this.exportStructure(workspace),
+      settings: workspace.config
+    };
+
+    if (options.includeAssets) {
+      data.assets = await this.exportAssets(workspace);
+    }
+
+    if (options.includeHistory) {
+      data.history = await this.exportHistory(workspace);
+    }
+
+    return {
+      format: 'json',
+      data: JSON.stringify(data, null, 2),
+      size: JSON.stringify(data).length,
+      checksum: this.calculateChecksum(data)
+    };
+  }
+
+  async importWorkspace(data, format, targetPath, options = {}) {
+    const importers = {
+      'json': this.importFromJSON,
+      'markdown': this.importFromMarkdown,
+      'zip': this.importFromZip,
+      'obsidian': this.importFromObsidian,
+      'notion': this.importFromNotion
+    };
+
+    const importer = importers[format];
+    if (!importer) {
+      throw new Error(`Unsupported import format: ${format}`);
+    }
+
+    // Create backup before import
+    if (options.createBackup !== false) {
+      await this.createBackup(targetPath);
+    }
+
+    return await importer.call(this, data, targetPath, options);
+  }
+
+  async importFromObsidian(obsidianVault, targetPath, options) {
+    // Convert Obsidian vault to Lokus workspace
+    const conversion = {
+      files: await this.convertObsidianFiles(obsidianVault),
+      settings: await this.convertObsidianSettings(obsidianVault),
+      plugins: await this.mapObsidianPlugins(obsidianVault)
+    };
+
+    await this.createWorkspaceFromConversion(conversion, targetPath);
+    
+    return {
+      imported: conversion.files.length,
+      warnings: conversion.warnings || [],
+      suggestions: conversion.suggestions || []
+    };
+  }
+}
+```
+
+## Performance Optimization
+
+### 1. Lazy Loading and Caching
+
+```javascript
+// Efficient content loading
+class ContentManager {
+  constructor(workspace) {
+    this.workspace = workspace;
+    this.cache = new LRUCache({ max: 1000, ttl: 300000 }); // 5 minutes
+    this.loadingPromises = new Map();
+  }
+
+  async loadFile(path) {
+    // Check cache first
+    const cached = this.cache.get(path);
+    if (cached) return cached;
+
+    // Check if already loading
+    if (this.loadingPromises.has(path)) {
+      return await this.loadingPromises.get(path);
+    }
+
+    // Load file
+    const loadPromise = this.doLoadFile(path);
+    this.loadingPromises.set(path, loadPromise);
+
+    try {
+      const content = await loadPromise;
+      this.cache.set(path, content);
+      return content;
+    } finally {
+      this.loadingPromises.delete(path);
+    }
+  }
+
+  async preloadNearbyFiles(currentPath) {
+    // Predictively load related files
+    const related = await this.findRelatedFiles(currentPath);
+    
+    for (const file of related.slice(0, 5)) { // Limit preloading
+      setImmediate(() => this.loadFile(file.path));
+    }
+  }
+}
+```
+
+### 2. Index Optimization
+
+```javascript
+// Incremental indexing
+class IncrementalIndexer {
+  async updateIndex(workspace, changes) {
+    for (const change of changes) {
+      switch (change.type) {
+        case 'added':
+          await this.addToIndex(change.file);
+          break;
+          
+        case 'modified':
+          await this.updateInIndex(change.file);
+          break;
+          
+        case 'deleted':
+          await this.removeFromIndex(change.file);
+          break;
+      }
+    }
+
+    await this.optimizeIndex();
+  }
+
+  async optimizeIndex() {
+    // Periodic index optimization
+    if (this.shouldOptimize()) {
+      await this.compactIndex();
+      await this.rebuildSearchSuggestions();
+      await this.updateSemanticEmbeddings();
+    }
+  }
+}
+```
+
+## Integration with External Tools
+
+### 1. Git Integration
+
+```javascript
+// Advanced Git workflow
+class GitIntegration {
+  async setupRepository(workspacePath) {
+    const git = simpleGit(workspacePath);
+    
+    await git.init();
+    await this.createGitignore(workspacePath);
+    await this.setupGitHooks(workspacePath);
+    await git.add('.').commit('Initial commit');
+  }
+
+  async createGitignore(workspacePath) {
+    const gitignore = `
+# Lokus workspace files
+.lokus/cache/
+.lokus/temp/
+.lokus/locks/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.swp
+*.log
+
+# User-specific
+.user-settings
+`;
+    
+    await fs.writeFile(path.join(workspacePath, '.gitignore'), gitignore);
+  }
+
+  async autoCommit(workspace, changes) {
+    const git = simpleGit(workspace.path);
+    
+    const commitMessage = this.generateCommitMessage(changes);
+    
+    await git.add('.');
+    await git.commit(commitMessage);
+    
+    if (workspace.config.git.autoPush) {
+      await git.push();
+    }
+  }
+}
+```
+
+### 2. Cloud Storage Integration
+
+```javascript
+// Multi-provider cloud sync
+class CloudSync {
+  constructor(provider, credentials) {
+    this.provider = this.createProvider(provider, credentials);
+  }
+
+  createProvider(type, credentials) {
+    const providers = {
+      'google-drive': () => new GoogleDriveProvider(credentials),
+      'dropbox': () => new DropboxProvider(credentials),
+      'onedrive': () => new OneDriveProvider(credentials),
+      's3': () => new S3Provider(credentials)
+    };
+
+    const providerFactory = providers[type];
+    if (!providerFactory) {
+      throw new Error(`Unsupported cloud provider: ${type}`);
+    }
+
+    return providerFactory();
+  }
+
+  async syncWorkspace(workspace) {
+    const changes = await this.detectChanges(workspace);
+    
+    for (const change of changes) {
+      await this.syncFile(change);
+    }
+
+    await this.updateSyncMetadata(workspace);
+  }
+}
+```
+
+This comprehensive workspace management system provides the foundation for efficient, scalable, and collaborative knowledge work within Lokus, supporting everything from individual note-taking to large-scale team research projects.
