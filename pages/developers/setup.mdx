@@ -1,0 +1,527 @@
+# Developer Setup
+
+Complete guide to setting up your development environment for contributing to Lokus or building plugins.
+
+## Prerequisites
+
+### Required Tools
+
+**Node.js and npm**
+- Version: 18.0.0 or higher
+- Download from [nodejs.org](https://nodejs.org/)
+- Verify installation: `node --version && npm --version`
+
+**Rust**
+- Latest stable version via rustup
+- Install from [rustup.rs](https://rustup.rs/)
+- Verify installation: `rustc --version && cargo --version`
+
+**Git**
+- Any recent version
+- Download from [git-scm.com](https://git-scm.com/)
+- Verify installation: `git --version`
+
+### Platform-Specific Requirements
+
+#### Windows
+
+**Visual Studio Build Tools**
+```powershell
+# Using winget
+winget install Microsoft.VisualStudio.2022.BuildTools
+
+# Manual download
+# Visit: https://visualstudio.microsoft.com/downloads/
+```
+
+Required components:
+- C++ build tools
+- Windows 10/11 SDK
+
+**WebView2**
+```powershell
+# Usually pre-installed on Windows 10+
+winget install Microsoft.EdgeWebView2
+```
+
+#### macOS
+
+**Xcode Command Line Tools**
+```bash
+xcode-select --install
+```
+
+For iOS development (optional):
+```bash
+xcode-select --install
+# Install full Xcode from App Store
+```
+
+#### Linux (Ubuntu/Debian)
+
+```bash
+sudo apt-get update
+sudo apt-get install -y \
+    build-essential \
+    curl \
+    wget \
+    file \
+    libgtk-3-dev \
+    libwebkit2gtk-4.1-dev \
+    libayatana-appindicator3-dev \
+    librsvg2-dev \
+    patchelf \
+    pkg-config
+```
+
+#### Linux (Fedora)
+
+```bash
+sudo dnf install -y \
+    gcc-c++ \
+    curl \
+    wget \
+    file \
+    gtk3-devel \
+    webkit2gtk4.1-devel \
+    libappindicator-gtk3-devel \
+    librsvg2-devel \
+    patchelf \
+    pkg-config
+```
+
+#### Linux (Arch)
+
+```bash
+sudo pacman -Syu
+sudo pacman -S --needed \
+    base-devel \
+    curl \
+    wget \
+    file \
+    gtk3 \
+    webkit2gtk \
+    libappindicator-gtk3 \
+    librsvg \
+    patchelf \
+    pkg-config
+```
+
+## Clone Repository
+
+```bash
+# Clone the repository
+git clone https://github.com/lokus-ai/lokus.git
+cd lokus
+
+# Checkout development branch (if not working on main)
+git checkout develop
+```
+
+## Install Dependencies
+
+### Frontend Dependencies
+
+```bash
+# Install npm packages
+npm install
+```
+
+This installs:
+- React and related libraries
+- TipTap editor
+- Vite build tools
+- Development tools (ESLint, Prettier, Vitest)
+
+### Backend Dependencies
+
+```bash
+# Rust dependencies are managed by Cargo
+# They'll be downloaded on first build
+cargo build --manifest-path=src-tauri/Cargo.toml
+```
+
+First build will take 5-10 minutes as Cargo downloads and compiles all dependencies.
+
+## Project Structure
+
+```
+lokus/
+├── src/                      # Frontend source (React)
+│   ├── editor/              # TipTap editor
+│   ├── views/               # Main views
+│   ├── components/          # UI components
+│   ├── core/                # Core logic
+│   ├── plugins/             # Plugin system
+│   ├── mcp-server/          # MCP server
+│   └── hooks/               # React hooks
+├── src-tauri/               # Backend source (Rust)
+│   ├── src/
+│   │   ├── main.rs         # Entry point
+│   │   ├── auth.rs         # Authentication
+│   │   ├── plugins.rs      # Plugin backend
+│   │   └── ...             # Other modules
+│   ├── Cargo.toml          # Rust dependencies
+│   └── tauri.conf.json     # Tauri config
+├── packages/                # Monorepo packages
+│   ├── lokus-plugin-cli/   # Plugin CLI
+│   └── plugin-sdk/         # Plugin SDK
+├── tests/                   # Test suites
+│   ├── unit/               # Unit tests
+│   ├── e2e/                # E2E tests
+│   └── integration/        # Integration tests
+└── docs/                    # Documentation
+
+Configuration Files:
+├── package.json            # NPM config
+├── vite.config.js         # Vite config
+├── vitest.config.js       # Test config
+├── playwright.config.js   # E2E test config
+└── tailwind.config.cjs    # Tailwind CSS
+```
+
+## Development Workflow
+
+### Running Development Server
+
+```bash
+# Start Vite dev server + Tauri
+npm run tauri dev
+```
+
+This will:
+1. Start Vite dev server on port 1420
+2. Build Rust backend in debug mode
+3. Launch Lokus application
+4. Enable hot module replacement (HMR)
+
+### Running Tests
+
+**Unit Tests**
+```bash
+# Run all unit tests
+npm test
+
+# Watch mode
+npm run test:watch
+
+# With coverage
+npm run test:coverage
+```
+
+**E2E Tests**
+```bash
+# Run E2E tests
+npm run test:e2e
+
+# With UI
+npm run test:e2e:ui
+
+# Headed mode (visible browser)
+npm run test:e2e:headed
+```
+
+**Rust Tests**
+```bash
+# Run Rust tests
+cd src-tauri
+cargo test
+```
+
+### Building for Production
+
+**Development Build**
+```bash
+npm run build
+```
+
+**Platform-Specific Production Build**
+```bash
+# Windows
+npm run build:windows
+
+# macOS
+npm run build:macos
+
+# Linux
+npm run build:linux
+
+# All platforms
+npm run build:all
+```
+
+Build artifacts will be in:
+- Windows: `src-tauri/target/release/bundle/msi/` or `.../nsis/`
+- macOS: `src-tauri/target/release/bundle/dmg/` or `.../macos/`
+- Linux: `src-tauri/target/release/bundle/appimage/`, `.../deb/`, or `.../rpm/`
+
+## Development Environment Setup
+
+### VSCode (Recommended)
+
+**Recommended Extensions**
+```json
+{
+  "recommendations": [
+    "rust-lang.rust-analyzer",
+    "tauri-apps.tauri-vscode",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "bradlc.vscode-tailwindcss",
+    "vitest.explorer"
+  ]
+}
+```
+
+**Workspace Settings**
+```json
+{
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "rust-analyzer.checkOnSave.command": "clippy",
+  "tailwindCSS.experimental.classRegex": [
+    ["clsx\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"]
+  ]
+}
+```
+
+### Environment Variables
+
+Create `.env` file in project root:
+
+```bash
+# Gmail OAuth (optional)
+GOOGLE_CLIENT_ID=your_client_id
+GOOGLE_CLIENT_SECRET=your_client_secret
+
+# Development
+NODE_ENV=development
+RUST_LOG=debug
+
+# MCP Server (optional)
+MCP_SERVER_PORT=3001
+```
+
+### Git Configuration
+
+**Set up pre-commit hooks**
+```bash
+# Install husky
+npm install --save-dev husky
+
+# Initialize hooks
+npx husky install
+```
+
+**Commit message format**
+Follow conventional commits:
+```
+feat: add new feature
+fix: fix bug
+docs: update documentation
+style: format code
+refactor: refactor code
+test: add tests
+chore: update dependencies
+```
+
+## Debugging
+
+### Frontend Debugging
+
+**Chrome DevTools**
+- Open with `Ctrl+Shift+I` (Windows/Linux) or `Cmd+Option+I` (macOS)
+- Available in development mode
+
+**React DevTools**
+Install browser extension for React component inspection.
+
+### Backend Debugging
+
+**Rust Logs**
+```bash
+# Set log level
+RUST_LOG=debug npm run tauri dev
+
+# Module-specific logging
+RUST_LOG=lokus::auth=debug,lokus::plugins=trace npm run tauri dev
+```
+
+**Debugger (VSCode)**
+Create `.vscode/launch.json`:
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Tauri Development Debug",
+      "cargo": {
+        "args": [
+          "build",
+          "--manifest-path=./src-tauri/Cargo.toml",
+          "--no-default-features"
+        ]
+      },
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}
+```
+
+### Performance Profiling
+
+**React Profiler**
+```javascript
+import { Profiler } from 'react';
+
+<Profiler id="Editor" onRender={onRenderCallback}>
+  <Editor />
+</Profiler>
+```
+
+**Rust Profiling**
+```bash
+# Install cargo-flamegraph
+cargo install flamegraph
+
+# Profile
+cargo flamegraph --bin lokus
+```
+
+## Common Development Tasks
+
+### Adding a New Feature
+
+1. Create feature branch
+```bash
+git checkout -b feature/my-feature
+```
+
+2. Implement feature with tests
+3. Run tests and linting
+```bash
+npm test
+npm run lint
+```
+
+4. Build and verify
+```bash
+npm run build
+```
+
+5. Create pull request
+
+### Creating a Plugin
+
+```bash
+# Use plugin CLI
+npm install -g lokus-plugin-cli
+
+# Create plugin
+lokus-plugin create my-plugin
+cd my-plugin
+
+# Develop
+lokus-plugin dev
+
+# Test
+npm test
+
+# Build
+lokus-plugin build
+```
+
+See [Plugin Development](/developers/plugins) for details.
+
+### Working on Documentation
+
+```bash
+# Clone docs repository
+git clone https://github.com/lokus-ai/lokus-docs.git
+cd lokus-docs
+
+# Install dependencies
+npm install
+
+# Start dev server
+npm run dev
+```
+
+## Troubleshooting
+
+### Build Failures
+
+**Node modules issues**
+```bash
+rm -rf node_modules package-lock.json
+npm install
+```
+
+**Rust cache issues**
+```bash
+cd src-tauri
+cargo clean
+cargo build
+```
+
+### Platform-Specific Issues
+
+**Windows: Missing build tools**
+```powershell
+npm install --global windows-build-tools
+```
+
+**macOS: Command line tools not found**
+```bash
+sudo xcode-select --reset
+xcode-select --install
+```
+
+**Linux: WebKit not found**
+```bash
+# Ubuntu/Debian
+sudo apt-get install libwebkit2gtk-4.1-dev
+
+# Fedora
+sudo dnf install webkit2gtk4.1-devel
+```
+
+### Performance Issues
+
+**Slow builds**
+- Use release mode only for final builds
+- Enable incremental compilation (on by default)
+- Add to `.cargo/config.toml`:
+```toml
+[build]
+incremental = true
+```
+
+**Slow HMR**
+- Reduce the number of files watched
+- Disable source maps in dev: `vite.config.js`
+```javascript
+export default {
+  build: {
+    sourcemap: false
+  }
+}
+```
+
+## Next Steps
+
+- Read [Architecture Overview](/developers/architecture)
+- Learn about [Plugin Development](/developers/plugins)
+- Explore [MCP Integration](/developers/mcp)
+- Check [Contributing Guidelines](/developers/contributing)
+
+## Getting Help
+
+- GitHub Discussions: [lokus-ai/lokus/discussions](https://github.com/lokus-ai/lokus/discussions)
+- Discord: Join our Discord server
+- Documentation: [docs.lokus.ai](https://docs.lokus.ai)
+- Email: developers@lokus.ai

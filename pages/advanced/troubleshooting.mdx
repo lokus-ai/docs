@@ -1,0 +1,855 @@
+# Troubleshooting Guide
+
+Common issues, solutions, and debugging techniques for Lokus.
+
+## Installation Issues
+
+### Application Won't Start
+
+**Symptoms:** Lokus crashes on launch or shows blank window
+
+**Solutions:**
+
+1. **Check system requirements:**
+   - macOS 10.15+ / Windows 10+ / Linux (Ubuntu 20.04+)
+   - 4GB RAM minimum
+   - 500MB free disk space
+
+2. **Clear application cache:**
+   ```bash
+   # macOS
+   rm -rf ~/Library/Application\ Support/com.lokus.app
+
+   # Windows
+   rmdir /s %APPDATA%\com.lokus.app
+
+   # Linux
+   rm -rf ~/.config/com.lokus.app
+   ```
+
+3. **Check permissions:**
+   ```bash
+   # macOS - Grant full disk access
+   System Preferences → Security & Privacy → Full Disk Access
+
+   # Linux - Ensure executable permissions
+   chmod +x lokus.AppImage
+   ```
+
+4. **View crash logs:**
+   ```bash
+   # macOS
+   cat ~/Library/Logs/Lokus/crash.log
+
+   # Windows
+   type %APPDATA%\Lokus\logs\crash.log
+
+   # Linux
+   cat ~/.local/share/Lokus/logs/crash.log
+   ```
+
+---
+
+### Installation Fails
+
+**Error:** "Installation failed" or "Cannot install package"
+
+**Solutions:**
+
+1. **Verify download integrity:**
+   ```bash
+   # Check SHA256 hash
+   shasum -a 256 lokus-installer.dmg
+   ```
+
+2. **Disable antivirus temporarily** - Some AV software blocks installation
+
+3. **Run as administrator (Windows):**
+   - Right-click installer
+   - Select "Run as administrator"
+
+4. **Check disk space:**
+   ```bash
+   df -h  # Linux/macOS
+   ```
+
+---
+
+## Workspace Issues
+
+### Workspace Won't Load
+
+**Symptoms:** Error loading workspace or blank workspace view
+
+**Solutions:**
+
+1. **Validate workspace path:**
+   ```typescript
+   const isValid = await invoke('validate_workspace_path', {
+     path: '/path/to/workspace'
+   });
+   ```
+
+2. **Check .lokus folder:**
+   ```bash
+   # Ensure .lokus folder exists and is writable
+   ls -la /path/to/workspace/.lokus
+   chmod -R 755 /path/to/workspace/.lokus
+   ```
+
+3. **Repair workspace:**
+   ```typescript
+   // Clear corrupted session state
+   await invoke('clear_all_workspace_data');
+
+   // Reinitialize workspace
+   await initializeWorkspace('/path/to/workspace');
+   ```
+
+4. **Try different workspace:**
+   - Close current workspace
+   - Create new test workspace
+   - If test works, issue is with original workspace
+
+---
+
+### Files Not Appearing
+
+**Symptoms:** Files exist but don't show in file tree
+
+**Solutions:**
+
+1. **Refresh file tree:**
+   - Press `F5`
+   - Or: File → Refresh Files
+
+2. **Check exclude patterns:**
+   ```json
+   {
+     "files": {
+       "excludePatterns": [
+         "node_modules",
+         ".git"
+       ]
+     }
+   }
+   ```
+
+3. **Check hidden files setting:**
+   ```json
+   {
+     "files": {
+       "showHiddenFiles": true
+     }
+   }
+   ```
+
+4. **Rebuild file index:**
+   ```typescript
+   await invoke('build_search_index');
+   ```
+
+---
+
+## Editor Issues
+
+### Editor Performance Issues
+
+**Symptoms:** Lag when typing, slow scrolling, high CPU usage
+
+**Solutions:**
+
+1. **Reduce file size:**
+   - Split large documents (>1MB)
+   - Remove unnecessary content
+
+2. **Disable expensive features:**
+   ```json
+   {
+     "editor": {
+       "spellCheck": false,
+       "syntaxHighlighting": false
+     }
+   }
+   ```
+
+3. **Clear editor cache:**
+   ```typescript
+   // Close all tabs
+   // Restart application
+   ```
+
+4. **Check for infinite loops in extensions:**
+   - Disable all plugins
+   - Enable one by one to identify culprit
+
+---
+
+### Content Not Saving
+
+**Symptoms:** Changes aren't persisted to disk
+
+**Solutions:**
+
+1. **Check auto-save:**
+   ```json
+   {
+     "editor": {
+       "autoSave": true,
+       "autoSaveDelay": 1000
+     }
+   }
+   ```
+
+2. **Manual save:**
+   - Press `Cmd/Ctrl+S`
+   - Check status bar for save confirmation
+
+3. **Check file permissions:**
+   ```bash
+   # Ensure file is writable
+   ls -l /path/to/file.md
+   chmod 644 /path/to/file.md
+   ```
+
+4. **Check disk space:**
+   ```bash
+   df -h
+   ```
+
+5. **View error logs:**
+   - Open Developer Tools (Cmd/Ctrl+Shift+I)
+   - Check Console tab for errors
+
+---
+
+### Formatting Issues
+
+**Problem:** Bold, italic, or other formatting not working
+
+**Solutions:**
+
+1. **Check keyboard shortcuts:**
+   - Verify shortcuts aren't conflicting
+   - Preferences → Keyboard Shortcuts
+
+2. **Test in new document:**
+   - Create new file
+   - Test formatting
+   - If works, issue is with specific document
+
+3. **Check extension conflicts:**
+   - Disable custom editor extensions
+   - Test formatting
+   - Re-enable extensions one by one
+
+4. **Reset editor state:**
+   ```typescript
+   // Close and reopen file
+   // Or restart application
+   ```
+
+---
+
+## Plugin Issues
+
+### Plugin Won't Install
+
+**Error:** "Failed to install plugin" or validation errors
+
+**Solutions:**
+
+1. **Validate plugin manifest:**
+   ```typescript
+   const result = await invoke('validate_plugin_manifest', {
+     manifest: manifestJSON
+   });
+
+   console.log(result.errors);
+   ```
+
+2. **Check plugin.json:**
+   ```json
+   {
+     "name": "plugin-name",
+     "version": "1.0.0",
+     "description": "Description",
+     "author": "Author",
+     "main": "index.js",
+     "permissions": ["read:files"]
+   }
+   ```
+
+3. **Verify file structure:**
+   ```
+   plugin-name/
+   ├── plugin.json
+   ├── index.js
+   └── README.md
+   ```
+
+4. **Check for name conflicts:**
+   - Ensure plugin name is unique
+   - List installed plugins
+
+---
+
+### Plugin Not Working
+
+**Symptoms:** Plugin installed but not functioning
+
+**Solutions:**
+
+1. **Check if enabled:**
+   ```typescript
+   const enabled = await invoke('get_enabled_plugins');
+   console.log(enabled);
+   ```
+
+2. **Enable plugin:**
+   ```typescript
+   await invoke('enable_plugin', { name: 'plugin-name' });
+   ```
+
+3. **Check permissions:**
+   ```typescript
+   const permissions = await invoke('get_plugin_permissions', {
+     plugin_name: 'plugin-name'
+   });
+   ```
+
+4. **View plugin logs:**
+   - Developer Tools → Console
+   - Filter by plugin name
+
+5. **Reinstall plugin:**
+   ```typescript
+   await invoke('uninstall_plugin', { name: 'plugin-name' });
+   // Reinstall plugin
+   ```
+
+---
+
+### Plugin Permissions Denied
+
+**Error:** "Plugin lacks permission" errors
+
+**Solutions:**
+
+1. **Check required permissions:**
+   - View plugin manifest
+   - Verify permissions declared
+
+2. **Grant permissions:**
+   ```typescript
+   await invoke('set_plugin_permission', {
+     plugin_name: 'plugin-name',
+     permissions: ['read:files', 'write:files']
+   });
+   ```
+
+3. **Review security settings:**
+   ```json
+   {
+     "security": {
+       "sandboxPlugins": true
+     }
+   }
+   ```
+
+---
+
+## Gmail Integration Issues
+
+### Authentication Fails
+
+**Error:** OAuth errors or "Failed to authenticate"
+
+**Solutions:**
+
+1. **Check OAuth credentials:**
+   - Verify CLIENT_ID and CLIENT_SECRET
+   - Ensure redirect URI is correct
+
+2. **Clear OAuth state:**
+   ```typescript
+   await invoke('gmail_logout');
+   // Try authentication again
+   ```
+
+3. **Check OAuth server:**
+   ```typescript
+   // Ensure OAuth server is running
+   const status = await invoke('mcp_status');
+   ```
+
+4. **Browser issues:**
+   - Clear browser cache
+   - Try different browser
+   - Disable ad blockers
+
+5. **Network issues:**
+   - Check firewall settings
+   - Verify internet connection
+   - Test with VPN disabled
+
+---
+
+### Emails Not Syncing
+
+**Symptoms:** Emails don't appear or are outdated
+
+**Solutions:**
+
+1. **Check authentication:**
+   ```typescript
+   const isAuth = await invoke('gmail_is_authenticated');
+   ```
+
+2. **Force sync:**
+   ```typescript
+   await invoke('gmail_force_process_queue');
+   ```
+
+3. **Check sync settings:**
+   ```json
+   {
+     "integrations": {
+       "gmail": {
+         "syncInterval": 300000,
+         "maxEmailsPerSync": 50
+       }
+     }
+   }
+   ```
+
+4. **Check API quota:**
+   - Gmail API has usage limits
+   - Wait and try again
+
+5. **View queue stats:**
+   ```typescript
+   const stats = await invoke('gmail_get_queue_stats');
+   console.log(stats);
+   ```
+
+---
+
+## MCP Server Issues
+
+### Server Won't Start
+
+**Error:** "Failed to start MCP server"
+
+**Solutions:**
+
+1. **Check Node.js:**
+   ```bash
+   node --version  # Should be v18+
+   ```
+
+2. **Check port availability:**
+   ```bash
+   # Check if port 3456 is in use
+   lsof -i :3456  # macOS/Linux
+   netstat -ano | findstr :3456  # Windows
+   ```
+
+3. **Try different port:**
+   ```typescript
+   await invoke('mcp_start', { port: 3457 });
+   ```
+
+4. **Check server file:**
+   ```bash
+   ls -la src/mcp-server/stdio-server.js
+   ```
+
+5. **View server logs:**
+   ```bash
+   cat ~/.lokus/logs/mcp-server.log
+   ```
+
+---
+
+### Server Connection Timeouts
+
+**Error:** "Connection timeout" or "Server not responding"
+
+**Solutions:**
+
+1. **Restart server:**
+   ```typescript
+   await invoke('mcp_restart');
+   ```
+
+2. **Check server health:**
+   ```typescript
+   const healthy = await invoke('mcp_health_check');
+   ```
+
+3. **Increase timeout:**
+   ```json
+   {
+     "integrations": {
+       "mcp": {
+         "timeout": 60000
+       }
+     }
+   }
+   ```
+
+4. **Check firewall:**
+   - Allow Node.js through firewall
+   - Allow port 3456
+
+---
+
+## Search Issues
+
+### Search Not Working
+
+**Symptoms:** No search results or search hangs
+
+**Solutions:**
+
+1. **Rebuild search index:**
+   ```typescript
+   await invoke('build_search_index');
+   ```
+
+2. **Check search settings:**
+   ```json
+   {
+     "search": {
+       "maxResults": 1000,
+       "indexOnStartup": true
+     }
+   }
+   ```
+
+3. **Clear search cache:**
+   ```typescript
+   // Delete search index
+   // Restart application
+   // Index will rebuild
+   ```
+
+4. **Check file permissions:**
+   - Ensure files are readable
+   - Check workspace permissions
+
+---
+
+### Search Too Slow
+
+**Symptoms:** Search takes >5 seconds
+
+**Solutions:**
+
+1. **Limit search scope:**
+   ```typescript
+   const results = await invoke('search_in_files', {
+     query: 'TODO',
+     max_results: 100,
+     file_types: ['.md']
+   });
+   ```
+
+2. **Use exclude patterns:**
+   ```json
+   {
+     "search": {
+       "excludePatterns": [
+         "node_modules",
+         "*.pdf",
+         "*.zip"
+       ]
+     }
+   }
+   ```
+
+3. **Rebuild index:**
+   - Corrupted index can slow search
+   - Rebuild from scratch
+
+---
+
+## Performance Issues
+
+### High CPU Usage
+
+**Symptoms:** CPU >80% when idle
+
+**Solutions:**
+
+1. **Check running processes:**
+   - Activity Monitor (macOS)
+   - Task Manager (Windows)
+   - System Monitor (Linux)
+
+2. **Disable plugins:**
+   - Some plugins may have loops
+   - Disable all plugins
+   - Re-enable one by one
+
+3. **Check file watchers:**
+   ```json
+   {
+     "files": {
+       "watchForChanges": false
+     }
+   }
+   ```
+
+4. **Close unused tabs:**
+   - Limit open tabs to 10-20
+   - Use tab groups
+
+---
+
+### High Memory Usage
+
+**Symptoms:** Memory >1GB
+
+**Solutions:**
+
+1. **Check open tabs:**
+   - Close unused tabs
+   - Restart application
+
+2. **Clear cache:**
+   ```typescript
+   // Close all tabs
+   // Restart application
+   ```
+
+3. **Limit cache size:**
+   ```json
+   {
+     "performance": {
+       "cacheSize": 50,
+       "maxOpenTabs": 10
+     }
+   }
+   ```
+
+4. **Check for memory leaks:**
+   - Open Developer Tools
+   - Memory Profiler
+   - Take heap snapshot
+
+---
+
+## Platform-Specific Issues
+
+### macOS Issues
+
+**Gatekeeper Warning:**
+```bash
+# Allow unsigned app
+xattr -d com.apple.quarantine /Applications/Lokus.app
+```
+
+**Permission Denied:**
+- System Preferences → Security & Privacy → Full Disk Access
+- Add Lokus to allowed applications
+
+**Keyboard Shortcuts Not Working:**
+- System Preferences → Keyboard → Shortcuts
+- Check for conflicts
+
+---
+
+### Windows Issues
+
+**SmartScreen Warning:**
+- Click "More info"
+- Click "Run anyway"
+
+**Antivirus Blocking:**
+- Add Lokus to exclusions
+- Temporarily disable to test
+
+**High DPI Issues:**
+- Right-click Lokus.exe → Properties
+- Compatibility → High DPI settings
+- Override scaling behavior
+
+---
+
+### Linux Issues
+
+**AppImage Won't Run:**
+```bash
+chmod +x Lokus.AppImage
+./Lokus.AppImage
+```
+
+**Missing Dependencies:**
+```bash
+# Ubuntu/Debian
+sudo apt install libfuse2
+
+# Fedora
+sudo dnf install fuse-libs
+```
+
+**Wayland Issues:**
+```bash
+# Force X11
+GDK_BACKEND=x11 ./Lokus.AppImage
+```
+
+---
+
+## Debug Mode
+
+### Enable Debug Logging
+
+**Via Environment Variable:**
+```bash
+LOKUS_DEBUG=true lokus
+```
+
+**Via Configuration:**
+```json
+{
+  "development": {
+    "debugLogging": true,
+    "showPerformanceMetrics": true
+  }
+}
+```
+
+**View Logs:**
+```bash
+# macOS
+tail -f ~/Library/Logs/Lokus/debug.log
+
+# Windows
+type %APPDATA%\Lokus\logs\debug.log
+
+# Linux
+tail -f ~/.local/share/Lokus/logs/debug.log
+```
+
+---
+
+### Developer Tools
+
+**Open Developer Tools:**
+- `Cmd/Ctrl+Shift+I`
+- Or: View → Developer → Developer Tools
+
+**Console Tab:**
+- View JavaScript errors
+- Check network requests
+- Monitor performance
+
+**Network Tab:**
+- View API requests
+- Check request timing
+- Debug authentication
+
+**Performance Tab:**
+- Profile performance
+- Find bottlenecks
+- Memory profiling
+
+---
+
+## Getting Help
+
+### Before Reporting Issues
+
+1. **Search existing issues** - GitHub Issues
+2. **Check documentation** - docs.lokus.app
+3. **Try latest version** - Update to latest release
+4. **Gather information:**
+   - Lokus version
+   - OS version
+   - Steps to reproduce
+   - Error messages
+   - Logs
+
+---
+
+### Report an Issue
+
+**GitHub Issues:** github.com/lokus/lokus/issues
+
+**Include:**
+1. **Description** - Clear problem description
+2. **Steps to reproduce** - Detailed steps
+3. **Expected behavior** - What should happen
+4. **Actual behavior** - What actually happens
+5. **Screenshots** - If applicable
+6. **Logs** - Error logs
+7. **Environment:**
+   - Lokus version
+   - OS and version
+   - Hardware specs
+
+---
+
+### Community Support
+
+- **Discord** - discord.gg/lokus
+- **Forum** - community.lokus.app
+- **Stack Overflow** - Tag: lokus
+- **Twitter** - @lokusapp
+
+---
+
+## Common Error Messages
+
+### "Failed to invoke command"
+
+**Cause:** Tauri command error
+
+**Solution:**
+1. Check command name spelling
+2. Verify parameters are correct
+3. Check backend logs
+
+---
+
+### "Permission denied"
+
+**Cause:** Insufficient file permissions
+
+**Solution:**
+1. Check file permissions
+2. Run with appropriate privileges
+3. Check security settings
+
+---
+
+### "Network request failed"
+
+**Cause:** Network connectivity issue
+
+**Solution:**
+1. Check internet connection
+2. Verify firewall settings
+3. Check proxy configuration
+
+---
+
+### "Plugin not found"
+
+**Cause:** Plugin not installed or disabled
+
+**Solution:**
+1. Install plugin
+2. Enable plugin
+3. Restart application
+
+---
+
+## Next Steps
+
+- [Configuration](/reference/configuration) - Configure Lokus
+- [Security](/advanced/security) - Security features
+- [Performance](/advanced/performance) - Optimize performance

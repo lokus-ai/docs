@@ -1,0 +1,968 @@
+# Plugin API Reference
+
+Complete reference for developing Lokus plugins. The Plugin API provides safe, controlled access to editor, UI, filesystem, and core features.
+
+## Plugin Structure
+
+### Manifest File (plugin.json)
+
+Every plugin requires a `plugin.json` manifest file:
+
+```json
+{
+  "name": "example-plugin",
+  "version": "1.0.0",
+  "description": "An example plugin for Lokus",
+  "author": "Your Name",
+  "main": "index.js",
+  "permissions": [
+    "read:files",
+    "write:files",
+    "ui:editor"
+  ],
+  "dependencies": {
+    "some-package": "^1.0.0"
+  },
+  "keywords": ["productivity", "editor"],
+  "repository": "https://github.com/username/example-plugin",
+  "homepage": "https://example.com",
+  "license": "MIT"
+}
+```
+
+**Required Fields:**
+- `name` - Plugin identifier (alphanumeric, hyphens, underscores)
+- `version` - Semantic version (e.g., "1.0.0")
+- `description` - Brief plugin description
+- `author` - Plugin author name
+- `main` - Entry point file path
+- `permissions` - Array of required permissions
+
+**Optional Fields:**
+- `dependencies` - npm package dependencies
+- `keywords` - Search keywords
+- `repository` - Source code repository URL
+- `homepage` - Plugin homepage URL
+- `license` - License identifier
+
+### Entry Point (index.js)
+
+```javascript
+export default class ExamplePlugin {
+  /**
+   * Called when plugin is activated
+   * @param {PluginAPI} context - Plugin API instance
+   */
+  activate(context) {
+    this.context = context;
+
+    // Add editor extension
+    context.addExtension({
+      name: 'customExtension',
+      // Extension implementation
+    });
+
+    // Add slash command
+    context.addSlashCommand({
+      name: 'example',
+      description: 'Example command',
+      handler: (editor) => {
+        // Command logic
+      }
+    });
+
+    // Register event listeners
+    context.on('file:save', this.onFileSave.bind(this));
+  }
+
+  /**
+   * Called when plugin is deactivated
+   */
+  deactivate() {
+    // Cleanup resources
+    this.context.removeAllListeners();
+  }
+
+  onFileSave(data) {
+    console.log('File saved:', data);
+  }
+}
+```
+
+## PluginAPI Class
+
+The `PluginAPI` class is passed to your plugin's `activate()` method and provides all plugin capabilities.
+
+### Constructor
+
+```javascript
+new PluginAPI(pluginId, editorAPI)
+```
+
+**Parameters:**
+- `pluginId` (string) - Unique plugin identifier
+- `editorAPI` (object) - Editor API instance
+
+## Editor API
+
+### addExtension()
+
+Adds a custom TipTap extension to the editor.
+
+```javascript
+context.addExtension(extension, options)
+```
+
+**Parameters:**
+- `extension` (Extension) - TipTap extension instance
+- `options` (object) - Extension options
+
+**Returns:** `string` - Extension ID
+
+**Example:**
+```javascript
+import { Node } from '@tiptap/core';
+
+const customExtension = Node.create({
+  name: 'customNode',
+  group: 'block',
+  content: 'inline*',
+  parseHTML() {
+    return [{ tag: 'div.custom-node' }];
+  },
+  renderHTML() {
+    return ['div', { class: 'custom-node' }, 0];
+  }
+});
+
+const extensionId = context.addExtension(customExtension);
+```
+
+---
+
+### addSlashCommand()
+
+Adds a slash command to the editor command palette.
+
+```javascript
+context.addSlashCommand(command)
+```
+
+**Parameters:**
+- `command` (object)
+  - `name` (string) - Command name
+  - `description` (string) - Command description
+  - `icon` (string) - Icon name or component
+  - `handler` (function) - Command execution function
+
+**Returns:** `string` - Command ID
+
+**Example:**
+```javascript
+context.addSlashCommand({
+  name: 'insert-date',
+  description: 'Insert current date',
+  icon: 'calendar',
+  handler: (editor) => {
+    const date = new Date().toISOString().split('T')[0];
+    editor.commands.insertContent(date);
+  }
+});
+```
+
+---
+
+### addToolbarButton()
+
+Adds a button to the editor toolbar.
+
+```javascript
+context.addToolbarButton(button)
+```
+
+**Parameters:**
+- `button` (object)
+  - `name` (string) - Button name
+  - `label` (string) - Button label
+  - `icon` (string) - Icon name
+  - `action` (function) - Click handler
+  - `isActive` (function) - Active state check
+
+**Returns:** `string` - Button ID
+
+**Example:**
+```javascript
+context.addToolbarButton({
+  name: 'highlight',
+  label: 'Highlight',
+  icon: 'marker',
+  action: (editor) => {
+    editor.chain().focus().toggleHighlight().run();
+  },
+  isActive: (editor) => {
+    return editor.isActive('highlight');
+  }
+});
+```
+
+---
+
+### getEditorContent()
+
+Gets the current editor content as HTML or markdown.
+
+```javascript
+context.getEditorContent()
+```
+
+**Returns:** `string` - Editor content
+
+**Example:**
+```javascript
+const content = context.getEditorContent();
+console.log(content);
+```
+
+---
+
+### setEditorContent()
+
+Sets the editor content.
+
+```javascript
+context.setEditorContent(content)
+```
+
+**Parameters:**
+- `content` (string) - Content to set (HTML or markdown)
+
+**Example:**
+```javascript
+context.setEditorContent('# New Content\n\nThis is new content.');
+```
+
+---
+
+### insertContent()
+
+Inserts content at the current cursor position.
+
+```javascript
+context.insertContent(content)
+```
+
+**Parameters:**
+- `content` (string | object) - Content to insert
+
+**Example:**
+```javascript
+context.insertContent('Inserted text');
+
+// Or insert HTML/nodes
+context.insertContent({
+  type: 'paragraph',
+  content: [{ type: 'text', text: 'Inserted paragraph' }]
+});
+```
+
+---
+
+### getSelection()
+
+Gets the current editor selection.
+
+```javascript
+context.getSelection()
+```
+
+**Returns:** `object` - Selection object with `from`, `to`, and `text` properties
+
+**Example:**
+```javascript
+const selection = context.getSelection();
+console.log('Selected text:', selection.text);
+console.log('Range:', selection.from, '-', selection.to);
+```
+
+## UI API
+
+### registerPanel()
+
+Registers a custom UI panel.
+
+```javascript
+context.registerPanel(panel)
+```
+
+**Parameters:**
+- `panel` (object)
+  - `name` (string) - Panel name
+  - `title` (string) - Panel title
+  - `icon` (string) - Panel icon
+  - `component` (Component) - React component
+  - `position` (string) - 'left' | 'right' | 'bottom'
+
+**Returns:** `string` - Panel ID
+
+**Example:**
+```javascript
+import MyPanelComponent from './MyPanel.jsx';
+
+const panelId = context.registerPanel({
+  name: 'custom-panel',
+  title: 'My Custom Panel',
+  icon: 'box',
+  component: MyPanelComponent,
+  position: 'right'
+});
+```
+
+---
+
+### addMenuItem()
+
+Adds an item to the application menu.
+
+```javascript
+context.addMenuItem(menuItem)
+```
+
+**Parameters:**
+- `menuItem` (object)
+  - `name` (string) - Menu item name
+  - `label` (string) - Display label
+  - `action` (function) - Click handler
+  - `shortcut` (string) - Keyboard shortcut
+
+**Returns:** `string` - Menu item ID
+
+**Example:**
+```javascript
+context.addMenuItem({
+  name: 'export-pdf',
+  label: 'Export as PDF',
+  action: () => {
+    // Export logic
+  },
+  shortcut: 'CommandOrControl+Shift+P'
+});
+```
+
+---
+
+### showNotification()
+
+Displays a notification to the user.
+
+```javascript
+context.showNotification(notification)
+```
+
+**Parameters:**
+- `notification` (object)
+  - `message` (string) - Notification message
+  - `type` (string) - 'info' | 'success' | 'warning' | 'error'
+  - `duration` (number) - Display duration in ms (default: 3000)
+
+**Example:**
+```javascript
+context.showNotification({
+  message: 'Operation completed successfully!',
+  type: 'success',
+  duration: 3000
+});
+```
+
+---
+
+### showDialog()
+
+Shows a modal dialog.
+
+```javascript
+await context.showDialog(dialog)
+```
+
+**Parameters:**
+- `dialog` (object)
+  - `title` (string) - Dialog title
+  - `message` (string) - Dialog message
+  - `buttons` (array) - Button definitions
+  - `type` (string) - 'confirm' | 'prompt' | 'alert'
+
+**Returns:** `Promise<any>` - User response
+
+**Example:**
+```javascript
+const result = await context.showDialog({
+  title: 'Confirm Action',
+  message: 'Are you sure you want to proceed?',
+  buttons: [
+    { label: 'Cancel', value: false },
+    { label: 'OK', value: true, primary: true }
+  ],
+  type: 'confirm'
+});
+
+if (result) {
+  // User clicked OK
+}
+```
+
+## Filesystem API
+
+### readFile()
+
+Reads a file from the workspace.
+
+```javascript
+await context.readFile(filePath)
+```
+
+**Parameters:**
+- `filePath` (string) - Absolute file path
+
+**Returns:** `Promise<string>` - File content
+
+**Requires Permission:** `read:files`
+
+**Example:**
+```javascript
+try {
+  const content = await context.readFile('/path/to/file.md');
+  console.log(content);
+} catch (error) {
+  console.error('Failed to read file:', error);
+}
+```
+
+---
+
+### writeFile()
+
+Writes content to a file.
+
+```javascript
+await context.writeFile(filePath, content)
+```
+
+**Parameters:**
+- `filePath` (string) - Absolute file path
+- `content` (string) - Content to write
+
+**Returns:** `Promise<void>`
+
+**Requires Permission:** `write:files`
+
+**Example:**
+```javascript
+await context.writeFile('/path/to/file.md', '# New Content');
+```
+
+---
+
+### fileExists()
+
+Checks if a file exists.
+
+```javascript
+await context.fileExists(filePath)
+```
+
+**Parameters:**
+- `filePath` (string) - Absolute file path
+
+**Returns:** `Promise<boolean>`
+
+**Requires Permission:** `read:files`
+
+**Example:**
+```javascript
+const exists = await context.fileExists('/path/to/file.md');
+if (exists) {
+  // File exists
+}
+```
+
+## Settings API
+
+### getSetting()
+
+Gets a plugin setting value.
+
+```javascript
+await context.getSetting(key, defaultValue)
+```
+
+**Parameters:**
+- `key` (string) - Setting key
+- `defaultValue` (any) - Default value if not set
+
+**Returns:** `Promise<any>` - Setting value
+
+**Example:**
+```javascript
+const apiKey = await context.getSetting('apiKey', '');
+const maxItems = await context.getSetting('maxItems', 10);
+```
+
+---
+
+### setSetting()
+
+Sets a plugin setting value.
+
+```javascript
+await context.setSetting(key, value)
+```
+
+**Parameters:**
+- `key` (string) - Setting key
+- `value` (any) - Setting value (JSON serializable)
+
+**Returns:** `Promise<void>`
+
+**Example:**
+```javascript
+await context.setSetting('apiKey', 'secret-key-123');
+await context.setSetting('theme', 'dark');
+```
+
+---
+
+### getAllSettings()
+
+Gets all plugin settings.
+
+```javascript
+await context.getAllSettings()
+```
+
+**Returns:** `Promise<object>` - Settings object
+
+**Example:**
+```javascript
+const settings = await context.getAllSettings();
+console.log(settings);
+// { apiKey: 'secret-key-123', theme: 'dark', ... }
+```
+
+---
+
+### saveAllSettings()
+
+Saves all plugin settings.
+
+```javascript
+await context.saveAllSettings(settings)
+```
+
+**Parameters:**
+- `settings` (object) - Settings object
+
+**Returns:** `Promise<void>`
+
+**Example:**
+```javascript
+const settings = {
+  apiKey: 'new-key',
+  theme: 'light',
+  enabled: true
+};
+await context.saveAllSettings(settings);
+```
+
+## Event System
+
+### on()
+
+Registers an event listener.
+
+```javascript
+context.on(event, handler)
+```
+
+**Parameters:**
+- `event` (string) - Event name
+- `handler` (function) - Event handler
+
+**Example:**
+```javascript
+context.on('file:save', (data) => {
+  console.log('File saved:', data.path);
+});
+
+context.on('editor:selection', (selection) => {
+  console.log('Selection changed:', selection);
+});
+```
+
+**Available Events:**
+- `file:save` - File saved
+- `file:open` - File opened
+- `file:close` - File closed
+- `editor:selection` - Selection changed
+- `editor:content` - Content changed
+- `workspace:change` - Workspace changed
+- `plugin:enabled` - Plugin enabled
+- `plugin:disabled` - Plugin disabled
+
+---
+
+### off()
+
+Removes an event listener.
+
+```javascript
+context.off(event, handler)
+```
+
+**Parameters:**
+- `event` (string) - Event name
+- `handler` (function) - Event handler
+
+**Example:**
+```javascript
+const handler = (data) => console.log(data);
+context.on('file:save', handler);
+// Later...
+context.off('file:save', handler);
+```
+
+---
+
+### emit()
+
+Emits a custom event.
+
+```javascript
+context.emit(event, data)
+```
+
+**Parameters:**
+- `event` (string) - Event name
+- `data` (any) - Event data
+
+**Example:**
+```javascript
+context.emit('custom:event', { message: 'Hello' });
+```
+
+---
+
+### removeAllListeners()
+
+Removes all event listeners.
+
+```javascript
+context.removeAllListeners()
+```
+
+**Example:**
+```javascript
+// In deactivate() method
+deactivate() {
+  this.context.removeAllListeners();
+}
+```
+
+## Permissions System
+
+Plugins must declare required permissions in `plugin.json`:
+
+### Available Permissions
+
+**File Operations:**
+- `read:files` - Read workspace files
+- `write:files` - Write to workspace files
+- `read:workspace` - Read workspace metadata
+- `write:workspace` - Modify workspace metadata
+
+**Network:**
+- `network:http` - Make HTTP requests
+- `network:https` - Make HTTPS requests
+
+**UI:**
+- `ui:editor` - Modify editor UI
+- `ui:sidebar` - Add sidebar panels
+- `ui:toolbar` - Add toolbar buttons
+
+**System:**
+- `execute:commands` - Execute system commands
+- `storage:local` - Access local storage
+- `clipboard:read` - Read clipboard
+- `clipboard:write` - Write to clipboard
+
+### hasPermission()
+
+Checks if plugin has a permission.
+
+```javascript
+context.hasPermission(permission)
+```
+
+**Parameters:**
+- `permission` (string) - Permission name
+
+**Returns:** `boolean`
+
+**Example:**
+```javascript
+if (context.hasPermission('read:files')) {
+  const content = await context.readFile('/path/to/file.md');
+}
+```
+
+## Utility Methods
+
+### isValidPath()
+
+Validates a file path for security.
+
+```javascript
+context.isValidPath(path)
+```
+
+**Parameters:**
+- `path` (string) - File path
+
+**Returns:** `boolean`
+
+**Example:**
+```javascript
+const isValid = context.isValidPath('/path/to/file.md');
+if (isValid) {
+  // Safe to use path
+}
+```
+
+**Security Note:** Prevents directory traversal attacks (../, etc.)
+
+## Plugin Lifecycle
+
+### Activation
+
+1. Plugin is loaded by PluginManager
+2. `activate(context)` is called with PluginAPI instance
+3. Plugin registers extensions, commands, panels, etc.
+4. Event listeners are attached
+
+### Deactivation
+
+1. `deactivate()` is called
+2. Plugin should clean up resources:
+   - Remove event listeners
+   - Unregister UI elements
+   - Cancel pending operations
+   - Save state if needed
+
+```javascript
+deactivate() {
+  // Remove listeners
+  this.context.removeAllListeners();
+
+  // Clean up timers
+  if (this.timer) {
+    clearInterval(this.timer);
+  }
+
+  // Save state
+  this.context.setSetting('lastState', this.state);
+}
+```
+
+## Best Practices
+
+### Error Handling
+
+```javascript
+activate(context) {
+  try {
+    // Plugin initialization
+    context.addExtension(myExtension);
+  } catch (error) {
+    console.error('Plugin activation failed:', error);
+    // Show user-friendly error
+    context.showNotification({
+      message: 'Plugin failed to load',
+      type: 'error'
+    });
+  }
+}
+```
+
+### Async Operations
+
+```javascript
+activate(context) {
+  // Don't block activation
+  this.initialize(context);
+}
+
+async initialize(context) {
+  try {
+    const data = await context.getSetting('data');
+    // Process data
+  } catch (error) {
+    console.error('Initialization failed:', error);
+  }
+}
+```
+
+### Resource Cleanup
+
+```javascript
+deactivate() {
+  // Always clean up
+  this.context.removeAllListeners();
+
+  // Cancel pending requests
+  if (this.abortController) {
+    this.abortController.abort();
+  }
+
+  // Save state
+  this.saveState();
+}
+```
+
+### Permission Checks
+
+```javascript
+async readUserFile(path) {
+  if (!this.context.hasPermission('read:files')) {
+    throw new Error('No permission to read files');
+  }
+
+  return await this.context.readFile(path);
+}
+```
+
+## Example Plugins
+
+### Simple Toolbar Button
+
+```javascript
+export default class HelloPlugin {
+  activate(context) {
+    context.addToolbarButton({
+      name: 'say-hello',
+      label: 'Say Hello',
+      icon: 'smile',
+      action: () => {
+        context.showNotification({
+          message: 'Hello from plugin!',
+          type: 'info'
+        });
+      }
+    });
+  }
+
+  deactivate() {}
+}
+```
+
+### Custom Slash Command
+
+```javascript
+export default class DatePlugin {
+  activate(context) {
+    context.addSlashCommand({
+      name: 'today',
+      description: 'Insert today\'s date',
+      handler: (editor) => {
+        const date = new Date().toLocaleDateString();
+        editor.commands.insertContent(date);
+      }
+    });
+  }
+
+  deactivate() {}
+}
+```
+
+### File Watcher
+
+```javascript
+export default class AutoSavePlugin {
+  activate(context) {
+    this.context = context;
+    this.isDirty = false;
+
+    context.on('editor:content', () => {
+      this.isDirty = true;
+    });
+
+    this.timer = setInterval(() => {
+      if (this.isDirty) {
+        this.autoSave();
+      }
+    }, 60000); // Every minute
+  }
+
+  async autoSave() {
+    try {
+      const content = this.context.getEditorContent();
+      // Save logic
+      this.isDirty = false;
+
+      this.context.showNotification({
+        message: 'Auto-saved',
+        type: 'success',
+        duration: 1000
+      });
+    } catch (error) {
+      console.error('Auto-save failed:', error);
+    }
+  }
+
+  deactivate() {
+    clearInterval(this.timer);
+    this.context.removeAllListeners();
+  }
+}
+```
+
+## Debugging
+
+### Console Logging
+
+```javascript
+activate(context) {
+  console.log('Plugin activated:', this.constructor.name);
+
+  context.on('file:save', (data) => {
+    console.log('File saved event:', data);
+  });
+}
+```
+
+### Error Handling
+
+```javascript
+try {
+  const result = await context.readFile(path);
+} catch (error) {
+  console.error('Error details:', {
+    message: error.message,
+    stack: error.stack,
+    plugin: this.constructor.name
+  });
+}
+```
+
+## Security Considerations
+
+1. **Path Validation** - Always validate file paths
+2. **Permission Checks** - Check permissions before operations
+3. **Input Sanitization** - Sanitize user input
+4. **XSS Prevention** - Escape HTML in notifications/dialogs
+5. **Rate Limiting** - Limit API calls and operations
+6. **Error Messages** - Don't expose sensitive information
+
+## Next Steps
+
+- [Tauri Commands Reference](/reference/tauri-commands) - Backend commands
+- [MCP Server API](/reference/mcp-api) - MCP integration
+- [Configuration](/reference/configuration) - Configure plugins
+- [Advanced Customization](/advanced/customization) - Advanced plugin techniques

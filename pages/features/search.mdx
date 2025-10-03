@@ -1,0 +1,813 @@
+# Search System
+
+Lokus features a powerful, lightning-fast search system built in Rust that helps you find information across your entire workspace instantly. With full-text search, advanced filtering, and intelligent ranking, you can locate any note, task, or piece of content in milliseconds.
+
+## Overview
+
+The search system indexes all your content in real-time, providing instant results as you type. Whether you're looking for a specific phrase, exploring related topics, or filtering by metadata, Lokus search adapts to your needs.
+
+### Key Features
+
+- **Lightning-fast search** powered by Rust indexing
+- **Full-text search** across all notes and content
+- **Fuzzy matching** for typo tolerance
+- **Advanced filters** by tags, dates, properties
+- **Regular expression** support
+- **Search history** and suggestions
+- **Saved searches** for repeated queries
+
+## Basic Search
+
+### Quick Search
+
+Access search from anywhere:
+
+**Keyboard Shortcuts:**
+- `Cmd/Ctrl + F` - Search in current note
+- `Cmd/Ctrl + Shift + F` - Global search
+- `Cmd/Ctrl + P` - Command palette with search
+
+**Search Interface:**
+- Search input with autocomplete
+- Results list with previews
+- Filter sidebar
+- Sort options
+- Result count
+
+### Search Syntax
+
+Simple text search:
+
+```
+machine learning
+"exact phrase"
+note title
+tag name
+```
+
+**Features:**
+- Case-insensitive by default
+- Whole word matching
+- Phrase search with quotes
+- Partial word matching
+
+### Search Results
+
+Results display:
+
+**Result Card:**
+- Note title
+- File path
+- Last modified date
+- Matching snippet (highlighted)
+- Match count
+- Tags
+
+**Interactions:**
+- Click to open note
+- Cmd/Ctrl + Click for new pane
+- Hover for preview
+- Right-click for options
+
+![Search Interface with Results](/placeholder.svg)
+
+## Advanced Search
+
+### Search Operators
+
+Combine terms with operators:
+
+**Boolean Operators:**
+```
+term1 AND term2
+term1 OR term2
+NOT term1
+(term1 OR term2) AND term3
+```
+
+**Proximity Search:**
+```
+"word1 word2"~5    # Within 5 words
+"exact phrase"     # Exact order
+```
+
+**Wildcards:**
+```
+test*              # Starts with "test"
+*ing               # Ends with "ing"
+te?t               # Single character wildcard
+```
+
+### Field Search
+
+Search specific fields:
+
+**Field Syntax:**
+```
+title:project              # In title
+content:algorithm          # In content
+tag:#important             # By tag
+path:/Projects/            # In folder
+created:2024-03-20         # Creation date
+modified:>2024-03-01       # Modified after
+author:@john               # By author
+```
+
+**Available Fields:**
+- `title` - Note title
+- `content` - Note content
+- `tag` - Tags
+- `path` - File path
+- `type` - Note type
+- `created` - Creation date
+- `modified` - Modified date
+- `author` - Creator
+- `properties.*` - Custom properties
+
+### Date Filters
+
+Search by date ranges:
+
+**Date Syntax:**
+```
+created:today
+created:yesterday
+created:this-week
+created:this-month
+created:2024-03-20
+created:>2024-01-01
+created:before-2024-12-31
+created:2024-01..2024-03-31
+modified:last-7-days
+modified:next-week
+```
+
+**Relative Dates:**
+- `today`, `yesterday`, `tomorrow`
+- `this-week`, `last-week`, `next-week`
+- `this-month`, `last-month`, `next-month`
+- `this-year`, `last-year`
+- `last-N-days`, `next-N-days`
+
+### Property Filters
+
+Filter by custom properties:
+
+**Property Syntax:**
+```
+status:active
+priority:high
+assignee:@sarah
+progress:>50
+completed:true
+tags:contains:project
+```
+
+**Operators:**
+- `:` equals
+- `:>` greater than
+- `:<` less than
+- `:>=` greater or equal
+- `:<=` less or equal
+- `:!=` not equal
+- `:contains:` contains text
+- `:starts:` starts with
+- `:ends:` ends with
+
+## Filter Panel
+
+### Visual Filters
+
+Build searches with UI:
+
+**Filter Categories:**
+- **Type:** Notes, tasks, canvases, bases
+- **Tags:** Multi-select tag picker
+- **Folders:** Folder tree selector
+- **Dates:** Date range picker
+- **Properties:** Custom property filters
+- **Status:** Task status, note state
+
+**Filter Builder:**
+1. Select filter type
+2. Choose operator
+3. Enter value
+4. Add to query
+5. Combine with AND/OR
+
+### Quick Filters
+
+Pre-built filter buttons:
+
+**Common Filters:**
+- All notes
+- Recent (last 7 days)
+- Favorites
+- Untagged
+- Orphaned (no links)
+- Tasks
+- Completed tasks
+- Overdue tasks
+
+**Custom Quick Filters:**
+- Create from current search
+- Pin frequently used filters
+- Organize in groups
+- Keyboard shortcuts
+
+## Search Modes
+
+### Fuzzy Search
+
+Tolerant of typos and variations:
+
+**Features:**
+- Character transposition
+- Missing characters
+- Extra characters
+- Similar characters
+
+**Example:**
+```
+Search: "algoritm"
+Finds: "algorithm"
+
+Search: "machne learning"
+Finds: "machine learning"
+```
+
+**Fuzzy Threshold:**
+- Strict (exact matches)
+- Medium (1-2 char difference)
+- Loose (more tolerance)
+
+### Regex Search
+
+Pattern-based searching:
+
+**Enable Regex:**
+```
+regex:pattern
+/pattern/
+```
+
+**Examples:**
+```
+regex:\b\d{3}-\d{3}-\d{4}\b    # Phone numbers
+/TODO.*urgent/                 # TODO with urgent
+regex:^# .+                    # All headers
+/\b[A-Z]{2,}\b/                # Acronyms
+```
+
+**Regex Features:**
+- Full PCRE syntax
+- Case-sensitive option
+- Multiline mode
+- Word boundaries
+
+### Semantic Search
+
+AI-powered conceptual search:
+
+**Features:**
+- Meaning-based matching
+- Concept similarity
+- Related topics
+- Query expansion
+
+**Example:**
+```
+Search: "productivity tips"
+Also finds:
+- "time management"
+- "efficiency strategies"
+- "workflow optimization"
+```
+
+**Configuration:**
+- Enable in Settings > Search
+- Local AI model or API
+- Similarity threshold
+- Max results
+
+## Search in Context
+
+### Search Scope
+
+Limit search scope:
+
+**Scope Options:**
+- **Workspace:** All notes (default)
+- **Folder:** Selected folder and subfolders
+- **Current Note:** In-note search
+- **Selection:** Selected notes
+- **Linked Notes:** From current note
+- **Tag:** Notes with specific tag
+
+**Setting Scope:**
+1. Select scope from dropdown
+2. Choose folder/tag/note
+3. Search runs in scope only
+4. Clear scope to search all
+
+### Search and Replace
+
+Find and replace across notes:
+
+**Replace Options:**
+- Current note
+- All search results
+- Selected results
+- Regex replace
+
+**Replace Process:**
+1. Enter search term
+2. Enter replacement
+3. Preview changes
+4. Confirm replace
+5. Undo if needed
+
+**Regex Replace:**
+```
+Find: (\d{2})/(\d{2})/(\d{4})
+Replace: $3-$1-$2
+Result: 03/20/2024 → 2024-03-20
+```
+
+## Result Ranking
+
+### Relevance Scoring
+
+Results ranked by relevance:
+
+**Ranking Factors:**
+- Term frequency
+- Title matches (higher weight)
+- Exact phrase matches
+- Proximity of terms
+- Document length
+- Recency
+- Link count (importance)
+- Access frequency
+
+**Boosting:**
+```
+title:project^2            # Boost title matches
+tag:#important^3           # Boost tagged notes
+recent^1.5                 # Boost recent notes
+```
+
+### Sort Options
+
+Control result order:
+
+**Sort By:**
+- Relevance (default)
+- Date modified (newest/oldest)
+- Date created (newest/oldest)
+- Title (A-Z, Z-A)
+- File size (largest/smallest)
+- Link count (most/least)
+
+**Secondary Sort:**
+- Apply multiple sort criteria
+- Stable sort order
+- Preserve relevance
+
+## Search History
+
+### Recent Searches
+
+Track your searches:
+
+**Features:**
+- Last 50 searches saved
+- Click to repeat search
+- Edit and re-run
+- Delete from history
+- Clear all history
+
+**History Display:**
+```
+Recent Searches:
+1. machine learning AND python
+2. tag:#project status:active
+3. "meeting notes" path:/Work/
+4. modified:last-week
+5. task: AND priority:high
+```
+
+### Search Suggestions
+
+Smart suggestions as you type:
+
+**Suggestion Types:**
+- Previous searches
+- Popular searches
+- Note titles
+- Tag names
+- Field names
+- Property values
+
+**Autocomplete:**
+- Real-time suggestions
+- Keyboard navigation
+- Tab to complete
+- Enter to search
+
+## Saved Searches
+
+### Creating Saved Searches
+
+Save frequent searches:
+
+**Process:**
+1. Build search query
+2. Click "Save Search"
+3. Name the search
+4. Optional: Add to sidebar
+5. Optional: Set keyboard shortcut
+
+**Saved Search Properties:**
+- Name and description
+- Query string
+- Filters applied
+- Sort order
+- Scope
+- Created date
+
+### Managing Saved Searches
+
+Organize your searches:
+
+**Actions:**
+- Edit search
+- Rename search
+- Duplicate search
+- Delete search
+- Export/import searches
+
+**Organization:**
+- Group by category
+- Pin favorites
+- Reorder list
+- Share with team
+
+## Search Integration
+
+### Graph Search
+
+Graph-aware searching:
+
+**Graph Queries:**
+```
+linked-to:[[Note Name]]
+linked-from:[[Note Name]]
+connections:>10
+distance:2 from:[[Start Note]]
+orphan:true
+cluster:"Research"
+```
+
+**Use Cases:**
+- Find notes linked to specific note
+- Find notes within N hops
+- Find highly connected notes
+- Find isolated notes
+
+### Task Search
+
+Search tasks specifically:
+
+**Task Queries:**
+```
+task:content
+task-status:todo
+task-priority:high
+task-assignee:@john
+task-due:<today
+task-overdue:true
+has:subtasks
+task-progress:>50%
+```
+
+**Task Filters:**
+- By status
+- By due date
+- By assignee
+- By priority
+- By completion
+
+### Base Search
+
+Search within Bases:
+
+**Base Queries:**
+```
+base:"Project Tracker"
+base-property:status=active
+base-relation:has:tasks
+base-aggregate:sum(hours)>100
+```
+
+## Search Performance
+
+### Indexing
+
+Real-time index updates:
+
+**Index Features:**
+- Incremental indexing
+- Background processing
+- Low memory footprint
+- Fast updates (under 10ms)
+
+**Index Scope:**
+- Note content
+- Note metadata
+- Properties
+- Tags
+- Links
+- Tasks
+
+**Index Statistics:**
+- Total notes indexed
+- Index size
+- Last update time
+- Indexing queue length
+
+### Search Speed
+
+Optimized for performance:
+
+**Benchmarks:**
+- Simple search: under 10ms
+- Complex query: under 50ms
+- Regex search: under 100ms
+- Fuzzy search: under 150ms
+
+**Optimization:**
+- Rust-powered backend
+- Inverted index structure
+- Result caching
+- Progressive loading
+- Virtual scrolling
+
+## Export Results
+
+### Export Options
+
+Save search results:
+
+**Formats:**
+- **List:** Plain text list
+- **Markdown:** Formatted markdown
+- **CSV:** Spreadsheet format
+- **JSON:** Structured data
+
+**Export Content:**
+- Note titles only
+- Titles + paths
+- Titles + excerpts
+- Full note content
+
+**Example Export (Markdown):**
+```markdown
+# Search Results: "machine learning"
+Total: 15 results
+
+## [Introduction to ML](path/to/note1.md)
+Last modified: 2024-03-20
+Excerpt: "Machine learning is a subset of..."
+
+## [Python ML Libraries](path/to/note2.md)
+Last modified: 2024-03-18
+Excerpt: "Popular machine learning libraries include..."
+```
+
+![Search Results with Filters and Previews](/placeholder.svg)
+
+## Configuration
+
+### Search Settings
+
+Configure in Settings > Search:
+
+**General:**
+- Default search mode
+- Fuzzy threshold
+- Max results
+- Preview length
+- Case sensitivity
+
+**Indexing:**
+- Index frequency
+- Excluded folders
+- Excluded file types
+- Include archived notes
+- Index properties
+
+**Performance:**
+- Cache size
+- Background indexing
+- Incremental updates
+- Memory limit
+
+**Privacy:**
+- Search history enabled
+- History retention days
+- Clear on exit
+- Exclude from search
+
+### Keyboard Shortcuts
+
+| Action | Shortcut |
+|--------|----------|
+| Global Search | Cmd/Ctrl + Shift + F |
+| Search in Note | Cmd/Ctrl + F |
+| Next Result | Cmd/Ctrl + G |
+| Previous Result | Cmd/Ctrl + Shift + G |
+| Replace | Cmd/Ctrl + H |
+| Toggle Filters | Cmd/Ctrl + Shift + L |
+| Clear Search | Esc |
+| Focus Search | Cmd/Ctrl + K |
+
+## Advanced Features
+
+### Search Plugins
+
+Extend search functionality:
+
+**Plugin Types:**
+- Custom search providers
+- Additional indexers
+- Result processors
+- Search UI extensions
+
+**Example Plugins:**
+- PDF content search
+- OCR for images
+- Code symbol search
+- External file search
+
+### API Search
+
+Programmatic search:
+
+**REST API:**
+```javascript
+// Search notes
+GET /api/search?q=machine+learning&limit=10
+
+// Advanced search
+POST /api/search
+{
+  "query": "machine learning",
+  "filters": {
+    "tags": ["#ai", "#ml"],
+    "dateRange": {
+      "start": "2024-01-01",
+      "end": "2024-12-31"
+    }
+  },
+  "sort": "relevance",
+  "limit": 20
+}
+```
+
+**Response:**
+```json
+{
+  "results": [
+    {
+      "id": "note-123",
+      "title": "Introduction to ML",
+      "path": "/Notes/ML/intro.md",
+      "excerpt": "Machine learning is...",
+      "score": 0.95,
+      "highlights": [...]
+    }
+  ],
+  "total": 15,
+  "time_ms": 12
+}
+```
+
+## Use Cases
+
+### Research
+
+Finding research materials:
+
+**Workflow:**
+1. Search by topic or keywords
+2. Filter by tags or dates
+3. Review result excerpts
+4. Open relevant notes
+5. Export findings
+
+**Example Search:**
+```
+"neural networks" OR "deep learning"
+tag:#research
+created:this-year
+path:/Research/
+```
+
+### Project Management
+
+Locating project information:
+
+**Queries:**
+```
+tag:#project-alpha
+status:active
+priority:high
+due:<next-week
+```
+
+### Knowledge Discovery
+
+Exploring related content:
+
+**Techniques:**
+- Start with broad search
+- Review related notes
+- Follow links
+- Narrow with filters
+- Save useful queries
+
+### Content Audit
+
+Finding outdated content:
+
+**Audit Search:**
+```
+modified:before-2023-01-01
+NOT tag:#archived
+has:broken-links
+```
+
+## Best Practices
+
+### Search Strategies
+
+**Effective Searching:**
+- Start broad, then narrow
+- Use quotes for phrases
+- Combine with filters
+- Save common searches
+- Review search tips regularly
+
+**Query Building:**
+1. Identify key terms
+2. Add field specifiers
+3. Apply filters
+4. Test and refine
+5. Save if reusable
+
+### Search Optimization
+
+**For Better Results:**
+- Use descriptive note titles
+- Add relevant tags
+- Maintain consistent naming
+- Regular cleanup of old notes
+- Keep index up to date
+
+## Troubleshooting
+
+### Common Issues
+
+**Issue:** No results found
+**Solution:** Check spelling, try broader terms, verify filters
+
+**Issue:** Too many results
+**Solution:** Add filters, use exact phrases, search specific fields
+
+**Issue:** Slow search
+**Solution:** Rebuild index, reduce workspace size, check excluded folders
+
+**Issue:** Missing notes in results
+**Solution:** Rebuild index, check note location, verify not excluded
+
+### Index Maintenance
+
+**Rebuild Index:**
+1. Settings > Search
+2. Click "Rebuild Index"
+3. Wait for completion
+4. Test search again
+
+**Index Troubleshooting:**
+- Clear cache
+- Check index integrity
+- Review error logs
+- Verify permissions
+
+## Next Steps
+
+- Explore [Wiki Links](/features/wiki-links) for linked content search
+- Use [Tasks](/features/tasks) for task-specific searches
+- Try [Bases](/features/bases) for structured data queries
+- Learn [Graph](/features/graph) for visual search navigation

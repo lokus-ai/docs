@@ -1,0 +1,297 @@
+# API Overview
+
+Lokus provides a comprehensive API architecture that spans multiple layers, from the Tauri backend to the frontend plugin system. This document provides a high-level overview of the entire API surface.
+
+## Architecture Layers
+
+### 1. Tauri Backend (Rust)
+
+The Tauri backend provides the core native functionality through Rust commands that are invoked from the frontend JavaScript/TypeScript code.
+
+**Key Modules:**
+- **File System Operations** - Read, write, create, delete files and folders
+- **Workspace Management** - Session state, workspace validation, and persistence
+- **Plugin System** - Plugin installation, management, and execution
+- **MCP Server** - Model Context Protocol server lifecycle management
+- **Gmail Integration** - OAuth authentication and email operations
+- **Task Management** - Task creation, querying, and extraction
+- **Search** - Full-text search across workspace files
+- **Clipboard** - Cross-platform clipboard operations
+- **Platform Services** - OS-specific features and capabilities
+
+### 2. Frontend JavaScript API
+
+The frontend provides high-level abstractions and utilities for building Lokus functionality.
+
+**Core Modules:**
+- **Editor API** - TipTap editor extensions and commands
+- **Shortcuts Registry** - Keyboard shortcut management
+- **Theme Manager** - Theme customization and switching
+- **Config Store** - Application configuration persistence
+- **Plugin Manager** - Frontend plugin lifecycle
+- **Wiki Links** - Internal linking and resolution
+- **Graph Engine** - Knowledge graph rendering and analysis
+
+### 3. Plugin API
+
+Lokus provides a powerful plugin system that allows extending functionality without modifying core code.
+
+**Plugin Capabilities:**
+- Access to file system operations
+- Editor manipulation and extensions
+- UI panel registration
+- Custom data providers
+- MCP tool integration
+- Event system hooks
+
+### 4. MCP Server API
+
+The Model Context Protocol server provides AI assistant integration through a standardized protocol.
+
+**MCP Features:**
+- File and workspace tools
+- Note manipulation
+- Search capabilities
+- Editor commands
+- Custom resource providers
+
+## API Invocation Patterns
+
+### Backend Commands (Rust → JavaScript)
+
+```typescript
+import { invoke } from '@tauri-apps/api/core';
+
+// Example: Read file content
+const content = await invoke<string>('read_file_content', {
+  path: '/path/to/file.md'
+});
+
+// Example: List plugins
+const plugins = await invoke<PluginInfo[]>('list_plugins');
+```
+
+### Event System
+
+```typescript
+import { listen } from '@tauri-apps/api/event';
+
+// Listen for shortcuts updated event
+await listen('shortcuts:updated', (event) => {
+  console.log('Shortcut updated:', event.payload);
+});
+
+// Emit custom event
+import { emit } from '@tauri-apps/api/event';
+await emit('lokus:save-file');
+```
+
+### Plugin Registration
+
+```javascript
+// Plugin manifest (plugin.json)
+{
+  "name": "example-plugin",
+  "version": "1.0.0",
+  "main": "index.js",
+  "permissions": [
+    "read:files",
+    "write:files",
+    "ui:editor"
+  ]
+}
+
+// Plugin entry point (index.js)
+export default class ExamplePlugin {
+  activate(context) {
+    // Plugin initialization
+    context.registerCommand('example:command', () => {
+      // Command implementation
+    });
+  }
+
+  deactivate() {
+    // Cleanup
+  }
+}
+```
+
+## API Categories
+
+### File Operations
+- `read_workspace_files` - Recursive directory listing
+- `read_file_content` - Read file as string
+- `write_file_content` - Write string to file
+- `create_file_in_workspace` - Create new file
+- `create_folder_in_workspace` - Create new folder
+- `rename_file` - Rename file or folder
+- `move_file` - Move file to different directory
+- `delete_file` - Delete file or folder
+- `reveal_in_finder` - Open file manager at path
+- `open_terminal` - Open terminal at path
+
+### Workspace Management
+- `save_last_workspace` - Persist workspace path
+- `clear_last_workspace` - Clear saved workspace
+- `validate_workspace_path` - Validate workspace directory
+- `get_validated_workspace_path` - Get and validate saved workspace
+- `clear_all_workspace_data` - Reset workspace data
+- `save_session_state` - Save open tabs and UI state
+- `load_session_state` - Restore session state
+
+### Plugin System
+- `list_plugins` - Get all installed plugins
+- `install_plugin` - Install from ZIP or directory
+- `uninstall_plugin` - Remove plugin
+- `get_plugin_info` - Get plugin metadata
+- `enable_plugin` - Activate plugin
+- `disable_plugin` - Deactivate plugin
+- `get_enabled_plugins` - List active plugins
+- `validate_plugin_manifest` - Validate plugin.json
+- `set_plugin_permission` - Configure permissions
+- `get_plugin_permissions` - Read permissions
+- `set_plugin_setting` - Store plugin config
+- `get_plugin_setting` - Read plugin config
+- `read_plugin_file` - Read plugin file content
+- `get_plugin_manifest` - Read plugin.json
+
+### MCP Server
+- `mcp_start` - Start MCP server process
+- `mcp_stop` - Stop MCP server
+- `mcp_status` - Get server status
+- `mcp_restart` - Restart server
+- `mcp_health_check` - Check server health
+
+### Gmail Integration
+- `gmail_initiate_auth` - Start OAuth flow
+- `gmail_complete_auth` - Complete OAuth with code
+- `gmail_check_auth_callback` - Poll for auth completion
+- `gmail_is_authenticated` - Check auth status
+- `gmail_logout` - Clear credentials
+- `gmail_get_profile` - Get user profile
+- `gmail_list_emails` - List emails with filters
+- `gmail_search_emails` - Search with query
+- `gmail_get_email` - Get single email
+- `gmail_send_email` - Send new email
+- `gmail_reply_email` - Reply to email
+- `gmail_forward_email` - Forward email
+- `gmail_mark_as_read` - Mark emails as read
+- `gmail_mark_as_unread` - Mark emails as unread
+- `gmail_star_emails` - Add star to emails
+- `gmail_unstar_emails` - Remove star
+- `gmail_archive_emails` - Archive emails
+- `gmail_delete_emails` - Delete emails
+- `gmail_get_labels` - Get label list
+- `gmail_get_queue_stats` - Get operation queue stats
+- `gmail_force_process_queue` - Force queue processing
+- `gmail_clear_queue` - Clear operation queue
+
+### Task Management
+- `create_task` - Create new task
+- `get_all_tasks` - List all tasks
+- `get_task` - Get task by ID
+- `update_task` - Update task properties
+- `delete_task` - Delete task
+- `get_tasks_by_status` - Filter by status
+- `get_tasks_by_note` - Get tasks in note
+- `bulk_update_task_status` - Update multiple statuses
+- `extract_tasks_from_content` - Parse tasks from markdown
+
+### Search Operations
+- `search_in_files` - Full-text search across workspace
+- `search_in_file` - Search within single file
+- `get_file_content_with_lines` - Get file with line numbers
+- `build_search_index` - Build search index for workspace
+
+### Clipboard Operations
+- `clipboard_write_text` - Write plain text
+- `clipboard_read_text` - Read plain text
+- `clipboard_write_html` - Write HTML content
+- `clipboard_read_html` - Read HTML content
+- `clipboard_has_text` - Check if clipboard has text
+- `clipboard_clear` - Clear clipboard
+- `clipboard_write_text_enhanced` - Enhanced text write
+- `clipboard_read_text_enhanced` - Enhanced text read
+- `clipboard_write_html_enhanced` - Enhanced HTML write
+- `clipboard_get_content_info` - Get content metadata
+- `clipboard_get_platform_info` - Get platform capabilities
+- `clipboard_get_usage_tips` - Get usage recommendations
+- `clipboard_clear_enhanced` - Enhanced clear operation
+
+### Platform Services
+- `get_platform_information` - Get OS and platform details
+- `check_platform_feature_support` - Check feature availability
+- `get_platform_capabilities` - Get platform capabilities
+- `get_system_information` - Get detailed system info
+- `check_system_capability` - Check specific capability
+
+### Theme Management
+- `theme_broadcast` - Broadcast theme changes
+
+## Error Handling
+
+All Tauri commands return `Result<T, String>` where errors are serialized as strings. Frontend code should handle errors appropriately:
+
+```typescript
+try {
+  const result = await invoke('some_command', { param: value });
+  // Success handling
+} catch (error) {
+  console.error('Command failed:', error);
+  // Error handling
+}
+```
+
+## Type Safety
+
+Lokus uses TypeScript for type-safe API interactions. Define interfaces for complex types:
+
+```typescript
+interface PluginInfo {
+  manifest: PluginManifest;
+  path: string;
+  enabled: boolean;
+  installed_at: string;
+  size: number;
+}
+
+interface PluginManifest {
+  name: string;
+  version: string;
+  description: string;
+  author: string;
+  main: string;
+  permissions: string[];
+  dependencies?: Record<string, string>;
+  keywords?: string[];
+  repository?: string;
+  homepage?: string;
+  license?: string;
+}
+```
+
+## Performance Considerations
+
+- **Debounce file operations** - Avoid rapid successive writes
+- **Batch operations** - Use bulk commands when available
+- **Cache read operations** - Store frequently accessed data
+- **Lazy load plugins** - Only load when needed
+- **Async/await properly** - Don't block the UI thread
+- **Clean up listeners** - Remove event listeners when unmounting
+
+## Security
+
+- All file operations are sandboxed to workspace directories
+- Plugin permissions are strictly enforced
+- No arbitrary code execution without plugin manifest
+- OAuth tokens are stored securely using platform APIs
+- Network requests require explicit permissions
+
+## Next Steps
+
+- [Tauri Commands Reference](/reference/tauri-commands) - Detailed command documentation
+- [Plugin API Reference](/reference/plugin-api) - Plugin development guide
+- [MCP Server API](/reference/mcp-api) - MCP protocol integration
+- [Gmail API](/reference/gmail-api) - Email integration guide
+- [Keyboard Shortcuts](/reference/keyboard-shortcuts) - Shortcut reference
+- [Configuration](/reference/configuration) - Configuration options

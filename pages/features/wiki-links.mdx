@@ -1,0 +1,715 @@
+# Wiki Links & Backlinks
+
+Wiki links are the foundation of connected note-taking in Lokus. They enable bidirectional linking between notes, creating a web of knowledge that mirrors how ideas naturally connect in your mind.
+
+## Overview
+
+Wiki links allow you to reference other notes using a simple `[[Note Name]]` syntax. Unlike traditional hyperlinks, wiki links automatically create backlinks, showing you all notes that reference the current note.
+
+### Key Benefits
+
+- **Effortless Connections:** Link notes with simple bracket syntax
+- **Bidirectional Tracking:** Automatically see incoming and outgoing links
+- **Discoverability:** Find related content through link networks
+- **Knowledge Graphs:** Visualize your note relationships
+- **Broken Link Detection:** Identify and fix missing connections
+
+## Creating Wiki Links
+
+### Basic Syntax
+
+Create a wiki link by wrapping a note name in double brackets:
+
+```markdown
+[[Note Name]]
+[[My Project Ideas]]
+[[2024-03-15 Meeting Notes]]
+```
+
+**Features:**
+- Case-sensitive or case-insensitive (configurable)
+- Spaces and special characters allowed
+- Relative to workspace root
+- Creates note if it doesn't exist
+
+### Autocomplete
+
+As you type `[[`, Lokus displays an autocomplete menu:
+
+**Autocomplete Features:**
+- Fuzzy search across all notes
+- Recent notes prioritized
+- Folder path shown
+- Keyboard navigation (↑↓, Enter)
+- Filter by folder
+- Shows note preview on hover
+
+**Example:**
+```markdown
+[[proj     → Shows "Project Ideas", "Project Plan", etc.
+```
+
+### Link Aliases
+
+Display different text than the note name:
+
+```markdown
+[[Note Name|Display Text]]
+[[2024-Q1-Report|Q1 Report]]
+[[Technical Documentation|docs]]
+```
+
+**Use Cases:**
+- Shorter display text
+- Natural language flow
+- Alternative naming
+- Localization
+
+### Link Validation
+
+Lokus validates links in real-time:
+
+**Valid Link:**
+- Green underline
+- Click to navigate
+- Hover shows preview
+
+**Broken Link:**
+- Red underline
+- Click to create note
+- Hover shows "Note not found"
+
+**Ambiguous Link:**
+- Yellow underline
+- Multiple matches found
+- Click to choose target
+
+![Creating Wiki Links with Autocomplete](/placeholder.svg)
+
+## Backlinks
+
+Backlinks are automatically generated references showing which notes link to the current note.
+
+### Backlinks Panel
+
+Located in the right sidebar, the backlinks panel displays:
+
+**Information Shown:**
+- Note name with link
+- Excerpt showing link context
+- Number of references in note
+- Last modified date
+- Folder location
+
+**Interactions:**
+- Click to navigate to note
+- Hover to preview full context
+- Filter by folder
+- Sort by date or name
+- Group by folder or flat list
+
+### Backlinks Display
+
+```markdown
+Current Note: "Project Ideas"
+
+Backlinks (3):
+├─ Meeting Notes 2024-03-15
+│  "Discussed [[Project Ideas]] for Q2"
+│
+├─ Team Brainstorm
+│  "Review [[Project Ideas]] and prioritize"
+│  "Assign owners to [[Project Ideas]]"
+│
+└─ Quarterly Planning
+   "Incorporate [[Project Ideas]] into roadmap"
+```
+
+![Backlinks Panel Display](/placeholder.svg)
+
+### Unlinked Mentions
+
+Lokus also finds unlinked mentions - text that matches note names but isn't linked:
+
+**Example:**
+```markdown
+Current Note: "Python Best Practices"
+
+Unlinked Mentions (2):
+├─ Code Review Notes
+│  "Follow Python Best Practices for..."
+│  [Convert to Link]
+│
+└─ Onboarding Guide
+   "Read Python Best Practices before..."
+   [Convert to Link]
+```
+
+**Features:**
+- One-click conversion to wiki link
+- Batch conversion
+- Ignore false positives
+- Case-insensitive matching
+
+![Link Autocomplete and Suggestions](/placeholder.svg)
+
+## Link Types
+
+### Internal Links
+
+Standard wiki links to notes in your workspace:
+
+```markdown
+[[Note Name]]
+[[Folder/Note Name]]
+[[../Parent Folder/Note Name]]
+```
+
+### Folder Links
+
+Link to entire folders:
+
+```markdown
+[[Projects/]]
+[[Archive/2023/]]
+```
+
+**Features:**
+- Shows all notes in folder
+- Folder note (index.md) shown first
+- Navigate folder structure
+- Create notes in folder
+
+### Header Links
+
+Link to specific sections within notes:
+
+```markdown
+[[Note Name#Header]]
+[[Project Ideas#Q2 Plans]]
+[[README#Installation]]
+```
+
+**Features:**
+- Scroll to header on click
+- Autocomplete shows headers
+- Backlinks show header context
+- Deep linking support
+
+### Block Links
+
+Link to specific blocks/paragraphs:
+
+```markdown
+[[Note Name#^block-id]]
+```
+
+**Creating Block IDs:**
+```markdown
+This is a paragraph ^unique-id
+
+- List item ^item-id
+```
+
+**Use Cases:**
+- Reference specific quotes
+- Link to particular points
+- Create precise citations
+
+## Link Management
+
+### Link Explorer
+
+Access the Link Explorer from the sidebar:
+
+**Features:**
+- All links in workspace
+- Orphaned notes (no links)
+- Broken links
+- Most linked notes
+- Least linked notes
+- Link statistics
+
+### Finding Links
+
+Search for links:
+
+**By Source:**
+```
+links from: "Project Ideas"
+```
+
+**By Target:**
+```
+links to: "Project Ideas"
+```
+
+**By Path:**
+```
+links in: "Projects/"
+```
+
+### Refactoring Links
+
+When renaming or moving notes, Lokus updates all links automatically:
+
+**Rename Note:**
+1. Right-click note → Rename
+2. Enter new name
+3. Lokus updates all references
+4. Backlinks preserved
+
+**Move Note:**
+1. Drag note to new folder
+2. Lokus updates all paths
+3. Links continue working
+4. Relative paths adjusted
+
+**Batch Operations:**
+- Rename multiple notes
+- Move multiple notes
+- Update link patterns
+- Fix broken links
+
+## Link Visualization
+
+### Graph View
+
+See [Graph Visualization](/features/graph) for detailed information.
+
+**Quick Access:**
+- Click graph icon in note
+- Shows local graph (1-2 hops)
+- Interactive navigation
+- Filter by link type
+
+### Backlink Graph
+
+Visualize backlinks as a network:
+
+**Features:**
+- Current note at center
+- Backlinks as connected nodes
+- Bidirectional arrows
+- Distance indicates strength
+- Click to navigate
+
+## Advanced Features
+
+### Link Properties
+
+Add metadata to links:
+
+```markdown
+[[Note Name|alias]]{ .class #id key=value }
+```
+
+**Use Cases:**
+- Styling (CSS classes)
+- Type indicators
+- Relationship labels
+- Custom attributes
+
+### Transclusion
+
+Embed content from other notes:
+
+```markdown
+![[Note Name]]
+![[Note Name#Header]]
+![[Note Name#^block-id]]
+```
+
+**Features:**
+- Live updating
+- Nested transclusion
+- Circular reference detection
+- Edit in place (optional)
+
+**Example:**
+```markdown
+# Project Overview
+
+## Goals
+![[Project Goals#Q2]]
+
+## Timeline
+![[Project Timeline]]
+```
+
+### Link Filtering
+
+Filter links by criteria:
+
+**In Note:**
+```markdown
+Show only links matching:
+- Path pattern: `[[Projects/*]]`
+- Tag: `[[#project]]`
+- Type: internal, external, broken
+```
+
+**In Backlinks Panel:**
+- Filter by folder
+- Filter by tag
+- Filter by date range
+- Hide resolved links
+
+## Link Contexts
+
+### Context Display
+
+Backlinks show surrounding context:
+
+**Short Context (default):**
+```markdown
+"...previous text [[Link]] following text..."
+```
+
+**Extended Context:**
+```markdown
+Entire paragraph containing the link.
+Can span multiple sentences.
+Helps understand reference meaning.
+```
+
+**No Context:**
+```markdown
+[[Link]]
+(Just the link, useful for reference lists)
+```
+
+### Context Settings
+
+Configure in Settings > Links:
+
+- Context length (0-500 characters)
+- Show before/after separately
+- Highlight link in context
+- Trim by sentence boundaries
+- Include list markers
+
+## Link Patterns
+
+### Smart Link Detection
+
+Lokus recognizes various link patterns:
+
+**Hashtags:**
+```markdown
+#project #idea #q2-2024
+```
+
+**Wikilinks:**
+```markdown
+[[Note Name]]
+```
+
+**Markdown Links:**
+```markdown
+[Text](url)
+```
+
+**URLs:**
+```markdown
+https://example.com
+```
+
+**File Links:**
+```markdown
+file:///path/to/file
+```
+
+### Link Conversion
+
+Convert between link types:
+
+**Convert to Wiki Link:**
+- Select text
+- Press `Cmd/Ctrl + K`
+- Autocomplete shows notes
+- Select target
+
+**Convert to Markdown Link:**
+- Right-click wiki link
+- "Convert to Markdown"
+- Generates `[text](path)`
+
+## Link Statistics
+
+### Note Statistics
+
+View link metrics for each note:
+
+**Outgoing Links:**
+- Total count
+- Unique notes linked
+- Most frequent targets
+- Link density
+
+**Incoming Links (Backlinks):**
+- Total count
+- Unique sources
+- Most frequent sources
+- Reference density
+
+### Workspace Statistics
+
+Overall workspace metrics:
+
+**Link Metrics:**
+- Total links
+- Average links per note
+- Most linked notes (top 10)
+- Orphaned notes (no links)
+- Broken links
+- Link growth over time
+
+**Graph Metrics:**
+- Connected components
+- Average path length
+- Clustering coefficient
+- Network density
+
+## Search Integration
+
+### Link Search
+
+Search within links:
+
+**Query Syntax:**
+```
+link:"Project"           # Links containing "Project"
+haslink:[[Project Ideas]] # Notes linking to specific note
+nolink                   # Notes with no links
+```
+
+**Advanced Queries:**
+```
+link:"Project" AND tag:#active
+haslink:[[README]] OR haslink:[[Guide]]
+nolink folder:"Archive"
+```
+
+### Quick Switcher
+
+Access links via command palette:
+
+1. Press `Cmd/Ctrl + P`
+2. Type note name
+3. See incoming/outgoing links
+4. Navigate instantly
+
+## Best Practices
+
+### Linking Strategy
+
+**When to Link:**
+- Related concepts
+- Prerequisites
+- Examples and instances
+- Categories and tags
+- Sources and references
+
+**When Not to Link:**
+- Common words (unless note exists)
+- Every occurrence (link first only)
+- Generic terms
+- Temporary content
+
+### Naming Conventions
+
+**Good Note Names:**
+- Clear and descriptive
+- Unique and distinctive
+- Searchable keywords
+- Consistent format
+
+**Examples:**
+```markdown
+Good:
+[[Python Data Structures]]
+[[Meeting Notes 2024-03-15]]
+[[Project Roadmap Q2]]
+
+Avoid:
+[[Notes]]           # Too generic
+[[Stuff]]           # Unclear
+[[temp]]            # Temporary
+[[New Note 23]]     # Meaningless
+```
+
+### Link Organization
+
+**Hierarchy:**
+- Use folders for structure
+- Link notes within hierarchy
+- Cross-reference between folders
+- Create index notes
+
+**Hub Notes:**
+- Create overview notes
+- Link to related notes
+- Update regularly
+- Serve as entry points
+
+**Example Hub:**
+```markdown
+# Machine Learning Hub
+
+## Fundamentals
+- [[Neural Networks Basics]]
+- [[Gradient Descent]]
+- [[Activation Functions]]
+
+## Frameworks
+- [[TensorFlow Guide]]
+- [[PyTorch Tutorial]]
+
+## Projects
+- [[Image Classification Project]]
+- [[NLP Sentiment Analysis]]
+```
+
+## Performance
+
+### Optimization
+
+Lokus efficiently handles large link networks:
+
+**Indexing:**
+- Real-time link extraction
+- Incremental updates
+- Background processing
+- Fast lookup tables
+
+**Caching:**
+- Link graph cached
+- Backlinks precomputed
+- Lazy loading for large sets
+- Debounced updates
+
+**Benchmarks:**
+- 10,000+ notes supported
+- under 10ms link lookup
+- under 50ms backlink retrieval
+- under 100ms graph rendering
+
+## Configuration
+
+### Settings
+
+Configure linking behavior in Settings > Links:
+
+**General:**
+- Case sensitivity
+- Auto-create notes
+- Link format (wiki/markdown)
+- Show preview on hover
+
+**Backlinks:**
+- Show context
+- Context length
+- Group by folder
+- Sort order
+
+**Validation:**
+- Highlight broken links
+- Check on save
+- Auto-fix on rename
+- Warn on delete
+
+### Keyboard Shortcuts
+
+| Action | Shortcut |
+|--------|----------|
+| Create Link | Cmd/Ctrl + K |
+| Follow Link | Cmd/Ctrl + Click |
+| Open Link in New Pane | Cmd/Ctrl + Shift + Click |
+| Copy Link | Right-click → Copy |
+| Show Backlinks | Cmd/Ctrl + Shift + B |
+| Link Explorer | Cmd/Ctrl + L |
+
+## Integration
+
+### Graph Integration
+
+Links power the graph view:
+
+- Each note is a node
+- Each link is an edge
+- Bidirectional arrows
+- Weight by link count
+- See [Graph Visualization](/features/graph)
+
+### Search Integration
+
+Links enhance search:
+
+- Find linked notes
+- Filter by connections
+- Rank by link strength
+- See [Search System](/features/search)
+
+### Task Integration
+
+Link tasks to notes:
+
+```markdown
+- [ ] Review [[Project Proposal]] by Friday
+- [x] Update [[Documentation]] with new features
+- [ ] Discuss [[Budget]] in [[Team Meeting]]
+```
+
+## Troubleshooting
+
+### Common Issues
+
+**Issue:** Links not working
+**Solution:** Check syntax, ensure note exists, verify workspace
+
+**Issue:** Backlinks not showing
+**Solution:** Rebuild link index (Settings > Links > Rebuild)
+
+**Issue:** Slow link autocomplete
+**Solution:** Clear cache, reduce workspace size, check indexing
+
+**Issue:** Broken links after rename
+**Solution:** Use built-in rename (not file system), enable auto-update
+
+### Debugging
+
+**Link Inspector:**
+1. Right-click link
+2. Select "Inspect Link"
+3. View link properties
+4. See resolution path
+5. Check for issues
+
+## Migration
+
+### From Other Apps
+
+**Obsidian:**
+- Wiki links compatible
+- Aliases supported
+- Block references work
+- Transclusion supported
+
+**Roam Research:**
+- Convert `[[Page]]` → works directly
+- Convert `((Block))` → use block links
+- Convert `#tags` → keep as-is
+
+**Notion:**
+- Export to markdown
+- Convert `[Page]` → `[[Page]]`
+- Preserve links in export
+- Use migration tool
+
+## Next Steps
+
+- Explore [Graph Visualization](/features/graph) to see your link network
+- Learn about [Search](/features/search) for finding linked content
+- Check out [Templates](/features/templates) with pre-built link structures
+- See [Canvas](/features/canvas) for visual link organization

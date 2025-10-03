@@ -1,0 +1,301 @@
+---
+title: Quick Start
+description: Get started with Lokus in minutes
+---
+
+import { Steps, Callout } from 'nextra/components'
+
+# Quick Start
+
+Get up and running with Lokus in just a few minutes. This guide will walk you through the essential features to help you start taking notes effectively.
+
+## First Launch
+
+<Steps>
+
+### Open Your First Workspace
+
+When you first launch Lokus, you'll be prompted to open or create a workspace. A workspace is simply a folder on your computer where your notes will be stored.
+
+1. Click **Open Workspace** or **Create New Workspace**
+2. Select an empty folder or create a new one
+3. Lokus will initialize the workspace and you're ready to start
+
+<Callout type="info">
+Your notes are stored as plain Markdown files on your local filesystem, giving you complete ownership and portability of your data.
+</Callout>
+
+### Interface Overview
+
+The Lokus interface consists of four main areas:
+
+- **Sidebar** (Left): Navigate your folder structure, search notes, and access recent files
+- **Editor** (Center): Write and edit your notes with a clean, distraction-free interface
+- **Preview** (Right, optional): See a live preview of your rendered Markdown
+- **Top Bar**: Quick actions, workspace selector, and settings
+
+![Lokus Interface Overview](/placeholder.svg)
+
+</Steps>
+
+## Creating Your First Note
+
+<Steps>
+
+### Create a New Note
+
+There are several ways to create a new note:
+
+- Click the **New Note** button in the toolbar
+- Use the keyboard shortcut: `Cmd+N` (Mac) or `Ctrl+N` (Windows/Linux)
+- Right-click in the sidebar and select **New Note**
+
+Give your note a meaningful name like `my-first-note.md`.
+
+### Basic Markdown Formatting
+
+Lokus supports standard Markdown syntax. Here are the essentials:
+
+```markdown
+# Heading 1
+## Heading 2
+### Heading 3
+
+**Bold text** and *italic text*
+
+- Bullet point 1
+- Bullet point 2
+  - Nested bullet
+
+1. Numbered list
+2. Second item
+
+> This is a blockquote
+
+`inline code` and code blocks:
+
+\`\`\`javascript
+function hello() {
+  console.log("Hello, Lokus!");
+}
+\`\`\`
+```
+
+### Wiki Links
+
+One of Lokus's most powerful features is wiki-style linking between notes:
+
+```markdown
+Link to another note: [[Note Title]]
+
+Link with custom text: [[Note Title|Custom Display Text]]
+
+Link to a heading: [[Note Title#Heading]]
+```
+
+When you type `[[`, Lokus will show an autocomplete dropdown with your existing notes. If you link to a note that doesn't exist yet, Lokus will create it when you click the link.
+
+![Creating Your First Note with Markdown](/placeholder.svg)
+
+</Steps>
+
+## Advanced Features
+
+### Math Equations
+
+Lokus supports LaTeX math equations using KaTeX:
+
+**Inline math**: Wrap expressions in single dollar signs
+
+```markdown
+The quadratic formula is $x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}$
+```
+
+**Block math**: Use double dollar signs for display equations
+
+```markdown
+$$
+\int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}
+$$
+```
+
+<Callout type="info">
+Math rendering happens in real-time as you type, making it perfect for technical notes and academic work.
+</Callout>
+
+### Task Lists
+
+Create interactive checkboxes with task list syntax:
+
+```markdown
+- [ ] Incomplete task
+- [x] Completed task
+- [ ] Another pending item
+  - [ ] Nested subtask
+```
+
+Click any checkbox to toggle its completion state. Lokus saves the state automatically.
+
+### Code Syntax Highlighting
+
+Lokus provides syntax highlighting for numerous programming languages:
+
+```markdown
+\`\`\`python
+def fibonacci(n):
+    if n <= 1:
+        return n
+    return fibonacci(n-1) + fibonacci(n-2)
+\`\`\`
+
+\`\`\`typescript
+interface Note {
+  title: string;
+  content: string;
+  createdAt: Date;
+}
+\`\`\`
+```
+
+### Tables
+
+Create organized data with Markdown tables:
+
+```markdown
+| Feature | Lokus | Others |
+|---------|-------|--------|
+| Local-first | Yes | Varies |
+| Privacy | Full | Limited |
+| Speed | Fast | Slower |
+```
+
+## Essential Workflows
+
+### Search Everything
+
+Lokus provides powerful search capabilities:
+
+- **Quick Search**: Press `Cmd+P` (Mac) or `Ctrl+P` (Windows/Linux) to open the command palette
+- **Full-Text Search**: Press `Cmd+Shift+F` to search across all notes
+- **Filter by tags**: Use `#tag` in search to find tagged notes
+
+### Graph View
+
+Visualize connections between your notes:
+
+1. Click the **Graph View** icon in the toolbar
+2. See an interactive network of your notes and their links
+3. Click any node to open that note
+4. Use the graph to discover relationships and gaps in your knowledge
+
+### Templates
+
+Save time with note templates:
+
+1. Create a new note with your desired structure
+2. Save it in a `.templates` folder in your workspace
+3. Use `Cmd+T` to insert a template into any note
+
+Example template:
+
+```markdown
+---
+created: {{date}}
+tags: []
+---
+
+# {{title}}
+
+## Summary
+
+
+## Key Points
+
+-
+
+## References
+
+-
+```
+
+### Folders and Organization
+
+Organize notes with folders:
+
+- Create folders in the sidebar with right-click → **New Folder**
+- Drag and drop notes between folders
+- Use consistent naming conventions like:
+  - `projects/` for project notes
+  - `daily/` for daily notes
+  - `areas/` for areas of responsibility
+  - `resources/` for reference material
+
+## Keyboard Shortcuts
+
+Master these shortcuts to work efficiently:
+
+| Action | Mac | Windows/Linux |
+|--------|-----|---------------|
+| New note | `Cmd+N` | `Ctrl+N` |
+| Quick search | `Cmd+P` | `Ctrl+P` |
+| Full-text search | `Cmd+Shift+F` | `Ctrl+Shift+F` |
+| Toggle preview | `Cmd+E` | `Ctrl+E` |
+| Toggle sidebar | `Cmd+B` | `Ctrl+B` |
+| Insert template | `Cmd+T` | `Ctrl+T` |
+| Save note | `Cmd+S` | `Ctrl+S` |
+| Bold text | `Cmd+B` | `Ctrl+B` |
+| Italic text | `Cmd+I` | `Ctrl+I` |
+| Insert link | `Cmd+K` | `Ctrl+K` |
+| Open graph view | `Cmd+G` | `Ctrl+G` |
+| Open settings | `Cmd+,` | `Ctrl+,` |
+
+<Callout type="tip">
+View all keyboard shortcuts by pressing `Cmd+/` (Mac) or `Ctrl+/` (Windows/Linux).
+</Callout>
+
+## Customization
+
+### Editor Settings
+
+Customize your writing experience in **Settings** → **Editor**:
+
+- **Font family**: Choose your preferred font
+- **Font size**: Adjust text size for comfortable reading
+- **Line height**: Set spacing between lines
+- **Theme**: Switch between light and dark modes
+- **Vim mode**: Enable Vim keybindings if preferred
+
+### Appearance
+
+Make Lokus your own:
+
+- **Theme**: Light, dark, or system-based
+- **Accent color**: Customize the interface accent color
+- **Font**: Choose from a variety of monospace and serif fonts
+
+## Next Steps
+
+Now that you're familiar with the basics, explore these guides:
+
+- [Workspace Setup](/getting-started/workspace-setup) - Learn advanced workspace management
+- [Markdown Reference](/guides/markdown) - Complete Markdown syntax guide
+- [Keyboard Shortcuts](/guides/keyboard-shortcuts) - Master all shortcuts
+- [Templates & Automation](/guides/templates) - Create powerful workflows
+
+## Tips for Success
+
+<Callout type="tip">
+**Start simple**: Don't over-organize at the beginning. Start writing notes and let your organization system emerge naturally.
+</Callout>
+
+<Callout type="tip">
+**Link often**: The real power of Lokus comes from connecting ideas. Make liberal use of wiki links.
+</Callout>
+
+<Callout type="tip">
+**Daily notes**: Consider starting each day with a daily note to capture thoughts, tasks, and references.
+</Callout>
+
+<Callout type="tip">
+**Review regularly**: Use the graph view weekly to review connections and find orphaned notes.
+</Callout>

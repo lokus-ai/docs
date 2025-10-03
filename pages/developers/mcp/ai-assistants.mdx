@@ -1,0 +1,500 @@
+# AI Assistant Integration
+
+Learn how to connect AI assistants to Lokus using the Model Context Protocol (MCP).
+
+## Supported AI Assistants
+
+Lokus's MCP implementation works with any AI assistant that supports the MCP protocol:
+
+- Desktop AI assistants
+- Web-based AI tools
+- Custom AI integrations
+- IDE extensions with AI capabilities
+
+## Connection Methods
+
+### Method 1: Stdio Transport
+
+For local AI assistants that communicate via standard input/output:
+
+```javascript
+import { StdioTransport, MCPClient } from '@lokus/mcp'
+
+// Start Lokus MCP server
+const transport = new StdioTransport({
+  command: 'lokus',
+  args: ['mcp', 'server'],
+  env: process.env
+})
+
+// Connect client
+const client = new MCPClient('ai-assistant')
+await client.connect(transport, {
+  name: 'My AI Assistant',
+  version: '1.0.0'
+})
+
+// Use Lokus capabilities
+const resources = await client.listResources()
+const result = await client.callTool('note.create', {
+  title: 'AI Generated Note',
+  content: 'Content from AI'
+})
+```
+
+### Method 2: WebSocket Transport
+
+For remote or web-based AI assistants:
+
+```javascript
+import { WebSocketTransport, MCPClient } from '@lokus/mcp'
+
+// Connect to Lokus WebSocket server
+const transport = new WebSocketTransport({
+  url: 'ws://localhost:3000/mcp',
+  protocols: ['mcp-v1']
+})
+
+const client = new MCPClient('web-ai-assistant')
+await client.connect(transport)
+```
+
+### Method 3: HTTP/REST Transport
+
+For REST API-based integrations:
+
+```javascript
+import { HTTPTransport, MCPClient } from '@lokus/mcp'
+
+const transport = new HTTPTransport({
+  baseURL: 'http://localhost:3000/mcp',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY'
+  }
+})
+
+const client = new MCPClient('rest-ai')
+await client.connect(transport)
+```
+
+## Configuration Examples
+
+### Desktop AI Assistant
+
+Configuration for a desktop AI application:
+
+```json
+{
+  "mcpServers": {
+    "lokus": {
+      "command": "lokus",
+      "args": ["mcp", "server"],
+      "transport": "stdio",
+      "autoStart": true,
+      "description": "Lokus note-taking application"
+    }
+  }
+}
+```
+
+### VS Code Extension
+
+Integrate with VS Code-based AI extensions:
+
+```javascript
+// extension.js
+import * as vscode from 'vscode'
+import { MCPClient } from '@lokus/mcp'
+
+export async function activate(context) {
+  // Create MCP client
+  const client = new MCPClient('vscode-ai')
+
+  // Connect to Lokus
+  await client.connect(transport)
+
+  // Register commands
+  context.subscriptions.push(
+    vscode.commands.registerCommand('ai.createNote', async () => {
+      const title = await vscode.window.showInputBox({
+        prompt: 'Note title'
+      })
+
+      const result = await client.callTool('note.create', {
+        title,
+        content: ''
+      })
+
+      vscode.window.showInformationMessage(`Created: ${result.noteId}`)
+    })
+  )
+}
+```
+
+### Web Application
+
+Integrate MCP into a web-based AI assistant:
+
+```javascript
+// ai-web-app.js
+import { MCPClient } from '@lokus/mcp'
+
+class AIWebApp {
+  async connect() {
+    this.mcpClient = new MCPClient('web-app')
+
+    await this.mcpClient.connect(new WebSocketTransport({
+      url: 'ws://localhost:3000/mcp'
+    }))
+
+    // Subscribe to resource updates
+    this.mcpClient.on('resource-updated', (event) => {
+      this.updateUI(event)
+    })
+  }
+
+  async generateNote(prompt) {
+    // Get context from Lokus
+    const currentNote = await this.mcpClient.readResource('lokus://notes/current')
+    const relatedNotes = await this.mcpClient.callTool('note.search', {
+      query: prompt,
+      limit: 5
+    })
+
+    // Generate content with AI
+    const content = await this.aiModel.generate({
+      prompt,
+      context: {
+        currentNote: currentNote.contents[0].text,
+        relatedNotes: relatedNotes.results
+      }
+    })
+
+    // Create note in Lokus
+    return await this.mcpClient.callTool('note.create', {
+      title: 'AI Generated',
+      content
+    })
+  }
+}
+```
+
+## Common Integration Patterns
+
+### Pattern 1: Context-Aware Generation
+
+Use Lokus resources as context for AI generation:
+
+```javascript
+async function generateWithContext(aiClient, mcpClient, prompt) {
+  // Gather context from Lokus
+  const context = {
+    currentNote: await mcpClient.readResource('lokus://notes/current'),
+    recentNotes: await mcpClient.callTool('note.search', {
+      query: '',
+      limit: 10
+    }),
+    workspace: await mcpClient.readResource('lokus://workspace/info')
+  }
+
+  // Generate with AI
+  const response = await aiClient.generate({
+    prompt,
+    context: JSON.stringify(context, null, 2)
+  })
+
+  // Save result to Lokus
+  await mcpClient.callTool('note.create', {
+    title: 'AI Generated',
+    content: response.text
+  })
+
+  return response
+}
+```
+
+### Pattern 2: Tool-Augmented AI
+
+Let AI execute Lokus tools:
+
+```javascript
+async function toolAugmentedAI(aiClient, mcpClient, userQuery) {
+  // Get available tools
+  const tools = await mcpClient.listTools()
+
+  // Let AI choose which tools to use
+  const plan = await aiClient.planActions({
+    query: userQuery,
+    availableTools: tools.tools
+  })
+
+  // Execute planned tools
+  const results = []
+  for (const action of plan.actions) {
+    const result = await mcpClient.callTool(action.tool, action.args)
+    results.push(result)
+  }
+
+  // Generate final response
+  return await aiClient.synthesize({
+    query: userQuery,
+    toolResults: results
+  })
+}
+```
+
+### Pattern 3: Interactive Editing
+
+AI-assisted editing with real-time updates:
+
+```javascript
+class InteractiveEditor {
+  constructor(mcpClient) {
+    this.mcpClient = mcpClient
+
+    // Subscribe to changes
+    mcpClient.on('resource-updated', (event) => {
+      if (event.uri === 'lokus://notes/current') {
+        this.onNoteChange(event.content)
+      }
+    })
+  }
+
+  async suggestImprovements() {
+    const note = await this.mcpClient.readResource('lokus://notes/current')
+
+    const prompt = await this.mcpClient.getPrompt('note.improve', {
+      title: note.metadata.title,
+      content: note.contents[0].text
+    })
+
+    const suggestions = await this.ai.generate(prompt.messages)
+
+    return suggestions
+  }
+
+  async applyImprovement(suggestion) {
+    const note = await this.mcpClient.readResource('lokus://notes/current')
+
+    const improved = await this.ai.applyEdit({
+      original: note.contents[0].text,
+      instruction: suggestion
+    })
+
+    await this.mcpClient.callTool('note.update', {
+      noteId: note.metadata.noteId,
+      content: improved
+    })
+  }
+}
+```
+
+## Security Considerations
+
+### Authentication
+
+Secure your MCP server:
+
+```javascript
+import { MCPServer } from '@lokus/mcp'
+
+const server = new MCPServer({
+  authentication: {
+    type: 'token',
+    validateToken: async (token) => {
+      return await this.tokenStore.validate(token)
+    }
+  }
+})
+
+// Client includes token
+const client = new MCPClient('ai-assistant', {
+  authentication: {
+    token: 'your-api-token'
+  }
+})
+```
+
+### Permission Scoping
+
+Limit what AI assistants can access:
+
+```javascript
+const server = new MCPServer({
+  authorization: {
+    resources: {
+      'lokus://notes/current': ['read'],
+      'lokus://notes/all': ['read'],
+      'lokus://admin/*': [] // Deny admin resources
+    },
+    tools: {
+      'note.create': true,
+      'note.search': true,
+      'note.delete': false // Prevent deletion
+    }
+  }
+})
+```
+
+### Audit Logging
+
+Track AI assistant actions:
+
+```javascript
+mcpServer.on('tool-called', (event) => {
+  console.log('Audit log:', {
+    timestamp: new Date().toISOString(),
+    client: event.clientId,
+    tool: event.toolName,
+    args: event.args,
+    result: event.result
+  })
+})
+```
+
+## Best Practices
+
+### 1. Connection Management
+- Implement reconnection logic
+- Handle connection errors gracefully
+- Use keep-alive for long sessions
+- Clean up resources on disconnect
+
+### 2. Resource Usage
+- Cache frequently accessed resources
+- Use subscriptions for live updates
+- Batch operations when possible
+- Implement rate limiting
+
+### 3. Error Handling
+- Validate tool inputs
+- Provide helpful error messages
+- Implement retry logic
+- Log errors for debugging
+
+### 4. User Experience
+- Show loading states
+- Provide progress updates
+- Allow cancellation
+- Display clear feedback
+
+## Example: Complete AI Assistant
+
+```javascript
+import { MCPClient, StdioTransport } from '@lokus/mcp'
+
+class LokusAIAssistant {
+  constructor(aiModel) {
+    this.aiModel = aiModel
+    this.mcpClient = null
+  }
+
+  async connect() {
+    const transport = new StdioTransport({
+      command: 'lokus',
+      args: ['mcp', 'server']
+    })
+
+    this.mcpClient = new MCPClient('ai-assistant', {
+      autoReconnect: true,
+      reconnectDelay: 5000
+    })
+
+    await this.mcpClient.connect(transport, {
+      name: 'Lokus AI Assistant',
+      version: '1.0.0'
+    })
+
+    console.log('Connected to Lokus')
+  }
+
+  async processQuery(userQuery) {
+    // Get relevant context
+    const resources = await this.gatherContext(userQuery)
+
+    // Get available tools
+    const tools = await this.mcpClient.listTools()
+
+    // Let AI plan actions
+    const plan = await this.aiModel.plan({
+      query: userQuery,
+      context: resources,
+      tools: tools.tools
+    })
+
+    // Execute plan
+    const results = await this.executePlan(plan)
+
+    // Generate response
+    return await this.aiModel.synthesize({
+      query: userQuery,
+      context: resources,
+      results
+    })
+  }
+
+  async gatherContext(query) {
+    // Search relevant notes
+    const searchResults = await this.mcpClient.callTool('note.search', {
+      query,
+      limit: 5
+    })
+
+    // Get current note
+    const currentNote = await this.mcpClient.readResource('lokus://notes/current')
+
+    return {
+      searchResults: searchResults.results,
+      currentNote: currentNote.contents[0].text
+    }
+  }
+
+  async executePlan(plan) {
+    const results = []
+
+    for (const step of plan.steps) {
+      try {
+        const result = await this.mcpClient.callTool(step.tool, step.args)
+        results.push({
+          step: step.id,
+          success: true,
+          result
+        })
+      } catch (error) {
+        results.push({
+          step: step.id,
+          success: false,
+          error: error.message
+        })
+      }
+    }
+
+    return results
+  }
+
+  async disconnect() {
+    if (this.mcpClient) {
+      await this.mcpClient.disconnect()
+    }
+  }
+}
+
+// Usage
+const assistant = new LokusAIAssistant(myAIModel)
+await assistant.connect()
+
+const response = await assistant.processQuery(
+  'Create a summary of my recent project notes'
+)
+console.log(response)
+
+await assistant.disconnect()
+```
+
+## Next Steps
+
+**Related Documentation:**
+- [API Reference](/developers/mcp/api-reference)
+- [Plugin Integration](/developers/mcp/plugin-integration)
+- [Resources](/developers/mcp/resources)
+- [Tools](/developers/mcp/tools)

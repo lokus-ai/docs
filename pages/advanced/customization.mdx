@@ -1,0 +1,757 @@
+# Advanced Customization
+
+Advanced techniques for customizing Lokus to match your workflow, from custom themes and editor extensions to plugin development and UI modifications.
+
+## Custom Themes
+
+### Creating a Custom Theme
+
+Define custom colors and syntax highlighting:
+
+```json
+{
+  "theme": "custom",
+  "customTheme": {
+    "name": "Ocean Theme",
+    "colors": {
+      "background": "#0c1e2a",
+      "foreground": "#e0e0e0",
+      "primary": "#00acc1",
+      "secondary": "#455a64",
+      "accent": "#ff6e40",
+      "border": "#1a3a4a",
+      "sidebar": "#0a1820",
+      "editor": "#0c1e2a",
+      "selection": "#00acc133",
+      "highlight": "#ff6e4033"
+    },
+    "syntax": {
+      "keyword": "#00acc1",
+      "string": "#4caf50",
+      "comment": "#607d8b",
+      "function": "#ffc107",
+      "variable": "#90caf9",
+      "number": "#ff9800",
+      "operator": "#ec407a",
+      "tag": "#7c4dff"
+    },
+    "editor": {
+      "lineHighlight": "#ffffff0a",
+      "cursor": "#00acc1",
+      "gutterBackground": "#0a1820",
+      "gutterForeground": "#546e7a"
+    }
+  }
+}
+```
+
+**Color Properties:**
+
+**Main Colors:**
+- `background` - Application background
+- `foreground` - Default text color
+- `primary` - Primary UI elements and links
+- `secondary` - Secondary UI elements
+- `accent` - Highlights and accents
+- `border` - Border and divider colors
+- `sidebar` - Sidebar background
+- `editor` - Editor pane background
+
+**Interactive States:**
+- `selection` - Selected text background
+- `highlight` - Highlighted text background
+- `hover` - Hover state color
+- `active` - Active state color
+
+**Syntax Highlighting:**
+- `keyword` - Language keywords (if, for, function)
+- `string` - String literals
+- `comment` - Comments
+- `function` - Function names
+- `variable` - Variable names
+- `number` - Numeric literals
+- `operator` - Operators (+, -, *, /)
+- `tag` - HTML/XML tags
+
+---
+
+### Theme Variables
+
+Use CSS custom properties for dynamic theming:
+
+```css
+/* src/styles/themes/custom.css */
+:root {
+  --color-bg: #0c1e2a;
+  --color-fg: #e0e0e0;
+  --color-primary: #00acc1;
+  --color-accent: #ff6e40;
+
+  /* Editor */
+  --editor-font-size: 16px;
+  --editor-line-height: 1.6;
+  --editor-padding: 2rem;
+
+  /* UI */
+  --sidebar-width: 250px;
+  --toolbar-height: 48px;
+  --border-radius: 4px;
+  --transition-speed: 0.2s;
+}
+
+.dark-theme {
+  --color-bg: #1e1e1e;
+  --color-fg: #d4d4d4;
+}
+```
+
+---
+
+### Dynamic Theme Switching
+
+```typescript
+import { updateConfig } from '@/core/config/store';
+
+async function switchTheme(themeName: string) {
+  await updateConfig({ theme: themeName });
+
+  // Broadcast theme change
+  await invoke('theme_broadcast', { theme: themeName });
+
+  // Update CSS variables
+  updateCSSVariables(themeName);
+}
+
+function updateCSSVariables(theme: string) {
+  const root = document.documentElement;
+  const colors = getThemeColors(theme);
+
+  Object.entries(colors).forEach(([key, value]) => {
+    root.style.setProperty(`--color-${key}`, value);
+  });
+}
+```
+
+---
+
+## Custom Editor Extensions
+
+### Creating a TipTap Extension
+
+```typescript
+import { Node } from '@tiptap/core';
+import { ReactNodeViewRenderer } from '@tiptap/react';
+import CustomComponent from './CustomComponent';
+
+export const CustomExtension = Node.create({
+  name: 'customNode',
+
+  group: 'block',
+
+  content: 'inline*',
+
+  parseHTML() {
+    return [
+      {
+        tag: 'div[data-type="custom"]'
+      }
+    ];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return ['div', {
+      ...HTMLAttributes,
+      'data-type': 'custom',
+      class: 'custom-node'
+    }, 0];
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(CustomComponent);
+  },
+
+  addCommands() {
+    return {
+      setCustomNode: (attributes) => ({ commands }) => {
+        return commands.insertContent({
+          type: this.name,
+          attrs: attributes
+        });
+      }
+    };
+  },
+
+  addKeyboardShortcuts() {
+    return {
+      'Mod-Shift-C': () => this.editor.commands.setCustomNode({})
+    };
+  }
+});
+```
+
+---
+
+### Custom React Component
+
+```tsx
+import React from 'react';
+import { NodeViewWrapper } from '@tiptap/react';
+
+export default function CustomComponent({ node, updateAttributes }) {
+  return (
+    <NodeViewWrapper className="custom-component">
+      <div className="custom-content">
+        <input
+          value={node.attrs.value}
+          onChange={(e) => updateAttributes({ value: e.target.value })}
+          placeholder="Enter value..."
+        />
+      </div>
+    </NodeViewWrapper>
+  );
+}
+```
+
+---
+
+### Registering Extension via Plugin
+
+```javascript
+// plugin.json
+{
+  "name": "custom-extension-plugin",
+  "permissions": ["ui:editor"]
+}
+
+// index.js
+import { CustomExtension } from './CustomExtension';
+
+export default class CustomExtensionPlugin {
+  activate(context) {
+    context.addExtension(CustomExtension);
+  }
+
+  deactivate() {
+    // Cleanup
+  }
+}
+```
+
+---
+
+## Custom UI Components
+
+### Custom Sidebar Panel
+
+```tsx
+import React from 'react';
+
+export default function CustomPanel({ context }) {
+  const [data, setData] = React.useState([]);
+
+  React.useEffect(() => {
+    // Load panel data
+    loadData().then(setData);
+
+    // Listen for updates
+    const handler = (newData) => setData(newData);
+    context.on('data:updated', handler);
+
+    return () => context.off('data:updated', handler);
+  }, []);
+
+  return (
+    <div className="custom-panel">
+      <div className="panel-header">
+        <h3>Custom Panel</h3>
+        <button onClick={() => refreshData()}>Refresh</button>
+      </div>
+      <div className="panel-content">
+        {data.map(item => (
+          <div key={item.id} className="panel-item">
+            {item.name}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+async function loadData() {
+  // Load data from API or filesystem
+  return [];
+}
+```
+
+Register panel:
+
+```javascript
+context.registerPanel({
+  name: 'custom-panel',
+  title: 'Custom Panel',
+  icon: 'box',
+  component: CustomPanel,
+  position: 'right'
+});
+```
+
+---
+
+### Custom Toolbar
+
+```tsx
+import React from 'react';
+
+export default function CustomToolbar({ editor }) {
+  return (
+    <div className="custom-toolbar">
+      <button
+        onClick={() => editor.chain().focus().toggleBold().run()}
+        className={editor.isActive('bold') ? 'active' : ''}
+      >
+        Bold
+      </button>
+
+      <button
+        onClick={() => insertCustomBlock(editor)}
+      >
+        Insert Custom
+      </button>
+
+      <select
+        onChange={(e) => setHeading(editor, e.target.value)}
+        value={getCurrentHeading(editor)}
+      >
+        <option value="paragraph">Paragraph</option>
+        <option value="heading1">Heading 1</option>
+        <option value="heading2">Heading 2</option>
+        <option value="heading3">Heading 3</option>
+      </select>
+    </div>
+  );
+}
+
+function insertCustomBlock(editor) {
+  editor.chain().focus().setCustomNode({
+    type: 'customBlock'
+  }).run();
+}
+
+function setHeading(editor, level) {
+  if (level === 'paragraph') {
+    editor.chain().focus().setParagraph().run();
+  } else {
+    const headingLevel = parseInt(level.replace('heading', ''));
+    editor.chain().focus().setHeading({ level: headingLevel }).run();
+  }
+}
+
+function getCurrentHeading(editor) {
+  for (let i = 1; i <= 6; i++) {
+    if (editor.isActive('heading', { level: i })) {
+      return `heading${i}`;
+    }
+  }
+  return 'paragraph';
+}
+```
+
+---
+
+## Custom Commands
+
+### Adding Slash Commands
+
+```javascript
+context.addSlashCommand({
+  name: 'current-date',
+  description: 'Insert current date',
+  icon: 'calendar',
+  keywords: ['date', 'today'],
+  handler: (editor) => {
+    const date = new Date().toISOString().split('T')[0];
+    editor.commands.insertContent(date);
+  }
+});
+
+context.addSlashCommand({
+  name: 'code-snippet',
+  description: 'Insert code snippet',
+  icon: 'code',
+  handler: async (editor) => {
+    const language = await promptForLanguage();
+    editor.commands.insertContent({
+      type: 'codeBlock',
+      attrs: { language }
+    });
+  }
+});
+```
+
+---
+
+### Command Palette Integration
+
+```typescript
+// Register custom command in palette
+registerCommand({
+  id: 'custom:action',
+  name: 'Custom Action',
+  description: 'Performs custom action',
+  category: 'Custom',
+  shortcut: 'Cmd+Shift+X',
+  handler: async () => {
+    // Command implementation
+    await performCustomAction();
+  }
+});
+```
+
+---
+
+## Workspace Customization
+
+### Custom File Templates
+
+```javascript
+// Define templates
+const templates = {
+  'meeting-notes': {
+    name: 'Meeting Notes',
+    content: `# Meeting Notes - {date}
+
+## Attendees
+-
+
+## Agenda
+1.
+
+## Notes
+
+
+## Action Items
+- [ ]
+
+## Next Meeting
+- Date:
+- Time: `
+  },
+
+  'project-plan': {
+    name: 'Project Plan',
+    content: `# {title}
+
+**Created:** {date}
+**Status:** Planning
+
+## Overview
+
+
+## Goals
+
+
+## Timeline
+
+
+## Resources
+
+
+## Risks
+`
+  }
+};
+
+// Use template
+async function createFromTemplate(templateId, variables) {
+  const template = templates[templateId];
+  let content = template.content;
+
+  // Replace variables
+  Object.entries(variables).forEach(([key, value]) => {
+    content = content.replace(new RegExp(`\\{${key}\\}`, 'g'), value);
+  });
+
+  // Create file
+  const filePath = await invoke('create_file_in_workspace', {
+    workspace_path: workspacePath,
+    name: `${variables.title}.md`
+  });
+
+  await invoke('write_file_content', {
+    path: filePath,
+    content
+  });
+
+  return filePath;
+}
+```
+
+---
+
+### Custom Folder Structure
+
+```typescript
+const workspaceStructure = {
+  'Inbox': {
+    description: 'Quick notes and captures'
+  },
+  'Projects': {
+    description: 'Project-specific notes',
+    subfolders: ['Active', 'Archive', 'Ideas']
+  },
+  'Resources': {
+    description: 'Reference materials',
+    subfolders: ['Articles', 'Books', 'Research']
+  },
+  'Daily': {
+    description: 'Daily notes',
+    pattern: '{year}/{month}'
+  }
+};
+
+async function initializeWorkspace(workspacePath: string) {
+  for (const [folder, config] of Object.entries(workspaceStructure)) {
+    await invoke('create_folder_in_workspace', {
+      workspace_path: workspacePath,
+      name: folder
+    });
+
+    if (config.subfolders) {
+      for (const subfolder of config.subfolders) {
+        await invoke('create_folder_in_workspace', {
+          workspace_path: `${workspacePath}/${folder}`,
+          name: subfolder
+        });
+      }
+    }
+  }
+}
+```
+
+---
+
+## Advanced Plugin Development
+
+### Plugin with Multiple Features
+
+```javascript
+export default class AdvancedPlugin {
+  constructor() {
+    this.state = {};
+    this.timers = [];
+  }
+
+  activate(context) {
+    this.context = context;
+
+    // Initialize features
+    this.initializeUI();
+    this.registerCommands();
+    this.setupEventListeners();
+    this.startBackgroundTasks();
+  }
+
+  initializeUI() {
+    // Add toolbar buttons
+    this.context.addToolbarButton({
+      name: 'plugin-action',
+      label: 'Plugin Action',
+      icon: 'star',
+      action: () => this.performAction()
+    });
+
+    // Register panel
+    this.context.registerPanel({
+      name: 'plugin-panel',
+      title: 'Plugin Panel',
+      component: this.createPanel()
+    });
+  }
+
+  registerCommands() {
+    this.context.addSlashCommand({
+      name: 'plugin-command',
+      description: 'Plugin command',
+      handler: (editor) => this.handleCommand(editor)
+    });
+  }
+
+  setupEventListeners() {
+    this.context.on('file:save', this.onFileSave.bind(this));
+    this.context.on('editor:selection', this.onSelection.bind(this));
+  }
+
+  startBackgroundTasks() {
+    // Auto-save state periodically
+    const timer = setInterval(() => {
+      this.saveState();
+    }, 60000);
+
+    this.timers.push(timer);
+  }
+
+  async performAction() {
+    try {
+      const content = this.context.getEditorContent();
+      const processed = await this.processContent(content);
+      this.context.setEditorContent(processed);
+
+      this.context.showNotification({
+        message: 'Action completed!',
+        type: 'success'
+      });
+    } catch (error) {
+      this.context.showNotification({
+        message: `Error: ${error.message}`,
+        type: 'error'
+      });
+    }
+  }
+
+  async processContent(content) {
+    // Custom processing logic
+    return content;
+  }
+
+  async saveState() {
+    await this.context.setSetting('state', this.state);
+  }
+
+  deactivate() {
+    // Clean up timers
+    this.timers.forEach(timer => clearInterval(timer));
+
+    // Remove event listeners
+    this.context.removeAllListeners();
+
+    // Save final state
+    this.saveState();
+  }
+}
+```
+
+---
+
+## CSS Customization
+
+### Custom Styles
+
+```css
+/* Custom editor styles */
+.ProseMirror {
+  padding: 3rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.ProseMirror h1 {
+  font-size: 2.5em;
+  font-weight: 700;
+  margin: 2em 0 0.5em;
+  color: var(--color-primary);
+}
+
+.ProseMirror p {
+  margin: 1em 0;
+  line-height: 1.8;
+}
+
+.ProseMirror code {
+  background: var(--color-code-bg);
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+}
+
+/* Custom sidebar styles */
+.sidebar {
+  background: var(--color-sidebar);
+  border-right: 1px solid var(--color-border);
+}
+
+.sidebar-item {
+  padding: 0.5em 1em;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.sidebar-item:hover {
+  background: var(--color-hover);
+}
+
+.sidebar-item.active {
+  background: var(--color-active);
+  color: var(--color-primary);
+}
+```
+
+---
+
+## Integration Examples
+
+### Custom AI Integration
+
+```typescript
+interface AIConfig {
+  apiKey: string;
+  model: string;
+  maxTokens: number;
+}
+
+class AIAssistant {
+  constructor(private context: PluginAPI) {}
+
+  async summarize(text: string): Promise<string> {
+    const config = await this.getConfig();
+
+    const response = await fetch('https://api.example.com/summarize', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${config.apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        text,
+        model: config.model,
+        max_tokens: config.maxTokens
+      })
+    });
+
+    const data = await response.json();
+    return data.summary;
+  }
+
+  async getConfig(): Promise<AIConfig> {
+    return {
+      apiKey: await this.context.getSetting('aiApiKey', ''),
+      model: await this.context.getSetting('aiModel', 'gpt-4'),
+      maxTokens: await this.context.getSetting('maxTokens', 1000)
+    };
+  }
+}
+
+// Usage in plugin
+export default class AIPlugin {
+  activate(context) {
+    const ai = new AIAssistant(context);
+
+    context.addSlashCommand({
+      name: 'summarize',
+      description: 'Summarize selected text',
+      handler: async (editor) => {
+        const selection = context.getSelection();
+        const summary = await ai.summarize(selection.text);
+        editor.commands.insertContent(`\n\n**Summary:**\n${summary}\n`);
+      }
+    });
+  }
+}
+```
+
+---
+
+## Next Steps
+
+- [Performance Optimization](/advanced/performance) - Optimize performance
+- [Security Features](/advanced/security) - Security best practices
+- [Troubleshooting](/advanced/troubleshooting) - Common issues

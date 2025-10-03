@@ -1,0 +1,457 @@
+---
+title: Workspace Setup
+description: Configure and manage your Lokus workspaces
+---
+
+import { Steps, Callout, Tabs } from 'nextra/components'
+
+# Workspace Setup
+
+A workspace in Lokus is a folder on your computer that contains all your notes, attachments, and configuration. Understanding workspaces is key to organizing your knowledge effectively.
+
+## What is a Workspace?
+
+A workspace is simply a directory on your filesystem that Lokus uses to store your notes. Each workspace is completely independent, allowing you to:
+
+- **Separate contexts**: Keep work notes separate from personal notes
+- **Maintain privacy**: Store sensitive notes in encrypted volumes
+- **Organize projects**: Create dedicated workspaces for different projects
+- **Sync selectively**: Sync only specific workspaces to cloud storage
+
+<Callout type="info">
+All notes are stored as plain Markdown (`.md`) files, making them portable and future-proof. You can open and edit them with any text editor.
+</Callout>
+
+### Workspace Structure
+
+A typical workspace looks like this:
+
+```
+my-workspace/
+├── .lokus/                 # Lokus configuration and metadata
+│   ├── config.json        # Workspace settings
+│   ├── graph.json         # Graph data cache
+│   └── index.db           # Search index
+├── .templates/            # Note templates
+├── assets/                # Images and attachments
+├── daily/                 # Daily notes
+├── projects/              # Project notes
+├── areas/                 # Areas of responsibility
+└── resources/             # Reference materials
+```
+
+The `.lokus` folder contains workspace-specific settings and cached data. You can safely add it to `.gitignore` if versioning your notes.
+
+## Creating a New Workspace
+
+<Steps>
+
+### Choose Your Location
+
+Decide where to store your workspace:
+
+- **Local storage**: `~/Documents/Lokus/` for general notes
+- **Cloud sync**: `~/Dropbox/Notes/` or `~/iCloud/Notes/` for automatic backup
+- **Encrypted volume**: For sensitive information
+- **Git repository**: For version-controlled notes
+
+### Create the Workspace
+
+<Tabs items={['From Lokus', 'Manually']}>
+  <Tabs.Tab>
+    1. Click the workspace selector in the top bar
+    2. Select **New Workspace**
+    3. Choose a location and name
+    4. Click **Create**
+
+    Lokus will initialize the workspace with default folders and configuration.
+  </Tabs.Tab>
+
+  <Tabs.Tab>
+    1. Create a new folder in your preferred location
+    2. Open Lokus and click **Open Workspace**
+    3. Select the empty folder
+    4. Lokus will initialize it as a workspace
+  </Tabs.Tab>
+</Tabs>
+
+### Initial Configuration
+
+After creating a workspace, configure these essential settings:
+
+1. **Workspace Name**: Give it a descriptive name in Settings → Workspace
+2. **Default Folder**: Set where new notes are created by default
+3. **Templates Location**: Specify where templates are stored (default: `.templates/`)
+4. **Assets Location**: Choose where attachments are saved (default: `assets/`)
+
+</Steps>
+
+## Managing Multiple Workspaces
+
+### Switching Workspaces
+
+Lokus makes it easy to work with multiple workspaces:
+
+- Click the **workspace selector** in the top bar
+- Select from your recent workspaces
+- Or choose **Open Workspace** to browse for a different one
+
+<Callout type="tip">
+Use keyboard shortcut `Cmd+Shift+O` (Mac) or `Ctrl+Shift+O` (Windows/Linux) to quickly switch workspaces.
+</Callout>
+
+### Recent Workspaces
+
+Lokus remembers your recently used workspaces:
+
+- Access them from the workspace selector dropdown
+- Pin frequently used workspaces to keep them at the top
+- Remove workspaces from the list via right-click → **Remove from Recent**
+
+<Callout type="info">
+Removing a workspace from recent workspaces does not delete any files. It only removes it from the quick access list.
+</Callout>
+
+### Workspace Session State
+
+Lokus automatically saves your session state for each workspace:
+
+- **Open files**: Your open tabs are restored when you return
+- **Cursor position**: Resume exactly where you left off
+- **Sidebar state**: Expanded folders and scroll position are preserved
+- **Graph view state**: Your graph view position and zoom level
+
+This makes it seamless to switch between different projects and contexts.
+
+## Workspace Settings
+
+### General Settings
+
+Configure workspace-wide preferences in **Settings** → **Workspace**:
+
+```json
+{
+  "name": "My Workspace",
+  "defaultLocation": "inbox",
+  "templatesFolder": ".templates",
+  "attachmentsFolder": "assets",
+  "autoSave": true,
+  "autoSaveInterval": 2000
+}
+```
+
+- **Name**: Display name for the workspace
+- **Default Location**: Where new notes are created
+- **Templates Folder**: Location of note templates
+- **Attachments Folder**: Where pasted images and files are stored
+- **Auto Save**: Enable automatic saving (recommended)
+- **Auto Save Interval**: Delay in milliseconds before saving
+
+### Editor Preferences
+
+Each workspace can have unique editor preferences:
+
+- **Font Family**: Different fonts for different contexts (e.g., monospace for code notes)
+- **Font Size**: Adjust for different displays
+- **Line Width**: Narrower for reading, wider for editing
+- **Spell Check**: Enable for writing-focused workspaces
+
+### File Handling
+
+Configure how Lokus handles files in your workspace:
+
+- **File Naming**: Choose between `kebab-case`, `snake_case`, or `Title Case`
+- **New Note Template**: Default content for new notes
+- **Confirm Delete**: Require confirmation before deleting notes
+- **Trash Location**: Use system trash or workspace `.trash` folder
+
+### Sync and Backup
+
+Lokus works seamlessly with various sync solutions:
+
+<Tabs items={['Dropbox', 'iCloud', 'Git', 'Syncthing']}>
+  <Tabs.Tab>
+    **Dropbox Sync**
+
+    1. Create your workspace inside your Dropbox folder
+    2. Dropbox automatically syncs changes across devices
+    3. Access version history through Dropbox's web interface
+
+    Recommended location: `~/Dropbox/Lokus/workspace-name/`
+  </Tabs.Tab>
+
+  <Tabs.Tab>
+    **iCloud Drive**
+
+    1. Create workspace in `~/Library/Mobile Documents/com~apple~CloudDocs/`
+    2. iCloud syncs automatically on macOS and iOS
+    3. Access notes on mobile devices with compatible apps
+
+    Note: iCloud sync can be slower than Dropbox or Git
+  </Tabs.Tab>
+
+  <Tabs.Tab>
+    **Git Version Control**
+
+    Initialize a Git repository in your workspace:
+
+    ```bash
+    cd /path/to/workspace
+    git init
+
+    # Add .gitignore
+    echo ".lokus/" >> .gitignore
+    echo ".DS_Store" >> .gitignore
+
+    git add .
+    git commit -m "Initial commit"
+    ```
+
+    Benefits:
+    - Full version history
+    - Branch different versions of notes
+    - Collaborate with others
+    - Push to GitHub/GitLab for backup
+  </Tabs.Tab>
+
+  <Tabs.Tab>
+    **Syncthing**
+
+    1. Set up Syncthing on your devices
+    2. Add your workspace folder to Syncthing
+    3. Configure sync settings:
+       - Enable ignore patterns for `.lokus/` if needed
+       - Use versioning for backup
+
+    Syncthing provides local, peer-to-peer sync without cloud services.
+  </Tabs.Tab>
+</Tabs>
+
+<Callout type="warning">
+**Conflict Resolution**: When syncing, be careful about editing the same note on multiple devices simultaneously. Most sync services create conflict files that you'll need to merge manually.
+</Callout>
+
+## File Organization Best Practices
+
+### Folder Structure
+
+Design a folder structure that matches how you think:
+
+**Option 1: PARA Method**
+```
+workspace/
+├── projects/        # Active projects with deadlines
+├── areas/           # Ongoing responsibilities
+├── resources/       # Reference materials
+└── archives/        # Completed items
+```
+
+**Option 2: Zettelkasten**
+```
+workspace/
+├── fleeting/        # Quick captures
+├── literature/      # Notes from reading
+├── permanent/       # Refined, atomic notes
+└── index/           # Structure notes and maps
+```
+
+**Option 3: Simple Categories**
+```
+workspace/
+├── work/
+├── personal/
+├── learning/
+└── projects/
+```
+
+<Callout type="tip">
+Choose a structure that feels natural to you. You can always reorganize later, and wiki links will remain intact even if you move files.
+</Callout>
+
+### Naming Conventions
+
+Consistent naming makes notes easier to find:
+
+**Date-based**: `2025-09-29-meeting-notes.md`
+- Good for: Daily notes, meeting notes, journal entries
+- Sorts chronologically
+- Easy to find by date
+
+**Descriptive titles**: `getting-started-with-react-hooks.md`
+- Good for: Evergreen notes, tutorials, reference materials
+- Searchable by content
+- Easy to link with wiki links
+
+**ID-based**: `202509291430-meeting-notes.md` (Zettelkasten style)
+- Good for: Large collections of interconnected notes
+- Unique identifiers prevent naming conflicts
+- Timestamp preserves creation context
+
+### Tags and Metadata
+
+Use frontmatter to add metadata to your notes:
+
+```markdown
+---
+title: Getting Started with Lokus
+tags: [documentation, tutorial, beginner]
+created: 2025-09-29
+modified: 2025-09-29
+author: Your Name
+status: draft
+---
+
+# Note content starts here
+```
+
+Benefits of metadata:
+- **Filter searches**: Find all notes with specific tags
+- **Track status**: Know which notes are drafts, published, or archived
+- **Sort by date**: See your most recent work
+- **Add context**: Remember when and why you created a note
+
+## Advanced Workspace Configuration
+
+### Custom Configuration File
+
+Advanced users can directly edit `.lokus/config.json`:
+
+```json
+{
+  "workspace": {
+    "name": "My Workspace",
+    "version": "1.0.0",
+    "settings": {
+      "defaultLocation": "inbox",
+      "templatesFolder": ".templates",
+      "attachmentsFolder": "assets",
+      "dailyNotesFolder": "daily",
+      "dailyNoteFormat": "YYYY-MM-DD"
+    },
+    "editor": {
+      "fontFamily": "iA Writer Quattro",
+      "fontSize": 16,
+      "lineHeight": 1.6,
+      "maxLineWidth": 750,
+      "spellCheck": true,
+      "typewriterMode": false,
+      "focusMode": false
+    },
+    "behavior": {
+      "autoSave": true,
+      "autoSaveInterval": 2000,
+      "confirmDelete": true,
+      "openLinksInNewTab": false,
+      "createNonExistentLinks": true
+    }
+  }
+}
+```
+
+### Workspace Templates
+
+Create a template workspace to quickly set up new projects:
+
+1. Create a workspace with your ideal structure
+2. Add template notes and folders
+3. Configure settings
+4. Save it as a template location
+5. Copy this workspace whenever starting a new project
+
+### Shared Workspaces
+
+Collaborate with others using shared workspaces:
+
+**Via Git:**
+```bash
+# Clone a shared repository
+git clone https://github.com/team/shared-notes.git
+
+# Open in Lokus
+# Edit notes as usual
+# Commit and push changes
+
+git add .
+git commit -m "Add meeting notes"
+git push
+```
+
+**Via Network Drive:**
+- Place workspace on a shared network drive
+- Multiple users can access (avoid simultaneous edits)
+- Use file locking if available
+
+<Callout type="warning">
+**Concurrent Editing**: Lokus is designed for single-user operation. Simultaneous editing by multiple users can cause conflicts. Use Git for version-controlled collaboration.
+</Callout>
+
+### Encrypted Workspaces
+
+Protect sensitive notes with encryption:
+
+**Option 1: System Encryption**
+- macOS: Create an encrypted disk image with Disk Utility
+- Windows: Use BitLocker or VeraCrypt
+- Linux: Use LUKS encryption
+
+**Option 2: Encrypted Container**
+- Use VeraCrypt to create an encrypted container
+- Mount the container when needed
+- Open workspace inside mounted volume
+
+**Option 3: Encrypted Cloud Storage**
+- Use Cryptomator with Dropbox/iCloud
+- Create workspace inside encrypted vault
+- Automatic encryption on sync
+
+## Troubleshooting
+
+### Workspace Won't Open
+
+If a workspace fails to open:
+
+1. Check folder permissions (must be readable/writable)
+2. Verify `.lokus` folder exists and isn't corrupted
+3. Try opening from File menu instead of recent list
+4. Check available disk space
+
+### Missing Notes or Files
+
+If notes are missing:
+
+1. Verify you're in the correct workspace
+2. Check the folder structure in Finder/Explorer
+3. Use full-text search to locate the note
+4. Check sync service for conflict files
+5. Restore from backup if necessary
+
+### Sync Conflicts
+
+When sync services create conflicts:
+
+1. Look for files named `file.md (conflicted copy)`
+2. Open both versions side by side
+3. Manually merge changes
+4. Delete the conflict file after merging
+
+### Performance Issues
+
+If Lokus is slow with large workspaces:
+
+1. Rebuild search index: Settings → Advanced → Rebuild Index
+2. Exclude large folders from indexing
+3. Archive old notes to a separate workspace
+4. Check for very large individual files (>10MB)
+
+## Next Steps
+
+Now that you understand workspaces, explore these topics:
+
+- [Markdown Reference](/guides/markdown) - Master Markdown syntax
+- [Templates & Automation](/guides/templates) - Streamline your workflow
+- [Graph View](/guides/graph-view) - Visualize your knowledge network
+- [Keyboard Shortcuts](/guides/keyboard-shortcuts) - Work more efficiently
+
+<Callout type="tip">
+**Start with one workspace**: Don't over-complicate things initially. Most users find that one well-organized workspace is sufficient. Add more workspaces only when you have a clear need for separation.
+</Callout>

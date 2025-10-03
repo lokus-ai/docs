@@ -1,0 +1,542 @@
+# MCP (Model Context Protocol) Overview
+
+Lokus implements the Model Context Protocol (MCP), a standardized JSON-RPC 2.0-based protocol that enables seamless communication between AI assistants and applications. MCP provides a unified interface for exposing application context, tools, and capabilities to AI models.
+
+## What is MCP?
+
+The Model Context Protocol is an open standard that allows AI assistants to:
+- **Access Resources**: Read and subscribe to application data (files, databases, APIs)
+- **Execute Tools**: Perform actions and operations within the application
+- **Use Prompts**: Leverage pre-defined prompt templates for common tasks
+- **Maintain Context**: Stay synchronized with application state changes
+
+## Architecture
+
+Lokus's MCP implementation consists of several key components:
+
+```
+┌─────────────────────────────────────────────────────┐
+│              Lokus Application                      │
+├─────────────────────────────────────────────────────┤
+│                                                     │
+│  ┌─────────────────────────────────────────┐      │
+│  │        MCP Integration Layer             │      │
+│  ├─────────────────────────────────────────┤      │
+│  │                                          │      │
+│  │  ┌──────────────┐  ┌──────────────┐   │      │
+│  │  │    MCP       │  │    MCP       │   │      │
+│  │  │   Server     │  │   Client     │   │      │
+│  │  │    Host      │  │   Factory    │   │      │
+│  │  └──────┬───────┘  └──────┬───────┘   │      │
+│  │         │                  │           │      │
+│  │         ├──────────────────┤           │      │
+│  │         │                                │      │
+│  │  ┌──────▼──────────────────────────┐   │      │
+│  │  │      MCP Plugin Manager          │   │      │
+│  │  └──────────────────────────────────┘   │      │
+│  │                                          │      │
+│  └─────────────────────────────────────────┘      │
+│                                                     │
+│  ┌─────────────────────────────────────────┐      │
+│  │      Plugin Ecosystem                    │      │
+│  ├─────────────────────────────────────────┤      │
+│  │                                          │      │
+│  │  ┌──────────┐  ┌──────────┐  ┌────────┐│      │
+│  │  │   MCP    │  │   MCP    │  │  MCP   ││      │
+│  │  │  Plugin  │  │  Plugin  │  │ Plugin ││      │
+│  │  │    A     │  │    B     │  │   C    ││      │
+│  │  └──────────┘  └──────────┘  └────────┘│      │
+│  │                                          │      │
+│  └─────────────────────────────────────────┘      │
+│                        ▲                            │
+│                        │                            │
+└────────────────────────┼────────────────────────────┘
+                         │
+                         │ JSON-RPC 2.0
+                         │
+                    ┌────▼─────┐
+                    │    AI    │
+                    │ Assistant│
+                    └──────────┘
+```
+
+### Core Components
+
+#### 1. MCP Protocol
+The foundation of the system implementing JSON-RPC 2.0 with MCP-specific extensions:
+
+- **Protocol Version**: `2024-11-05`
+- **Transport**: Supports stdio, WebSocket, and IPC
+- **Message Types**: Requests, responses, notifications
+- **Methods**: Standardized endpoints for resources, tools, and prompts
+
+#### 2. MCP Server Host
+Manages MCP server instances within Lokus:
+
+- **Process Management**: Runs servers in isolated Web Workers or subprocesses
+- **Health Monitoring**: Tracks server status and performance
+- **Resource Limits**: Enforces memory and CPU constraints
+- **Lifecycle Management**: Handles startup, shutdown, and crash recovery
+
+#### 3. MCP Plugin Manager
+Coordinates MCP-enabled plugins:
+
+- **Plugin Discovery**: Identifies plugins with MCP capabilities
+- **Server Registration**: Associates plugins with MCP servers
+- **Global Registry**: Maintains cross-plugin resource/tool directory
+- **Event Coordination**: Handles inter-plugin communication
+
+#### 4. MCP Client API
+High-level client interface for consuming MCP services:
+
+- **Connection Management**: Establishes and maintains server connections
+- **Resource Access**: Lists, reads, and subscribes to resources
+- **Tool Invocation**: Executes tools with validation and error handling
+- **Prompt Rendering**: Retrieves and renders prompt templates
+- **Caching**: Optimizes performance with intelligent caching
+
+## Protocol Specification
+
+### JSON-RPC 2.0 Foundation
+
+MCP builds on JSON-RPC 2.0, using:
+
+**Request Format:**
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "resources/list",
+  "params": {}
+}
+```
+
+**Response Format:**
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "resources": []
+  }
+}
+```
+
+**Error Format:**
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "error": {
+    "code": -32001,
+    "message": "Resource not found",
+    "data": { "uri": "lokus://note/123" }
+  }
+}
+```
+
+### Standard Methods
+
+| Method | Description | Request Params | Response |
+|--------|-------------|----------------|----------|
+| `initialize` | Initialize MCP session | `protocolVersion`, `capabilities`, `clientInfo` | `serverInfo`, `capabilities` |
+| `resources/list` | List available resources | `cursor` (optional) | `resources[]`, `nextCursor` |
+| `resources/read` | Read resource content | `uri` | `contents[]` |
+| `resources/subscribe` | Subscribe to resource updates | `uri` | `subscribed: true` |
+| `tools/list` | List available tools | `cursor` (optional) | `tools[]`, `nextCursor` |
+| `tools/call` | Execute a tool | `name`, `arguments` | `content[]`, `isError` |
+| `prompts/list` | List prompt templates | `cursor` (optional) | `prompts[]` |
+| `prompts/get` | Get rendered prompt | `name`, `arguments` | `messages[]` |
+
+### Notifications
+
+MCP uses notifications for server-to-client updates:
+
+- `notifications/resources/updated` - Resource content changed
+- `notifications/resources/list_changed` - Available resources changed
+- `notifications/tools/list_changed` - Available tools changed
+- `notifications/prompts/list_changed` - Available prompts changed
+- `notifications/logging/message` - Server log message
+
+## Key Features
+
+### 1. Resource System
+
+Resources represent accessible data within Lokus:
+
+**Resource Types:**
+- `file` - File system files and documents
+- `directory` - Folder structures
+- `database` - Database queries and results
+- `api` - External API endpoints
+- `memory` - In-memory data structures
+- `web` - Web content and URLs
+- `custom` - Plugin-defined resource types
+
+**Capabilities:**
+- List all available resources
+- Read resource content
+- Subscribe to real-time updates
+- Pagination for large resource lists
+- MIME type support for various formats
+
+### 2. Tool System
+
+Tools enable AI assistants to perform actions:
+
+**Tool Types:**
+- `function` - Direct function calls
+- `command` - Application commands
+- `api_call` - External API operations
+- `script` - Script execution
+- `query` - Database or search queries
+
+**Features:**
+- JSON Schema input validation
+- Typed parameters and return values
+- Async execution support
+- Error handling and reporting
+- Rate limiting and throttling
+
+### 3. Prompt System
+
+Reusable prompt templates for common workflows:
+
+**Template Features:**
+- Variable substitution with `{{variable}}` syntax
+- Required and optional arguments
+- Type-safe argument definitions
+- Multi-message support (system, user, assistant)
+- Context-aware rendering
+
+## Plugin Integration
+
+Plugins can integrate with MCP in three ways:
+
+### MCP Server Plugin
+Exposes resources and tools to AI assistants:
+
+```javascript
+export default class MyMCPPlugin {
+  async activate(context) {
+    const { mcp } = context
+
+    // Register resource
+    mcp.registerResource({
+      uri: 'myplugin://data/users',
+      name: 'User Database',
+      type: 'database',
+      description: 'Access to user data'
+    })
+
+    // Register tool
+    mcp.registerTool({
+      name: 'createUser',
+      description: 'Create a new user',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+          email: { type: 'string' }
+        },
+        required: ['name', 'email']
+      },
+      execute: async (args) => {
+        // Tool implementation
+        return { success: true, userId: '123' }
+      }
+    })
+  }
+}
+```
+
+### MCP Client Plugin
+Consumes MCP services from other plugins or external servers:
+
+```javascript
+export default class MyClientPlugin {
+  async activate(context) {
+    const { mcp } = context
+
+    // Create MCP client
+    const client = mcp.createClient({
+      autoReconnect: true
+    })
+
+    // Connect to server
+    await client.connect(transport)
+
+    // Use MCP services
+    const resources = await client.listResources()
+    const result = await client.callTool('createUser', {
+      name: 'John Doe',
+      email: 'john@example.com'
+    })
+  }
+}
+```
+
+### Hybrid Plugin
+Acts as both server and client:
+
+```javascript
+export default class MyHybridPlugin {
+  async activate(context) {
+    const { mcp } = context
+
+    // Expose own capabilities
+    mcp.registerTool({ /* ... */ })
+
+    // Consume other plugins' capabilities
+    const tools = mcp.findTools({ category: 'data' })
+    await mcp.callTool('someOtherPlugin.exportData', {})
+  }
+}
+```
+
+## Security Model
+
+### Sandboxing
+- MCP servers run in isolated Web Workers or subprocesses
+- Limited access to Lokus APIs based on declared permissions
+- No direct file system or network access without permissions
+
+### Permissions
+Plugins must declare MCP-related permissions:
+
+```json
+{
+  "permissions": [
+    "mcp:serve",
+    "mcp:resources:read",
+    "mcp:resources:write",
+    "mcp:tools:execute",
+    "mcp:client"
+  ]
+}
+```
+
+### Resource Limits
+- Memory limit: 100MB per server (configurable)
+- CPU time limit: 1 second per request
+- API rate limit: 1000 calls per second
+- Automatic shutdown on resource exhaustion
+
+### Validation
+- JSON Schema validation for all tool inputs
+- URI validation for resources
+- Type checking for prompt arguments
+- Sanitization of user-provided data
+
+## Performance Considerations
+
+### Caching
+- Client-side caching of resources, tools, and prompts
+- TTL-based cache invalidation
+- Cache warming on connection
+- Selective cache clearing
+
+### Lazy Loading
+- Resources loaded on-demand
+- Tool definitions cached after first retrieval
+- Prompt templates compiled once
+
+### Connection Pooling
+- Reuse connections across multiple requests
+- WebSocket keep-alive for persistent connections
+- Automatic reconnection with exponential backoff
+
+### Monitoring
+- Request/response time tracking
+- Resource usage metrics
+- Health check endpoints
+- Performance profiling hooks
+
+## Use Cases
+
+### 1. AI-Powered Editing
+```javascript
+// AI assistant can access note content
+const note = await client.readResource('lokus://note/current')
+
+// AI can invoke formatting tools
+await client.callTool('formatMarkdown', {
+  content: note.contents[0].text
+})
+```
+
+### 2. Knowledge Base Integration
+```javascript
+// Expose wiki pages as resources
+mcp.registerResource({
+  uri: 'lokus://wiki/all',
+  name: 'Wiki Pages',
+  type: 'database',
+  description: 'All wiki pages in the workspace'
+})
+
+// AI can search and reference wiki content
+const pages = await client.listResources({ type: 'database' })
+```
+
+### 3. Task Automation
+```javascript
+// Register automation tools
+mcp.registerTool({
+  name: 'bulkRename',
+  description: 'Rename multiple files',
+  inputSchema: { /* ... */ },
+  execute: async (args) => {
+    // Bulk rename logic
+  }
+})
+
+// AI can execute complex workflows
+await client.callTool('bulkRename', {
+  pattern: '*.md',
+  replace: 'note-'
+})
+```
+
+### 4. External Data Integration
+```javascript
+// Register API resource
+mcp.registerResource({
+  uri: 'api://github/issues',
+  name: 'GitHub Issues',
+  type: 'api',
+  description: 'Project issues from GitHub'
+})
+
+// AI can query external data
+const issues = await client.readResource('api://github/issues')
+```
+
+## Protocol Versioning
+
+Lokus implements MCP protocol version `2024-11-05` with:
+
+- Backward compatibility with earlier versions (negotiated during initialization)
+- Forward compatibility through capability detection
+- Graceful degradation for unsupported features
+- Version-specific feature flags
+
+## Error Handling
+
+### Standard Error Codes
+
+| Code | Name | Description |
+|------|------|-------------|
+| -32600 | Invalid Request | Malformed request |
+| -32601 | Method Not Found | Unknown method |
+| -32602 | Invalid Params | Invalid parameters |
+| -32603 | Internal Error | Server error |
+| -32001 | Resource Not Found | Resource doesn't exist |
+| -32002 | Resource Access Denied | Permission denied |
+| -32003 | Resource Unavailable | Temporarily unavailable |
+| -32011 | Tool Not Found | Tool doesn't exist |
+| -32012 | Tool Execution Error | Tool execution failed |
+| -32013 | Tool Invalid Input | Invalid tool arguments |
+| -32021 | Prompt Not Found | Prompt doesn't exist |
+| -32022 | Prompt Invalid Arguments | Invalid prompt arguments |
+
+### Error Response Example
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "error": {
+    "code": -32011,
+    "message": "Tool not found: createUser",
+    "data": {
+      "availableTools": ["listUsers", "updateUser"],
+      "suggestion": "Did you mean 'listUsers'?"
+    }
+  }
+}
+```
+
+## Debugging and Logging
+
+### Client-Side Debugging
+```javascript
+const client = new MCPClient('my-client', {
+  debug: true,
+  logLevel: 'debug'
+})
+
+client.on('message-sent', (msg) => {
+  console.log('Sent:', msg)
+})
+
+client.on('protocol-error', (error) => {
+  console.error('Protocol error:', error)
+})
+```
+
+### Server-Side Logging
+```javascript
+const protocol = new MCPProtocol('my-server')
+
+protocol.on('resource-registered', (resource) => {
+  console.log('Resource registered:', resource.uri)
+})
+
+protocol.on('tool-called', (event) => {
+  console.log(`Tool ${event.name} called with`, event.args)
+})
+```
+
+### Logging Method
+Set server log level dynamically:
+
+```javascript
+await client.sendRequest('logging/setLevel', {
+  level: 'debug' // 'debug', 'info', 'warn', 'error'
+})
+```
+
+## Best Practices
+
+### Resource Design
+1. **Use descriptive URIs**: `lokus://plugin/type/identifier`
+2. **Set appropriate MIME types**: `text/markdown`, `application/json`
+3. **Provide clear descriptions**: Help AI understand resource purpose
+4. **Implement pagination**: For large resource lists
+5. **Support subscriptions**: For frequently changing resources
+
+### Tool Design
+1. **Single responsibility**: Each tool should do one thing well
+2. **Comprehensive schemas**: Detailed JSON Schema validation
+3. **Error messages**: Clear, actionable error descriptions
+4. **Idempotency**: Tools should be safe to retry
+5. **Documentation**: Include usage examples in descriptions
+
+### Prompt Design
+1. **Clear templates**: Easy to understand variable substitution
+2. **Flexible arguments**: Support both required and optional parameters
+3. **Context inclusion**: Reference relevant resources
+4. **Multi-step prompts**: Break complex tasks into steps
+5. **Version control**: Track prompt template changes
+
+### Performance
+1. **Cache aggressively**: Use client-side caching
+2. **Batch operations**: Group multiple requests
+3. **Lazy load**: Don't load resources until needed
+4. **Monitor metrics**: Track performance continuously
+5. **Set timeouts**: Prevent hanging requests
+
+## Next Steps
+
+**Related Documentation:**
+- [Setup & Configuration](/developers/mcp/setup)
+- [Resources](/developers/mcp/resources)
+- [Tools](/developers/mcp/tools)
+- [Plugin Integration](/developers/mcp/plugin-integration)
+
+## Additional Resources
+
+- [MCP Specification](https://spec.modelcontextprotocol.io/)
+- [JSON-RPC 2.0 Specification](https://www.jsonrpc.org/specification)
+- [Plugin Development Guide](/developers/plugins/overview)
+- [Security Best Practices](/developers/plugins/security)

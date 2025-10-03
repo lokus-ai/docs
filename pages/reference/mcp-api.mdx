@@ -1,0 +1,731 @@
+# MCP Server API Reference
+
+The Model Context Protocol (MCP) server provides AI assistant integration for Lokus. This allows AI tools to interact with your workspace, manipulate files, and access editor functionality through a standardized protocol.
+
+## Overview
+
+The MCP server runs as a separate Node.js process and communicates with Lokus through:
+- **STDIO** - Standard input/output for direct communication
+- **HTTP** (archived) - REST API endpoints (legacy)
+
+## Server Management
+
+### Starting the Server
+
+The MCP server is automatically started when Lokus launches, or can be controlled via Tauri commands.
+
+**Via Tauri Command:**
+```typescript
+import { invoke } from '@tauri-apps/api/core';
+
+const status = await invoke('mcp_start', { port: 3456 });
+```
+
+**Server Location:**
+```
+{project-root}/src/mcp-server/stdio-server.js
+```
+
+### Server Status
+
+```typescript
+interface MCPServerStatus {
+  is_running: boolean;
+  port: number;
+  pid: number | null;
+  url: string | null;
+  last_error: string | null;
+}
+```
+
+### Control Commands
+
+**Start Server:**
+```typescript
+const status = await invoke('mcp_start', { port: 3456 });
+```
+
+**Stop Server:**
+```typescript
+const status = await invoke('mcp_stop');
+```
+
+**Restart Server:**
+```typescript
+const status = await invoke('mcp_restart', { port: 3456 });
+```
+
+**Check Status:**
+```typescript
+const status = await invoke('mcp_status');
+```
+
+**Health Check:**
+```typescript
+const isHealthy = await invoke('mcp_health_check');
+```
+
+## MCP Protocol
+
+The Model Context Protocol standardizes communication between AI assistants and applications. Lokus implements the MCP specification to provide:
+
+- **Tools** - Actions AI can perform (read file, search, create note)
+- **Resources** - Data AI can access (notes, workspace info, themes)
+- **Prompts** - Predefined prompts AI can use
+
+## Available Tools
+
+### File Operations
+
+#### read_file
+
+Reads a file's content from the workspace.
+
+**Parameters:**
+- `path` (string) - Relative or absolute file path
+
+**Returns:** File content as string
+
+**Example Request:**
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "tools/call",
+  "params": {
+    "name": "read_file",
+    "arguments": {
+      "path": "notes/meeting.md"
+    }
+  },
+  "id": 1
+}
+```
+
+---
+
+#### write_file
+
+Writes content to a file in the workspace.
+
+**Parameters:**
+- `path` (string) - File path
+- `content` (string) - Content to write
+
+**Returns:** Success confirmation
+
+**Example Request:**
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "tools/call",
+  "params": {
+    "name": "write_file",
+    "arguments": {
+      "path": "notes/new-note.md",
+      "content": "# New Note\n\nContent here..."
+    }
+  },
+  "id": 2
+}
+```
+
+---
+
+#### list_files
+
+Lists all files in the workspace recursively.
+
+**Parameters:** None
+
+**Returns:** Array of file paths
+
+**Example Request:**
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "tools/call",
+  "params": {
+    "name": "list_files",
+    "arguments": {}
+  },
+  "id": 3
+}
+```
+
+---
+
+#### create_file
+
+Creates a new file in the workspace.
+
+**Parameters:**
+- `path` (string) - File path
+- `content` (string) - Initial content (optional)
+
+**Returns:** Created file path
+
+---
+
+#### delete_file
+
+Deletes a file from the workspace.
+
+**Parameters:**
+- `path` (string) - File path
+
+**Returns:** Success confirmation
+
+---
+
+### Search Operations
+
+#### search_files
+
+Searches for text across all workspace files.
+
+**Parameters:**
+- `query` (string) - Search query
+- `case_sensitive` (boolean) - Case sensitive search (optional)
+- `regex` (boolean) - Use regex (optional)
+
+**Returns:** Array of search results with file paths and matches
+
+**Example Request:**
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "tools/call",
+  "params": {
+    "name": "search_files",
+    "arguments": {
+      "query": "TODO",
+      "case_sensitive": false
+    }
+  },
+  "id": 4
+}
+```
+
+**Response:**
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "results": [
+      {
+        "file": "notes/tasks.md",
+        "line": 5,
+        "content": "TODO: Complete documentation",
+        "match": "TODO"
+      }
+    ]
+  },
+  "id": 4
+}
+```
+
+---
+
+### Editor Operations
+
+#### get_editor_content
+
+Gets the current editor content.
+
+**Parameters:** None
+
+**Returns:** Current editor content as markdown
+
+---
+
+#### set_editor_content
+
+Sets the editor content.
+
+**Parameters:**
+- `content` (string) - New editor content
+
+**Returns:** Success confirmation
+
+---
+
+#### insert_at_cursor
+
+Inserts content at the current cursor position.
+
+**Parameters:**
+- `content` (string) - Content to insert
+
+**Returns:** Success confirmation
+
+---
+
+### Note Operations
+
+#### create_note
+
+Creates a new note with optional template.
+
+**Parameters:**
+- `title` (string) - Note title
+- `content` (string) - Note content (optional)
+- `folder` (string) - Folder path (optional)
+
+**Returns:** Created note path
+
+**Example Request:**
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "tools/call",
+  "params": {
+    "name": "create_note",
+    "arguments": {
+      "title": "Meeting Notes",
+      "content": "# Meeting Notes\n\n## Attendees\n\n## Agenda",
+      "folder": "meetings"
+    }
+  },
+  "id": 5
+}
+```
+
+---
+
+#### get_note_metadata
+
+Gets metadata about a note (frontmatter, tags, links).
+
+**Parameters:**
+- `path` (string) - Note path
+
+**Returns:** Note metadata object
+
+---
+
+#### update_note_metadata
+
+Updates note metadata (frontmatter).
+
+**Parameters:**
+- `path` (string) - Note path
+- `metadata` (object) - Metadata to update
+
+**Returns:** Success confirmation
+
+---
+
+### Workspace Operations
+
+#### get_workspace_info
+
+Gets workspace information.
+
+**Parameters:** None
+
+**Returns:** Workspace metadata
+```json
+{
+  "path": "/Users/username/Documents/MyWorkspace",
+  "name": "MyWorkspace",
+  "noteCount": 42,
+  "size": 1048576
+}
+```
+
+---
+
+#### get_workspace_stats
+
+Gets workspace statistics.
+
+**Parameters:** None
+
+**Returns:** Detailed workspace statistics
+```json
+{
+  "totalNotes": 42,
+  "totalSize": 1048576,
+  "notesByFolder": {
+    "notes": 20,
+    "meetings": 15,
+    "projects": 7
+  },
+  "recentFiles": [...]
+}
+```
+
+---
+
+### AI Tools
+
+#### summarize_note
+
+Generates a summary of a note.
+
+**Parameters:**
+- `path` (string) - Note path
+- `maxLength` (number) - Maximum summary length (optional)
+
+**Returns:** Generated summary
+
+---
+
+#### extract_tasks
+
+Extracts tasks from a note.
+
+**Parameters:**
+- `path` (string) - Note path
+
+**Returns:** Array of extracted tasks
+```json
+{
+  "tasks": [
+    {
+      "text": "Complete documentation",
+      "status": "todo",
+      "line": 5
+    }
+  ]
+}
+```
+
+---
+
+## Available Resources
+
+Resources provide read-only access to workspace data.
+
+### Notes Resource
+
+**URI Pattern:** `lokus://notes/{path}`
+
+**Description:** Access note content and metadata
+
+**Example:**
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "resources/read",
+  "params": {
+    "uri": "lokus://notes/meeting-notes.md"
+  },
+  "id": 6
+}
+```
+
+---
+
+### Workspace Resource
+
+**URI Pattern:** `lokus://workspace/info`
+
+**Description:** Workspace configuration and metadata
+
+---
+
+### Config Resource
+
+**URI Pattern:** `lokus://config/{key}`
+
+**Description:** Application configuration values
+
+---
+
+### Theme Resource
+
+**URI Pattern:** `lokus://theme/current`
+
+**Description:** Current theme settings
+
+---
+
+### Plugin Resource
+
+**URI Pattern:** `lokus://plugins/{name}`
+
+**Description:** Plugin metadata and status
+
+---
+
+## Request Format
+
+All MCP requests follow JSON-RPC 2.0 format:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "method_name",
+  "params": {
+    "parameter": "value"
+  },
+  "id": 1
+}
+```
+
+## Response Format
+
+### Success Response
+
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "data": "response data"
+  },
+  "id": 1
+}
+```
+
+### Error Response
+
+```json
+{
+  "jsonrpc": "2.0",
+  "error": {
+    "code": -32600,
+    "message": "Invalid request",
+    "data": {
+      "details": "Additional error information"
+    }
+  },
+  "id": 1
+}
+```
+
+### Error Codes
+
+- `-32700` - Parse error
+- `-32600` - Invalid request
+- `-32601` - Method not found
+- `-32602` - Invalid params
+- `-32603` - Internal error
+- `-32000` to `-32099` - Server errors
+
+## Client Integration
+
+### Using MCP with AI Assistants
+
+Most AI assistants that support MCP can connect to Lokus automatically.
+
+**Connection String:**
+```
+stdio://localhost/path/to/lokus/src/mcp-server/stdio-server.js
+```
+
+**Environment Variables:**
+```bash
+MCP_SERVER_PATH=/path/to/lokus/src/mcp-server/stdio-server.js
+MCP_WORKSPACE_PATH=/path/to/workspace
+```
+
+---
+
+### JavaScript Client Example
+
+```javascript
+import { MCPClient } from '@modelcontextprotocol/sdk';
+
+const client = new MCPClient({
+  transport: {
+    type: 'stdio',
+    command: 'node',
+    args: ['/path/to/lokus/src/mcp-server/stdio-server.js']
+  }
+});
+
+await client.connect();
+
+// Call a tool
+const result = await client.callTool('read_file', {
+  path: 'notes/meeting.md'
+});
+
+console.log(result);
+```
+
+---
+
+### Python Client Example
+
+```python
+from mcp import MCPClient
+import json
+
+client = MCPClient(
+    transport_type="stdio",
+    command="node",
+    args=["/path/to/lokus/src/mcp-server/stdio-server.js"]
+)
+
+client.connect()
+
+# Call a tool
+result = client.call_tool("read_file", {
+    "path": "notes/meeting.md"
+})
+
+print(result)
+```
+
+## Development
+
+### Adding Custom Tools
+
+To add a custom MCP tool, modify `src/mcp-server/tools/`:
+
+```javascript
+// src/mcp-server/tools/customTools.js
+
+export const customTools = {
+  name: 'custom_tool',
+  description: 'Description of custom tool',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      param1: {
+        type: 'string',
+        description: 'Parameter description'
+      }
+    },
+    required: ['param1']
+  },
+  handler: async (params) => {
+    // Tool implementation
+    return {
+      result: 'Tool result'
+    };
+  }
+};
+```
+
+Register in `src/mcp-server/server.js`:
+
+```javascript
+import { customTools } from './tools/customTools.js';
+
+server.registerTool(customTools);
+```
+
+---
+
+### Adding Custom Resources
+
+```javascript
+// src/mcp-server/resources/customProvider.js
+
+export const customResource = {
+  uri: 'lokus://custom/{param}',
+  name: 'Custom Resource',
+  description: 'Custom resource description',
+  mimeType: 'application/json',
+  handler: async (uri) => {
+    // Resource implementation
+    return {
+      contents: [
+        {
+          uri,
+          mimeType: 'application/json',
+          text: JSON.stringify({ data: 'Resource data' })
+        }
+      ]
+    };
+  }
+};
+```
+
+Register resource provider in `src/mcp-server/server.js`.
+
+## Security
+
+### Authentication
+
+Currently, the MCP server runs locally and uses file system permissions for security. Future versions may include:
+- API key authentication
+- OAuth integration
+- Role-based access control
+
+### Permissions
+
+Tools respect Lokus file system permissions:
+- Read-only operations require read permission
+- Write operations require write permission
+- Workspace-scoped operations only access the current workspace
+
+### Rate Limiting
+
+To prevent abuse, the MCP server implements:
+- Request rate limiting (100 requests/minute)
+- Operation timeouts (30 seconds)
+- Maximum payload size (10MB)
+
+## Debugging
+
+### Enable Debug Logging
+
+Set environment variable:
+```bash
+MCP_DEBUG=true npm run tauri dev
+```
+
+### View Server Logs
+
+Server logs are written to:
+```
+~/.lokus/logs/mcp-server.log
+```
+
+### Test Tools
+
+Use the MCP testing utility:
+```bash
+node src/mcp-server/tools/test-tool.js read_file '{"path":"notes/test.md"}'
+```
+
+## Performance
+
+### Optimization Tips
+
+1. **Batch Requests** - Combine multiple operations
+2. **Cache Results** - Store frequently accessed data
+3. **Stream Large Files** - Use streaming for files > 1MB
+4. **Async Operations** - All operations are async
+5. **Connection Pooling** - Reuse connections
+
+### Benchmarks
+
+Typical operation times:
+- Read file: 5-10ms
+- Write file: 10-20ms
+- Search: 50-200ms (depends on workspace size)
+- List files: 20-50ms
+
+## Troubleshooting
+
+### Server Won't Start
+
+1. Check Node.js is installed: `node --version`
+2. Check server file exists
+3. Check port is not in use
+4. View error logs in `~/.lokus/logs/`
+
+### Connection Failed
+
+1. Verify server is running: `invoke('mcp_status')`
+2. Check firewall settings
+3. Verify correct port number
+4. Restart server: `invoke('mcp_restart')`
+
+### Tool Errors
+
+1. Check tool parameters match schema
+2. Verify file paths are correct
+3. Check workspace permissions
+4. Review server logs for details
+
+## Next Steps
+
+- [Tauri Commands](/reference/tauri-commands) - Backend API
+- [Plugin API](/reference/plugin-api) - Plugin development
+- [Configuration](/reference/configuration) - Server configuration

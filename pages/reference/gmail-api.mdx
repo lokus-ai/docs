@@ -1,0 +1,792 @@
+# Gmail Integration API
+
+Complete reference for integrating Gmail functionality into Lokus. The Gmail API provides OAuth authentication and comprehensive email operations.
+
+## Overview
+
+The Gmail integration allows Lokus to:
+- Authenticate with Google OAuth 2.0
+- Read and send emails
+- Search and filter messages
+- Manage labels and folders
+- Convert emails to notes
+- Queue operations for offline support
+
+## Authentication
+
+### OAuth Flow
+
+The Gmail integration uses OAuth 2.0 for secure authentication.
+
+### Initiate Authentication
+
+```typescript
+import { invoke } from '@tauri-apps/api/core';
+
+const authUrl = await invoke<string>('gmail_initiate_auth');
+// Open authUrl in browser for user authorization
+```
+
+**Returns:** Authorization URL to open in browser
+
+**Process:**
+1. Generate authorization URL
+2. User authorizes in browser
+3. Google redirects with authorization code
+4. Complete authentication with code
+
+---
+
+### Check for Auth Callback
+
+Poll for OAuth callback completion:
+
+```typescript
+const callback = await invoke<[string, string] | null>('gmail_check_auth_callback');
+
+if (callback) {
+  const [code, state] = callback;
+  // Complete authentication
+  const profile = await invoke('gmail_complete_auth', { code, state });
+}
+```
+
+**Returns:** `[code, state]` tuple or `null`
+
+---
+
+### Complete Authentication
+
+```typescript
+interface GmailProfile {
+  email: string;
+  name: string | null;
+  picture: string | null;
+}
+
+const profile = await invoke<GmailProfile>('gmail_complete_auth', {
+  code: authorizationCode,
+  state: stateParameter
+});
+```
+
+**Parameters:**
+- `code` (string) - OAuth authorization code
+- `state` (string) - OAuth state parameter
+
+**Returns:** User profile
+
+---
+
+### Check Authentication Status
+
+```typescript
+const isAuthenticated = await invoke<boolean>('gmail_is_authenticated');
+
+if (isAuthenticated) {
+  // User is logged in
+}
+```
+
+---
+
+### Get User Profile
+
+```typescript
+const profile = await invoke<GmailProfile | null>('gmail_get_profile');
+
+if (profile) {
+  console.log(`Logged in as: ${profile.email}`);
+}
+```
+
+---
+
+### Logout
+
+```typescript
+await invoke('gmail_logout');
+```
+
+Clears stored credentials and tokens.
+
+---
+
+## Email Operations
+
+### List Emails
+
+Lists emails with optional filtering.
+
+```typescript
+interface EmailListOptions {
+  max_results?: number;
+  page_token?: string;
+  label_ids?: string[];
+  include_spam_trash?: boolean;
+}
+
+const emails = await invoke<EmailMessage[]>('gmail_list_emails', {
+  max_results: 50,
+  page_token: null,
+  label_ids: ['INBOX'],
+  include_spam_trash: false
+});
+```
+
+**Parameters:**
+- `max_results` - Maximum number of emails (1-500, default: 50)
+- `page_token` - Pagination token for next page
+- `label_ids` - Filter by label IDs (e.g., ['INBOX', 'UNREAD'])
+- `include_spam_trash` - Include spam and trash (default: false)
+
+**Returns:** Array of EmailMessage objects
+
+---
+
+### Search Emails
+
+Search emails using Gmail's search syntax.
+
+```typescript
+const emails = await invoke<EmailMessage[]>('gmail_search_emails', {
+  query: 'from:example@gmail.com is:unread',
+  max_results: 20,
+  page_token: null,
+  include_spam_trash: false
+});
+```
+
+**Parameters:**
+- `query` - Gmail search query string
+- `max_results` - Maximum results
+- `page_token` - Pagination token
+- `include_spam_trash` - Include spam/trash
+
+**Gmail Search Syntax:**
+- `from:sender@example.com` - From specific sender
+- `to:recipient@example.com` - To specific recipient
+- `subject:keyword` - Subject contains keyword
+- `is:unread` - Unread messages
+- `is:starred` - Starred messages
+- `has:attachment` - Has attachments
+- `after:2024/01/01` - After date
+- `before:2024/12/31` - Before date
+- `label:labelname` - Has specific label
+
+---
+
+### Get Single Email
+
+```typescript
+const email = await invoke<EmailMessage>('gmail_get_email', {
+  message_id: '18f4c2d1a2b3c4d5'
+});
+```
+
+**Parameters:**
+- `message_id` - Email message ID
+
+**Returns:** Complete EmailMessage with body
+
+---
+
+### Email Message Structure
+
+```typescript
+interface EmailMessage {
+  id: string;
+  thread_id: string;
+  label_ids: string[];
+  snippet: string;
+  from: EmailAddress;
+  to: EmailAddress[];
+  cc?: EmailAddress[];
+  subject: string;
+  body_text?: string;
+  body_html?: string;
+  date: string; // ISO 8601 timestamp
+  is_read: boolean;
+  is_starred: boolean;
+  has_attachments: boolean;
+}
+
+interface EmailAddress {
+  name?: string;
+  email: string;
+}
+```
+
+---
+
+## Sending Emails
+
+### Send New Email
+
+```typescript
+const messageId = await invoke<string>('gmail_send_email', {
+  to: [
+    { email: 'recipient@example.com', name: 'Recipient Name' }
+  ],
+  subject: 'Hello from Lokus',
+  bodyText: 'This is a plain text message.',
+  bodyHtml: '<p>This is an <strong>HTML</strong> message.</p>',
+  cc: [
+    { email: 'cc@example.com' }
+  ],
+  bcc: null
+});
+```
+
+**Parameters:**
+- `to` - Array of recipients (required)
+- `subject` - Email subject (required)
+- `bodyText` - Plain text body (required)
+- `bodyHtml` - HTML body (optional)
+- `cc` - CC recipients (optional)
+- `bcc` - BCC recipients (optional)
+
+**Returns:** Sent message ID
+
+**Notes:**
+- At least plain text body is required
+- HTML body is optional but recommended
+- Both plain text and HTML can be provided
+
+---
+
+### Reply to Email
+
+```typescript
+const replyId = await invoke<string>('gmail_reply_email', {
+  message_id: '18f4c2d1a2b3c4d5',
+  to: [
+    { email: 'original-sender@example.com' }
+  ],
+  subject: 'Re: Original Subject',
+  bodyText: 'This is my reply.',
+  bodyHtml: null,
+  cc: null
+});
+```
+
+**Parameters:**
+- `message_id` - ID of message being replied to
+- `to` - Recipients
+- `subject` - Reply subject (typically "Re: Original")
+- `bodyText` - Reply text
+- `bodyHtml` - Reply HTML (optional)
+- `cc` - CC recipients (optional)
+
+**Returns:** Reply message ID
+
+---
+
+### Forward Email
+
+```typescript
+const forwardId = await invoke<string>('gmail_forward_email', {
+  message_id: '18f4c2d1a2b3c4d5',
+  to: [
+    { email: 'forward-to@example.com' }
+  ],
+  subject: 'Fwd: Original Subject',
+  bodyText: 'See forwarded email below.',
+  bodyHtml: null
+});
+```
+
+**Parameters:**
+- `message_id` - ID of message being forwarded
+- `to` - Recipients
+- `subject` - Forward subject (typically "Fwd: Original")
+- `bodyText` - Additional message text
+- `bodyHtml` - Additional HTML (optional)
+
+**Returns:** Forwarded message ID
+
+---
+
+## Email Management
+
+### Mark as Read/Unread
+
+```typescript
+// Mark as read
+await invoke('gmail_mark_as_read', {
+  message_ids: ['msg1', 'msg2', 'msg3']
+});
+
+// Mark as unread
+await invoke('gmail_mark_as_unread', {
+  message_ids: ['msg1']
+});
+```
+
+**Parameters:**
+- `message_ids` - Array of message IDs
+
+**Returns:** void
+
+---
+
+### Star/Unstar Emails
+
+```typescript
+// Add star
+await invoke('gmail_star_emails', {
+  message_ids: ['msg1', 'msg2']
+});
+
+// Remove star
+await invoke('gmail_unstar_emails', {
+  message_ids: ['msg1']
+});
+```
+
+---
+
+### Archive Emails
+
+Removes emails from inbox (moves to All Mail).
+
+```typescript
+await invoke('gmail_archive_emails', {
+  message_ids: ['msg1', 'msg2']
+});
+```
+
+---
+
+### Delete Emails
+
+Moves emails to trash.
+
+```typescript
+await invoke('gmail_delete_emails', {
+  message_ids: ['msg1']
+});
+```
+
+**Note:** Emails in trash are permanently deleted after 30 days.
+
+---
+
+## Labels
+
+### Get All Labels
+
+```typescript
+interface EmailLabel {
+  id: string;
+  name: string;
+  type: string;
+  message_list_visibility?: string;
+  label_list_visibility?: string;
+}
+
+const labels = await invoke<EmailLabel[]>('gmail_get_labels');
+```
+
+**Returns:** Array of all Gmail labels
+
+**System Labels:**
+- `INBOX` - Inbox
+- `SENT` - Sent mail
+- `DRAFT` - Drafts
+- `SPAM` - Spam
+- `TRASH` - Trash
+- `UNREAD` - Unread
+- `STARRED` - Starred
+- `IMPORTANT` - Important
+
+---
+
+## Operation Queue
+
+The Gmail integration includes an operation queue for offline support and rate limiting.
+
+### Get Queue Statistics
+
+```typescript
+interface QueueStats {
+  pending: number;
+  processing: number;
+  failed: number;
+  completed: number;
+}
+
+const stats = await invoke<QueueStats>('gmail_get_queue_stats');
+```
+
+---
+
+### Force Process Queue
+
+Manually trigger queue processing.
+
+```typescript
+await invoke('gmail_force_process_queue');
+```
+
+---
+
+### Clear Queue
+
+Clears all pending operations.
+
+```typescript
+await invoke('gmail_clear_queue');
+```
+
+**Warning:** This discards pending operations permanently.
+
+---
+
+## Integration Examples
+
+### Convert Email to Note
+
+```typescript
+async function emailToNote(messageId: string, workspacePath: string) {
+  // Get email
+  const email = await invoke<EmailMessage>('gmail_get_email', {
+    message_id: messageId
+  });
+
+  // Create note content
+  const content = `# ${email.subject}
+
+**From:** ${email.from.name} <${email.from.email}>
+**Date:** ${new Date(email.date).toLocaleString()}
+**To:** ${email.to.map(t => t.email).join(', ')}
+
+---
+
+${email.body_text || email.body_html}
+`;
+
+  // Save as note
+  const notePath = `${workspacePath}/emails/${email.id}.md`;
+  await invoke('write_file_content', {
+    path: notePath,
+    content
+  });
+
+  return notePath;
+}
+```
+
+---
+
+### Email Search Dashboard
+
+```typescript
+interface EmailDashboard {
+  unread: EmailMessage[];
+  starred: EmailMessage[];
+  recent: EmailMessage[];
+}
+
+async function buildDashboard(): Promise<EmailDashboard> {
+  const [unread, starred, recent] = await Promise.all([
+    invoke<EmailMessage[]>('gmail_search_emails', {
+      query: 'is:unread',
+      max_results: 10
+    }),
+    invoke<EmailMessage[]>('gmail_search_emails', {
+      query: 'is:starred',
+      max_results: 10
+    }),
+    invoke<EmailMessage[]>('gmail_list_emails', {
+      max_results: 20,
+      label_ids: ['INBOX']
+    })
+  ]);
+
+  return { unread, starred, recent };
+}
+```
+
+---
+
+### Bulk Email Operations
+
+```typescript
+async function archiveOldEmails(daysOld: number) {
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - daysOld);
+
+  const query = `before:${cutoffDate.toISOString().split('T')[0]}`;
+
+  const emails = await invoke<EmailMessage[]>('gmail_search_emails', {
+    query,
+    max_results: 500
+  });
+
+  const messageIds = emails.map(e => e.id);
+
+  // Archive in batches of 100
+  for (let i = 0; i < messageIds.length; i += 100) {
+    const batch = messageIds.slice(i, i + 100);
+    await invoke('gmail_archive_emails', { message_ids: batch });
+  }
+}
+```
+
+---
+
+### Email Templates
+
+```typescript
+interface EmailTemplate {
+  subject: string;
+  body: string;
+}
+
+const templates: Record<string, EmailTemplate> = {
+  meeting: {
+    subject: 'Meeting Invitation',
+    body: `Hi {name},
+
+I'd like to schedule a meeting to discuss {topic}.
+
+When: {date} at {time}
+Where: {location}
+
+Please let me know if this works for you.
+
+Best regards,
+{sender}`
+  },
+  followup: {
+    subject: 'Following up on {topic}',
+    body: `Hi {name},
+
+Just following up on our discussion about {topic}.
+
+{content}
+
+Let me know if you have any questions.
+
+Best,
+{sender}`
+  }
+};
+
+function fillTemplate(
+  templateName: string,
+  variables: Record<string, string>
+): EmailTemplate {
+  const template = templates[templateName];
+  let subject = template.subject;
+  let body = template.body;
+
+  for (const [key, value] of Object.entries(variables)) {
+    subject = subject.replace(`{${key}}`, value);
+    body = body.replace(new RegExp(`\\{${key}\\}`, 'g'), value);
+  }
+
+  return { subject, body };
+}
+
+// Usage
+const email = fillTemplate('meeting', {
+  name: 'John',
+  topic: 'Project Planning',
+  date: '2024-01-15',
+  time: '2:00 PM',
+  location: 'Conference Room A',
+  sender: 'Jane'
+});
+
+await invoke('gmail_send_email', {
+  to: [{ email: 'john@example.com', name: 'John' }],
+  subject: email.subject,
+  bodyText: email.body
+});
+```
+
+---
+
+## Error Handling
+
+### Authentication Errors
+
+```typescript
+try {
+  await invoke('gmail_initiate_auth');
+} catch (error) {
+  if (error.includes('OAuth server failed')) {
+    console.error('OAuth server error:', error);
+    // Restart OAuth server or show error to user
+  }
+}
+```
+
+---
+
+### API Rate Limits
+
+Gmail API has usage quotas:
+- 1 billion requests/day
+- 250 quota units per user per second
+
+The integration handles rate limiting automatically with the operation queue.
+
+---
+
+### Network Errors
+
+```typescript
+try {
+  const emails = await invoke('gmail_list_emails', options);
+} catch (error) {
+  if (error.includes('Network')) {
+    // Network error - operations will be queued
+    console.log('Operation queued for when online');
+  } else {
+    // Other error
+    console.error('Gmail API error:', error);
+  }
+}
+```
+
+---
+
+## Security
+
+### Token Storage
+
+OAuth tokens are stored securely using platform-specific secure storage:
+- **macOS:** Keychain
+- **Windows:** Windows Credential Manager
+- **Linux:** Secret Service API / libsecret
+
+Tokens are never stored in plain text.
+
+---
+
+### Permissions
+
+The integration requests these OAuth scopes:
+- `https://www.googleapis.com/auth/gmail.readonly` - Read emails
+- `https://www.googleapis.com/auth/gmail.send` - Send emails
+- `https://www.googleapis.com/auth/gmail.modify` - Modify labels and state
+- `https://www.googleapis.com/auth/userinfo.email` - User profile
+- `https://www.googleapis.com/auth/userinfo.profile` - User profile
+
+---
+
+### Token Refresh
+
+Access tokens are automatically refreshed when they expire. The refresh token is stored securely and used to obtain new access tokens.
+
+---
+
+## Performance
+
+### Batch Operations
+
+Use bulk operations to reduce API calls:
+
+```typescript
+// Good - Single API call
+await invoke('gmail_mark_as_read', {
+  message_ids: ['msg1', 'msg2', 'msg3']
+});
+
+// Bad - Multiple API calls
+for (const id of ['msg1', 'msg2', 'msg3']) {
+  await invoke('gmail_mark_as_read', { message_ids: [id] });
+}
+```
+
+---
+
+### Pagination
+
+For large result sets, use pagination:
+
+```typescript
+async function getAllEmails() {
+  const allEmails: EmailMessage[] = [];
+  let pageToken: string | null = null;
+
+  do {
+    const response = await invoke<EmailMessage[]>('gmail_list_emails', {
+      max_results: 500,
+      page_token: pageToken
+    });
+
+    allEmails.push(...response);
+
+    // Get next page token from response metadata
+    pageToken = getNextPageToken(response);
+  } while (pageToken);
+
+  return allEmails;
+}
+```
+
+---
+
+### Caching
+
+Cache frequently accessed data:
+
+```typescript
+class EmailCache {
+  private cache = new Map<string, EmailMessage>();
+  private ttl = 5 * 60 * 1000; // 5 minutes
+
+  async getEmail(id: string): Promise<EmailMessage> {
+    const cached = this.cache.get(id);
+    if (cached && Date.now() - cached.timestamp < this.ttl) {
+      return cached.data;
+    }
+
+    const email = await invoke<EmailMessage>('gmail_get_email', {
+      message_id: id
+    });
+
+    this.cache.set(id, {
+      data: email,
+      timestamp: Date.now()
+    });
+
+    return email;
+  }
+}
+```
+
+---
+
+## Troubleshooting
+
+### OAuth Fails
+
+1. Check OAuth credentials are configured
+2. Verify redirect URI is correct
+3. Check network connectivity
+4. Clear cached credentials and retry
+
+### Emails Not Syncing
+
+1. Check authentication status
+2. Verify network connection
+3. Check operation queue for errors
+4. Review API quota usage
+
+### Missing Emails
+
+1. Check label filters
+2. Verify `include_spam_trash` setting
+3. Check date range filters
+4. Review search query syntax
+
+## Next Steps
+
+- [Tauri Commands](/reference/tauri-commands) - Backend API
+- [Configuration](/reference/configuration) - Configure Gmail integration
+- [Advanced Customization](/advanced/customization) - Custom email workflows

@@ -1,0 +1,1849 @@
+# Tauri Commands Reference
+
+Complete reference for all Tauri backend commands available in Lokus. These commands are invoked from the frontend using the `@tauri-apps/api/core` module.
+
+## Usage Pattern
+
+```typescript
+import { invoke } from '@tauri-apps/api/core';
+
+const result = await invoke<ReturnType>('command_name', {
+  parameter1: value1,
+  parameter2: value2
+});
+```
+
+---
+
+## File System Operations
+
+### read_workspace_files
+
+Recursively reads all files and folders in a workspace directory.
+
+**Parameters:**
+- `workspace_path` (string) - Absolute path to workspace directory
+
+**Returns:** `Promise<FileEntry[]>`
+
+**FileEntry Type:**
+```typescript
+interface FileEntry {
+  name: string;
+  path: string;
+  is_directory: boolean;
+  children?: FileEntry[];
+}
+```
+
+**Example:**
+```typescript
+const files = await invoke<FileEntry[]>('read_workspace_files', {
+  workspace_path: '/Users/username/Documents/MyWorkspace'
+});
+```
+
+**Notes:**
+- Recursion limited to 10 levels deep
+- Symbolic links are skipped to prevent infinite loops
+- Entries are sorted with directories first, then alphabetically
+
+---
+
+### read_file_content
+
+Reads the content of a file as a string.
+
+**Parameters:**
+- `path` (string) - Absolute path to file
+
+**Returns:** `Promise<string>`
+
+**Example:**
+```typescript
+const content = await invoke<string>('read_file_content', {
+  path: '/path/to/note.md'
+});
+```
+
+**Errors:**
+- File not found
+- Permission denied
+- File is binary (will return garbled text)
+
+---
+
+### write_file_content
+
+Writes string content to a file, creating it if it doesn't exist.
+
+**Parameters:**
+- `path` (string) - Absolute path to file
+- `content` (string) - Content to write
+
+**Returns:** `Promise<void>`
+
+**Example:**
+```typescript
+await invoke('write_file_content', {
+  path: '/path/to/note.md',
+  content: '# My Note\n\nContent here...'
+});
+```
+
+**Notes:**
+- Overwrites existing file
+- Creates parent directories if needed
+- Uses UTF-8 encoding
+
+---
+
+### create_file_in_workspace
+
+Creates a new empty file in the workspace.
+
+**Parameters:**
+- `workspace_path` (string) - Workspace directory path
+- `name` (string) - File name (relative to workspace)
+
+**Returns:** `Promise<string>` - Full path to created file
+
+**Example:**
+```typescript
+const filePath = await invoke<string>('create_file_in_workspace', {
+  workspace_path: '/path/to/workspace',
+  name: 'new-note.md'
+});
+// Returns: '/path/to/workspace/new-note.md'
+```
+
+---
+
+### create_folder_in_workspace
+
+Creates a new folder in the workspace.
+
+**Parameters:**
+- `workspace_path` (string) - Workspace directory path
+- `name` (string) - Folder name (relative to workspace)
+
+**Returns:** `Promise<void>`
+
+**Example:**
+```typescript
+await invoke('create_folder_in_workspace', {
+  workspace_path: '/path/to/workspace',
+  name: 'new-folder'
+});
+```
+
+**Errors:**
+- Folder already exists
+- Invalid folder name
+
+---
+
+### rename_file
+
+Renames a file or folder.
+
+**Parameters:**
+- `path` (string) - Current file path
+- `new_name` (string) - New file name (not full path)
+
+**Returns:** `Promise<string>` - New full path
+
+**Example:**
+```typescript
+const newPath = await invoke<string>('rename_file', {
+  path: '/path/to/old-name.md',
+  new_name: 'new-name.md'
+});
+// Returns: '/path/to/new-name.md'
+```
+
+---
+
+### move_file
+
+Moves a file or folder to a different directory.
+
+**Parameters:**
+- `source_path` (string) - Source file path
+- `destination_dir` (string) - Destination directory path
+
+**Returns:** `Promise<void>`
+
+**Example:**
+```typescript
+await invoke('move_file', {
+  source_path: '/path/to/file.md',
+  destination_dir: '/path/to/other-folder'
+});
+```
+
+**Errors:**
+- File with same name already exists in destination
+- Invalid destination directory
+
+---
+
+### delete_file
+
+Deletes a file or recursively deletes a folder.
+
+**Parameters:**
+- `path` (string) - Path to file or folder
+
+**Returns:** `Promise<void>`
+
+**Example:**
+```typescript
+await invoke('delete_file', {
+  path: '/path/to/file-or-folder'
+});
+```
+
+**Warning:** This operation is permanent and cannot be undone.
+
+---
+
+### reveal_in_finder
+
+Opens the system file manager at the specified path.
+
+**Parameters:**
+- `path` (string) - Path to file or folder
+
+**Returns:** `Promise<void>`
+
+**Example:**
+```typescript
+await invoke('reveal_in_finder', {
+  path: '/path/to/file.md'
+});
+```
+
+**Platform Behavior:**
+- macOS: Opens Finder and selects the file
+- Windows: Opens Explorer and selects the file
+- Linux: Opens default file manager
+
+---
+
+### open_terminal
+
+Opens a terminal window at the specified path.
+
+**Parameters:**
+- `path` (string) - Directory path
+
+**Returns:** `Promise<void>`
+
+**Example:**
+```typescript
+await invoke('open_terminal', {
+  path: '/path/to/workspace'
+});
+```
+
+**Platform Behavior:**
+- macOS: Opens Terminal.app
+- Windows: Opens Command Prompt or PowerShell
+- Linux: Opens default terminal emulator
+
+---
+
+## Workspace Management
+
+### save_last_workspace
+
+Saves the last opened workspace path for restoration on next launch.
+
+**Parameters:**
+- `path` (string) - Workspace path to save
+
+**Returns:** `Promise<void>`
+
+**Example:**
+```typescript
+await invoke('save_last_workspace', {
+  path: '/path/to/workspace'
+});
+```
+
+---
+
+### clear_last_workspace
+
+Clears the saved workspace path.
+
+**Returns:** `Promise<void>`
+
+**Example:**
+```typescript
+await invoke('clear_last_workspace');
+```
+
+---
+
+### validate_workspace_path
+
+Validates that a path is a valid workspace directory.
+
+**Parameters:**
+- `path` (string) - Path to validate
+
+**Returns:** `Promise<boolean>`
+
+**Example:**
+```typescript
+const isValid = await invoke<boolean>('validate_workspace_path', {
+  path: '/path/to/workspace'
+});
+```
+
+**Validation Criteria:**
+- Path exists and is a directory
+- Directory is readable
+- Can create or has .lokus folder
+- Has write permissions
+
+---
+
+### get_validated_workspace_path
+
+Gets the last saved workspace path and validates it.
+
+**Returns:** `Promise<string | null>`
+
+**Example:**
+```typescript
+const workspacePath = await invoke<string | null>('get_validated_workspace_path');
+if (workspacePath) {
+  // Load workspace
+}
+```
+
+**Notes:**
+- Returns null if no workspace saved or validation fails
+- Automatically clears invalid workspace path
+
+---
+
+### clear_all_workspace_data
+
+Clears all workspace-related data including session states.
+
+**Returns:** `Promise<void>`
+
+**Example:**
+```typescript
+await invoke('clear_all_workspace_data');
+```
+
+**Warning:** This is primarily for development and debugging.
+
+---
+
+### save_session_state
+
+Saves the current session state (open tabs, expanded folders).
+
+**Parameters:**
+- `workspace_path` (string) - Workspace path
+- `open_tabs` (string[]) - Array of open file paths
+- `expanded_folders` (string[]) - Array of expanded folder paths
+
+**Returns:** `Promise<void>`
+
+**Example:**
+```typescript
+await invoke('save_session_state', {
+  workspace_path: '/path/to/workspace',
+  open_tabs: ['/path/to/file1.md', '/path/to/file2.md'],
+  expanded_folders: ['/path/to/folder1', '/path/to/folder2']
+});
+```
+
+---
+
+### load_session_state
+
+Loads the saved session state for a workspace.
+
+**Parameters:**
+- `workspace_path` (string) - Workspace path
+
+**Returns:** `Promise<SessionState | null>`
+
+**SessionState Type:**
+```typescript
+interface SessionState {
+  open_tabs: string[];
+  expanded_folders: string[];
+}
+```
+
+**Example:**
+```typescript
+const session = await invoke<SessionState | null>('load_session_state', {
+  workspace_path: '/path/to/workspace'
+});
+if (session) {
+  // Restore tabs and folders
+}
+```
+
+---
+
+### is_development_mode
+
+Checks if the application is running in development mode.
+
+**Returns:** `Promise<boolean>`
+
+**Example:**
+```typescript
+const isDev = await invoke<boolean>('is_development_mode');
+```
+
+---
+
+### force_launcher_mode
+
+Forces the application to show the launcher screen (clears workspace data).
+
+**Returns:** `Promise<boolean>`
+
+**Example:**
+```typescript
+await invoke('force_launcher_mode');
+```
+
+---
+
+## Plugin System
+
+### list_plugins
+
+Lists all installed plugins with their metadata.
+
+**Returns:** `Promise<PluginInfo[]>`
+
+**PluginInfo Type:**
+```typescript
+interface PluginInfo {
+  manifest: PluginManifest;
+  path: string;
+  enabled: boolean;
+  installed_at: string; // ISO timestamp
+  size: number; // bytes
+}
+
+interface PluginManifest {
+  name: string;
+  version: string;
+  description: string;
+  author: string;
+  main: string;
+  permissions: string[];
+  dependencies?: Record<string, string>;
+  keywords?: string[];
+  repository?: string;
+  homepage?: string;
+  license?: string;
+}
+```
+
+**Example:**
+```typescript
+const plugins = await invoke<PluginInfo[]>('list_plugins');
+```
+
+---
+
+### install_plugin
+
+Installs a plugin from a ZIP file or directory.
+
+**Parameters:**
+- `path` (string) - Path to ZIP file or plugin directory
+
+**Returns:** `Promise<string>` - Installed plugin name
+
+**Example:**
+```typescript
+const pluginName = await invoke<string>('install_plugin', {
+  path: '/path/to/plugin.zip'
+});
+```
+
+**Process:**
+1. Validates plugin.json manifest
+2. Checks for version conflicts
+3. Extracts/copies files to plugin directory
+4. Creates installation log
+
+**Errors:**
+- Invalid manifest
+- Plugin already installed
+- Missing required files
+
+---
+
+### uninstall_plugin
+
+Uninstalls a plugin and cleans up its data.
+
+**Parameters:**
+- `name` (string) - Plugin name
+
+**Returns:** `Promise<void>`
+
+**Example:**
+```typescript
+await invoke('uninstall_plugin', {
+  name: 'example-plugin'
+});
+```
+
+**Process:**
+1. Removes from enabled plugins list
+2. Clears plugin settings
+3. Deletes plugin files
+
+---
+
+### get_plugin_info
+
+Gets detailed information about a specific plugin.
+
+**Parameters:**
+- `name` (string) - Plugin name
+
+**Returns:** `Promise<PluginInfo>`
+
+**Example:**
+```typescript
+const info = await invoke<PluginInfo>('get_plugin_info', {
+  name: 'example-plugin'
+});
+```
+
+---
+
+### validate_plugin_manifest
+
+Validates a plugin manifest JSON string.
+
+**Parameters:**
+- `manifest` (string) - JSON string of plugin.json
+
+**Returns:** `Promise<ValidationResult>`
+
+**ValidationResult Type:**
+```typescript
+interface ValidationResult {
+  valid: boolean;
+  errors: ValidationError[];
+  warnings: string[];
+}
+
+interface ValidationError {
+  field: string;
+  message: string;
+}
+```
+
+**Example:**
+```typescript
+const result = await invoke<ValidationResult>('validate_plugin_manifest', {
+  manifest: JSON.stringify(manifestObject)
+});
+```
+
+**Validation Checks:**
+- Required fields present
+- Valid semantic version
+- Valid plugin name (alphanumeric, hyphens, underscores)
+- Valid permissions
+- Valid main entry point
+
+---
+
+### get_plugins_directory
+
+Gets the path to the plugins directory.
+
+**Returns:** `Promise<string>`
+
+**Example:**
+```typescript
+const pluginsDir = await invoke<string>('get_plugins_directory');
+// Returns: '/Users/username/.lokus/plugins'
+```
+
+---
+
+### create_plugins_directory
+
+Creates the plugins directory if it doesn't exist.
+
+**Returns:** `Promise<string>` - Plugin directory path
+
+**Example:**
+```typescript
+const pluginsDir = await invoke<string>('create_plugins_directory');
+```
+
+---
+
+### enable_plugin
+
+Enables a plugin, making it active.
+
+**Parameters:**
+- `name` (string) - Plugin name
+
+**Returns:** `Promise<void>`
+
+**Example:**
+```typescript
+await invoke('enable_plugin', {
+  name: 'example-plugin'
+});
+```
+
+**Process:**
+- Validates plugin exists
+- Adds to enabled plugins list
+- Saves settings atomically
+
+---
+
+### disable_plugin
+
+Disables a plugin, making it inactive.
+
+**Parameters:**
+- `name` (string) - Plugin name
+
+**Returns:** `Promise<void>`
+
+**Example:**
+```typescript
+await invoke('disable_plugin', {
+  name: 'example-plugin'
+});
+```
+
+---
+
+### get_enabled_plugins
+
+Gets list of currently enabled plugin names.
+
+**Returns:** `Promise<string[]>`
+
+**Example:**
+```typescript
+const enabledPlugins = await invoke<string[]>('get_enabled_plugins');
+```
+
+---
+
+### set_plugin_permission
+
+Sets permissions for a plugin.
+
+**Parameters:**
+- `plugin_name` (string) - Plugin name
+- `permissions` (string[]) - Array of permission strings
+
+**Returns:** `Promise<void>`
+
+**Example:**
+```typescript
+await invoke('set_plugin_permission', {
+  plugin_name: 'example-plugin',
+  permissions: ['read:files', 'write:files', 'ui:editor']
+});
+```
+
+**Valid Permissions:**
+- `read:files` - Read workspace files
+- `write:files` - Write to workspace files
+- `read:workspace` - Read workspace metadata
+- `write:workspace` - Modify workspace metadata
+- `execute:commands` - Execute system commands
+- `network:http` - Make HTTP requests
+- `network:https` - Make HTTPS requests
+- `ui:editor` - Modify editor UI
+- `ui:sidebar` - Add sidebar panels
+- `ui:toolbar` - Add toolbar buttons
+- `storage:local` - Access local storage
+- `clipboard:read` - Read clipboard
+- `clipboard:write` - Write to clipboard
+
+---
+
+### get_plugin_permissions
+
+Gets the permissions for a plugin.
+
+**Parameters:**
+- `plugin_name` (string) - Plugin name
+
+**Returns:** `Promise<string[]>`
+
+**Example:**
+```typescript
+const permissions = await invoke<string[]>('get_plugin_permissions', {
+  plugin_name: 'example-plugin'
+});
+```
+
+---
+
+### set_plugin_setting
+
+Stores a configuration value for a plugin.
+
+**Parameters:**
+- `plugin_name` (string) - Plugin name
+- `key` (string) - Setting key
+- `value` (any) - Setting value (JSON serializable)
+
+**Returns:** `Promise<void>`
+
+**Example:**
+```typescript
+await invoke('set_plugin_setting', {
+  plugin_name: 'example-plugin',
+  key: 'apiKey',
+  value: 'secret-key-123'
+});
+```
+
+---
+
+### get_plugin_setting
+
+Retrieves a configuration value for a plugin.
+
+**Parameters:**
+- `plugin_name` (string) - Plugin name
+- `key` (string) - Setting key
+
+**Returns:** `Promise<any | null>`
+
+**Example:**
+```typescript
+const apiKey = await invoke<string | null>('get_plugin_setting', {
+  plugin_name: 'example-plugin',
+  key: 'apiKey'
+});
+```
+
+---
+
+### read_plugin_file
+
+Reads a file from within a plugin directory.
+
+**Parameters:**
+- `path` (string) - Full path to plugin file
+
+**Returns:** `Promise<string>`
+
+**Example:**
+```typescript
+const content = await invoke<string>('read_plugin_file', {
+  path: '/Users/username/.lokus/plugins/example-plugin/README.md'
+});
+```
+
+**Security:** Path must be within the plugins directory.
+
+---
+
+### get_plugin_manifest
+
+Reads and parses a plugin's manifest file.
+
+**Parameters:**
+- `plugin_name` (string) - Plugin name
+
+**Returns:** `Promise<PluginManifest>`
+
+**Example:**
+```typescript
+const manifest = await invoke<PluginManifest>('get_plugin_manifest', {
+  plugin_name: 'example-plugin'
+});
+```
+
+---
+
+## MCP Server Management
+
+### mcp_start
+
+Starts the MCP (Model Context Protocol) server.
+
+**Parameters:**
+- `port` (number | null) - Port number (default: 3456)
+
+**Returns:** `Promise<MCPServerStatus>`
+
+**MCPServerStatus Type:**
+```typescript
+interface MCPServerStatus {
+  is_running: boolean;
+  port: number;
+  pid: number | null;
+  url: string | null;
+  last_error: string | null;
+}
+```
+
+**Example:**
+```typescript
+const status = await invoke<MCPServerStatus>('mcp_start', {
+  port: 3456
+});
+```
+
+---
+
+### mcp_stop
+
+Stops the MCP server.
+
+**Returns:** `Promise<MCPServerStatus>`
+
+**Example:**
+```typescript
+const status = await invoke<MCPServerStatus>('mcp_stop');
+```
+
+---
+
+### mcp_status
+
+Gets the current status of the MCP server.
+
+**Returns:** `Promise<MCPServerStatus>`
+
+**Example:**
+```typescript
+const status = await invoke<MCPServerStatus>('mcp_status');
+```
+
+---
+
+### mcp_restart
+
+Restarts the MCP server.
+
+**Parameters:**
+- `port` (number | null) - Port number (default: 3456)
+
+**Returns:** `Promise<MCPServerStatus>`
+
+**Example:**
+```typescript
+const status = await invoke<MCPServerStatus>('mcp_restart', {
+  port: 3456
+});
+```
+
+---
+
+### mcp_health_check
+
+Checks if the MCP server process is healthy.
+
+**Returns:** `Promise<boolean>`
+
+**Example:**
+```typescript
+const isHealthy = await invoke<boolean>('mcp_health_check');
+```
+
+---
+
+## Gmail Integration
+
+### gmail_initiate_auth
+
+Initiates the Gmail OAuth authentication flow.
+
+**Returns:** `Promise<string>` - Authorization URL
+
+**Example:**
+```typescript
+const authUrl = await invoke<string>('gmail_initiate_auth');
+// Open authUrl in browser
+```
+
+---
+
+### gmail_complete_auth
+
+Completes the OAuth flow with the authorization code.
+
+**Parameters:**
+- `code` (string) - OAuth authorization code
+- `state` (string) - OAuth state parameter
+
+**Returns:** `Promise<GmailProfile>`
+
+**GmailProfile Type:**
+```typescript
+interface GmailProfile {
+  email: string;
+  name: string | null;
+  picture: string | null;
+}
+```
+
+**Example:**
+```typescript
+const profile = await invoke<GmailProfile>('gmail_complete_auth', {
+  code: 'auth-code-from-oauth',
+  state: 'state-from-oauth'
+});
+```
+
+---
+
+### gmail_check_auth_callback
+
+Checks for OAuth callback data from the local OAuth server.
+
+**Returns:** `Promise<[string, string] | null>` - [code, state] or null
+
+**Example:**
+```typescript
+const callback = await invoke<[string, string] | null>('gmail_check_auth_callback');
+if (callback) {
+  const [code, state] = callback;
+  // Complete authentication
+}
+```
+
+---
+
+### gmail_is_authenticated
+
+Checks if Gmail is currently authenticated.
+
+**Returns:** `Promise<boolean>`
+
+**Example:**
+```typescript
+const isAuth = await invoke<boolean>('gmail_is_authenticated');
+```
+
+---
+
+### gmail_logout
+
+Logs out of Gmail and clears credentials.
+
+**Returns:** `Promise<void>`
+
+**Example:**
+```typescript
+await invoke('gmail_logout');
+```
+
+---
+
+### gmail_get_profile
+
+Gets the authenticated user's Gmail profile.
+
+**Returns:** `Promise<GmailProfile | null>`
+
+**Example:**
+```typescript
+const profile = await invoke<GmailProfile | null>('gmail_get_profile');
+```
+
+---
+
+### gmail_list_emails
+
+Lists emails with optional filters.
+
+**Parameters:**
+- `max_results` (number | null) - Maximum emails to return
+- `page_token` (string | null) - Pagination token
+- `label_ids` (string[] | null) - Label IDs to filter by
+- `include_spam_trash` (boolean | null) - Include spam/trash
+
+**Returns:** `Promise<EmailMessage[]>`
+
+**EmailMessage Type:**
+```typescript
+interface EmailMessage {
+  id: string;
+  thread_id: string;
+  label_ids: string[];
+  snippet: string;
+  from: EmailAddress;
+  to: EmailAddress[];
+  cc?: EmailAddress[];
+  subject: string;
+  body_text?: string;
+  body_html?: string;
+  date: string; // ISO timestamp
+  is_read: boolean;
+  is_starred: boolean;
+  has_attachments: boolean;
+}
+
+interface EmailAddress {
+  name?: string;
+  email: string;
+}
+```
+
+**Example:**
+```typescript
+const emails = await invoke<EmailMessage[]>('gmail_list_emails', {
+  max_results: 50,
+  page_token: null,
+  label_ids: ['INBOX'],
+  include_spam_trash: false
+});
+```
+
+---
+
+### gmail_search_emails
+
+Searches emails with a Gmail search query.
+
+**Parameters:**
+- `query` (string) - Gmail search query
+- `max_results` (number | null) - Maximum emails
+- `page_token` (string | null) - Pagination token
+- `include_spam_trash` (boolean | null) - Include spam/trash
+
+**Returns:** `Promise<EmailMessage[]>`
+
+**Example:**
+```typescript
+const emails = await invoke<EmailMessage[]>('gmail_search_emails', {
+  query: 'from:example@gmail.com is:unread',
+  max_results: 20,
+  page_token: null,
+  include_spam_trash: false
+});
+```
+
+**Query Syntax:** Uses Gmail's standard search syntax.
+
+---
+
+### gmail_get_email
+
+Gets a single email by ID.
+
+**Parameters:**
+- `message_id` (string) - Email message ID
+
+**Returns:** `Promise<EmailMessage>`
+
+**Example:**
+```typescript
+const email = await invoke<EmailMessage>('gmail_get_email', {
+  message_id: '18f4c2d1a2b3c4d5'
+});
+```
+
+---
+
+### gmail_send_email
+
+Sends a new email.
+
+**Parameters:**
+- `to` (EmailAddress[]) - Recipients
+- `subject` (string) - Email subject
+- `bodyText` (string) - Plain text body
+- `bodyHtml` (string | null) - HTML body (optional)
+- `cc` (EmailAddress[] | null) - CC recipients (optional)
+- `bcc` (EmailAddress[] | null) - BCC recipients (optional)
+
+**Returns:** `Promise<string>` - Sent message ID
+
+**Example:**
+```typescript
+const messageId = await invoke<string>('gmail_send_email', {
+  to: [{ email: 'recipient@example.com', name: 'Recipient Name' }],
+  subject: 'Hello from Lokus',
+  bodyText: 'This is a plain text message.',
+  bodyHtml: '<p>This is an <strong>HTML</strong> message.</p>',
+  cc: null,
+  bcc: null
+});
+```
+
+---
+
+### gmail_reply_email
+
+Replies to an email.
+
+**Parameters:**
+- `message_id` (string) - Original message ID
+- `to` (EmailAddress[]) - Recipients
+- `subject` (string) - Reply subject
+- `bodyText` (string | null) - Plain text body
+- `bodyHtml` (string | null) - HTML body
+- `cc` (EmailAddress[] | null) - CC recipients
+
+**Returns:** `Promise<string>` - Reply message ID
+
+**Example:**
+```typescript
+const replyId = await invoke<string>('gmail_reply_email', {
+  message_id: '18f4c2d1a2b3c4d5',
+  to: [{ email: 'original@example.com' }],
+  subject: 'Re: Original Subject',
+  bodyText: 'This is my reply.',
+  bodyHtml: null,
+  cc: null
+});
+```
+
+---
+
+### gmail_forward_email
+
+Forwards an email.
+
+**Parameters:**
+- `message_id` (string) - Original message ID
+- `to` (EmailAddress[]) - Recipients
+- `subject` (string) - Forward subject
+- `bodyText` (string | null) - Additional text
+- `bodyHtml` (string | null) - Additional HTML
+
+**Returns:** `Promise<string>` - Forwarded message ID
+
+**Example:**
+```typescript
+const forwardId = await invoke<string>('gmail_forward_email', {
+  message_id: '18f4c2d1a2b3c4d5',
+  to: [{ email: 'forward@example.com' }],
+  subject: 'Fwd: Original Subject',
+  bodyText: 'See forwarded email below.',
+  bodyHtml: null
+});
+```
+
+---
+
+### gmail_mark_as_read
+
+Marks emails as read.
+
+**Parameters:**
+- `message_ids` (string[]) - Array of message IDs
+
+**Returns:** `Promise<void>`
+
+**Example:**
+```typescript
+await invoke('gmail_mark_as_read', {
+  message_ids: ['18f4c2d1a2b3c4d5', '28f4c2d1a2b3c4d6']
+});
+```
+
+---
+
+### gmail_mark_as_unread
+
+Marks emails as unread.
+
+**Parameters:**
+- `message_ids` (string[]) - Array of message IDs
+
+**Returns:** `Promise<void>`
+
+**Example:**
+```typescript
+await invoke('gmail_mark_as_unread', {
+  message_ids: ['18f4c2d1a2b3c4d5']
+});
+```
+
+---
+
+### gmail_star_emails
+
+Adds star to emails.
+
+**Parameters:**
+- `message_ids` (string[]) - Array of message IDs
+
+**Returns:** `Promise<void>`
+
+**Example:**
+```typescript
+await invoke('gmail_star_emails', {
+  message_ids: ['18f4c2d1a2b3c4d5']
+});
+```
+
+---
+
+### gmail_unstar_emails
+
+Removes star from emails.
+
+**Parameters:**
+- `message_ids` (string[]) - Array of message IDs
+
+**Returns:** `Promise<void>`
+
+**Example:**
+```typescript
+await invoke('gmail_unstar_emails', {
+  message_ids: ['18f4c2d1a2b3c4d5']
+});
+```
+
+---
+
+### gmail_archive_emails
+
+Archives emails (removes from inbox).
+
+**Parameters:**
+- `message_ids` (string[]) - Array of message IDs
+
+**Returns:** `Promise<void>`
+
+**Example:**
+```typescript
+await invoke('gmail_archive_emails', {
+  message_ids: ['18f4c2d1a2b3c4d5']
+});
+```
+
+---
+
+### gmail_delete_emails
+
+Deletes emails (moves to trash).
+
+**Parameters:**
+- `message_ids` (string[]) - Array of message IDs
+
+**Returns:** `Promise<void>`
+
+**Example:**
+```typescript
+await invoke('gmail_delete_emails', {
+  message_ids: ['18f4c2d1a2b3c4d5']
+});
+```
+
+---
+
+### gmail_get_labels
+
+Gets all Gmail labels.
+
+**Returns:** `Promise<EmailLabel[]>`
+
+**EmailLabel Type:**
+```typescript
+interface EmailLabel {
+  id: string;
+  name: string;
+  type: string;
+  message_list_visibility?: string;
+  label_list_visibility?: string;
+}
+```
+
+**Example:**
+```typescript
+const labels = await invoke<EmailLabel[]>('gmail_get_labels');
+```
+
+---
+
+### gmail_get_queue_stats
+
+Gets statistics about the email operation queue.
+
+**Returns:** `Promise<QueueStats>`
+
+**Example:**
+```typescript
+const stats = await invoke('gmail_get_queue_stats');
+```
+
+---
+
+### gmail_force_process_queue
+
+Forces processing of the email operation queue.
+
+**Returns:** `Promise<void>`
+
+**Example:**
+```typescript
+await invoke('gmail_force_process_queue');
+```
+
+---
+
+### gmail_clear_queue
+
+Clears the email operation queue.
+
+**Returns:** `Promise<void>`
+
+**Example:**
+```typescript
+await invoke('gmail_clear_queue');
+```
+
+---
+
+## Task Management
+
+### create_task
+
+Creates a new task.
+
+**Parameters:**
+- Task properties (varies by implementation)
+
+**Returns:** `Promise<Task>`
+
+**Example:**
+```typescript
+const task = await invoke('create_task', {
+  title: 'Complete documentation',
+  status: 'todo',
+  note_path: '/path/to/note.md'
+});
+```
+
+---
+
+### get_all_tasks
+
+Gets all tasks in the workspace.
+
+**Returns:** `Promise<Task[]>`
+
+**Example:**
+```typescript
+const tasks = await invoke('get_all_tasks');
+```
+
+---
+
+### get_task
+
+Gets a specific task by ID.
+
+**Parameters:**
+- `id` (string) - Task ID
+
+**Returns:** `Promise<Task>`
+
+**Example:**
+```typescript
+const task = await invoke('get_task', {
+  id: 'task-123'
+});
+```
+
+---
+
+### update_task
+
+Updates task properties.
+
+**Parameters:**
+- Task update data
+
+**Returns:** `Promise<Task>`
+
+**Example:**
+```typescript
+const updated = await invoke('update_task', {
+  id: 'task-123',
+  status: 'done'
+});
+```
+
+---
+
+### delete_task
+
+Deletes a task.
+
+**Parameters:**
+- `id` (string) - Task ID
+
+**Returns:** `Promise<void>`
+
+**Example:**
+```typescript
+await invoke('delete_task', {
+  id: 'task-123'
+});
+```
+
+---
+
+### get_tasks_by_status
+
+Gets tasks filtered by status.
+
+**Parameters:**
+- `status` (string) - Task status
+
+**Returns:** `Promise<Task[]>`
+
+**Example:**
+```typescript
+const todoTasks = await invoke('get_tasks_by_status', {
+  status: 'todo'
+});
+```
+
+---
+
+### get_tasks_by_note
+
+Gets all tasks in a specific note.
+
+**Parameters:**
+- `note_path` (string) - Path to note file
+
+**Returns:** `Promise<Task[]>`
+
+**Example:**
+```typescript
+const tasks = await invoke('get_tasks_by_note', {
+  note_path: '/path/to/note.md'
+});
+```
+
+---
+
+### bulk_update_task_status
+
+Updates status for multiple tasks.
+
+**Parameters:**
+- `task_ids` (string[]) - Array of task IDs
+- `status` (string) - New status
+
+**Returns:** `Promise<void>`
+
+**Example:**
+```typescript
+await invoke('bulk_update_task_status', {
+  task_ids: ['task-1', 'task-2', 'task-3'],
+  status: 'done'
+});
+```
+
+---
+
+### extract_tasks_from_content
+
+Parses markdown content and extracts tasks.
+
+**Parameters:**
+- `content` (string) - Markdown content
+
+**Returns:** `Promise<Task[]>`
+
+**Example:**
+```typescript
+const tasks = await invoke('extract_tasks_from_content', {
+  content: '- [ ] Task 1\n- [x] Task 2\n- [ ] Task 3'
+});
+```
+
+---
+
+## Search Operations
+
+### search_in_files
+
+Performs full-text search across all workspace files.
+
+**Parameters:**
+- Search parameters (varies by implementation)
+
+**Returns:** `Promise<SearchResult[]>`
+
+**Example:**
+```typescript
+const results = await invoke('search_in_files', {
+  query: 'TODO',
+  case_sensitive: false
+});
+```
+
+---
+
+### search_in_file
+
+Searches within a single file.
+
+**Parameters:**
+- `file_path` (string) - Path to file
+- `query` (string) - Search query
+
+**Returns:** `Promise<SearchResult[]>`
+
+**Example:**
+```typescript
+const results = await invoke('search_in_file', {
+  file_path: '/path/to/note.md',
+  query: 'important'
+});
+```
+
+---
+
+### get_file_content_with_lines
+
+Gets file content with line numbers for search results.
+
+**Parameters:**
+- `file_path` (string) - Path to file
+
+**Returns:** `Promise<string[]>`
+
+**Example:**
+```typescript
+const lines = await invoke('get_file_content_with_lines', {
+  file_path: '/path/to/note.md'
+});
+```
+
+---
+
+### build_search_index
+
+Builds or rebuilds the search index for the workspace.
+
+**Returns:** `Promise<void>`
+
+**Example:**
+```typescript
+await invoke('build_search_index');
+```
+
+---
+
+## Clipboard Operations
+
+### clipboard_write_text
+
+Writes plain text to clipboard.
+
+**Parameters:**
+- `text` (string) - Text to write
+
+**Returns:** `Promise<void>`
+
+**Example:**
+```typescript
+await invoke('clipboard_write_text', {
+  text: 'Hello, clipboard!'
+});
+```
+
+---
+
+### clipboard_read_text
+
+Reads plain text from clipboard.
+
+**Returns:** `Promise<string>`
+
+**Example:**
+```typescript
+const text = await invoke<string>('clipboard_read_text');
+```
+
+---
+
+### clipboard_write_html
+
+Writes HTML to clipboard.
+
+**Parameters:**
+- `html` (string) - HTML content
+
+**Returns:** `Promise<void>`
+
+**Example:**
+```typescript
+await invoke('clipboard_write_html', {
+  html: '<p>Hello, <strong>clipboard</strong>!</p>'
+});
+```
+
+---
+
+### clipboard_read_html
+
+Reads HTML from clipboard.
+
+**Returns:** `Promise<string>`
+
+**Example:**
+```typescript
+const html = await invoke<string>('clipboard_read_html');
+```
+
+---
+
+### clipboard_has_text
+
+Checks if clipboard contains text.
+
+**Returns:** `Promise<boolean>`
+
+**Example:**
+```typescript
+const hasText = await invoke<boolean>('clipboard_has_text');
+```
+
+---
+
+### clipboard_clear
+
+Clears the clipboard.
+
+**Returns:** `Promise<void>`
+
+**Example:**
+```typescript
+await invoke('clipboard_clear');
+```
+
+---
+
+### clipboard_write_text_enhanced
+
+Enhanced clipboard text write with platform optimizations.
+
+**Parameters:**
+- `text` (string) - Text to write
+
+**Returns:** `Promise<void>`
+
+---
+
+### clipboard_read_text_enhanced
+
+Enhanced clipboard text read with platform optimizations.
+
+**Returns:** `Promise<string>`
+
+---
+
+### clipboard_write_html_enhanced
+
+Enhanced clipboard HTML write.
+
+**Parameters:**
+- `html` (string) - HTML content
+
+**Returns:** `Promise<void>`
+
+---
+
+### clipboard_get_content_info
+
+Gets metadata about clipboard contents.
+
+**Returns:** `Promise<ClipboardInfo>`
+
+---
+
+### clipboard_get_platform_info
+
+Gets clipboard platform capabilities.
+
+**Returns:** `Promise<PlatformInfo>`
+
+---
+
+### clipboard_get_usage_tips
+
+Gets platform-specific clipboard usage tips.
+
+**Returns:** `Promise<string[]>`
+
+---
+
+### clipboard_clear_enhanced
+
+Enhanced clipboard clear operation.
+
+**Returns:** `Promise<void>`
+
+---
+
+## Platform Services
+
+### get_platform_information
+
+Gets detailed platform and OS information.
+
+**Returns:** `Promise<PlatformInfo>`
+
+**Example:**
+```typescript
+const info = await invoke('get_platform_information');
+```
+
+---
+
+### check_platform_feature_support
+
+Checks if a specific feature is supported on the current platform.
+
+**Parameters:**
+- `feature` (string) - Feature name
+
+**Returns:** `Promise<boolean>`
+
+**Example:**
+```typescript
+const supported = await invoke<boolean>('check_platform_feature_support', {
+  feature: 'global-shortcuts'
+});
+```
+
+---
+
+### get_platform_capabilities
+
+Gets all platform capabilities.
+
+**Returns:** `Promise<Record<string, boolean>>`
+
+**Example:**
+```typescript
+const capabilities = await invoke('get_platform_capabilities');
+```
+
+---
+
+### get_system_information
+
+Gets detailed system information.
+
+**Returns:** `Promise<SystemInfo>`
+
+**Example:**
+```typescript
+const sysInfo = await invoke('get_system_information');
+```
+
+---
+
+### check_system_capability
+
+Checks a specific system capability.
+
+**Parameters:**
+- `capability` (string) - Capability name
+
+**Returns:** `Promise<boolean>`
+
+**Example:**
+```typescript
+const hasCapability = await invoke<boolean>('check_system_capability', {
+  capability: 'file-watcher'
+});
+```
+
+---
+
+## Theme Management
+
+### theme_broadcast
+
+Broadcasts theme changes to all windows.
+
+**Parameters:**
+- Theme data
+
+**Returns:** `Promise<void>`
+
+**Example:**
+```typescript
+await invoke('theme_broadcast', {
+  theme: 'dark'
+});
+```
+
+---
+
+## Error Handling Best Practices
+
+```typescript
+async function safeInvoke<T>(
+  command: string,
+  args?: Record<string, any>
+): Promise<T | null> {
+  try {
+    return await invoke<T>(command, args);
+  } catch (error) {
+    console.error(`Command ${command} failed:`, error);
+    // Show user-friendly error message
+    return null;
+  }
+}
+
+// Usage
+const result = await safeInvoke<string>('read_file_content', {
+  path: '/path/to/file.md'
+});
+
+if (result === null) {
+  // Handle error
+}
+```
+
+## Performance Tips
+
+1. **Batch Operations** - Use bulk commands when available
+2. **Cache Results** - Store frequently accessed data
+3. **Debounce Writes** - Avoid excessive file writes
+4. **Lazy Load** - Only invoke commands when needed
+5. **Error Handling** - Always handle potential errors
+6. **Type Safety** - Use TypeScript interfaces for type checking
+
+## Next Steps
+
+- [Plugin API Reference](/reference/plugin-api) - Build custom plugins
+- [MCP Server API](/reference/mcp-api) - MCP integration
+- [Gmail API](/reference/gmail-api) - Email automation
+- [Configuration](/reference/configuration) - Configure Lokus

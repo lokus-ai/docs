@@ -1,0 +1,808 @@
+# Theme System
+
+Lokus provides a comprehensive theme system that allows you to customize every aspect of the application's appearance. From light and dark modes to custom color schemes and syntax highlighting themes, make Lokus truly your own.
+
+## Overview
+
+The theme system offers deep customization options while maintaining excellent defaults. Whether you prefer subtle, professional themes or vibrant, colorful designs, Lokus adapts to your preferences with real-time preview and easy switching between themes.
+
+### Key Features
+
+- **Light and dark mode** with automatic switching
+- **Custom color schemes** for full personalization
+- **Syntax highlighting themes** for 100+ languages
+- **Per-element customization** for fine-tuned control
+- **Theme export and import** for sharing
+- **Community theme gallery** with hundreds of themes
+- **Real-time preview** for instant feedback
+
+## Built-in Themes
+
+### Default Themes
+
+Lokus includes professional themes out of the box:
+
+**Light Themes:**
+- **Lokus Light** - Clean, modern default
+- **Classic Light** - Traditional, high contrast
+- **Sepia** - Warm, paper-like
+- **High Contrast Light** - Maximum readability
+- **Soft Light** - Gentle on eyes
+
+**Dark Themes:**
+- **Lokus Dark** - Modern, balanced dark
+- **Classic Dark** - Traditional dark theme
+- **True Black** - OLED-friendly
+- **High Contrast Dark** - Maximum readability
+- **Nord** - Cool, pleasant dark
+
+**Special Themes:**
+- **Auto** - Follows system preference
+- **Time-Based** - Changes with time of day
+- **Focus Mode** - Minimal distractions
+
+### Theme Components
+
+What themes control:
+
+**Interface Elements:**
+- Window background
+- Sidebar colors
+- Toolbar styling
+- Panel backgrounds
+- Border colors
+- Shadow effects
+
+![Theme System Light and Dark Modes](/placeholder.svg)
+
+**Editor Elements:**
+- Text color
+- Background color
+- Selection color
+- Line highlighting
+- Gutter styling
+- Cursor color
+
+**Syntax Highlighting:**
+- Keywords
+- Strings
+- Numbers
+- Comments
+- Functions
+- Variables
+- Operators
+
+**UI Components:**
+- Buttons
+- Inputs
+- Dropdowns
+- Modals
+- Tooltips
+- Badges
+
+## Switching Themes
+
+### Quick Switch
+
+Change themes instantly:
+
+**Method 1: Settings**
+1. Settings → Appearance → Theme
+2. Browse theme list
+3. Click theme to preview
+4. Select to apply
+
+**Method 2: Command Palette**
+1. Press `Cmd/Ctrl + P`
+2. Type "theme"
+3. Select theme from list
+4. Theme applied
+
+**Method 3: Keyboard Shortcut**
+- `Cmd/Ctrl + Shift + T` - Open theme picker
+- `Cmd/Ctrl + D` - Toggle dark/light mode
+
+### Auto Theme Switching
+
+Automatic theme changes:
+
+**System-Based:**
+- Follow OS dark mode setting
+- Automatic light/dark switch
+- Instant synchronization
+
+**Time-Based:**
+```yaml
+theme_schedule:
+  - time: "06:00"
+    theme: "Lokus Light"
+  - time: "18:00"
+    theme: "Lokus Dark"
+  - time: "22:00"
+    theme: "True Black"
+```
+
+**Location-Based:**
+- Use sunrise/sunset times
+- Adapt to local lighting
+- GPS-based switching
+
+**Activity-Based:**
+- Reading mode → Sepia
+- Coding mode → Dark theme
+- Focus mode → Minimal theme
+
+## Creating Custom Themes
+
+### Theme Editor
+
+Visual theme creation:
+
+**Editor Features:**
+- Live preview
+- Color picker
+- Component inspector
+- Before/after comparison
+- Undo/redo
+
+**Process:**
+1. Settings → Appearance → Create Theme
+2. Choose base theme
+3. Customize colors
+4. Preview changes
+5. Save theme
+
+### Color Palette
+
+Define theme colors:
+
+**Primary Colors:**
+```json
+{
+  "primary": "#3b82f6",
+  "secondary": "#8b5cf6",
+  "accent": "#06b6d4",
+  "success": "#10b981",
+  "warning": "#f59e0b",
+  "error": "#ef4444",
+  "info": "#3b82f6"
+}
+```
+
+**Background Colors:**
+```json
+{
+  "bg-primary": "#ffffff",
+  "bg-secondary": "#f3f4f6",
+  "bg-tertiary": "#e5e7eb",
+  "bg-hover": "#f9fafb",
+  "bg-active": "#e5e7eb",
+  "bg-overlay": "rgba(0, 0, 0, 0.5)"
+}
+```
+
+**Text Colors:**
+```json
+{
+  "text-primary": "#111827",
+  "text-secondary": "#6b7280",
+  "text-tertiary": "#9ca3af",
+  "text-inverse": "#ffffff",
+  "text-link": "#3b82f6",
+  "text-link-hover": "#2563eb"
+}
+```
+
+**Border Colors:**
+```json
+{
+  "border-default": "#e5e7eb",
+  "border-hover": "#d1d5db",
+  "border-focus": "#3b82f6",
+  "border-active": "#2563eb"
+}
+```
+
+### Typography
+
+Font customization:
+
+**Font Settings:**
+```json
+{
+  "font-family-sans": "Inter, system-ui, sans-serif",
+  "font-family-serif": "Georgia, serif",
+  "font-family-mono": "JetBrains Mono, monospace",
+
+  "font-size-xs": "0.75rem",
+  "font-size-sm": "0.875rem",
+  "font-size-base": "1rem",
+  "font-size-lg": "1.125rem",
+  "font-size-xl": "1.25rem",
+  "font-size-2xl": "1.5rem",
+
+  "line-height-tight": "1.25",
+  "line-height-normal": "1.5",
+  "line-height-relaxed": "1.75"
+}
+```
+
+**Editor Typography:**
+```json
+{
+  "editor-font-family": "JetBrains Mono",
+  "editor-font-size": "14px",
+  "editor-line-height": "1.6",
+  "editor-letter-spacing": "0",
+  "editor-font-weight": "400"
+}
+```
+
+### Spacing and Layout
+
+Control spacing:
+
+**Spacing Scale:**
+```json
+{
+  "spacing-0": "0",
+  "spacing-1": "0.25rem",
+  "spacing-2": "0.5rem",
+  "spacing-3": "0.75rem",
+  "spacing-4": "1rem",
+  "spacing-5": "1.25rem",
+  "spacing-6": "1.5rem",
+  "spacing-8": "2rem",
+  "spacing-10": "2.5rem",
+  "spacing-12": "3rem"
+}
+```
+
+**Border Radius:**
+```json
+{
+  "radius-none": "0",
+  "radius-sm": "0.125rem",
+  "radius-md": "0.375rem",
+  "radius-lg": "0.5rem",
+  "radius-xl": "0.75rem",
+  "radius-full": "9999px"
+}
+```
+
+**Shadows:**
+```json
+{
+  "shadow-sm": "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+  "shadow-md": "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+  "shadow-lg": "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+  "shadow-xl": "0 20px 25px -5px rgba(0, 0, 0, 0.1)"
+}
+```
+
+![Custom Theme Creation and Customization](/placeholder.svg)
+
+## Syntax Highlighting
+
+### Code Themes
+
+Themes for code highlighting:
+
+**Popular Code Themes:**
+- **VS Code Dark+** - Visual Studio Code default
+- **GitHub Light/Dark** - GitHub style
+- **Dracula** - Popular dark theme
+- **Monokai** - Classic Sublime Text
+- **Solarized Light/Dark** - Ethan Schoonover's theme
+- **One Dark/Light** - Atom editor themes
+- **Material Theme** - Material Design inspired
+- **Nord** - Arctic-inspired palette
+
+### Token Styling
+
+Customize syntax colors:
+
+**Token Types:**
+```json
+{
+  "keyword": "#cf222e",
+  "string": "#0a3069",
+  "number": "#0550ae",
+  "comment": "#6e7781",
+  "function": "#8250df",
+  "variable": "#24292f",
+  "operator": "#cf222e",
+  "class": "#953800",
+  "type": "#116329",
+  "constant": "#0550ae",
+  "property": "#24292f",
+  "punctuation": "#24292f",
+  "tag": "#116329",
+  "attribute": "#0550ae",
+  "selector": "#6e7781"
+}
+```
+
+### Language-Specific
+
+Per-language customization:
+
+**Example (JavaScript):**
+```json
+{
+  "javascript": {
+    "keyword": "#cf222e",
+    "function": "#8250df",
+    "variable": "#24292f",
+    "string": "#0a3069",
+    "comment": "#6e7781"
+  }
+}
+```
+
+## Theme Variables
+
+### CSS Variables
+
+Theme implemented with CSS variables:
+
+**Core Variables:**
+```css
+:root {
+  --color-primary: #3b82f6;
+  --color-background: #ffffff;
+  --color-text: #111827;
+
+  --font-sans: Inter, system-ui;
+  --font-mono: JetBrains Mono;
+
+  --spacing-unit: 0.25rem;
+  --border-radius: 0.375rem;
+
+  --transition-speed: 150ms;
+  --transition-easing: cubic-bezier(0.4, 0, 0.2, 1);
+}
+```
+
+**Dark Mode Override:**
+```css
+[data-theme="dark"] {
+  --color-background: #111827;
+  --color-text: #f9fafb;
+  --color-primary: #60a5fa;
+}
+```
+
+### Theme JSON
+
+Theme as JSON configuration:
+
+```json
+{
+  "name": "My Custom Theme",
+  "type": "dark",
+  "version": "1.0.0",
+  "author": "Your Name",
+
+  "colors": {
+    "primary": "#3b82f6",
+    "background": "#111827",
+    "text": "#f9fafb"
+  },
+
+  "typography": {
+    "fontFamily": "Inter",
+    "fontSize": "14px"
+  },
+
+  "syntax": {
+    "keyword": "#cf222e",
+    "string": "#0a3069"
+  },
+
+  "ui": {
+    "borderRadius": "0.375rem",
+    "shadow": "0 4px 6px rgba(0,0,0,0.1)"
+  }
+}
+```
+
+## Advanced Customization
+
+### Component Theming
+
+Style individual components:
+
+**Sidebar Customization:**
+```json
+{
+  "sidebar": {
+    "background": "#f9fafb",
+    "text": "#111827",
+    "hover": "#f3f4f6",
+    "active": "#e5e7eb",
+    "border": "#e5e7eb",
+    "width": "250px"
+  }
+}
+```
+
+**Editor Customization:**
+```json
+{
+  "editor": {
+    "background": "#ffffff",
+    "text": "#111827",
+    "selection": "#dbeafe",
+    "lineHighlight": "#f9fafb",
+    "cursor": "#3b82f6",
+    "gutter": "#f3f4f6"
+  }
+}
+```
+
+### Conditional Styling
+
+Context-based theming:
+
+**Focus Mode:**
+```json
+{
+  "focusMode": {
+    "enabled": true,
+    "sidebar": "hidden",
+    "background": "#fafafa",
+    "textColor": "#333333",
+    "dimOpacity": 0.3
+  }
+}
+```
+
+**Reading Mode:**
+```json
+{
+  "readingMode": {
+    "fontFamily": "Georgia, serif",
+    "fontSize": "18px",
+    "lineHeight": "1.8",
+    "maxWidth": "700px",
+    "background": "#fffff8"
+  }
+}
+```
+
+### Animation Settings
+
+Control animations:
+
+```json
+{
+  "animations": {
+    "enabled": true,
+    "speed": "normal",
+    "easing": "ease-in-out",
+
+    "transitions": {
+      "theme": "300ms",
+      "hover": "150ms",
+      "modal": "200ms",
+      "page": "250ms"
+    }
+  }
+}
+```
+
+## Theme Gallery
+
+### Browsing Themes
+
+Explore community themes:
+
+**Gallery Features:**
+- Search by name, tag, or color
+- Filter by type (light/dark)
+- Sort by popularity, date, rating
+- Preview before installing
+- One-click installation
+
+**Theme Cards:**
+- Theme name and author
+- Preview screenshot
+- Color palette
+- Download count
+- Rating
+- Tags (minimal, colorful, etc.)
+
+### Installing Themes
+
+Add community themes:
+
+**Installation:**
+1. Browse theme gallery
+2. Click theme to preview
+3. Click "Install"
+4. Theme downloaded
+5. Apply immediately or later
+
+**Theme Sources:**
+- Built-in gallery
+- Theme marketplace URL
+- GitHub repositories
+- Local theme files
+
+### Sharing Themes
+
+Publish your themes:
+
+**Publishing Process:**
+1. Create custom theme
+2. Click "Share Theme"
+3. Add description and tags
+4. Upload screenshot
+5. Submit to gallery
+
+**Theme Package:**
+```
+my-theme/
+├── theme.json          # Theme definition
+├── preview.png         # Screenshot
+├── README.md           # Description
+└── LICENSE            # License file
+```
+
+## Import and Export
+
+### Exporting Themes
+
+Save and share themes:
+
+**Export Options:**
+- JSON format
+- CSS variables
+- Complete package
+- Color palette only
+
+**Export Process:**
+1. Settings → Appearance
+2. Select theme
+3. Click "Export"
+4. Choose format
+5. Save file
+
+**Exported JSON:**
+```json
+{
+  "name": "My Theme",
+  "version": "1.0.0",
+  "colors": {...},
+  "typography": {...},
+  "syntax": {...}
+}
+```
+
+### Importing Themes
+
+Add external themes:
+
+**Import Methods:**
+- Drag and drop file
+- File picker
+- URL import
+- Git repository
+
+**Import Process:**
+1. Settings → Appearance
+2. Click "Import Theme"
+3. Select file/URL
+4. Preview theme
+5. Confirm import
+
+## Accessibility
+
+### High Contrast
+
+Enhanced contrast themes:
+
+**Features:**
+- Minimum 7:1 contrast ratio
+- Clear borders
+- Distinct colors
+- No subtle differences
+- WCAG AAA compliant
+
+**High Contrast Settings:**
+```json
+{
+  "highContrast": {
+    "enabled": true,
+    "contrastRatio": 7.0,
+    "boldText": true,
+    "thickBorders": true
+  }
+}
+```
+
+### Color Blind Modes
+
+Accessible color schemes:
+
+**Supported Types:**
+- Protanopia (red-blind)
+- Deuteranopia (green-blind)
+- Tritanopia (blue-blind)
+- Achromatopsia (total color blindness)
+
+**Color Adjustments:**
+- Avoid red/green combinations
+- Use patterns and icons
+- High contrast markers
+- Shape indicators
+
+### Font Size
+
+Adjustable text size:
+
+**Size Options:**
+- Extra Small (12px)
+- Small (14px)
+- Medium (16px)
+- Large (18px)
+- Extra Large (20px)
+- Custom size
+
+**Zoom:**
+- Interface zoom (50% - 200%)
+- Editor zoom (50% - 300%)
+- Independent controls
+- Keyboard shortcuts
+
+## Performance
+
+### Theme Loading
+
+Optimized loading:
+
+**Techniques:**
+- Lazy loading
+- CSS-in-JS optimization
+- Variable caching
+- Preload critical styles
+
+**Performance:**
+- Theme switch under 50ms
+- Initial load under 100ms
+- No layout shift
+- Smooth transitions
+
+### Theme Caching
+
+Efficient theme storage:
+
+**Caching Strategy:**
+- Active theme in memory
+- Recent themes cached
+- Lazy load others
+- Clear unused cache
+
+## Configuration
+
+### Theme Settings
+
+Configure in Settings → Appearance:
+
+**General:**
+- Active theme
+- Auto-switch mode
+- Theme schedule
+- Animation speed
+
+**Editor:**
+- Syntax theme
+- Font family
+- Font size
+- Line height
+
+**Interface:**
+- Sidebar style
+- Window opacity
+- Border style
+- Shadow intensity
+
+**Accessibility:**
+- High contrast
+- Color blind mode
+- Font scaling
+- Motion reduction
+
+### Keyboard Shortcuts
+
+| Action | Shortcut |
+|--------|----------|
+| Theme Picker | Cmd/Ctrl + Shift + T |
+| Toggle Dark Mode | Cmd/Ctrl + D |
+| Increase Font | Cmd/Ctrl + Plus |
+| Decrease Font | Cmd/Ctrl + Minus |
+| Reset Font | Cmd/Ctrl + 0 |
+| Focus Mode | Cmd/Ctrl + Shift + F |
+
+## Best Practices
+
+### Theme Design
+
+**Effective Themes:**
+- Consistent color palette
+- Sufficient contrast
+- Clear hierarchy
+- Readable fonts
+- Appropriate spacing
+
+**Color Guidelines:**
+- Limit to 5-7 colors
+- Use color theory
+- Test in both modes
+- Consider accessibility
+- Provide variants
+
+### Theme Maintenance
+
+**Keep Themes Updated:**
+- Test with new versions
+- Update deprecated values
+- Fix compatibility issues
+- Document changes
+- Version control
+
+## Use Cases
+
+### Personal Branding
+
+Match your style:
+
+**Customization:**
+- Brand colors
+- Logo colors
+- Personal preferences
+- Consistent aesthetic
+
+### Team Themes
+
+Shared workspace themes:
+
+**Benefits:**
+- Consistent experience
+- Brand alignment
+- Reduced eye strain
+- Professional appearance
+
+### Context-Specific
+
+Different themes for tasks:
+
+**Examples:**
+- Writing: Sepia, minimal
+- Coding: Dark, high contrast
+- Reading: Serif, comfortable
+- Presenting: High contrast
+
+## Troubleshooting
+
+### Common Issues
+
+**Issue:** Theme not applying
+**Solution:** Restart app, clear cache, re-import theme
+
+**Issue:** Colors look wrong
+**Solution:** Check display calibration, verify theme values
+
+**Issue:** Performance slow
+**Solution:** Disable animations, simplify theme, reduce complexity
+
+**Issue:** Import failed
+**Solution:** Verify JSON format, check compatibility, review errors
+
+## Next Steps
+
+- Customize [Editor](/features/editor) appearance
+- Style [Canvas](/features/canvas) elements
+- Theme [Graph](/features/graph) visualization
+- See [Developer Guide](/developers) for theme API

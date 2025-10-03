@@ -1,0 +1,547 @@
+# Data Provider Plugins
+
+Integrate external data sources and services into Lokus. Create connections to APIs, databases, and cloud services.
+
+## What are Data Providers?
+
+Data providers allow you to:
+- Fetch data from external APIs
+- Sync with cloud services (Jira, Trello, GitHub, etc.)
+- Query databases
+- Display external data in Lokus
+- Real-time data synchronization
+
+## Basic Data Provider
+
+```typescript
+import { Plugin, PluginContext } from '@lokus/plugin-sdk'
+
+export default class DataProviderPlugin implements Plugin {
+  private api!: LokusAPI
+  private cache = new Map()
+
+  async activate(context: PluginContext) {
+    this.api = context.api
+
+    // Register data provider
+    context.api.registerDataProvider('myapi', this)
+
+    // Register commands
+    this.registerCommands(context)
+
+    // Start sync
+    this.startSync()
+  }
+
+  // Fetch data from external API
+  async fetchData(query: string): Promise<any[]> {
+    try {
+      const response = await this.api.network.fetch(
+        `https://api.example.com/data?q=${encodeURIComponent(query)}`
+      )
+      return await response.json()
+    } catch (error) {
+      this.api.log('error', 'Failed to fetch data', error)
+      return []
+    }
+  }
+
+  // Sync data periodically
+  private startSync() {
+    setInterval(() => this.syncData(), 60000) // Every minute
+  }
+
+  private async syncData() {
+    const data = await this.fetchData('*')
+    await this.api.storage.set('syncedData', data)
+    this.api.events.emit('myPlugin.dataUpdated', data)
+  }
+}
+```
+
+## GitHub Integration Example
+
+```typescript
+class GitHubProviderPlugin implements Plugin {
+  private api!: LokusAPI
+  private token?: string
+
+  async activate(context: PluginContext) {
+    this.api = context.api
+
+    // Get stored token
+    this.token = await context.secrets.get('github-token')
+
+    if (!this.token) {
+      await this.authenticateUser()
+    }
+
+    // Register commands
+    context.subscriptions.push(
+      context.api.commands.register({
+        id: 'github.fetchIssues',
+        title: 'Fetch GitHub Issues',
+        handler: () => this.fetchIssues()
+      })
+    )
+
+    // Create tree view for issues
+    this.createIssuesView(context)
+  }
+
+  private async authenticateUser() {
+    const token = await this.api.ui.showInputBox({
+      prompt: 'Enter GitHub Personal Access Token',
+      password: true,
+      validateInput: (value) => {
+        if (!value) return 'Token is required'
+        if (value.length < 20) return 'Invalid token format'
+        return null
+      }
+    })
+
+    if (token) {
+      await this.context.secrets.store('github-token', token)
+      this.token = token
+    }
+  }
+
+  private async fetchIssues(repo?: string) {
+    if (!this.token) {
+      await this.authenticateUser()
+      return
+    }
+
+    try {
+      const response = await this.api.network.fetch(
+        `https://api.github.com/repos/${repo || 'user/repo'}/issues`,
+        {
+          headers: {
+            'Authorization': `Bearer ${this.token}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        }
+      )
+
+      const issues = await response.json()
+
+      // Display in panel
+      this.displayIssues(issues)
+
+      // Cache for offline access
+      await this.api.storage.set('github-issues', issues)
+
+      return issues
+    } catch (error) {
+      this.api.ui.showNotification(
+        'Failed to fetch GitHub issues',
+        'error'
+      )
+      throw error
+    }
+  }
+
+  private displayIssues(issues: any[]) {
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <body>
+          <h2>GitHub Issues</h2>
+          <ul>
+            ${issues.map(issue => `
+              <li>
+                <strong>#${issue.number}</strong>: ${issue.title}
+                <br>
+                <small>${issue.state} - ${issue.user.login}</small>
+              </li>
+            `).join('')}
+          </ul>
+        </body>
+      </html>
+    `
+
+    // Update panel
+    this.panel.webview.html = html
+  }
+
+  private createIssuesView(context: PluginContext) {
+    this.panel = context.api.ui.registerWebviewPanel({
+      id: 'github.issues',
+      title: 'GitHub Issues',
+      type: 'webview',
+      location: 'sidebar',
+      icon: 'github'
+    })
+
+    context.subscriptions.push(this.panel)
+  }
+}
+```
+
+## REST API Integration
+
+```typescript
+class RESTProviderPlugin implements Plugin {
+  private baseUrl = 'https://api.example.com'
+  private apiKey?: string
+
+  async activate(context: PluginContext) {
+    this.apiKey = await context.api.config.get('myPlugin.apiKey')
+
+    // CRUD operations
+    context.subscriptions.push(
+      context.api.commands.register({
+        id: 'myPlugin.createItem',
+        title: 'Create Item',
+        handler: () => this.createItem()
+      }),
+
+      context.api.commands.register({
+        id: 'myPlugin.listItems',
+        title: 'List Items',
+        handler: () => this.listItems()
+      })
+    )
+  }
+
+  private async request(endpoint: string, options: RequestInit = {}) {
+    const url = `${this.baseUrl}${endpoint}`
+
+    const response = await this.api.network.fetch(url, {
+      ...options,
+      headers: {
+        'Authorization': `Bearer ${this.apiKey}`,
+        'Content-Type': 'application/json',
+        ...options.headers
+      }
+    })
+
+    if (!response.ok) {
+      throw new Error(`API request failed: ${response.statusText}`)
+    }
+
+    return response.json()
+  }
+
+  async listItems() {
+    try {
+      const items = await this.request('/items')
+      return items
+    } catch (error) {
+      this.api.ui.showNotification('Failed to fetch items', 'error')
+      throw error
+    }
+  }
+
+  async createItem(data: any) {
+    try {
+      const item = await this.request('/items', {
+        method: 'POST',
+        body: JSON.stringify(data)
+      })
+      return item
+    } catch (error) {
+      this.api.ui.showNotification('Failed to create item', 'error')
+      throw error
+    }
+  }
+
+  async updateItem(id: string, data: any) {
+    return this.request(`/items/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    })
+  }
+
+  async deleteItem(id: string) {
+    return this.request(`/items/${id}`, {
+      method: 'DELETE'
+    })
+  }
+}
+```
+
+## Caching and Offline Support
+
+```typescript
+class CachedProviderPlugin implements Plugin {
+  private cache = new Map<string, CacheEntry>()
+  private cacheTTL = 5 * 60 * 1000 // 5 minutes
+
+  async fetchWithCache<T>(key: string, fetcher: () => Promise<T>): Promise<T> {
+    // Check cache
+    const cached = this.cache.get(key)
+    if (cached && Date.now() - cached.timestamp < this.cacheTTL) {
+      return cached.data as T
+    }
+
+    // Fetch fresh data
+    try {
+      const data = await fetcher()
+
+      // Update cache
+      this.cache.set(key, {
+        data,
+        timestamp: Date.now()
+      })
+
+      // Persist to storage
+      await this.api.storage.set(`cache:${key}`, {
+        data,
+        timestamp: Date.now()
+      })
+
+      return data
+    } catch (error) {
+      // Return stale cache on error
+      if (cached) {
+        this.api.ui.showNotification(
+          'Using cached data (network error)',
+          'warning'
+        )
+        return cached.data as T
+      }
+
+      throw error
+    }
+  }
+
+  async getData(id: string) {
+    return this.fetchWithCache(`data:${id}`, () =>
+      this.api.network.fetch(`https://api.example.com/data/${id}`)
+        .then(r => r.json())
+    )
+  }
+}
+
+interface CacheEntry {
+  data: any
+  timestamp: number
+}
+```
+
+## Real-time Data Sync
+
+```typescript
+class RealtimeProviderPlugin implements Plugin {
+  private ws?: WebSocket
+  private reconnectTimeout?: NodeJS.Timeout
+
+  async activate(context: PluginContext) {
+    this.connectWebSocket()
+
+    context.subscriptions.push({
+      dispose: () => {
+        this.ws?.close()
+        if (this.reconnectTimeout) {
+          clearTimeout(this.reconnectTimeout)
+        }
+      }
+    })
+  }
+
+  private connectWebSocket() {
+    this.ws = new WebSocket('wss://api.example.com/realtime')
+
+    this.ws.onopen = () => {
+      console.log('WebSocket connected')
+      this.api.ui.showNotification('Connected to server', 'success')
+
+      // Subscribe to channels
+      this.ws!.send(JSON.stringify({
+        type: 'subscribe',
+        channels: ['updates', 'notifications']
+      }))
+    }
+
+    this.ws.onmessage = (event) => {
+      const message = JSON.parse(event.data)
+      this.handleRealtimeMessage(message)
+    }
+
+    this.ws.onerror = (error) => {
+      console.error('WebSocket error:', error)
+    }
+
+    this.ws.onclose = () => {
+      console.log('WebSocket closed, reconnecting...')
+
+      // Reconnect after delay
+      this.reconnectTimeout = setTimeout(() => {
+        this.connectWebSocket()
+      }, 5000)
+    }
+  }
+
+  private handleRealtimeMessage(message: any) {
+    switch (message.type) {
+      case 'update':
+        this.api.events.emit('dataUpdated', message.data)
+        break
+
+      case 'notification':
+        this.api.ui.showNotification(message.text, message.level)
+        break
+    }
+  }
+}
+```
+
+## Authentication
+
+```typescript
+class AuthProviderPlugin implements Plugin {
+  async authenticate(): Promise<string> {
+    // OAuth flow
+    const authUrl = await this.getAuthUrl()
+
+    // Open browser
+    await this.api.ui.openExternal(authUrl)
+
+    // Wait for callback
+    const token = await this.waitForCallback()
+
+    // Store token
+    await this.context.secrets.store('auth-token', token)
+
+    return token
+  }
+
+  private async getAuthUrl(): Promise<string> {
+    const clientId = 'your-client-id'
+    const redirectUri = 'lokus://auth-callback'
+    const scopes = 'read write'
+
+    return `https://oauth.example.com/authorize?` +
+      `client_id=${clientId}&` +
+      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+      `scope=${encodeURIComponent(scopes)}&` +
+      `response_type=code`
+  }
+
+  private async waitForCallback(): Promise<string> {
+    return new Promise((resolve, reject) => {
+      // Register URI handler
+      const disposable = this.api.registerUriHandler((uri) => {
+        if (uri.startsWith('lokus://auth-callback')) {
+          const url = new URL(uri)
+          const code = url.searchParams.get('code')
+
+          if (code) {
+            this.exchangeCodeForToken(code).then(resolve)
+          } else {
+            reject(new Error('No auth code received'))
+          }
+
+          disposable.dispose()
+        }
+      })
+
+      // Timeout after 5 minutes
+      setTimeout(() => {
+        disposable.dispose()
+        reject(new Error('Authentication timeout'))
+      }, 5 * 60 * 1000)
+    })
+  }
+
+  private async exchangeCodeForToken(code: string): Promise<string> {
+    const response = await this.api.network.fetch(
+      'https://oauth.example.com/token',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code,
+          client_id: 'your-client-id',
+          client_secret: 'your-client-secret',
+          grant_type: 'authorization_code'
+        })
+      }
+    )
+
+    const data = await response.json()
+    return data.access_token
+  }
+}
+```
+
+## Best Practices
+
+### Error Handling
+
+```typescript
+async function safeFetch<T>(
+  fetcher: () => Promise<T>,
+  fallback: T
+): Promise<T> {
+  try {
+    return await fetcher()
+  } catch (error) {
+    console.error('Fetch failed:', error)
+
+    // Show user-friendly error
+    api.ui.showNotification(
+      'Failed to load data. Using cached version.',
+      'warning'
+    )
+
+    return fallback
+  }
+}
+```
+
+### Rate Limiting
+
+```typescript
+class RateLimiter {
+  private queue: Array<() => Promise<any>> = []
+  private processing = false
+  private requestsPerMinute = 60
+
+  async enqueue<T>(request: () => Promise<T>): Promise<T> {
+    return new Promise((resolve, reject) => {
+      this.queue.push(async () => {
+        try {
+          const result = await request()
+          resolve(result)
+        } catch (error) {
+          reject(error)
+        }
+      })
+
+      this.processQueue()
+    })
+  }
+
+  private async processQueue() {
+    if (this.processing || this.queue.length === 0) return
+
+    this.processing = true
+
+    while (this.queue.length > 0) {
+      const request = this.queue.shift()!
+      await request()
+
+      // Wait between requests
+      await new Promise(resolve =>
+        setTimeout(resolve, 60000 / this.requestsPerMinute)
+      )
+    }
+
+    this.processing = false
+  }
+}
+```
+
+## Examples
+
+- [Jira Integration](https://github.com/lokus-ai/plugin-examples/tree/main/jira)
+- [GitHub Integration](https://github.com/lokus-ai/plugin-examples/tree/main/github)
+- [Trello Integration](https://github.com/lokus-ai/plugin-examples/tree/main/trello)
+
+## Resources
+
+- [Network API](/developers/plugins/api#network-api)
+- [Storage API](/developers/plugins/api#storage-api)
+- [Authentication Guide](/developers/authentication)

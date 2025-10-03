@@ -1,0 +1,792 @@
+# Graph Visualization
+
+The graph visualization in Lokus transforms your notes and their connections into an interactive network diagram, providing a visual representation of your knowledge structure. The graph helps you discover patterns, identify clusters, and navigate your notes in ways traditional folders and search cannot.
+
+## Overview
+
+Lokus offers both 2D and 3D graph visualizations powered by Sigma.js, Three.js, and D3-force physics simulation. The graph dynamically updates as you create, edit, and link notes, giving you real-time insight into your knowledge base.
+
+### Key Features
+
+- **Interactive 2D and 3D graphs** with smooth navigation
+- **Force-directed layout** for natural clustering
+- **Real-time updates** as notes and links change
+- **Advanced filtering** by tags, folders, and properties
+- **Multiple layout algorithms** for different perspectives
+- **Node and edge styling** based on metadata
+- **Export capabilities** for sharing and analysis
+
+## Graph Types
+
+### 2D Graph View
+
+The default 2D graph provides a clean, performant visualization:
+
+**Features:**
+- Sigma.js rendering engine
+- WebGL-accelerated graphics
+- Smooth zooming and panning
+- Node labels at all zoom levels
+- Edge bundling for clarity
+- Hover interactions
+- Click to navigate
+
+**Best For:**
+- Quick navigation
+- Overview of structure
+- Large workspaces (1000+ notes)
+- Daily use
+
+![2D Graph View with Force-Directed Layout](/placeholder.svg)
+
+### 3D Graph View
+
+The 3D graph adds depth for exploring complex relationships:
+
+**Features:**
+- Three.js rendering
+- 3D force-directed layout
+- Camera rotation and orbit
+- Depth perception
+- Node elevation by properties
+- Animated transitions
+- VR support (experimental)
+
+**Best For:**
+- Dense networks
+- Hierarchical structures
+- Presentations
+- Deep exploration
+
+![3D Graph View with Depth Visualization](/placeholder.svg)
+
+### Local Graph
+
+Focus on a single note and its immediate connections:
+
+**Features:**
+- Current note at center
+- 1-3 hop distance configurable
+- Linked notes shown
+- Backlinks highlighted
+- Compact view
+- Embedded in note view
+
+**Use Cases:**
+- Understanding note context
+- Finding related content
+- Checking link structure
+- Quick navigation
+
+## Navigation
+
+### Basic Controls
+
+**2D Graph:**
+- **Pan:** Click and drag background
+- **Zoom:** Mouse wheel or pinch
+- **Select:** Click node
+- **Navigate:** Double-click node
+- **Reset:** Double-click background
+
+**3D Graph:**
+- **Rotate:** Click and drag background
+- **Pan:** Right-click and drag
+- **Zoom:** Mouse wheel
+- **Orbit:** Shift + drag
+- **Navigate:** Double-click node
+
+### Keyboard Shortcuts
+
+| Action | Shortcut |
+|--------|----------|
+| Open Graph | Cmd/Ctrl + G |
+| Toggle 2D/3D | Cmd/Ctrl + Shift + 3 |
+| Focus Node | F |
+| Fit to View | Cmd/Ctrl + 0 |
+| Zoom In | Cmd/Ctrl + Plus |
+| Zoom Out | Cmd/Ctrl + Minus |
+| Search Node | Cmd/Ctrl + F |
+| Filter | Cmd/Ctrl + Shift + F |
+| Reset Layout | R |
+
+### Search and Focus
+
+**Node Search:**
+1. Press `Cmd/Ctrl + F` in graph
+2. Type note name
+3. Fuzzy search filters nodes
+4. Press Enter to focus
+5. Navigate with arrow keys
+
+**Focus Mode:**
+- Press `F` to focus selected node
+- Dims other nodes
+- Shows immediate connections
+- Adjustable focus distance
+
+## Layout Algorithms
+
+### Force-Directed Layout
+
+Default physics-based layout using D3-force:
+
+**Forces:**
+- **Link Force:** Pulls connected nodes together
+- **Charge Force:** Pushes all nodes apart
+- **Center Force:** Keeps graph centered
+- **Collision Force:** Prevents overlap
+
+**Parameters:**
+```javascript
+{
+  linkDistance: 100,      // Distance between linked nodes
+  linkStrength: 1,        // Pull strength
+  chargeStrength: -300,   // Repulsion strength
+  centerStrength: 0.1,    // Centering force
+  velocityDecay: 0.4      // Movement damping
+}
+```
+
+**Characteristics:**
+- Natural clustering
+- Reveals community structure
+- Adapts to network topology
+- Continuous optimization
+
+### Hierarchical Layout
+
+Tree-like layout for hierarchical structures:
+
+**Options:**
+- **Top-Down:** Root at top
+- **Left-Right:** Root at left
+- **Radial:** Root at center
+
+**Parameters:**
+- Node spacing
+- Level separation
+- Sibling distance
+- Direction
+
+**Best For:**
+- Folder hierarchies
+- Taxonomy structures
+- Sequential content
+- Parent-child relationships
+
+### Circular Layout
+
+Nodes arranged in a circle:
+
+**Features:**
+- Uniform distribution
+- Clear edge patterns
+- Compact visualization
+- Aesthetic appeal
+
+**Sorting:**
+- Alphabetical
+- By connections
+- By date
+- By custom property
+
+### Grid Layout
+
+Nodes on a regular grid:
+
+**Features:**
+- Predictable positions
+- Easy scanning
+- Good for small graphs
+- Stable layout
+
+**Grid Types:**
+- Square grid
+- Hexagonal grid
+- Custom spacing
+
+### Custom Layouts
+
+Create custom layouts via plugins:
+
+```javascript
+export const customLayout = {
+  name: 'custom',
+
+  compute(graph, settings) {
+    graph.forEachNode((node, attributes) => {
+      // Calculate x, y position
+      const pos = calculatePosition(node, attributes);
+      graph.setNodeAttribute(node, 'x', pos.x);
+      graph.setNodeAttribute(node, 'y', pos.y);
+    });
+  }
+};
+```
+
+## Node Styling
+
+### Node Appearance
+
+**Visual Properties:**
+- **Size:** Based on importance, word count, or connections
+- **Color:** By folder, tag, or custom property
+- **Shape:** Circle, square, diamond, star
+- **Border:** Thickness and color
+- **Label:** Font, size, color
+
+**Size Modes:**
+- **Fixed:** Same size for all nodes
+- **By Links:** Larger nodes have more connections
+- **By Word Count:** Larger nodes have more content
+- **By Custom:** Use any numeric property
+
+### Node Colors
+
+**Color Schemes:**
+- **Folder-based:** Each folder gets a color
+- **Tag-based:** Color by primary tag
+- **Type-based:** Color by note type
+- **Date-based:** Gradient by creation date
+- **Custom:** Define color rules
+
+**Color Palettes:**
+- Default (10 colors)
+- Colorblind-friendly
+- Pastel
+- Vibrant
+- Monochrome
+- Custom (import from palette)
+
+### Node Labels
+
+**Label Display:**
+- **Always:** Show at all zoom levels
+- **On Hover:** Show when mouse over
+- **On Zoom:** Show when zoomed in
+- **Never:** Hide labels
+
+**Label Content:**
+- Note title
+- Note alias
+- First heading
+- Custom field
+- Shortened title
+
+### Node Icons
+
+Add icons to nodes:
+
+**Icon Sources:**
+- File type (markdown, PDF, etc.)
+- Note property
+- Folder icon
+- Custom icon
+- Lucide icon library
+
+**Example:**
+```markdown
+---
+icon: FileText
+color: "#3b82f6"
+size: large
+---
+```
+
+## Edge Styling
+
+### Edge Appearance
+
+**Visual Properties:**
+- **Color:** By type, direction, or strength
+- **Thickness:** By link count or weight
+- **Style:** Solid, dashed, dotted
+- **Arrows:** Direction indicators
+- **Curve:** Straight, curved, bundled
+
+### Edge Types
+
+**Direction:**
+- **Bidirectional:** Both nodes link each other
+- **Unidirectional:** One-way link
+- **Undirected:** No direction (default)
+
+**Relationship:**
+- **Wiki Link:** Standard note link
+- **Backlink:** Reverse reference
+- **Embed:** Transclusion
+- **Reference:** Citation or mention
+
+### Edge Weights
+
+Represent connection strength:
+
+**Weight Calculation:**
+- Number of links between notes
+- Number of shared tags
+- Content similarity
+- Custom formula
+
+**Visual Mapping:**
+- Thicker lines for stronger connections
+- Darker colors for higher weights
+- Animated for active connections
+
+## Filtering
+
+### Filter Panel
+
+Access filters from graph toolbar:
+
+**Filter Types:**
+- **Text:** Filter by note name
+- **Folder:** Include/exclude folders
+- **Tag:** Show specific tags
+- **Date:** Filter by date range
+- **Property:** Filter by custom fields
+
+### Filter Syntax
+
+Advanced filtering with queries:
+
+```
+# Show only project notes
+folder:"Projects" AND tag:#active
+
+# Exclude archived content
+NOT folder:"Archive"
+
+# Recent notes with links
+created:>2024-01-01 AND links:>0
+
+# High-connectivity nodes
+connections:>10
+
+# Complex query
+(tag:#project OR tag:#idea) AND folder:"Current"
+```
+
+### Saved Filters
+
+Save frequently used filters:
+
+1. Create filter
+2. Click "Save Filter"
+3. Name the filter
+4. Access from dropdown
+
+**Pre-built Filters:**
+- Most Connected
+- Recent Activity
+- Orphaned Notes
+- Hub Notes
+- Untagged Notes
+
+## Clustering
+
+### Automatic Clustering
+
+Lokus detects communities in your graph:
+
+**Algorithms:**
+- **Louvain:** Modularity optimization
+- **Label Propagation:** Fast clustering
+- **Betweenness:** Bridge detection
+- **K-means:** Fixed number of clusters
+
+**Visualization:**
+- Color by cluster
+- Cluster boundaries
+- Cluster labels
+- Inter-cluster links
+
+### Manual Clustering
+
+Create custom clusters:
+
+1. Select nodes (Shift + click)
+2. Right-click selection
+3. "Create Cluster"
+4. Name and color cluster
+
+**Cluster Operations:**
+- Add/remove nodes
+- Merge clusters
+- Split clusters
+- Nest clusters
+
+## Analysis
+
+### Graph Metrics
+
+View statistics about your graph:
+
+**Network Metrics:**
+- **Nodes:** Total note count
+- **Edges:** Total link count
+- **Density:** Connection ratio
+- **Average Degree:** Avg links per note
+- **Diameter:** Longest shortest path
+- **Components:** Disconnected groups
+
+**Node Metrics (per note):**
+- **Degree:** Total connections
+- **In-Degree:** Incoming links
+- **Out-Degree:** Outgoing links
+- **Betweenness:** Bridge importance
+- **Closeness:** Average distance to others
+- **PageRank:** Influence score
+
+### Path Analysis
+
+Find connections between notes:
+
+**Shortest Path:**
+1. Select source node
+2. Shift + click target node
+3. Path highlighted
+4. Distance shown
+
+**All Paths:**
+- Show all routes
+- Filter by length
+- Highlight on hover
+
+**Path Metrics:**
+- Path length
+- Intermediate nodes
+- Alternative routes
+
+### Network Patterns
+
+Identify structural patterns:
+
+**Hubs:**
+- Highly connected notes
+- Central to knowledge graph
+- Potential index pages
+
+**Bridges:**
+- Connect communities
+- Critical connections
+- Integration points
+
+**Isolates:**
+- No connections
+- Orphaned content
+- Candidates for linking
+
+**Cliques:**
+- Fully connected subgraphs
+- Tightly related topics
+- Dense knowledge areas
+
+## Interaction
+
+### Node Actions
+
+Right-click node for context menu:
+
+**Actions:**
+- Open in current pane
+- Open in new pane
+- Open in new window
+- Show in sidebar
+- Show in canvas
+- Copy link
+- Delete note
+- Properties
+
+### Selection
+
+Select multiple nodes:
+
+**Methods:**
+- Click while holding Shift
+- Drag selection rectangle
+- Select by filter
+- Select neighbors
+
+**Selection Actions:**
+- Create cluster
+- Bulk edit properties
+- Export selection
+- Delete selection
+
+![Graph Node Interactions and Selections](/placeholder.svg)
+
+### Hover Effects
+
+Hover over nodes for information:
+
+**Hover Display:**
+- Note title (full)
+- First paragraph preview
+- Link count
+- Last modified date
+- Tags
+- Custom properties
+
+**Connected Nodes:**
+- Highlight immediate connections
+- Dim unconnected nodes
+- Show edge labels
+
+## Performance
+
+### Optimization
+
+Graph performance with large workspaces:
+
+**Rendering:**
+- WebGL for 2D (10,000+ nodes)
+- WebGL for 3D (5,000+ nodes)
+- Level-of-detail (LOD) rendering
+- Frustum culling in 3D
+- Occlusion culling
+
+**Physics:**
+- Web Worker simulation
+- Quadtree acceleration
+- Adaptive timestep
+- Sleep detection for stable nodes
+
+**Benchmarks:**
+- 10,000 nodes: 60fps
+- 1,000 nodes: Full features
+- 100,000 links: Supported
+
+### Performance Settings
+
+Adjust for your needs:
+
+**Quality:**
+- **High:** All effects, smooth
+- **Medium:** Balanced
+- **Low:** Performance priority
+- **Auto:** Adjust dynamically
+
+**Options:**
+- Particle effects
+- Anti-aliasing
+- Shadows (3D)
+- Edge curves
+- Label rendering
+
+## Export
+
+### Image Export
+
+Export graph as image:
+
+**Formats:**
+- PNG (raster)
+- SVG (vector)
+- JPG (compressed)
+- WebP (modern)
+
+**Options:**
+- Resolution (1x-4x)
+- Transparent background
+- Include labels
+- Include legend
+- Current view or full graph
+
+### Data Export
+
+Export graph structure:
+
+**Formats:**
+- JSON (nodes + edges)
+- GraphML (standard format)
+- GEXF (Gephi format)
+- DOT (Graphviz)
+- CSV (nodes/edges separate)
+
+**Use Cases:**
+- External analysis
+- Backup
+- Migration
+- Sharing
+
+### Interactive Export
+
+Export as interactive HTML:
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Lokus Graph Export</title>
+    <script src="sigma.min.js"></script>
+  </head>
+  <body>
+    <!-- Embedded interactive graph -->
+  </body>
+</html>
+```
+
+**Features:**
+- Standalone file
+- Full interactivity
+- No server required
+- Share via email/web
+
+## Use Cases
+
+### Knowledge Exploration
+
+Discover connections:
+
+1. Open graph view
+2. Navigate to topic area
+3. Explore local connections
+4. Follow interesting paths
+5. Update notes with insights
+
+### Content Organization
+
+Identify structure issues:
+
+**Find:**
+- Orphaned notes → link them
+- Dense clusters → split topics
+- Weak connections → add bridges
+- Missing hubs → create index
+
+### Workflow Integration
+
+**Daily Review:**
+1. Check recent node activity
+2. Verify new connections
+3. Identify patterns
+4. Plan next work
+
+**Project Planning:**
+1. Create project hub note
+2. Link all related notes
+3. Visualize project scope
+4. Track connections
+
+## Configuration
+
+### Graph Settings
+
+Configure in Settings > Graph:
+
+**Layout:**
+- Default algorithm
+- Force parameters
+- Animation speed
+- Stability threshold
+
+**Appearance:**
+- Node size mode
+- Color scheme
+- Edge style
+- Label display
+
+**Performance:**
+- Quality preset
+- Max nodes to display
+- Physics enabled
+- Update frequency
+
+**Behavior:**
+- Click action
+- Double-click action
+- Hover delay
+- Navigation mode
+
+## Integration
+
+### Editor Integration
+
+Access graph from editor:
+
+**Local Graph:**
+- Embedded in note view
+- Shows note connections
+- Click to navigate
+- Updates in real-time
+
+**Graph Panel:**
+- Side-by-side with editor
+- Synchronized selection
+- Linked scrolling
+
+### Canvas Integration
+
+Combine graph and canvas:
+
+**Canvas Nodes:**
+- Drag notes from graph to canvas
+- Maintain connections
+- Visual layout control
+- See [Canvas](/features/canvas)
+
+### Search Integration
+
+Graph-aware search:
+
+```
+connected-to:[[Note Name]]
+distance:2 from:[[Start]]
+cluster:"Research"
+```
+
+See [Search System](/features/search)
+
+## Best Practices
+
+### Graph Maintenance
+
+**Regular Review:**
+- Check for orphans monthly
+- Verify link accuracy
+- Update hub notes
+- Prune old connections
+
+**Strategic Linking:**
+- Link related concepts
+- Create hub notes
+- Maintain hierarchies
+- Balance structure vs. flexibility
+
+### Visualization Tips
+
+**For Large Graphs:**
+- Use filters liberally
+- Focus on subgraphs
+- Leverage clustering
+- Export for analysis
+
+**For Presentations:**
+- Use 3D view
+- Enable animations
+- Clean up layout
+- Export high-res images
+
+## Troubleshooting
+
+### Common Issues
+
+**Issue:** Graph too cluttered
+**Solution:** Apply filters, increase charge force, use clustering
+
+**Issue:** Slow performance
+**Solution:** Reduce quality, limit nodes shown, disable physics
+
+**Issue:** Nodes overlapping
+**Solution:** Increase collision force, use different layout
+
+**Issue:** Can't find node
+**Solution:** Use search (Cmd/Ctrl + F), check filters
+
+## Next Steps
+
+- Explore [Wiki Links](/features/wiki-links) to create connections
+- Try [Canvas](/features/canvas) for manual graph layout
+- Learn [Search](/features/search) for graph-based queries
+- See [Templates](/features/templates) for structured linking

@@ -1,0 +1,288 @@
+# Features Overview
+
+Lokus provides a comprehensive suite of features designed for modern knowledge management, combining powerful editing capabilities with advanced visualization and organization tools.
+
+## Core Features
+
+### Rich Text Editing
+
+Lokus includes a sophisticated rich text editor built on TipTap 3.4.x, offering full markdown support with advanced extensions for wiki links, math equations, code highlighting, and more.
+
+**Core Editing Features:**
+- [Rich Text Editor](/features/editor) - Full markdown support with advanced extensions
+- [Wiki Links](/features/wiki-links) - Bidirectional linking with autocomplete
+- [Graph Visualization](/features/graph) - 2D/3D interactive graph views
+- [Canvas](/features/canvas) - Infinite whiteboard with TLDraw
+
+### Knowledge Management
+
+**Organization Tools:**
+- [Task Management](/features/tasks) - Kanban boards and task tracking
+- [Database Views](/features/bases) - Table, card, list, and calendar views
+- [Search System](/features/search) - Fast full-text search powered by Rust
+- [Templates](/features/templates) - Pre-built and custom templates
+
+### Integrations & Customization
+
+**Extensions:**
+- [Gmail Integration](/features/gmail) - Import and sync emails
+- [Theme System](/features/themes) - Custom color schemes and visual styles
+
+## Feature Categories
+
+### Editor & Content Creation
+
+**Rich Text Editor**
+- Full markdown support with real-time preview
+- Custom TipTap extensions for enhanced functionality
+- Inline formatting (bold, italic, underline, strikethrough)
+- Headers (H1-H6) with automatic TOC generation
+- Lists (ordered, unordered, task lists)
+- Code blocks with 100+ language syntax highlighting
+- Math equations using LaTeX/KaTeX
+- Tables with column resizing and formatting
+- Images with drag-and-drop support
+- Smart paste (auto-detects content type)
+
+**Wiki Links**
+- Bidirectional linking with `[[Page Name]]` syntax
+- Autocomplete suggestions while typing
+- Backlinks panel showing incoming references
+- Alias support `[[Page Name|Display Text]]`
+- Link validation and broken link detection
+- Quick navigation between linked pages
+
+**Code Support**
+- Syntax highlighting for 100+ languages
+- Line numbers and code folding
+- Copy code button
+- Language badge display
+- Theme-aware color schemes
+
+### Visualization & Navigation
+
+**Graph Visualization**
+- 2D force-directed graph using Sigma.js
+- 3D graph visualization with Three.js
+- Interactive node navigation
+- Filter by tags, folders, or connections
+- Zoom, pan, and focus controls
+- Physics simulation with configurable forces
+- Node clustering and grouping
+- Connection strength visualization
+
+**Canvas & Whiteboard**
+- Infinite canvas powered by TLDraw
+- Draw shapes, arrows, and freehand
+- Add sticky notes and text boxes
+- Embed notes directly on canvas
+- Multi-user collaboration support
+- Export to PNG, SVG, or PDF
+- Touch and stylus support
+
+### Organization & Structure
+
+**Task Management**
+- Multiple task states (todo, doing, done, cancelled)
+- Kanban board view with drag-and-drop
+- Due dates and priorities
+- Task dependencies and subtasks
+- Progress tracking and statistics
+- Filter and sort by multiple criteria
+- Quick task creation with shortcuts
+
+**Database Views (Bases)**
+- Table view with sortable columns
+- Card/gallery view for visual content
+- List view for compact display
+- Calendar view for time-based data
+- Custom properties and field types
+- Filtering and sorting capabilities
+- Aggregations and rollups
+- Relations between databases
+
+**Templates**
+- Pre-built templates for common use cases
+- Custom template creation
+- Variable substitution
+- Template categories and tags
+- Quick access via command palette
+- Template gallery and sharing
+
+### Search & Discovery
+
+**Full-Text Search**
+- Lightning-fast search powered by Rust
+- Search across all notes and content
+- Fuzzy matching for typo tolerance
+- Filter by tags, dates, or folders
+- Regular expression support
+- Search within specific fields
+- Recent searches history
+- Search result highlighting
+
+**Smart Navigation**
+- Command palette (Cmd/Ctrl+K)
+- Quick switcher for rapid file access
+- Recent files list
+- Breadcrumb navigation
+- Folder tree with drag-and-drop
+- Starred/favorite notes
+
+### Integrations
+
+**Gmail Integration**
+- OAuth 2.0 authentication
+- Import emails as notes
+- Preserve threading and metadata
+- Attachment handling
+- Email search and filtering
+- Two-way sync options
+- Privacy-focused design
+
+**External Tools**
+- Jira integration for project management
+- Trello board sync
+- Calendar integrations
+- Custom data providers via plugins
+- MCP (Model Context Protocol) support
+- AI assistant integration
+
+### Customization
+
+**Theme System**
+- Light and dark mode support
+- Custom color schemes
+- Syntax highlighting themes
+- Per-element customization
+- Theme export and import
+- Community theme gallery
+
+**Plugin System**
+- VS Code-level extensibility
+- Sandboxed plugin execution
+- Custom editor extensions
+- UI component plugins
+- Data provider plugins
+- Plugin marketplace
+
+## Platform Features
+
+### Local-First Architecture
+
+**Data Storage**
+- File-based markdown storage
+- No cloud dependency by default
+- Full data ownership
+- Git-friendly plain text format
+- Automatic backups
+- Version history
+
+**Performance**
+- Rust-powered backend for speed
+- Lazy loading for large workspaces
+- Efficient indexing and search
+- Minimal memory footprint
+- Native app performance
+
+### Cross-Platform
+
+**Desktop Support**
+- Windows (10 1903+)
+- macOS (10.15+, Intel + Apple Silicon)
+- Linux (Ubuntu 20.04+, AppImage, DEB, RPM)
+
+**Sync Options**
+- File system-based sync
+- Git synchronization
+- Cloud storage providers (Dropbox, Google Drive)
+- Custom sync solutions via plugins
+
+## Advanced Features
+
+### Developer Tools
+
+**Plugin Development**
+- TypeScript API
+- Hot reload during development
+- Debug console and logging
+- Plugin generator CLI
+- Comprehensive documentation
+- Example plugins and templates
+
+**MCP Server**
+- Model Context Protocol implementation
+- AI assistant integration
+- Context-aware suggestions
+- Custom tool definitions
+- Secure sandbox environment
+
+### Extensibility Points
+
+**Editor Extensions**
+- Custom node types
+- Mark extensions
+- Input rules and paste handlers
+- Keyboard shortcuts
+- Context menus
+
+**UI Extensions**
+- Custom sidebar panels
+- Toolbar buttons
+- Modal dialogs
+- Status bar items
+- Settings pages
+
+**Data Extensions**
+- Custom field types
+- Data transformers
+- Import/export formats
+- Sync adapters
+- Search providers
+
+## Feature Comparison
+
+| Feature | Lokus | Obsidian | Notion | Roam Research |
+|---------|-------|----------|--------|---------------|
+| Local-First | Yes | Yes | No | No |
+| Rich Text Editor | TipTap | CodeMirror | Proprietary | Proprietary |
+| Wiki Links | Yes | Yes | Yes | Yes |
+| Graph View | 2D/3D | 2D | No | Yes |
+| Canvas | Yes | Yes | No | No |
+| Database Views | Yes | Limited | Yes | No |
+| Plugin System | Yes | Yes | Limited | Limited |
+| Open Source | Planned | No | No | No |
+| Offline Support | Full | Full | Limited | Limited |
+| AI Integration | MCP | Limited | Built-in | Limited |
+| Performance | Rust | Node.js | Cloud | Cloud |
+
+## Coming Soon
+
+**Planned Features**
+- Mobile apps (iOS/Android)
+- Real-time collaboration
+- End-to-end encryption
+- Advanced AI features
+- Presentation mode
+- Timeline view
+- Mind mapping
+- PDF annotation
+
+**Community Requests**
+- Vim mode
+- Emacs keybindings
+- LaTeX export
+- Academic citations
+- Zettelkasten templates
+- Spaced repetition
+
+## Getting Started
+
+Ready to explore these features? Start with:
+
+1. [Rich Text Editor](/features/editor) - Learn about the editing experience
+2. [Wiki Links](/features/wiki-links) - Connect your notes
+3. [Graph Visualization](/features/graph) - Visualize your knowledge
+4. [Task Management](/features/tasks) - Organize your work
+
+Or jump directly to any feature from the navigation menu.

@@ -1,0 +1,495 @@
+# Editor Plugins
+
+Create custom editor extensions for Lokus's TipTap-based rich text editor. Add custom nodes, marks, extensions, and editor behaviors.
+
+## Editor Architecture
+
+Lokus uses TipTap 3 (built on ProseMirror) for its editor. Plugins can extend the editor with:
+
+- **Nodes** - Block-level content (paragraphs, headings, code blocks)
+- **Marks** - Inline formatting (bold, italic, links)
+- **Extensions** - Editor behaviors (keyboard shortcuts, paste handlers)
+- **Decorations** - Visual overlays (syntax highlighting, spell check)
+
+## Creating Custom Nodes
+
+### Basic Node Example
+
+```typescript
+import { Node } from '@tiptap/core'
+
+const CustomBlock = Node.create({
+  name: 'customBlock',
+
+  group: 'block',
+
+  content: 'inline*',
+
+  parseHTML() {
+    return [
+      {
+        tag: 'div[data-type="custom-block"]',
+      },
+    ]
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return ['div', { 'data-type': 'custom-block', ...HTMLAttributes }, 0]
+  },
+
+  addCommands() {
+    return {
+      insertCustomBlock: () => ({ commands }) => {
+        return commands.insertContent({
+          type: this.name,
+          content: [{ type: 'text', text: 'Custom block content' }],
+        })
+      },
+    }
+  },
+})
+```
+
+### Register Node in Plugin
+
+```typescript
+export default class EditorPlugin implements Plugin {
+  async activate(context: PluginContext) {
+    // Register the custom node
+    context.api.editor.registerExtension(CustomBlock)
+
+    // Register command to insert it
+    context.subscriptions.push(
+      context.api.commands.register({
+        id: 'myPlugin.insertCustomBlock',
+        title: 'Insert Custom Block',
+        handler: async () => {
+          const editor = await context.api.editor.getActiveEditor()
+          editor?.commands.insertCustomBlock()
+        }
+      })
+    )
+  }
+}
+```
+
+### Interactive Node Example
+
+Create a node with custom React component:
+
+```typescript
+import { Node, ReactNodeViewRenderer } from '@tiptap/react'
+
+const InteractiveNode = Node.create({
+  name: 'interactiveNode',
+
+  group: 'block',
+
+  atom: true,
+
+  addAttributes() {
+    return {
+      count: {
+        default: 0,
+      },
+    }
+  },
+
+  parseHTML() {
+    return [{ tag: 'interactive-node' }]
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return ['interactive-node', HTMLAttributes]
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(InteractiveNodeComponent)
+  },
+})
+
+// React component
+function InteractiveNodeComponent({ node, updateAttributes }) {
+  return (
+    <div className="interactive-node">
+      <p>Count: {node.attrs.count}</p>
+      <button onClick={() => updateAttributes({ count: node.attrs.count + 1 })}>
+        Increment
+      </button>
+    </div>
+  )
+}
+```
+
+## Creating Custom Marks
+
+### Basic Mark Example
+
+```typescript
+import { Mark } from '@tiptap/core'
+
+const CustomHighlight = Mark.create({
+  name: 'customHighlight',
+
+  addAttributes() {
+    return {
+      color: {
+        default: 'yellow',
+        parseHTML: element => element.getAttribute('data-color'),
+        renderHTML: attributes => {
+          return { 'data-color': attributes.color }
+        },
+      },
+    }
+  },
+
+  parseHTML() {
+    return [
+      {
+        tag: 'mark[data-type="custom-highlight"]',
+      },
+    ]
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return ['mark', { 'data-type': 'custom-highlight', ...HTMLAttributes }, 0]
+  },
+
+  addCommands() {
+    return {
+      setCustomHighlight: attributes => ({ commands }) => {
+        return commands.setMark(this.name, attributes)
+      },
+      toggleCustomHighlight: attributes => ({ commands }) => {
+        return commands.toggleMark(this.name, attributes)
+      },
+    }
+  },
+})
+```
+
+## Creating Extensions
+
+### Keyboard Shortcut Extension
+
+```typescript
+import { Extension } from '@tiptap/core'
+
+const CustomShortcuts = Extension.create({
+  name: 'customShortcuts',
+
+  addKeyboardShortcuts() {
+    return {
+      // Ctrl/Cmd + Shift + H
+      'Mod-Shift-h': () => this.editor.commands.setHeading({ level: 1 }),
+
+      // Ctrl/Cmd + D - Duplicate line
+      'Mod-d': () => {
+        const { state } = this.editor
+        const { from, to } = state.selection
+        const text = state.doc.textBetween(from, to, '\n')
+        return this.editor.commands.insertContentAt(to, `\n${text}`)
+      },
+
+      // Tab - Indent
+      'Tab': () => this.editor.commands.sinkListItem('listItem'),
+
+      // Shift+Tab - Outdent
+      'Shift-Tab': () => this.editor.commands.liftListItem('listItem'),
+    }
+  },
+})
+```
+
+### Paste Handler Extension
+
+```typescript
+const SmartPaste = Extension.create({
+  name: 'smartPaste',
+
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        props: {
+          handlePaste: (view, event, slice) => {
+            const text = event.clipboardData?.getData('text/plain')
+
+            // Handle URL paste
+            if (text && /^https?:\/\//.test(text)) {
+              const { state, dispatch } = view
+              const { tr } = state
+              tr.insertText(`[${text}](${text})`)
+              dispatch(tr)
+              return true
+            }
+
+            // Handle code paste
+            if (event.clipboardData?.types.includes('text/html')) {
+              const html = event.clipboardData.getData('text/html')
+              if (html.includes('<pre') || html.includes('<code')) {
+                // Insert as code block
+                this.editor.commands.setCodeBlock()
+                return false
+              }
+            }
+
+            return false
+          },
+        },
+      }),
+    ]
+  },
+})
+```
+
+## Syntax Highlighting
+
+### Adding Language Support
+
+```typescript
+import { lowlight } from 'lowlight'
+import rust from 'highlight.js/lib/languages/rust'
+
+export default class RustSyntaxPlugin implements Plugin {
+  async activate(context: PluginContext) {
+    // Register Rust language
+    lowlight.registerLanguage('rust', rust)
+
+    // Add to manifest
+    context.api.languages.registerLanguage({
+      id: 'rust',
+      extensions: ['.rs'],
+      aliases: ['Rust', 'rust-lang'],
+    })
+  }
+}
+```
+
+## Completion Providers
+
+### Custom Autocomplete
+
+```typescript
+context.api.editor.registerCompletionProvider(
+  'markdown',
+  {
+    provideCompletionItems(document, position, token, context) {
+      // Trigger on @mention
+      if (context.triggerCharacter === '@') {
+        return [
+          {
+            label: '@john',
+            kind: CompletionItemKind.User,
+            insertText: '@john',
+            detail: 'John Doe',
+            documentation: 'Mention John Doe'
+          },
+          {
+            label: '@jane',
+            kind: CompletionItemKind.User,
+            insertText: '@jane',
+            detail: 'Jane Smith',
+          }
+        ]
+      }
+
+      // Trigger on #hashtag
+      if (context.triggerCharacter === '#') {
+        return [
+          {
+            label: '#todo',
+            kind: CompletionItemKind.Keyword,
+            insertText: '#todo',
+          },
+          {
+            label: '#important',
+            kind: CompletionItemKind.Keyword,
+            insertText: '#important',
+          }
+        ]
+      }
+
+      return []
+    }
+  },
+  '@', '#'  // Trigger characters
+)
+```
+
+## Editor Commands
+
+### Custom Editor Commands
+
+```typescript
+// Register custom editor command
+context.api.commands.register({
+  id: 'myPlugin.formatMarkdown',
+  title: 'Format Markdown',
+  handler: async () => {
+    const content = await context.api.editor.getContent()
+
+    // Format the markdown
+    const formatted = formatMarkdown(content)
+
+    // Update editor
+    await context.api.editor.setContent(formatted)
+
+    context.api.ui.showNotification('Markdown formatted', 'success')
+  }
+})
+
+// Register selection-based command
+context.api.commands.register({
+  id: 'myPlugin.uppercaseSelection',
+  title: 'Uppercase Selection',
+  handler: async () => {
+    const selection = await context.api.editor.getSelection()
+    if (!selection) return
+
+    const text = await context.api.editor.getTextInRange({
+      start: selection.start,
+      end: selection.end
+    })
+
+    await context.api.editor.replaceText(
+      { start: selection.start, end: selection.end },
+      text.toUpperCase()
+    )
+  }
+})
+```
+
+## Decorations
+
+### Adding Visual Decorations
+
+```typescript
+import { Decoration, DecorationSet } from '@tiptap/pm/view'
+
+const TodoHighlight = Extension.create({
+  name: 'todoHighlight',
+
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        state: {
+          init(_, { doc }) {
+            return findTodos(doc)
+          },
+          apply(tr, oldState) {
+            return tr.docChanged ? findTodos(tr.doc) : oldState
+          },
+        },
+        props: {
+          decorations(state) {
+            return this.getState(state)
+          },
+        },
+      }),
+    ]
+  },
+})
+
+function findTodos(doc): DecorationSet {
+  const decorations = []
+
+  doc.descendants((node, pos) => {
+    if (node.isText && node.text) {
+      const regex = /TODO:([^\n]+)/g
+      let match
+
+      while ((match = regex.exec(node.text))) {
+        const from = pos + match.index
+        const to = from + match[0].length
+
+        decorations.push(
+          Decoration.inline(from, to, {
+            class: 'todo-highlight',
+            style: 'background-color: yellow; font-weight: bold;'
+          })
+        )
+      }
+    }
+  })
+
+  return DecorationSet.create(doc, decorations)
+}
+```
+
+## Best Practices
+
+### Performance
+
+```typescript
+// Bad: Recreate extension on every render
+function MyComponent() {
+  const CustomNode = Node.create({ /* ... */ })
+  return <Editor extensions={[CustomNode]} />
+}
+
+// Good: Create once
+const CustomNode = Node.create({ /* ... */ })
+
+function MyComponent() {
+  return <Editor extensions={[CustomNode]} />
+}
+```
+
+### Error Handling
+
+```typescript
+const SafeNode = Node.create({
+  name: 'safeNode',
+
+  addCommands() {
+    return {
+      insertSafeNode: () => ({ commands, editor }) => {
+        try {
+          return commands.insertContent({ type: this.name })
+        } catch (error) {
+          console.error('Failed to insert node:', error)
+          return false
+        }
+      },
+    }
+  },
+})
+```
+
+### Testing
+
+```typescript
+import { createTestEditor } from '@lokus/plugin-sdk/testing'
+
+describe('CustomNode', () => {
+  it('should insert custom node', () => {
+    const editor = createTestEditor({
+      extensions: [CustomNode]
+    })
+
+    editor.commands.insertCustomNode()
+
+    expect(editor.getJSON()).toMatchObject({
+      type: 'doc',
+      content: [
+        {
+          type: 'customNode',
+        },
+      ],
+    })
+  })
+})
+```
+
+## Examples
+
+Check out complete examples:
+- [Math Equations Plugin](https://github.com/lokus-ai/plugin-examples/tree/main/math-equations)
+- [Mermaid Diagrams Plugin](https://github.com/lokus-ai/plugin-examples/tree/main/mermaid)
+- [Custom Task Lists](https://github.com/lokus-ai/plugin-examples/tree/main/task-lists)
+
+## Resources
+
+- [TipTap Documentation](https://tiptap.dev)
+- [ProseMirror Guide](https://prosemirror.net/docs/guide/)
+- [Editor API Reference](/developers/plugins/api#editor-api)

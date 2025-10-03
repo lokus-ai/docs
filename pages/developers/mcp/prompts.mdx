@@ -1,0 +1,301 @@
+# MCP Prompts
+
+Prompts in MCP are reusable templates that help AI assistants generate contextually appropriate responses. They provide a structured way to define common interaction patterns and workflows.
+
+## Overview
+
+An MCP prompt is a template that:
+- **Defines structure**: Specifies message format and roles
+- **Accepts parameters**: Uses variable substitution
+- **Provides context**: Includes relevant information
+- **Guides AI**: Directs assistant behavior
+
+## Prompt Structure
+
+```typescript
+interface MCPPrompt {
+  name: string                // Unique identifier
+  description: string         // What the prompt does
+  template: string           // Template with {{variables}}
+  arguments?: PromptArgument[] // Parameter definitions
+}
+
+interface PromptArgument {
+  name: string
+  description: string
+  required?: boolean
+  type?: 'string' | 'number' | 'boolean'
+  default?: any
+}
+```
+
+## Creating Prompts
+
+### Basic Prompt
+
+```javascript
+export default class MyPlugin {
+  async activate(context) {
+    const { mcp } = context
+
+    mcp.registerPrompt({
+      name: 'summarizeNote',
+      description: 'Generate a summary of a note',
+      template: `Summarize the following note:\n\nTitle: {{title}}\n\nContent:\n{{content}}\n\nProvide a concise 2-3 sentence summary.`,
+      arguments: [
+        {
+          name: 'title',
+          description: 'Note title',
+          required: true,
+          type: 'string'
+        },
+        {
+          name: 'content',
+          description: 'Note content',
+          required: true,
+          type: 'string'
+        }
+      ]
+    })
+  }
+}
+```
+
+### Using Prompt Builder
+
+```javascript
+import { MCPPromptBuilder } from '@lokus/mcp'
+
+const prompt = new MCPPromptBuilder()
+  .setName('codeReview')
+  .setDescription('Request code review with specific focus areas')
+  .setTemplate(`Review the following code:\n\n\`\`\`{{language}}\n{{code}}\n\`\`\`\n\nFocus on: {{focusAreas}}\n\nProvide specific, actionable feedback.`)
+  .setArguments([
+    {
+      name: 'code',
+      description: 'Code to review',
+      required: true,
+      type: 'string'
+    },
+    {
+      name: 'language',
+      description: 'Programming language',
+      required: false,
+      type: 'string',
+      default: 'javascript'
+    },
+    {
+      name: 'focusAreas',
+      description: 'Areas to focus on (e.g., performance, security)',
+      required: false,
+      type: 'string',
+      default: 'code quality and best practices'
+    }
+  ])
+  .build()
+
+mcp.registerPrompt(prompt)
+```
+
+## Using Prompts
+
+### Client-Side
+
+```javascript
+import { MCPClient } from '@lokus/mcp'
+
+const client = new MCPClient('my-client')
+await client.connect(transport)
+
+// List available prompts
+const prompts = await client.listPrompts()
+console.log('Available prompts:', prompts.prompts.map(p => p.name))
+
+// Get rendered prompt
+const result = await client.getPrompt('summarizeNote', {
+  title: 'Project Plan',
+  content: 'We need to build a new feature...'
+})
+
+console.log('Rendered prompt:', result.messages[0].content.text)
+
+// Use with AI
+const aiResponse = await ai.sendMessage(result.messages)
+```
+
+## Common Prompt Patterns
+
+### Note Analysis
+
+```javascript
+mcp.registerPrompt({
+  name: 'analyzeNote',
+  description: 'Analyze note structure and suggest improvements',
+  template: `Analyze this note and provide suggestions:
+
+Title: {{title}}
+
+Content:
+{{content}}
+
+Please provide:
+1. Structural analysis
+2. Content organization suggestions
+3. Missing sections or information
+4. Overall quality assessment`,
+  arguments: [
+    { name: 'title', required: true, type: 'string' },
+    { name: 'content', required: true, type: 'string' }
+  ]
+})
+```
+
+### Task Generation
+
+```javascript
+mcp.registerPrompt({
+  name: 'generateTasks',
+  description: 'Generate actionable tasks from project description',
+  template: `Based on this project description, generate a list of specific, actionable tasks:
+
+Project: {{projectName}}
+Description: {{description}}
+Timeline: {{timeline}}
+
+Generate 5-10 tasks with:
+- Clear action items
+- Estimated effort
+- Dependencies
+- Priority level`,
+  arguments: [
+    { name: 'projectName', required: true, type: 'string' },
+    { name: 'description', required: true, type: 'string' },
+    { name: 'timeline', required: false, type: 'string', default: 'not specified' }
+  ]
+})
+```
+
+### Code Generation
+
+```javascript
+mcp.registerPrompt({
+  name: 'generateComponent',
+  description: 'Generate React component based on specifications',
+  template: `Generate a React component with the following specifications:
+
+Component Name: {{componentName}}
+Type: {{componentType}}
+Props: {{props}}
+Features: {{features}}
+
+Requirements:
+- Use TypeScript
+- Include PropTypes
+- Add JSDoc comments
+- Follow best practices
+- Include basic styling`,
+  arguments: [
+    { name: 'componentName', required: true, type: 'string' },
+    { name: 'componentType', required: false, type: 'string', default: 'functional' },
+    { name: 'props', required: false, type: 'string', default: 'none' },
+    { name: 'features', required: false, type: 'string', default: 'basic rendering' }
+  ]
+})
+```
+
+## Advanced Prompt Features
+
+### Multi-Step Prompts
+
+```javascript
+mcp.registerPrompt({
+  name: 'documentationWorkflow',
+  description: 'Multi-step documentation generation workflow',
+  template: `Step 1: Analyze the code
+{{code}}
+
+Step 2: Identify key components and their purposes
+
+Step 3: Generate documentation sections:
+- Overview
+- API Reference
+- Usage Examples
+- Configuration Options
+
+Step 4: Format in {{format}} format
+
+Additional context: {{context}}`,
+  arguments: [
+    { name: 'code', required: true, type: 'string' },
+    { name: 'format', required: false, type: 'string', default: 'Markdown' },
+    { name: 'context', required: false, type: 'string', default: 'none' }
+  ]
+})
+```
+
+### Context-Aware Prompts
+
+```javascript
+export default class ContextualPromptsPlugin {
+  async activate(context) {
+    const { mcp, workspace, editor } = context
+
+    mcp.registerPrompt({
+      name: 'improveCurrentNote',
+      description: 'Suggest improvements for the currently open note',
+      template: async () => {
+        // Get current context
+        const currentNote = await editor.getCurrentNote()
+        const relatedNotes = await workspace.findRelatedNotes(currentNote.id)
+
+        return `Improve this note:
+
+Current Note:
+Title: ${currentNote.title}
+Content:
+${currentNote.content}
+
+Related Notes:
+${relatedNotes.map(n => `- ${n.title}`).join('\n')}
+
+Suggest:
+1. Content improvements
+2. Additional links to related notes
+3. Better structure or organization
+4. Missing information to add`
+      },
+      arguments: []
+    })
+  }
+}
+```
+
+## Best Practices
+
+### 1. Template Design
+- Clear instructions
+- Structured format
+- Relevant context
+- Specific requirements
+- Example outputs
+
+### 2. Variable Usage
+- Descriptive names
+- Required vs optional
+- Default values
+- Type safety
+- Validation
+
+### 3. Documentation
+- Clear descriptions
+- Usage examples
+- Expected outputs
+- Limitations
+- Best practices
+
+## Next Steps
+
+**Related Documentation:**
+- [Plugin Integration](/developers/mcp/plugin-integration)
+- [AI Assistants](/developers/mcp/ai-assistants)
+- [API Reference](/developers/mcp/api-reference)

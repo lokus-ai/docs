@@ -1,0 +1,841 @@
+# MCP Setup & Configuration
+
+This guide walks you through setting up MCP (Model Context Protocol) in Lokus, from basic initialization to advanced configuration options.
+
+## Quick Start
+
+### 1. Initialize MCP Integration
+
+The MCP integration is automatically initialized when Lokus starts, but you can manually configure it:
+
+```javascript
+import { initializeMCP, getMCPIntegration } from '@lokus/mcp'
+
+// Initialize with default options
+const mcp = await initializeMCP(pluginManager, securityManager)
+
+// Or get the existing integration
+const mcp = getMCPIntegration()
+```
+
+### 2. Basic Server Configuration
+
+Create a simple MCP server plugin:
+
+```javascript
+// manifest.json
+{
+  "id": "my-mcp-server",
+  "name": "My MCP Server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "mcp-server",
+  "permissions": [
+    "mcp:serve",
+    "mcp:resources:read",
+    "mcp:tools:execute"
+  ],
+  "mcp": {
+    "type": "mcp-server",
+    "enableResourceSubscriptions": true,
+    "enableToolExecution": true,
+    "enablePromptTemplates": true
+  }
+}
+```
+
+```javascript
+// index.js
+export default class MyMCPServer {
+  async activate(context) {
+    const { mcp } = context
+
+    // Register a simple resource
+    mcp.registerResource({
+      uri: 'myplugin://hello',
+      name: 'Hello Resource',
+      type: 'memory',
+      mimeType: 'text/plain',
+      content: 'Hello from MCP!'
+    })
+
+    console.log('MCP server activated')
+  }
+
+  async deactivate() {
+    // Cleanup happens automatically
+  }
+}
+```
+
+### 3. Test Your Server
+
+Use the MCP client to test your server:
+
+```javascript
+import { MCPClient } from '@lokus/mcp'
+
+const client = new MCPClient('test-client')
+
+// Connect to your server
+await client.connect(transport, {
+  name: 'Test Client',
+  version: '1.0.0'
+})
+
+// List resources
+const resources = await client.listResources()
+console.log(resources) // Should include your 'hello' resource
+
+// Read resource
+const content = await client.readResource('myplugin://hello')
+console.log(content.contents[0].text) // 'Hello from MCP!'
+```
+
+## Server Configuration
+
+### Server Types
+
+Lokus supports three types of MCP servers:
+
+#### Internal Servers (Web Workers)
+Best for most plugins. Runs in isolated Web Worker for security and performance.
+
+```javascript
+{
+  "mcp": {
+    "type": "mcp-server",
+    "serverType": "internal" // Default
+  }
+}
+```
+
+**Pros:**
+- Secure sandboxing
+- No subprocess overhead
+- Good performance
+- Easy debugging
+
+**Cons:**
+- Limited Node.js API access
+- Memory limits apply
+
+#### External Servers (Subprocess)
+For plugins needing full Node.js capabilities or running external executables.
+
+```javascript
+{
+  "mcp": {
+    "type": "mcp-server",
+    "serverType": "external",
+    "command": "node",
+    "args": ["./server.js"],
+    "env": {
+      "NODE_ENV": "production"
+    }
+  }
+}
+```
+
+**Pros:**
+- Full Node.js API access
+- Can run external programs
+- More memory available
+
+**Cons:**
+- Subprocess overhead
+- Requires process management
+- More resource intensive
+
+#### Embedded Servers (Main Thread)
+Only for simple, trusted plugins. Runs in main thread.
+
+```javascript
+{
+  "mcp": {
+    "type": "mcp-server",
+    "serverType": "embedded"
+  }
+}
+```
+
+**Warning:** Use with caution. Can block UI if not careful.
+
+### Resource Limits
+
+Configure resource constraints for your server:
+
+```javascript
+{
+  "mcp": {
+    "memoryLimit": 134217728,        // 128MB in bytes
+    "cpuTimeLimit": 1000,            // 1 second per request
+    "maxConcurrentRequests": 50,     // Max parallel requests
+    "requestTimeout": 30000          // 30 second timeout
+  }
+}
+```
+
+### Capabilities Configuration
+
+Declare what your server supports:
+
+```javascript
+{
+  "mcp": {
+    "capabilities": {
+      "resources": {
+        "subscribe": true,           // Support resource subscriptions
+        "listChanged": true          // Notify on resource list changes
+      },
+      "tools": {
+        "listChanged": true          // Notify on tool list changes
+      },
+      "prompts": {
+        "listChanged": true          // Notify on prompt list changes
+      },
+      "logging": {
+        "enabled": true              // Support logging
+      }
+    }
+  }
+}
+```
+
+## Client Configuration
+
+### Creating a Client
+
+```javascript
+import { MCPClient } from '@lokus/mcp'
+
+const client = new MCPClient('my-client', {
+  // Connection
+  autoReconnect: true,
+  reconnectDelay: 5000,
+  maxReconnectAttempts: 5,
+  requestTimeout: 30000,
+
+  // Caching
+  enableResourceCaching: true,
+  resourceCacheTTL: 60000,         // 1 minute
+  enableToolCaching: false,        // Tools usually don't need caching
+
+  // Performance
+  maxConcurrentRequests: 10,
+  requestRetries: 3
+})
+```
+
+### Transport Configuration
+
+#### Stdio Transport (for subprocess servers)
+```javascript
+import { StdioTransport } from '@lokus/mcp'
+
+const transport = new StdioTransport({
+  command: 'node',
+  args: ['./mcp-server.js'],
+  env: process.env
+})
+
+await client.connect(transport)
+```
+
+#### WebSocket Transport (for remote servers)
+```javascript
+import { WebSocketTransport } from '@lokus/mcp'
+
+const transport = new WebSocketTransport({
+  url: 'ws://localhost:3000/mcp',
+  protocols: ['mcp-v1'],
+  reconnect: true
+})
+
+await client.connect(transport)
+```
+
+#### IPC Transport (for internal communication)
+```javascript
+import { IPCTransport } from '@lokus/mcp'
+
+const transport = new IPCTransport({
+  channel: 'mcp-server-1',
+  timeout: 30000
+})
+
+await client.connect(transport)
+```
+
+## Environment Configuration
+
+### Development Setup
+
+Create a `.env.development` file:
+
+```bash
+# MCP Configuration
+MCP_ENABLED=true
+MCP_DEBUG=true
+MCP_LOG_LEVEL=debug
+
+# Server Configuration
+MCP_SERVER_MEMORY_LIMIT=134217728
+MCP_SERVER_CPU_LIMIT=1000
+MCP_MAX_SERVERS=20
+
+# Client Configuration
+MCP_CLIENT_TIMEOUT=30000
+MCP_CLIENT_RETRIES=3
+MCP_AUTO_RECONNECT=true
+```
+
+Load in your application:
+
+```javascript
+import { loadMCPConfig } from '@lokus/mcp/config'
+
+const config = loadMCPConfig({
+  env: process.env.NODE_ENV || 'development'
+})
+
+const mcp = await initializeMCP(pluginManager, securityManager, config)
+```
+
+### Production Setup
+
+Create a `.env.production` file:
+
+```bash
+# MCP Configuration
+MCP_ENABLED=true
+MCP_DEBUG=false
+MCP_LOG_LEVEL=info
+
+# Server Configuration
+MCP_SERVER_MEMORY_LIMIT=104857600   # 100MB
+MCP_SERVER_CPU_LIMIT=500            # 500ms
+MCP_MAX_SERVERS=50
+
+# Security
+MCP_REQUIRE_SIGNATURE=true
+MCP_SANDBOX_MODE=strict
+
+# Monitoring
+MCP_METRICS_ENABLED=true
+MCP_HEALTH_CHECK_INTERVAL=5000
+```
+
+## Advanced Configuration
+
+### Custom Protocol Configuration
+
+```javascript
+import { MCPProtocol } from '@lokus/mcp'
+
+const protocol = new MCPProtocol('custom-server', {
+  // Protocol options
+  enableResourceSubscriptions: true,
+  enableToolExecution: true,
+  enablePromptTemplates: true,
+  enableLogging: true,
+
+  // Performance
+  maxConcurrentRequests: 100,
+  requestTimeout: 60000,
+
+  // Caching
+  cacheResources: true,
+  cacheTTL: 300000,                 // 5 minutes
+
+  // Validation
+  validateSchemas: true,
+  strictMode: true
+})
+```
+
+### Server Host Configuration
+
+```javascript
+import { MCPServerHost } from '@lokus/mcp'
+
+const serverHost = new MCPServerHost(securityManager, {
+  // Server limits
+  maxServers: 50,
+  serverStartupTimeout: 30000,
+  serverShutdownTimeout: 10000,
+
+  // Health monitoring
+  healthCheckInterval: 5000,
+  restartOnCrash: true,
+  maxRestartAttempts: 3,
+
+  // Process isolation
+  enableProcessIsolation: true,
+  memoryLimit: 100 * 1024 * 1024,   // 100MB
+  cpuLimit: 1000,                    // 1 second
+
+  // Monitoring
+  enableMetrics: true,
+  metricsInterval: 10000
+})
+
+await serverHost.initialize()
+```
+
+### Plugin Manager Configuration
+
+```javascript
+import { MCPPluginManager } from '@lokus/mcp'
+
+const pluginManager = new MCPPluginManager(basePluginManager, securityManager, {
+  // Discovery
+  autoDiscoverMCPPlugins: true,
+  scanInterval: 30000,
+
+  // Activation
+  lazyActivation: true,
+  activationTimeout: 10000,
+
+  // Global registry
+  enableGlobalRegistry: true,
+  indexResources: true,
+  indexTools: true,
+  indexPrompts: true,
+
+  // Security
+  requireSignature: true,
+  allowUnsignedPlugins: false,
+
+  // Performance
+  maxPlugins: 100,
+  resourceLimit: 200 * 1024 * 1024  // 200MB total
+})
+
+await pluginManager.initialize()
+```
+
+## Security Configuration
+
+### Permission Model
+
+Define granular permissions in your manifest:
+
+```json
+{
+  "permissions": [
+    // Basic MCP
+    "mcp:serve",
+    "mcp:client",
+
+    // Resource permissions
+    "mcp:resources:read",
+    "mcp:resources:write",
+    "mcp:resources:subscribe",
+
+    // Tool permissions
+    "mcp:tools:execute",
+    "mcp:tools:register",
+
+    // Prompt permissions
+    "mcp:prompts:read",
+    "mcp:prompts:register",
+
+    // Specific resource access
+    "mcp:resource:lokus://notes/*",
+    "mcp:resource:file://workspace/*",
+
+    // Specific tool access
+    "mcp:tool:filesystem.*",
+    "mcp:tool:editor.*"
+  ]
+}
+```
+
+### Sandboxing Configuration
+
+```javascript
+{
+  "mcp": {
+    "sandbox": {
+      "enabled": true,
+      "mode": "strict",              // 'strict' | 'moderate' | 'permissive'
+
+      // Memory limits
+      "memoryLimit": 134217728,
+      "heapLimit": 100663296,
+
+      // CPU limits
+      "cpuTimeLimit": 1000,
+      "cpuThrottling": true,
+
+      // Network access
+      "allowNetwork": false,
+      "allowedDomains": [
+        "api.example.com"
+      ],
+
+      // File system access
+      "allowFileSystem": false,
+      "allowedPaths": [
+        "/workspace/*"
+      ],
+
+      // API access
+      "allowedAPIs": [
+        "editor",
+        "workspace"
+      ]
+    }
+  }
+}
+```
+
+### Code Signing
+
+Sign your plugin for production:
+
+```bash
+# Generate signing key
+lokus-plugin sign-key generate --output signing-key.pem
+
+# Sign plugin
+lokus-plugin sign \
+  --plugin ./my-plugin \
+  --key signing-key.pem \
+  --output my-plugin.signed.vsix
+```
+
+Configure signature verification:
+
+```javascript
+{
+  "mcp": {
+    "requireSignature": true,
+    "trustedPublishers": [
+      "lokus-official",
+      "my-organization"
+    ],
+    "publicKeys": [
+      "-----BEGIN PUBLIC KEY-----\n...\n-----END PUBLIC KEY-----"
+    ]
+  }
+}
+```
+
+## Monitoring and Debugging
+
+### Enable Logging
+
+```javascript
+import { MCPProtocol } from '@lokus/mcp'
+
+const protocol = new MCPProtocol('my-server', {
+  enableLogging: true,
+  logLevel: 'debug'              // 'debug' | 'info' | 'warn' | 'error'
+})
+
+// Listen to log events
+protocol.on('log', (event) => {
+  console.log(`[${event.level}] ${event.message}`, event.data)
+})
+```
+
+### Metrics Collection
+
+```javascript
+import { MCPServerHost } from '@lokus/mcp'
+
+const serverHost = new MCPServerHost(securityManager, {
+  enableMetrics: true,
+  metricsInterval: 10000
+})
+
+// Listen to metrics events
+serverHost.on('server-resource-usage', (event) => {
+  console.log(`Server ${event.serverId}:`)
+  console.log(`  Memory: ${event.usage.memory / 1024 / 1024}MB`)
+  console.log(`  CPU: ${event.usage.cpu}ms`)
+  console.log(`  Requests: ${event.usage.requests}`)
+})
+```
+
+### Health Checks
+
+```javascript
+import { MCPServerHost } from '@lokus/mcp'
+
+const serverHost = new MCPServerHost(securityManager, {
+  healthCheckInterval: 5000
+})
+
+// Listen to health status
+serverHost.on('server-status-changed', (event) => {
+  console.log(`Server ${event.serverId} status: ${event.status}`)
+
+  if (event.status === 'error') {
+    console.error('Server error detected, attempting restart...')
+  }
+})
+
+// Manual health check
+const stats = serverHost.getStats()
+console.log(`Healthy servers: ${stats.healthyServers}/${stats.totalServers}`)
+```
+
+### Debug Mode
+
+Enable comprehensive debugging:
+
+```javascript
+// Set global debug mode
+process.env.MCP_DEBUG = 'true'
+
+// Or configure per component
+const client = new MCPClient('debug-client', {
+  debug: true,
+  logLevel: 'debug',
+  traceRequests: true,
+  traceCommunication: true
+})
+
+// Log all communication
+client.on('message-sent', (msg) => {
+  console.log('→', JSON.stringify(msg, null, 2))
+})
+
+client.on('message-received', (msg) => {
+  console.log('←', JSON.stringify(msg, null, 2))
+})
+
+client.on('protocol-error', (error) => {
+  console.error('Protocol error:', error)
+  console.error('Stack:', error.stack)
+})
+```
+
+## Testing Configuration
+
+### Unit Testing Setup
+
+```javascript
+import { createMockMCPServer, createMockMCPClient } from '@lokus/mcp/testing'
+
+describe('MCP Integration', () => {
+  let server, client
+
+  beforeEach(async () => {
+    // Create mock server
+    server = createMockMCPServer({
+      resources: [
+        {
+          uri: 'test://resource',
+          name: 'Test Resource',
+          content: 'test data'
+        }
+      ],
+      tools: [
+        {
+          name: 'testTool',
+          description: 'Test tool',
+          inputSchema: { type: 'object' },
+          execute: async () => ({ success: true })
+        }
+      ]
+    })
+
+    // Create mock client
+    client = createMockMCPClient()
+    await client.connect(server.getTransport())
+  })
+
+  afterEach(async () => {
+    await client.disconnect()
+    await server.stop()
+  })
+
+  test('should list resources', async () => {
+    const resources = await client.listResources()
+    expect(resources.resources).toHaveLength(1)
+    expect(resources.resources[0].uri).toBe('test://resource')
+  })
+})
+```
+
+### Integration Testing
+
+```javascript
+import { MCPTestHarness } from '@lokus/mcp/testing'
+
+describe('MCP Plugin Integration', () => {
+  let harness
+
+  beforeAll(async () => {
+    harness = new MCPTestHarness({
+      plugins: ['./test-plugins/mcp-server-plugin'],
+      timeout: 10000
+    })
+
+    await harness.start()
+  })
+
+  afterAll(async () => {
+    await harness.stop()
+  })
+
+  test('plugin should register resources', async () => {
+    const resources = await harness.listAllResources()
+    expect(resources).toContainEqual(
+      expect.objectContaining({
+        uri: 'myplugin://hello'
+      })
+    )
+  })
+
+  test('plugin should execute tools', async () => {
+    const result = await harness.callTool('myPlugin.testTool', {
+      arg: 'value'
+    })
+    expect(result.isError).toBe(false)
+  })
+})
+```
+
+## Common Configuration Patterns
+
+### High-Performance Setup
+
+Optimize for maximum throughput:
+
+```javascript
+const mcp = await initializeMCP(pluginManager, securityManager, {
+  server: {
+    maxConcurrentRequests: 200,
+    requestTimeout: 10000,
+    enableResourceCaching: true,
+    cacheTTL: 300000
+  },
+  client: {
+    enableResourceCaching: true,
+    enableToolCaching: true,
+    maxConcurrentRequests: 50,
+    requestRetries: 1
+  },
+  monitoring: {
+    enableMetrics: true,
+    metricsInterval: 30000
+  }
+})
+```
+
+### Low-Latency Setup
+
+Optimize for minimal latency:
+
+```javascript
+const mcp = await initializeMCP(pluginManager, securityManager, {
+  server: {
+    requestTimeout: 5000,
+    enableResourceCaching: false,     // Always fresh data
+    enablePreloading: true
+  },
+  client: {
+    enableResourceCaching: false,
+    requestTimeout: 3000,
+    maxConcurrentRequests: 10
+  }
+})
+```
+
+### High-Security Setup
+
+Maximum security for production:
+
+```javascript
+const mcp = await initializeMCP(pluginManager, securityManager, {
+  security: {
+    requireSignature: true,
+    allowUnsignedPlugins: false,
+    sandboxMode: 'strict',
+    validateSchemas: true
+  },
+  server: {
+    enableProcessIsolation: true,
+    memoryLimit: 50 * 1024 * 1024,    // 50MB
+    cpuLimit: 500,                     // 500ms
+    allowNetwork: false,
+    allowFileSystem: false
+  },
+  monitoring: {
+    enableMetrics: true,
+    enableHealthChecks: true,
+    healthCheckInterval: 3000
+  }
+})
+```
+
+## Troubleshooting
+
+### Server Not Starting
+
+Check server logs:
+```javascript
+const serverHost = getMCPIntegration().mcpServerHost
+
+serverHost.on('server-error', (event) => {
+  console.error(`Server ${event.serverId} error:`, event.error)
+})
+
+// Check server status
+const server = serverHost.getServer('my-server')
+console.log('Status:', server.status)
+console.log('Last error:', server.lastError)
+```
+
+### Connection Issues
+
+Debug client connection:
+```javascript
+client.on('state-changed', (event) => {
+  console.log(`State: ${event.oldState} → ${event.newState}`)
+})
+
+client.on('protocol-error', (error) => {
+  console.error('Protocol error:', error)
+})
+
+// Check connection status
+console.log('Client state:', client.state)
+console.log('Connection attempts:', client.connectionAttempts)
+console.log('Last error:', client.lastConnectionError)
+```
+
+### Performance Issues
+
+Profile performance:
+```javascript
+const stats = getMCPIntegration().getStats()
+
+console.log('MCP Statistics:')
+console.log('  Plugins:', stats.pluginManager.mcpPlugins)
+console.log('  Servers:', stats.serverHost.runningServers)
+console.log('  Clients:', stats.clients)
+
+// Check resource usage
+serverHost.on('server-resource-usage', (event) => {
+  if (event.usage.memory > 100 * 1024 * 1024) {
+    console.warn(`High memory usage: ${event.usage.memory / 1024 / 1024}MB`)
+  }
+  if (event.usage.cpu > 1000) {
+    console.warn(`High CPU usage: ${event.usage.cpu}ms`)
+  }
+})
+```
+
+## Next Steps
+
+**Related Documentation:**
+- [Resources](/developers/mcp/resources)
+- [Tools](/developers/mcp/tools)
+- [Prompts](/developers/mcp/prompts)
+- [Plugin Integration](/developers/mcp/plugin-integration)

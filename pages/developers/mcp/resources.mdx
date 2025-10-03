@@ -1,0 +1,805 @@
+# MCP Resources
+
+Resources in MCP represent accessible data and content within Lokus. They provide a standardized way for AI assistants to discover, read, and subscribe to application data.
+
+## Overview
+
+An MCP resource is any piece of data that can be:
+- **Discovered**: Listed through the `resources/list` method
+- **Read**: Accessed through the `resources/read` method
+- **Subscribed**: Monitored for changes (optional)
+- **Identified**: Referenced by a unique URI
+
+## Resource Structure
+
+### Basic Resource Definition
+
+```typescript
+interface MCPResource {
+  uri: string                      // Unique identifier
+  name: string                     // Human-readable name
+  description?: string             // What this resource contains
+  type: MCPResourceType            // Resource category
+  mimeType?: string               // Content type
+  lastModified?: string           // ISO 8601 timestamp
+  metadata?: Record<string, any>  // Additional properties
+  content?: string                // Text content (for registration)
+  blob?: Uint8Array              // Binary content (for registration)
+}
+```
+
+### Resource Types
+
+```typescript
+type MCPResourceType =
+  | 'file'       // File system files
+  | 'directory'  // Folder structures
+  | 'database'   // Database queries/results
+  | 'api'        // External API endpoints
+  | 'memory'     // In-memory data
+  | 'web'        // Web URLs and content
+  | 'custom'     // Plugin-defined types
+```
+
+## URI Scheme
+
+Resources use URI schemes to identify different data sources:
+
+```
+lokus://[plugin-id]/[resource-type]/[identifier]
+```
+
+### Standard URI Patterns
+
+```javascript
+// Notes
+'lokus://notes/current'              // Currently open note
+'lokus://notes/123'                  // Specific note by ID
+'lokus://notes/all'                  // All notes
+
+// Files
+'file:///workspace/README.md'        // Absolute file path
+'file://workspace/docs/*'            // File pattern
+
+// Wiki
+'lokus://wiki/HomePage'              // Wiki page
+'lokus://wiki/tags/important'        // Pages by tag
+
+// Plugin-specific
+'myplugin://data/users'              // Plugin data
+'myplugin://config/settings'         // Plugin configuration
+```
+
+## Registering Resources
+
+### Server-Side Registration
+
+Register resources in your MCP server plugin:
+
+```javascript
+export default class MyPlugin {
+  async activate(context) {
+    const { mcp } = context
+
+    // Simple text resource
+    mcp.registerResource({
+      uri: 'myplugin://hello',
+      name: 'Hello Message',
+      description: 'A simple greeting message',
+      type: 'memory',
+      mimeType: 'text/plain',
+      content: 'Hello from my plugin!'
+    })
+
+    // JSON data resource
+    mcp.registerResource({
+      uri: 'myplugin://config',
+      name: 'Plugin Configuration',
+      description: 'Current plugin settings',
+      type: 'memory',
+      mimeType: 'application/json',
+      content: JSON.stringify({
+        enabled: true,
+        theme: 'dark',
+        options: { ... }
+      })
+    })
+
+    // File resource
+    mcp.registerResource({
+      uri: 'file:///workspace/README.md',
+      name: 'Project README',
+      description: 'Project documentation',
+      type: 'file',
+      mimeType: 'text/markdown',
+      content: await this.readFile('/workspace/README.md')
+    })
+  }
+}
+```
+
+### Using Resource Builder
+
+Use the fluent builder API for complex resources:
+
+```javascript
+import { MCPResourceBuilder } from '@lokus/mcp'
+
+const resource = new MCPResourceBuilder()
+  .setUri('myplugin://users/list')
+  .setName('User List')
+  .setDescription('All registered users')
+  .setType('database')
+  .setMimeType('application/json')
+  .setMetadata({
+    count: 150,
+    lastUpdated: new Date().toISOString(),
+    access: 'read-only'
+  })
+  .setContent(JSON.stringify(users))
+  .build()
+
+mcp.registerResource(resource)
+```
+
+### Dynamic Resources
+
+Register resources that compute content on-demand:
+
+```javascript
+export default class DynamicResourcePlugin {
+  async activate(context) {
+    const { mcp } = context
+
+    // Register resource handler
+    mcp.registerResource({
+      uri: 'myplugin://stats/current',
+      name: 'Current Statistics',
+      type: 'memory',
+      mimeType: 'application/json',
+      // Content will be computed when requested
+      content: null,
+      metadata: {
+        dynamic: true
+      }
+    })
+
+    // Handle resource read requests
+    mcp.onResourceRead('myplugin://stats/current', async () => {
+      const stats = await this.computeStats()
+      return {
+        contents: [{
+          uri: 'myplugin://stats/current',
+          mimeType: 'application/json',
+          text: JSON.stringify(stats)
+        }]
+      }
+    })
+  }
+
+  async computeStats() {
+    return {
+      notes: await this.countNotes(),
+      files: await this.countFiles(),
+      timestamp: new Date().toISOString()
+    }
+  }
+}
+```
+
+## Reading Resources
+
+### Client-Side Resource Access
+
+```javascript
+import { MCPClient } from '@lokus/mcp'
+
+const client = new MCPClient('my-client')
+await client.connect(transport)
+
+// List all resources
+const response = await client.listResources()
+console.log('Available resources:', response.resources)
+
+// Read specific resource
+const content = await client.readResource('lokus://notes/current')
+console.log('Content:', content.contents[0].text)
+
+// Read with error handling
+try {
+  const result = await client.readResource('myplugin://data')
+  console.log('Success:', result)
+} catch (error) {
+  if (error.code === -32001) {
+    console.error('Resource not found')
+  } else if (error.code === -32002) {
+    console.error('Access denied')
+  } else {
+    console.error('Error:', error.message)
+  }
+}
+```
+
+### Pagination
+
+Handle large resource lists with pagination:
+
+```javascript
+async function listAllResources(client) {
+  const allResources = []
+  let cursor = null
+
+  do {
+    const response = await client.listResources({ cursor })
+    allResources.push(...response.resources)
+    cursor = response.nextCursor
+  } while (cursor)
+
+  return allResources
+}
+
+const resources = await listAllResources(client)
+console.log(`Total resources: ${resources.length}`)
+```
+
+### Filtering Resources
+
+```javascript
+// Filter by type
+const fileResources = response.resources.filter(r => r.type === 'file')
+
+// Filter by URI pattern
+const noteResources = response.resources.filter(r =>
+  r.uri.startsWith('lokus://notes/')
+)
+
+// Filter by metadata
+const writableResources = response.resources.filter(r =>
+  r.metadata?.access === 'read-write'
+)
+```
+
+## Resource Subscriptions
+
+Subscribe to resource changes for real-time updates:
+
+### Server-Side Updates
+
+```javascript
+export default class SubscriptionPlugin {
+  async activate(context) {
+    const { mcp } = context
+
+    // Register subscribable resource
+    mcp.registerResource({
+      uri: 'myplugin://counter',
+      name: 'Counter Value',
+      type: 'memory',
+      mimeType: 'text/plain',
+      content: '0'
+    })
+
+    // Update resource periodically
+    this.interval = setInterval(() => {
+      const newValue = (parseInt(this.currentValue) + 1).toString()
+
+      // Update resource (triggers notifications)
+      mcp.updateResource('myplugin://counter', newValue, {
+        updated: new Date().toISOString()
+      })
+
+      this.currentValue = newValue
+    }, 5000)
+  }
+
+  async deactivate() {
+    clearInterval(this.interval)
+  }
+}
+```
+
+### Client-Side Subscriptions
+
+```javascript
+// Subscribe to resource
+const subscription = await client.subscribeToResource('myplugin://counter')
+
+// Handle updates
+client.on('resource-updated', (event) => {
+  if (event.uri === 'myplugin://counter') {
+    console.log('Counter updated:', event.content)
+    console.log('Metadata:', event.metadata)
+  }
+})
+
+// Unsubscribe when done
+await subscription.dispose()
+```
+
+### Subscription Management
+
+```javascript
+class ResourceManager {
+  constructor(client) {
+    this.client = client
+    this.subscriptions = new Map()
+  }
+
+  async subscribe(uri, handler) {
+    // Avoid duplicate subscriptions
+    if (this.subscriptions.has(uri)) {
+      return this.subscriptions.get(uri)
+    }
+
+    const subscription = await this.client.subscribeToResource(uri)
+
+    const eventHandler = (event) => {
+      if (event.uri === uri) {
+        handler(event)
+      }
+    }
+
+    this.client.on('resource-updated', eventHandler)
+
+    this.subscriptions.set(uri, {
+      subscription,
+      handler: eventHandler
+    })
+
+    return subscription
+  }
+
+  async unsubscribe(uri) {
+    const sub = this.subscriptions.get(uri)
+    if (sub) {
+      await sub.subscription.dispose()
+      this.client.off('resource-updated', sub.handler)
+      this.subscriptions.delete(uri)
+    }
+  }
+
+  async unsubscribeAll() {
+    for (const uri of this.subscriptions.keys()) {
+      await this.unsubscribe(uri)
+    }
+  }
+}
+```
+
+## Resource Patterns
+
+### Pattern 1: Current Document
+
+Expose the currently active document:
+
+```javascript
+export default class EditorPlugin {
+  async activate(context) {
+    const { mcp, editor } = context
+
+    // Register current document resource
+    mcp.registerResource({
+      uri: 'lokus://editor/current',
+      name: 'Current Document',
+      description: 'Currently active document',
+      type: 'file',
+      mimeType: 'text/markdown'
+    })
+
+    // Update when document changes
+    editor.onDidChangeActiveDocument((doc) => {
+      mcp.updateResource('lokus://editor/current', doc.content, {
+        path: doc.path,
+        language: doc.language,
+        modified: doc.isDirty
+      })
+    })
+
+    // Update when content changes
+    editor.onDidChangeTextDocument((event) => {
+      if (event.document.uri === editor.activeDocument?.uri) {
+        mcp.updateResource('lokus://editor/current', event.document.content, {
+          changeCount: this.changeCount++
+        })
+      }
+    })
+  }
+}
+```
+
+### Pattern 2: Search Results
+
+Expose search results as a resource:
+
+```javascript
+export default class SearchPlugin {
+  async activate(context) {
+    const { mcp } = context
+
+    // Register search resource
+    mcp.registerResource({
+      uri: 'lokus://search/results',
+      name: 'Search Results',
+      type: 'memory',
+      mimeType: 'application/json',
+      content: JSON.stringify([])
+    })
+
+    // Handle dynamic read
+    mcp.onResourceRead('lokus://search/results', async () => {
+      const query = this.currentQuery
+      const results = await this.search(query)
+
+      return {
+        contents: [{
+          uri: 'lokus://search/results',
+          mimeType: 'application/json',
+          text: JSON.stringify({
+            query,
+            count: results.length,
+            results
+          })
+        }]
+      }
+    })
+  }
+
+  async performSearch(query) {
+    this.currentQuery = query
+    const results = await this.search(query)
+
+    // Notify subscribers
+    mcp.updateResource('lokus://search/results', JSON.stringify(results), {
+      query,
+      count: results.length,
+      timestamp: new Date().toISOString()
+    })
+
+    return results
+  }
+}
+```
+
+### Pattern 3: Database Query
+
+Expose database data as resources:
+
+```javascript
+export default class DatabasePlugin {
+  async activate(context) {
+    const { mcp } = context
+
+    // Register database resources
+    const tables = await this.getTables()
+
+    for (const table of tables) {
+      mcp.registerResource({
+        uri: `db://${table.name}`,
+        name: `${table.name} Table`,
+        description: `Access to ${table.name} database table`,
+        type: 'database',
+        mimeType: 'application/json',
+        metadata: {
+          rowCount: table.rowCount,
+          columns: table.columns
+        }
+      })
+
+      // Handle queries
+      mcp.onResourceRead(`db://${table.name}`, async (params) => {
+        const limit = params.limit || 100
+        const offset = params.offset || 0
+
+        const rows = await this.query(
+          `SELECT * FROM ${table.name} LIMIT ${limit} OFFSET ${offset}`
+        )
+
+        return {
+          contents: [{
+            uri: `db://${table.name}`,
+            mimeType: 'application/json',
+            text: JSON.stringify(rows)
+          }]
+        }
+      })
+    }
+  }
+}
+```
+
+### Pattern 4: File System
+
+Expose file system as navigable resources:
+
+```javascript
+export default class FileSystemPlugin {
+  async activate(context) {
+    const { mcp } = context
+
+    // Register root directory
+    await this.registerDirectory('file://workspace', '/workspace')
+  }
+
+  async registerDirectory(uri, path) {
+    const stats = await this.getDirectoryStats(path)
+
+    // Register directory resource
+    mcp.registerResource({
+      uri,
+      name: basename(path),
+      description: `Directory: ${path}`,
+      type: 'directory',
+      mimeType: 'application/json',
+      metadata: {
+        path,
+        fileCount: stats.files,
+        directoryCount: stats.directories
+      }
+    })
+
+    // Handle directory listing
+    mcp.onResourceRead(uri, async () => {
+      const entries = await this.readDirectory(path)
+
+      return {
+        contents: [{
+          uri,
+          mimeType: 'application/json',
+          text: JSON.stringify({
+            path,
+            entries: entries.map(e => ({
+              name: e.name,
+              type: e.type,
+              uri: `${uri}/${e.name}`,
+              size: e.size,
+              modified: e.modified
+            }))
+          })
+        }]
+      }
+    })
+
+    // Register child resources
+    const entries = await this.readDirectory(path)
+    for (const entry of entries) {
+      if (entry.type === 'file') {
+        await this.registerFile(`${uri}/${entry.name}`, `${path}/${entry.name}`)
+      } else if (entry.type === 'directory') {
+        await this.registerDirectory(`${uri}/${entry.name}`, `${path}/${entry.name}`)
+      }
+    }
+  }
+
+  async registerFile(uri, path) {
+    const stats = await this.getFileStats(path)
+
+    mcp.registerResource({
+      uri,
+      name: basename(path),
+      description: `File: ${path}`,
+      type: 'file',
+      mimeType: this.getMimeType(path),
+      metadata: {
+        path,
+        size: stats.size,
+        modified: stats.modified
+      }
+    })
+
+    // Handle file read
+    mcp.onResourceRead(uri, async () => {
+      const content = await this.readFile(path)
+
+      return {
+        contents: [{
+          uri,
+          mimeType: this.getMimeType(path),
+          text: content
+        }]
+      }
+    })
+  }
+}
+```
+
+## Advanced Topics
+
+### Resource Caching
+
+Implement client-side caching:
+
+```javascript
+class CachedResourceClient {
+  constructor(client, options = {}) {
+    this.client = client
+    this.cache = new Map()
+    this.cacheTTL = options.cacheTTL || 60000  // 1 minute
+  }
+
+  async readResource(uri, options = {}) {
+    const { skipCache = false } = options
+
+    // Check cache
+    if (!skipCache) {
+      const cached = this.cache.get(uri)
+      if (cached && Date.now() - cached.timestamp < this.cacheTTL) {
+        return cached.content
+      }
+    }
+
+    // Fetch from server
+    const content = await this.client.readResource(uri)
+
+    // Update cache
+    this.cache.set(uri, {
+      content,
+      timestamp: Date.now()
+    })
+
+    return content
+  }
+
+  invalidateCache(uri) {
+    if (uri) {
+      this.cache.delete(uri)
+    } else {
+      this.cache.clear()
+    }
+  }
+
+  // Subscribe and auto-invalidate
+  async subscribeToResource(uri) {
+    const subscription = await this.client.subscribeToResource(uri)
+
+    this.client.on('resource-updated', (event) => {
+      if (event.uri === uri) {
+        this.invalidateCache(uri)
+      }
+    })
+
+    return subscription
+  }
+}
+```
+
+### Access Control
+
+Implement resource-level permissions:
+
+```javascript
+export default class SecureResourcePlugin {
+  async activate(context) {
+    const { mcp, security } = context
+
+    // Register protected resource
+    mcp.registerResource({
+      uri: 'secure://admin/settings',
+      name: 'Admin Settings',
+      type: 'memory',
+      mimeType: 'application/json',
+      metadata: {
+        requiredPermission: 'admin:read'
+      }
+    })
+
+    // Intercept resource reads
+    mcp.onResourceRead('secure://admin/settings', async (params, clientInfo) => {
+      // Check permissions
+      if (!await security.hasPermission(clientInfo.id, 'admin:read')) {
+        throw {
+          code: -32002,
+          message: 'Access denied: insufficient permissions',
+          data: { requiredPermission: 'admin:read' }
+        }
+      }
+
+      // Return protected content
+      return {
+        contents: [{
+          uri: 'secure://admin/settings',
+          mimeType: 'application/json',
+          text: JSON.stringify(this.adminSettings)
+        }]
+      }
+    })
+  }
+}
+```
+
+### Resource Versioning
+
+Track resource versions:
+
+```javascript
+export default class VersionedResourcePlugin {
+  constructor() {
+    this.versions = new Map()
+  }
+
+  async activate(context) {
+    const { mcp } = context
+
+    // Register versioned resource
+    mcp.registerResource({
+      uri: 'versioned://document',
+      name: 'Versioned Document',
+      type: 'file',
+      mimeType: 'text/markdown',
+      metadata: {
+        version: 1,
+        previousVersions: []
+      }
+    })
+  }
+
+  async updateDocument(content) {
+    const currentVersion = this.versions.get('document') || { version: 0, content: '' }
+    const newVersion = currentVersion.version + 1
+
+    // Save previous version
+    this.versions.set(`document@${currentVersion.version}`, currentVersion)
+
+    // Update current version
+    const versionedContent = {
+      version: newVersion,
+      content,
+      timestamp: new Date().toISOString(),
+      previousVersion: currentVersion.version
+    }
+
+    this.versions.set('document', versionedContent)
+
+    // Update resource
+    mcp.updateResource('versioned://document', content, {
+      version: newVersion,
+      previousVersions: Array.from({ length: newVersion - 1 }, (_, i) => i + 1)
+    })
+
+    return newVersion
+  }
+
+  async getVersion(version) {
+    return this.versions.get(`document@${version}`)
+  }
+}
+```
+
+## Best Practices
+
+### 1. URI Design
+- Use consistent naming: `plugin://category/identifier`
+- Keep URIs stable across versions
+- Use meaningful identifiers, not internal IDs
+- Support hierarchical structures when appropriate
+
+### 2. Resource Metadata
+- Include useful metadata (size, timestamps, counts)
+- Document metadata fields in resource description
+- Use standardized metadata keys when possible
+- Keep metadata small and relevant
+
+### 3. Content Format
+- Use appropriate MIME types
+- Prefer JSON for structured data
+- Include character encoding for text
+- Consider compression for large content
+
+### 4. Performance
+- Register resources lazily when possible
+- Implement pagination for large lists
+- Cache frequently accessed resources
+- Use subscriptions instead of polling
+
+### 5. Error Handling
+- Return appropriate error codes
+- Provide helpful error messages
+- Include recovery suggestions in error data
+- Log errors for debugging
+
+## Next Steps
+
+**Related Documentation:**
+- [Tools](/developers/mcp/tools)
+- [Prompts](/developers/mcp/prompts)
+- [Plugin Integration](/developers/mcp/plugin-integration)
+- [API Reference](/developers/mcp/api-reference)

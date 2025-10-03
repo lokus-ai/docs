@@ -1,0 +1,717 @@
+# Configuration Reference
+
+Complete reference for configuring Lokus. Settings control editor behavior, appearance, plugins, shortcuts, and integrations.
+
+## Configuration File
+
+### Location
+
+**macOS:**
+```
+~/Library/Application Support/com.lokus.app/config.json
+```
+
+**Windows:**
+```
+%APPDATA%\com.lokus.app\config.json
+```
+
+**Linux:**
+```
+~/.config/com.lokus.app/config.json
+```
+
+### Format
+
+Configuration is stored as JSON:
+
+```json
+{
+  "version": "1.0",
+  "theme": "dark",
+  "editor": {
+    "fontSize": 16,
+    "fontFamily": "Inter",
+    "lineHeight": 1.6
+  },
+  "shortcuts": {
+    "save-file": "CommandOrControl+S"
+  },
+  "plugins": {
+    "enabled": ["plugin-name"]
+  }
+}
+```
+
+## Editor Settings
+
+### Font Settings
+
+```json
+{
+  "editor": {
+    "fontSize": 16,
+    "fontFamily": "Inter, system-ui, sans-serif",
+    "monospaceFontFamily": "JetBrains Mono, Menlo, monospace",
+    "lineHeight": 1.6,
+    "letterSpacing": 0
+  }
+}
+```
+
+**Options:**
+- `fontSize` (number) - Base font size in pixels (10-32)
+- `fontFamily` (string) - Main font family
+- `monospaceFontFamily` (string) - Code font family
+- `lineHeight` (number) - Line height multiplier (1.0-3.0)
+- `letterSpacing` (number) - Letter spacing in pixels
+
+**Example:**
+```json
+{
+  "editor": {
+    "fontSize": 18,
+    "fontFamily": "Georgia, serif",
+    "monospaceFontFamily": "Fira Code, monospace",
+    "lineHeight": 1.8
+  }
+}
+```
+
+---
+
+### Editor Behavior
+
+```json
+{
+  "editor": {
+    "autoSave": true,
+    "autoSaveDelay": 1000,
+    "spellCheck": true,
+    "wordWrap": true,
+    "showLineNumbers": false,
+    "indentSize": 2,
+    "tabSize": 4,
+    "insertSpaces": true
+  }
+}
+```
+
+**Options:**
+- `autoSave` (boolean) - Enable auto-save
+- `autoSaveDelay` (number) - Auto-save delay in milliseconds
+- `spellCheck` (boolean) - Enable spell checking
+- `wordWrap` (boolean) - Enable word wrapping
+- `showLineNumbers` (boolean) - Show line numbers in code blocks
+- `indentSize` (number) - Number of spaces for indentation
+- `tabSize` (number) - Tab width in spaces
+- `insertSpaces` (boolean) - Use spaces instead of tabs
+
+---
+
+### Editor Features
+
+```json
+{
+  "editor": {
+    "enableMarkdown": true,
+    "enableWikiLinks": true,
+    "enableMath": true,
+    "enableTasks": true,
+    "enableTables": true,
+    "enableCodeBlocks": true,
+    "enableHighlight": true
+  }
+}
+```
+
+**Options:**
+- `enableMarkdown` (boolean) - Enable markdown syntax
+- `enableWikiLinks` (boolean) - Enable [[wikilinks]]
+- `enableMath` (boolean) - Enable KaTeX math
+- `enableTasks` (boolean) - Enable task lists
+- `enableTables` (boolean) - Enable tables
+- `enableCodeBlocks` (boolean) - Enable code blocks
+- `enableHighlight` (boolean) - Enable text highlighting
+
+---
+
+## Theme Settings
+
+### Theme Selection
+
+```json
+{
+  "theme": "dark",
+  "customTheme": null
+}
+```
+
+**Built-in Themes:**
+- `light` - Light theme
+- `dark` - Dark theme
+- `system` - Follow system preference
+
+---
+
+### Custom Theme
+
+```json
+{
+  "theme": "custom",
+  "customTheme": {
+    "name": "My Theme",
+    "colors": {
+      "background": "#1e1e1e",
+      "foreground": "#ffffff",
+      "primary": "#007acc",
+      "secondary": "#6c757d",
+      "accent": "#ffc107",
+      "border": "#3e3e3e",
+      "sidebar": "#252525",
+      "editor": "#1e1e1e"
+    },
+    "syntax": {
+      "keyword": "#569cd6",
+      "string": "#ce9178",
+      "comment": "#6a9955",
+      "function": "#dcdcaa",
+      "variable": "#9cdcfe"
+    }
+  }
+}
+```
+
+**Color Properties:**
+- `background` - Main background color
+- `foreground` - Main text color
+- `primary` - Primary accent color
+- `secondary` - Secondary accent color
+- `accent` - Highlight accent color
+- `border` - Border color
+- `sidebar` - Sidebar background
+- `editor` - Editor background
+
+---
+
+## Workspace Settings
+
+```json
+{
+  "workspace": {
+    "defaultPath": "/Users/username/Documents/Notes",
+    "recentWorkspaces": [
+      "/Users/username/Documents/Work",
+      "/Users/username/Documents/Personal"
+    ],
+    "maxRecentWorkspaces": 10,
+    "rememberLastWorkspace": true,
+    "restoreSession": true
+  }
+}
+```
+
+**Options:**
+- `defaultPath` (string) - Default workspace location
+- `recentWorkspaces` (array) - List of recent workspaces
+- `maxRecentWorkspaces` (number) - Max recent workspaces to remember
+- `rememberLastWorkspace` (boolean) - Remember last opened workspace
+- `restoreSession` (boolean) - Restore open tabs and folders
+
+---
+
+## File Settings
+
+```json
+{
+  "files": {
+    "defaultNewFileTemplate": "# {title}\n\n",
+    "fileExtension": ".md",
+    "excludePatterns": [
+      "node_modules",
+      ".git",
+      "*.tmp"
+    ],
+    "watchForChanges": true,
+    "showHiddenFiles": false
+  }
+}
+```
+
+**Options:**
+- `defaultNewFileTemplate` (string) - Template for new files
+- `fileExtension` (string) - Default file extension
+- `excludePatterns` (array) - Patterns to exclude from file tree
+- `watchForChanges` (boolean) - Watch files for external changes
+- `showHiddenFiles` (boolean) - Show hidden files (starting with .)
+
+**Template Variables:**
+- `{title}` - File title (from filename)
+- `{date}` - Current date (YYYY-MM-DD)
+- `{time}` - Current time (HH:MM)
+- `{datetime}` - Full datetime (ISO 8601)
+
+---
+
+## Search Settings
+
+```json
+{
+  "search": {
+    "caseSensitive": false,
+    "wholeWord": false,
+    "useRegex": false,
+    "maxResults": 1000,
+    "excludePatterns": [
+      "*.pdf",
+      "*.zip"
+    ],
+    "indexOnStartup": true
+  }
+}
+```
+
+**Options:**
+- `caseSensitive` (boolean) - Case sensitive search by default
+- `wholeWord` (boolean) - Match whole words only
+- `useRegex` (boolean) - Use regex by default
+- `maxResults` (number) - Maximum search results
+- `excludePatterns` (array) - File patterns to exclude
+- `indexOnStartup` (boolean) - Build search index on startup
+
+---
+
+## Keyboard Shortcuts
+
+```json
+{
+  "shortcuts": {
+    "save-file": "CommandOrControl+S",
+    "new-file": "CommandOrControl+N",
+    "command-palette": "CommandOrControl+K",
+    "global-search": "CommandOrControl+Shift+F"
+  }
+}
+```
+
+See [Keyboard Shortcuts Reference](/reference/keyboard-shortcuts) for all available shortcuts.
+
+---
+
+## Plugin Settings
+
+```json
+{
+  "plugins": {
+    "enabled": ["plugin-name"],
+    "settings": {
+      "plugin-name": {
+        "apiKey": "secret",
+        "option": true
+      }
+    }
+  }
+}
+```
+
+**Options:**
+- `enabled` (array) - List of enabled plugin names
+- `settings` (object) - Plugin-specific settings
+
+---
+
+## Integration Settings
+
+### Gmail
+
+```json
+{
+  "integrations": {
+    "gmail": {
+      "enabled": true,
+      "syncInterval": 300000,
+      "maxEmailsPerSync": 50,
+      "defaultLabels": ["INBOX", "UNREAD"],
+      "emailToNoteTemplate": "# {subject}\n\n**From:** {from}\n**Date:** {date}\n\n---\n\n{body}"
+    }
+  }
+}
+```
+
+**Options:**
+- `enabled` (boolean) - Enable Gmail integration
+- `syncInterval` (number) - Sync interval in milliseconds
+- `maxEmailsPerSync` (number) - Max emails per sync
+- `defaultLabels` (array) - Default labels to filter
+- `emailToNoteTemplate` (string) - Template for email to note conversion
+
+---
+
+### MCP Server
+
+```json
+{
+  "integrations": {
+    "mcp": {
+      "enabled": true,
+      "port": 3456,
+      "autoStart": true,
+      "tools": {
+        "fileOperations": true,
+        "search": true,
+        "editor": true,
+        "ai": false
+      }
+    }
+  }
+}
+```
+
+**Options:**
+- `enabled` (boolean) - Enable MCP server
+- `port` (number) - Server port (default: 3456)
+- `autoStart` (boolean) - Start server on app launch
+- `tools` (object) - Enable/disable specific tool categories
+
+---
+
+## UI Settings
+
+```json
+{
+  "ui": {
+    "sidebarWidth": 250,
+    "sidebarPosition": "left",
+    "showStatusBar": true,
+    "showToolbar": true,
+    "compactMode": false,
+    "animationsEnabled": true,
+    "notificationPosition": "top-right",
+    "notificationDuration": 3000
+  }
+}
+```
+
+**Options:**
+- `sidebarWidth` (number) - Sidebar width in pixels
+- `sidebarPosition` (string) - 'left' or 'right'
+- `showStatusBar` (boolean) - Show status bar
+- `showToolbar` (boolean) - Show toolbar
+- `compactMode` (boolean) - Use compact UI mode
+- `animationsEnabled` (boolean) - Enable UI animations
+- `notificationPosition` (string) - Notification position
+- `notificationDuration` (number) - Notification duration (ms)
+
+---
+
+## Performance Settings
+
+```json
+{
+  "performance": {
+    "maxOpenTabs": 20,
+    "lazyLoadFiles": true,
+    "virtualScrolling": true,
+    "debounceDelay": 300,
+    "cacheSize": 100
+  }
+}
+```
+
+**Options:**
+- `maxOpenTabs` (number) - Maximum open tabs
+- `lazyLoadFiles` (boolean) - Lazy load file contents
+- `virtualScrolling` (boolean) - Use virtual scrolling for lists
+- `debounceDelay` (number) - Debounce delay for operations (ms)
+- `cacheSize` (number) - Number of files to cache in memory
+
+---
+
+## Security Settings
+
+```json
+{
+  "security": {
+    "allowExternalImages": true,
+    "allowExternalLinks": true,
+    "sandboxPlugins": true,
+    "validateFileTypes": true,
+    "maxFileSize": 10485760
+  }
+}
+```
+
+**Options:**
+- `allowExternalImages` (boolean) - Allow loading external images
+- `allowExternalLinks` (boolean) - Allow external links
+- `sandboxPlugins` (boolean) - Run plugins in sandbox
+- `validateFileTypes` (boolean) - Validate file types on open
+- `maxFileSize` (number) - Maximum file size in bytes (10MB default)
+
+---
+
+## Development Settings
+
+```json
+{
+  "development": {
+    "devTools": true,
+    "debugLogging": false,
+    "showPerformanceMetrics": false,
+    "enableExperimentalFeatures": false
+  }
+}
+```
+
+**Options:**
+- `devTools` (boolean) - Enable developer tools
+- `debugLogging` (boolean) - Enable debug logging
+- `showPerformanceMetrics` (boolean) - Show performance metrics
+- `enableExperimentalFeatures` (boolean) - Enable experimental features
+
+---
+
+## Programmatic Configuration
+
+### Reading Configuration
+
+```typescript
+import { readConfig } from '@/core/config/store';
+
+const config = await readConfig();
+console.log(config.theme); // 'dark'
+console.log(config.editor.fontSize); // 16
+```
+
+---
+
+### Updating Configuration
+
+```typescript
+import { updateConfig } from '@/core/config/store';
+
+await updateConfig({
+  theme: 'light',
+  editor: {
+    fontSize: 18
+  }
+});
+```
+
+**Note:** Updates are merged with existing config, not replaced.
+
+---
+
+### Watching for Changes
+
+```typescript
+import { watchConfig } from '@/core/config/store';
+
+const unwatch = watchConfig((newConfig, oldConfig) => {
+  console.log('Config changed:', newConfig);
+
+  if (newConfig.theme !== oldConfig.theme) {
+    console.log('Theme changed to:', newConfig.theme);
+  }
+});
+
+// Later: stop watching
+unwatch();
+```
+
+---
+
+## Configuration via Tauri Commands
+
+### Get Plugin Setting
+
+```typescript
+const value = await invoke('get_plugin_setting', {
+  plugin_name: 'example-plugin',
+  key: 'apiKey'
+});
+```
+
+---
+
+### Set Plugin Setting
+
+```typescript
+await invoke('set_plugin_setting', {
+  plugin_name: 'example-plugin',
+  key: 'apiKey',
+  value: 'secret-key-123'
+});
+```
+
+---
+
+## Environment Variables
+
+Lokus respects these environment variables:
+
+```bash
+# Custom config location
+LOKUS_CONFIG_PATH=/custom/path/to/config.json
+
+# Enable debug mode
+LOKUS_DEBUG=true
+
+# MCP server port
+MCP_PORT=3456
+
+# MCP debug mode
+MCP_DEBUG=true
+
+# Disable telemetry
+LOKUS_TELEMETRY=false
+```
+
+---
+
+## Migration
+
+### Upgrading Configuration
+
+When upgrading Lokus, configurations are automatically migrated:
+
+```typescript
+// Old config (v1.0)
+{
+  "fontSize": 16
+}
+
+// Migrated config (v2.0)
+{
+  "version": "2.0",
+  "editor": {
+    "fontSize": 16
+  }
+}
+```
+
+---
+
+### Resetting Configuration
+
+**Via UI:**
+1. Open Preferences
+2. Click "Reset to Defaults"
+3. Confirm reset
+
+**Via File:**
+Delete the configuration file and restart Lokus.
+
+**Programmatically:**
+```typescript
+import { resetConfig } from '@/core/config/store';
+
+await resetConfig();
+```
+
+---
+
+## Configuration Examples
+
+### Minimal Configuration
+
+```json
+{
+  "theme": "dark",
+  "editor": {
+    "fontSize": 16
+  }
+}
+```
+
+---
+
+### Power User Configuration
+
+```json
+{
+  "version": "1.0",
+  "theme": "custom",
+  "customTheme": {
+    "colors": {
+      "background": "#1e1e1e",
+      "foreground": "#d4d4d4"
+    }
+  },
+  "editor": {
+    "fontSize": 18,
+    "fontFamily": "JetBrains Mono",
+    "lineHeight": 1.8,
+    "autoSave": true,
+    "autoSaveDelay": 500
+  },
+  "shortcuts": {
+    "command-palette": "CommandOrControl+Shift+P",
+    "custom-action": "CommandOrControl+Shift+X"
+  },
+  "plugins": {
+    "enabled": ["git-integration", "ai-assistant"]
+  },
+  "performance": {
+    "maxOpenTabs": 30,
+    "lazyLoadFiles": true
+  }
+}
+```
+
+---
+
+### Team Configuration
+
+Share configuration across team:
+
+```json
+{
+  "version": "1.0",
+  "editor": {
+    "fontSize": 14,
+    "tabSize": 2,
+    "insertSpaces": true
+  },
+  "files": {
+    "defaultNewFileTemplate": "# {title}\n\n**Created:** {date}\n**Author:** {author}\n\n## Notes\n\n",
+    "excludePatterns": [
+      "node_modules",
+      ".git",
+      "dist"
+    ]
+  }
+}
+```
+
+---
+
+## Troubleshooting
+
+### Configuration Not Loading
+
+1. Check file location is correct
+2. Validate JSON syntax
+3. Check file permissions
+4. Delete and let Lokus recreate
+
+### Settings Not Persisting
+
+1. Ensure write permissions
+2. Check disk space
+3. Disable antivirus temporarily
+4. Check file locks
+
+### Invalid Configuration
+
+If config is invalid, Lokus will:
+1. Log error to console
+2. Fall back to defaults
+3. Create backup of invalid config
+4. Prompt user to fix or reset
+
+## Next Steps
+
+- [Keyboard Shortcuts](/reference/keyboard-shortcuts) - Configure shortcuts
+- [Plugin API](/reference/plugin-api) - Plugin configuration
+- [Advanced Customization](/advanced/customization) - Advanced configuration

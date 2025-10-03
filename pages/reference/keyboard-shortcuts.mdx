@@ -1,0 +1,379 @@
+# Keyboard Shortcuts Reference
+
+Complete reference for all keyboard shortcuts in Lokus. Shortcuts are customizable and work across macOS, Windows, and Linux with platform-appropriate modifiers.
+
+## Platform Modifiers
+
+Lokus uses cross-platform modifier keys that adapt to your operating system:
+
+| Modifier | macOS | Windows/Linux |
+|----------|-------|---------------|
+| `CommandOrControl` | ⌘ Cmd | Ctrl |
+| `Control` | ⌃ Control | Ctrl |
+| `Alt` / `Option` | ⌥ Option | Alt |
+| `Shift` | ⇧ Shift | Shift |
+
+## File Operations
+
+| Action | Shortcut | Description |
+|--------|----------|-------------|
+| **Save File** | `Cmd/Ctrl+S` | Save current file |
+| **New File** | `Cmd/Ctrl+N` | Create new file |
+| **New Folder** | `Cmd/Ctrl+Shift+N` | Create new folder |
+| **Print** | `Cmd/Ctrl+P` | Print current file |
+| **Refresh Files** | `F5` | Refresh file tree |
+
+## Edit Operations
+
+| Action | Shortcut | Description |
+|--------|----------|-------------|
+| **Undo** | `Cmd/Ctrl+Z` | Undo last action |
+| **Redo** | `Cmd/Ctrl+Shift+Z` | Redo last undone action |
+| **Cut** | `Cmd/Ctrl+X` | Cut selection |
+| **Copy** | `Cmd/Ctrl+C` | Copy selection |
+| **Paste** | `Cmd/Ctrl+V` | Paste from clipboard |
+| **Select All** | `Cmd/Ctrl+A` | Select all content |
+| **Find in Note** | `Cmd/Ctrl+F` | Open in-file search |
+| **Find and Replace** | `Cmd/Ctrl+H` | Open find and replace |
+
+## View Operations
+
+| Action | Shortcut | Description |
+|--------|----------|-------------|
+| **Toggle Sidebar** | `Cmd/Ctrl+B` | Show/hide file sidebar |
+| **Zoom In** | `Cmd/Ctrl++` | Increase zoom level |
+| **Zoom Out** | `Cmd/Ctrl+-` | Decrease zoom level |
+| **Actual Size** | `Cmd/Ctrl+0` | Reset zoom to 100% |
+| **Toggle Fullscreen** | `F11` | Enter/exit fullscreen |
+| **Toggle Split View** | `Cmd/Ctrl+\\` | Enable/disable split panes |
+| **Toggle Split Direction** | `Cmd/Ctrl+Shift+\\` | Switch horizontal/vertical split |
+| **Reset Pane Size** | `Cmd/Ctrl+Alt+\\` | Reset split pane sizes |
+| **Toggle Sync Scrolling** | `Cmd/Ctrl+Alt+S` | Sync scroll in split view |
+
+## Formatting
+
+| Action | Shortcut | Description |
+|--------|----------|-------------|
+| **Bold** | `Cmd/Ctrl+B` | Make text bold |
+| **Italic** | `Cmd/Ctrl+I` | Make text italic |
+| **Underline** | `Cmd/Ctrl+U` | Underline text |
+| **Strikethrough** | `Cmd/Ctrl+Shift+X` | Strike through text |
+| **Inline Code** | `Cmd/Ctrl+E` | Format as inline code |
+| **Highlight** | `Cmd/Ctrl+Shift+H` | Highlight text |
+
+## Insert Operations
+
+| Action | Shortcut | Description |
+|--------|----------|-------------|
+| **Insert WikiLink** | `Cmd/Ctrl+L` | Open wikilink insert modal |
+| **Insert Inline Math** | `Cmd/Ctrl+M` | Insert inline math equation |
+| **Insert Math Block** | `Cmd/Ctrl+Shift+M` | Insert block math equation |
+| **Insert Table** | `Cmd/Ctrl+Shift+T` | Insert table |
+| **Insert Code Block** | `Cmd/Ctrl+Shift+C` | Insert code block |
+
+## Navigation
+
+| Action | Shortcut | Description |
+|--------|----------|-------------|
+| **Command Palette** | `Cmd/Ctrl+K` | Open command palette |
+| **Global Search** | `Cmd/Ctrl+Shift+F` | Open workspace search |
+| **Next Tab** | `Cmd/Ctrl+Alt+→` | Switch to next tab |
+| **Previous Tab** | `Cmd/Ctrl+Alt+←` | Switch to previous tab |
+| **Close Tab** | `Cmd/Ctrl+W` | Close current tab |
+| **Reopen Closed Tab** | `Cmd/Ctrl+Shift+T` | Reopen last closed tab |
+| **Graph View** | `Cmd/Ctrl+Shift+G` | Open graph view |
+| **Kanban Board** | `Cmd/Ctrl+Shift+K` | Open kanban board |
+| **New Canvas** | `Cmd/Ctrl+Shift+C` | Create new canvas |
+
+## Application
+
+| Action | Shortcut | Description |
+|--------|----------|-------------|
+| **Open Preferences** | `Cmd/Ctrl+,` | Open preferences window |
+| **Keyboard Shortcuts Help** | `F1` | Show shortcuts help |
+
+## Customizing Shortcuts
+
+### Via Preferences
+
+1. Open Preferences (`Cmd/Ctrl+,`)
+2. Navigate to **Keyboard Shortcuts** section
+3. Click on a shortcut to edit
+4. Press your desired key combination
+5. Click **Save** to apply
+
+### Via Configuration File
+
+Edit the configuration file directly:
+
+**Location:**
+- macOS: `~/Library/Application Support/com.lokus.app/config.json`
+- Windows: `%APPDATA%/com.lokus.app/config.json`
+- Linux: `~/.config/com.lokus.app/config.json`
+
+**Format:**
+```json
+{
+  "shortcuts": {
+    "save-file": "CommandOrControl+S",
+    "new-file": "CommandOrControl+N",
+    "command-palette": "CommandOrControl+K",
+    "custom-action": "CommandOrControl+Shift+X"
+  }
+}
+```
+
+### Programmatic API
+
+```typescript
+import { setShortcut, resetShortcuts } from '@/core/shortcuts/registry';
+
+// Set custom shortcut
+await setShortcut('save-file', 'CommandOrControl+Alt+S');
+
+// Reset all shortcuts to defaults
+await resetShortcuts();
+```
+
+## Shortcut Conflicts
+
+### System Shortcuts
+
+Lokus avoids registering global shortcuts that conflict with system operations:
+
+**Never registered globally:**
+- `Cmd/Ctrl+C` (Copy)
+- `Cmd/Ctrl+V` (Paste)
+- `Cmd/Ctrl+X` (Cut)
+- `Cmd/Ctrl+A` (Select All)
+- `Cmd/Ctrl+Z` (Undo)
+- `Cmd/Ctrl+Shift+Z` (Redo)
+
+These shortcuts work within the app but don't override system behavior.
+
+### Application Conflicts
+
+If a shortcut conflicts with another application:
+
+1. Lokus shortcuts take precedence when app is focused
+2. System shortcuts always take precedence
+3. Custom shortcuts can override defaults
+
+### Resolving Conflicts
+
+**Change conflicting shortcut:**
+```typescript
+// Change command palette shortcut if Cmd+K conflicts
+await setShortcut('command-palette', 'CommandOrControl+Shift+P');
+```
+
+**Disable global shortcut:**
+```json
+{
+  "shortcuts": {
+    "action-id": null
+  }
+}
+```
+
+## Platform-Specific Shortcuts
+
+### macOS
+
+Additional macOS-specific shortcuts:
+
+| Action | Shortcut | Description |
+|--------|----------|-------------|
+| **Hide App** | `Cmd+H` | Hide Lokus window |
+| **Hide Others** | `Cmd+Alt+H` | Hide other apps |
+| **Minimize** | `Cmd+M` | Minimize window |
+| **New Window** | `Cmd+Shift+N` | Open new window |
+
+### Windows
+
+Additional Windows-specific shortcuts:
+
+| Action | Shortcut | Description |
+|--------|----------|-------------|
+| **Minimize** | `Win+Down` | Minimize window |
+| **Maximize** | `Win+Up` | Maximize window |
+| **Close Window** | `Alt+F4` | Close application |
+
+### Linux
+
+Additional Linux-specific shortcuts:
+
+| Action | Shortcut | Description |
+|--------|----------|-------------|
+| **Minimize** | `Alt+F9` | Minimize window |
+| **Maximize** | `Alt+F10` | Maximize window |
+| **Close Window** | `Alt+F4` | Close application |
+
+## Shortcut Cheat Sheet
+
+### Essential Shortcuts
+
+**Get Started:**
+- `Cmd/Ctrl+N` - New file
+- `Cmd/Ctrl+S` - Save
+- `Cmd/Ctrl+F` - Find in note
+- `Cmd/Ctrl+Shift+F` - Search workspace
+
+**Navigation:**
+- `Cmd/Ctrl+K` - Command palette
+- `Cmd/Ctrl+W` - Close tab
+- `Cmd/Ctrl+Alt+→` - Next tab
+- `Cmd/Ctrl+Alt+←` - Previous tab
+
+**Formatting:**
+- `Cmd/Ctrl+B` - Bold
+- `Cmd/Ctrl+I` - Italic
+- `Cmd/Ctrl+L` - Insert link
+- `Cmd/Ctrl+E` - Inline code
+
+**Advanced:**
+- `Cmd/Ctrl+Shift+G` - Graph view
+- `Cmd/Ctrl+\\` - Split view
+- `F1` - Shortcuts help
+
+### Printable Reference
+
+Download or print the keyboard shortcuts reference:
+- [PDF Download](/downloads/lokus-shortcuts.pdf)
+- [Print-friendly version](/shortcuts/print)
+
+## Accessibility
+
+### Keyboard Navigation
+
+Lokus is fully keyboard accessible:
+
+- **Tab** - Navigate between UI elements
+- **Shift+Tab** - Navigate backwards
+- **Enter** - Activate buttons/links
+- **Escape** - Close dialogs/modals
+- **Arrow Keys** - Navigate lists and trees
+
+### Screen Reader Support
+
+All shortcuts are announced by screen readers with descriptions.
+
+### Visual Indicators
+
+- Shortcut hints in tooltips
+- Active shortcuts highlighted in menus
+- Conflict warnings in preferences
+
+## Advanced Customization
+
+### Creating Custom Shortcuts
+
+Define custom shortcuts for plugin actions:
+
+```typescript
+import { ACTIONS } from '@/core/shortcuts/registry';
+
+// Add custom action
+ACTIONS.push({
+  id: 'my-custom-action',
+  name: 'My Custom Action',
+  event: 'custom:action',
+  default: 'CommandOrControl+Shift+X'
+});
+
+// Register shortcut
+await registerGlobalShortcuts();
+
+// Listen for event
+window.addEventListener('custom:action', () => {
+  console.log('Custom action triggered!');
+});
+```
+
+### Context-Specific Shortcuts
+
+Some shortcuts behave differently based on context:
+
+**In Editor:**
+- `Cmd/Ctrl+B` - Bold text
+- `Cmd/Ctrl+K` - Insert link or command palette
+
+**In Sidebar:**
+- `Enter` - Open file
+- `Delete` - Delete file
+- `F2` - Rename file
+
+**In Search:**
+- `Enter` - Open result
+- `Escape` - Close search
+- `Up/Down` - Navigate results
+
+## Troubleshooting
+
+### Shortcuts Not Working
+
+1. **Check if globally registered**
+   - Some shortcuts only work when app is focused
+   - System shortcuts take precedence
+
+2. **Verify no conflicts**
+   - Open Preferences → Keyboard Shortcuts
+   - Look for warning icons
+
+3. **Reset to defaults**
+   ```typescript
+   await resetShortcuts();
+   ```
+
+4. **Clear configuration cache**
+   - Quit Lokus
+   - Delete config file
+   - Restart app
+
+### Global Shortcuts Disabled
+
+In development mode, global shortcuts are disabled by default to prevent conflicts.
+
+**Enable in development:**
+```javascript
+// src/core/shortcuts/registry.js
+const DISABLE_GLOBAL_SHORTCUTS_IN_DEV = false;
+```
+
+### Platform-Specific Issues
+
+**macOS:**
+- Check System Preferences → Keyboard → Shortcuts
+- Ensure no conflicts with system shortcuts
+
+**Windows:**
+- Check Windows keyboard settings
+- Disable gaming mode if shortcuts lag
+
+**Linux:**
+- Check desktop environment shortcuts
+- May need to disable compositor shortcuts
+
+## Best Practices
+
+### Choosing Shortcuts
+
+1. **Use standard patterns** - Follow OS conventions
+2. **Avoid system shortcuts** - Don't override Cmd+Q, Alt+F4
+3. **Group related actions** - Use similar patterns (Cmd+B, Cmd+I)
+4. **Add Shift for variations** - Cmd+T vs Cmd+Shift+T
+5. **Test across platforms** - Ensure shortcuts work on all OSes
+
+### Teaching Users
+
+1. Show shortcuts in tooltips
+2. Display in command palette
+3. Provide printable reference
+4. Offer interactive tutorial
+5. Highlight most-used shortcuts
+
+## Next Steps
+
+- [Configuration](/reference/configuration) - Configure shortcuts
+- [Plugin API](/reference/plugin-api) - Add plugin shortcuts
+- [Advanced Customization](/advanced/customization) - Advanced shortcuts

@@ -1,0 +1,929 @@
+# Task Management
+
+Lokus provides a comprehensive task management system integrated directly into your notes. Track tasks, manage projects, visualize workflows in Kanban boards, and organize work alongside your knowledge base - all without leaving your note-taking environment.
+
+## Overview
+
+The task management system in Lokus goes beyond simple checkboxes, offering multiple task states, due dates, priorities, dependencies, and flexible views. Whether you're managing personal to-dos or complex project workflows, Lokus adapts to your needs.
+
+### Key Features
+
+- **Multiple task states** (todo, doing, done, cancelled)
+- **Kanban board view** with drag-and-drop
+- **Due dates and priorities** for time management
+- **Task dependencies** for complex workflows
+- **Progress tracking** with statistics and charts
+- **Filter and sort** by multiple criteria
+- **Calendar integration** for time-based planning
+
+## Creating Tasks
+
+### Task Syntax
+
+Create tasks using standard markdown checkboxes:
+
+```markdown
+- [ ] Basic task
+- [x] Completed task
+- [>] In progress task
+- [-] Cancelled task
+```
+
+**Task States:**
+- `[ ]` - Todo (not started)
+- `[>]` - Doing (in progress)
+- `[x]` - Done (completed)
+- `[-]` - Cancelled (won't do)
+
+### Task Properties
+
+Add metadata to tasks:
+
+```markdown
+- [ ] Review pull request @john #development !high 📅 2024-03-20
+- [ ] Write documentation @sarah #docs !medium 📅 2024-03-22 ⏱️ 2h
+- [ ] Deploy to production #devops !critical 📅 2024-03-25 🔁 weekly
+```
+
+**Property Types:**
+- `@user` - Assignee
+- `#tag` - Category/project
+- `!priority` - Priority level (low, medium, high, critical)
+- `📅 date` - Due date (YYYY-MM-DD)
+- `⏱️ duration` - Estimated time
+- `🔁 recurrence` - Repeat pattern
+- `^block-id` - Task ID for references
+
+### Quick Task Creation
+
+**From Command Palette:**
+1. Press `Cmd/Ctrl + P`
+2. Type "new task"
+3. Enter task details
+4. Choose location
+
+**From Editor:**
+1. Type `- [ ]` and Space
+2. Enter task description
+3. Add properties inline
+
+**From Sidebar:**
+1. Click "+" in Tasks panel
+2. Fill in task form
+3. Assign properties
+4. Save
+
+![Task Lists with Checkboxes and Properties](/placeholder.svg)
+
+### Task Templates
+
+Create reusable task templates:
+
+```markdown
+## Meeting Preparation Template
+- [ ] Review agenda #meeting 📅 {{date}}
+- [ ] Prepare materials #meeting 📅 {{date-1}}
+- [ ] Send invites @team #meeting 📅 {{date-2}}
+- [ ] Book conference room #logistics 📅 {{date-3}}
+```
+
+**Template Variables:**
+- `{{date}}` - Today's date
+- `{{date+N}}` - N days from now
+- `{{date-N}}` - N days ago
+- `{{user}}` - Current user
+- `{{title}}` - Note title
+
+## Task Views
+
+### List View
+
+Default view showing tasks as list:
+
+**Features:**
+- Hierarchical display (tasks and subtasks)
+- Inline editing
+- Quick state toggle
+- Drag to reorder
+- Expand/collapse sections
+
+**Grouping Options:**
+- By status
+- By due date
+- By priority
+- By assignee
+- By project/tag
+- By note
+
+**Sorting Options:**
+- Due date (ascending/descending)
+- Priority (high to low)
+- Created date
+- Modified date
+- Alphabetical
+- Custom order
+
+### Kanban Board
+
+Visual workflow management:
+
+**Columns:**
+- **Backlog:** Unscheduled tasks
+- **Todo:** Ready to start
+- **Doing:** In progress
+- **Review:** Awaiting review
+- **Done:** Completed
+- **Cancelled:** Won't do
+
+**Board Features:**
+- Drag tasks between columns
+- Swim lanes by priority/assignee
+- WIP (work in progress) limits
+- Quick add new tasks
+- Column collapse
+- Card customization
+
+**Card Display:**
+- Task title
+- Due date indicator
+- Priority badge
+- Assignee avatar
+- Tags/labels
+- Progress bar (for subtasks)
+
+![Kanban Board for Task Management](/placeholder.svg)
+
+### Calendar View
+
+Time-based task visualization:
+
+**Views:**
+- Month view
+- Week view
+- Day view
+- Agenda view
+
+**Features:**
+- Drag to reschedule
+- Visual date picker
+- Overdue highlighting
+- Multi-day tasks
+- Recurring tasks display
+- Task density indicators
+
+**Calendar Actions:**
+- Click date to create task
+- Drag to change due date
+- Click task to edit
+- Right-click for options
+
+### Table View
+
+Spreadsheet-like task management:
+
+**Columns:**
+- Status (checkbox)
+- Title (text)
+- Due Date (date picker)
+- Priority (dropdown)
+- Assignee (user picker)
+- Tags (multi-select)
+- Progress (percentage)
+- Custom fields
+
+**Features:**
+- Sort by any column
+- Filter by criteria
+- Bulk edit
+- Export to CSV
+- Column show/hide
+- Column reordering
+
+### Timeline View
+
+Gantt chart for project planning:
+
+**Display:**
+- Tasks on horizontal timeline
+- Duration bars
+- Dependencies as arrows
+- Milestones
+- Today indicator
+
+**Features:**
+- Drag to adjust dates
+- Drag to adjust duration
+- Visual dependency editing
+- Critical path highlighting
+- Zoom levels (day/week/month)
+
+## Task Properties
+
+### Due Dates
+
+Set and manage due dates:
+
+**Date Formats:**
+```markdown
+- [ ] Task 📅 2024-03-20
+- [ ] Task 📅 tomorrow
+- [ ] Task 📅 next Monday
+- [ ] Task 📅 in 3 days
+- [ ] Task 📅 Mar 20
+```
+
+**Date Picker:**
+- Calendar interface
+- Quick date buttons (today, tomorrow, next week)
+- Natural language input
+- Clear date option
+
+**Due Date States:**
+- **Future:** Normal display
+- **Today:** Yellow highlight
+- **Overdue:** Red highlight
+- **No Date:** Gray/dimmed
+
+### Priorities
+
+Set task importance:
+
+**Priority Levels:**
+- **Critical:** Must do immediately (red)
+- **High:** Important and urgent (orange)
+- **Medium:** Normal priority (yellow)
+- **Low:** Nice to have (blue)
+- **None:** No priority set (gray)
+
+**Priority Syntax:**
+```markdown
+- [ ] Critical task !critical
+- [ ] High priority !high
+- [ ] Medium priority !medium
+- [ ] Low priority !low
+```
+
+**Priority Indicators:**
+- Color-coded badges
+- Sort by priority
+- Filter by priority
+- Priority icons
+
+### Assignees
+
+Assign tasks to users:
+
+**Assignment:**
+```markdown
+- [ ] Task assigned to John @john
+- [ ] Multiple assignees @sarah @mike
+```
+
+**Features:**
+- User autocomplete
+- Avatar display
+- Filter by assignee
+- Assignee workload view
+- Email notifications
+
+### Tags and Labels
+
+Categorize tasks:
+
+**Tagging:**
+```markdown
+- [ ] Task #project-alpha #backend #review
+- [ ] Task #personal #errands
+```
+
+**Tag Features:**
+- Nested tags (#project/alpha)
+- Tag autocomplete
+- Color-coded tags
+- Tag cloud view
+- Filter by tags
+
+### Time Tracking
+
+Track time spent on tasks:
+
+**Time Estimate:**
+```markdown
+- [ ] Task ⏱️ 2h
+- [ ] Task ⏱️ 30m
+- [ ] Task ⏱️ 1d
+```
+
+**Time Tracking:**
+- Start/stop timer
+- Manual time entry
+- Time logs
+- Total time spent
+- Compare estimate vs. actual
+
+**Time Formats:**
+- Minutes: `30m`, `45m`
+- Hours: `2h`, `3.5h`
+- Days: `1d`, `2d`
+
+### Recurrence
+
+Repeating tasks:
+
+**Recurrence Patterns:**
+```markdown
+- [ ] Daily standup 🔁 daily
+- [ ] Weekly review 🔁 weekly
+- [ ] Monthly report 🔁 monthly
+- [ ] Quarterly planning 🔁 quarterly
+- [ ] Custom 🔁 every 2 weeks on Monday
+```
+
+**Recurrence Options:**
+- Daily, weekly, monthly, yearly
+- Specific days of week
+- Specific dates of month
+- Custom intervals
+- End date or count
+
+**Recurring Task Behavior:**
+- Auto-create next instance on completion
+- Skip weekends (optional)
+- Advance on completion or schedule
+
+## Task Dependencies
+
+### Creating Dependencies
+
+Link tasks in sequence:
+
+**Syntax:**
+```markdown
+- [ ] Task A ^task-a
+- [ ] Task B (depends on [[#^task-a]])
+- [ ] Task C (after [[#^task-a]] and [[#^task-b]])
+```
+
+**Dependency Types:**
+- **Finish-to-Start:** B starts when A finishes
+- **Start-to-Start:** B starts when A starts
+- **Finish-to-Finish:** B finishes when A finishes
+- **Start-to-Finish:** B finishes when A starts
+
+### Dependency Visualization
+
+**Dependency Graph:**
+- Visual connection between tasks
+- Critical path highlighting
+- Blocked task indicators
+- Dependency chain display
+
+**Blocked Tasks:**
+- Dimmed appearance
+- Lock icon
+- "Blocked by" indicator
+- Automatic unblock on completion
+
+### Dependency Management
+
+**Actions:**
+- Add dependency
+- Remove dependency
+- Change dependency type
+- View dependency chain
+- Find circular dependencies
+
+**Validation:**
+- Detect circular dependencies
+- Warn about conflicts
+- Suggest resolution
+- Auto-fix option
+
+## Subtasks
+
+### Creating Subtasks
+
+Hierarchical task structure:
+
+```markdown
+- [ ] Main task
+  - [ ] Subtask 1
+  - [ ] Subtask 2
+    - [ ] Sub-subtask 2.1
+    - [ ] Sub-subtask 2.2
+  - [ ] Subtask 3
+```
+
+**Features:**
+- Unlimited nesting levels
+- Indent with Tab
+- Outdent with Shift+Tab
+- Collapse/expand
+- Progress inheritance
+
+### Progress Tracking
+
+Parent task shows subtask progress:
+
+**Display:**
+```markdown
+- [ ] Main task [2/5]
+  - [x] Subtask 1
+  - [x] Subtask 2
+  - [ ] Subtask 3
+  - [ ] Subtask 4
+  - [ ] Subtask 5
+```
+
+**Progress Indicators:**
+- Fraction (2/5)
+- Percentage (40%)
+- Progress bar
+- Visual completion
+- Color coding
+
+### Subtask Behavior
+
+**Auto-complete:**
+- Complete all subtasks → parent auto-completes
+- Optional (configurable)
+
+**Auto-expand:**
+- Expand when parent clicked
+- Show/hide subtasks
+- Remember state
+
+## Task Statistics
+
+### Overview Dashboard
+
+View task metrics:
+
+**Statistics:**
+- Total tasks
+- By status (todo, doing, done, cancelled)
+- By priority
+- By due date (today, this week, overdue)
+- Completion rate
+- Average completion time
+
+**Visualizations:**
+- Pie chart (by status)
+- Bar chart (by priority)
+- Line chart (tasks over time)
+- Heatmap (completion by day)
+- Burndown chart (project progress)
+
+### Personal Analytics
+
+Track your productivity:
+
+**Metrics:**
+- Tasks completed per day/week/month
+- Completion rate trend
+- Average task duration
+- Most productive times
+- Task velocity
+
+**Reports:**
+- Daily summary
+- Weekly review
+- Monthly report
+- Custom date range
+- Export reports
+
+### Project Analytics
+
+Project-level insights:
+
+**Metrics:**
+- Project progress
+- Task distribution
+- Team workload
+- Blocked tasks count
+- At-risk tasks (overdue, no progress)
+
+**Forecasting:**
+- Estimated completion date
+- Tasks remaining
+- Velocity trend
+- Resource allocation
+
+## Filtering and Search
+
+### Quick Filters
+
+Pre-built filter buttons:
+
+**Status Filters:**
+- All tasks
+- Active (todo + doing)
+- Completed (done)
+- Open (not done or cancelled)
+
+**Time Filters:**
+- Today
+- This week
+- This month
+- Overdue
+- No date
+
+**Priority Filters:**
+- Critical
+- High
+- Medium
+- Low
+- Any priority
+
+### Advanced Filters
+
+Build complex filter queries:
+
+**Filter Syntax:**
+```
+status:todo AND priority:high
+due:before-today OR overdue:true
+assignee:@john AND tag:#project-alpha
+has:subtasks AND progress:under-50%
+created:>2024-01-01 AND status:!done
+```
+
+**Filter Operators:**
+- `AND`, `OR`, `NOT`
+- `=`, `!=`, `>`, `<`, `>=`, `<=`
+- `contains`, `starts-with`, `ends-with`
+- `has`, `is`, `in`
+
+### Saved Filters
+
+Save frequently used filters:
+
+**Creating Saved Filters:**
+1. Build filter query
+2. Click "Save Filter"
+3. Name the filter
+4. Optionally set as default
+
+**Pre-built Saved Filters:**
+- My tasks today
+- Overdue tasks
+- High priority open
+- Blocked tasks
+- Unassigned tasks
+- Completed this week
+
+### Task Search
+
+Full-text search in tasks:
+
+**Search Features:**
+- Task content search
+- Search in notes with tasks
+- Search in comments
+- Fuzzy matching
+- Regex support
+
+**Search Syntax:**
+```
+task:"review code"
+task-in:[[Project Notes]]
+task-tag:#urgent
+task-assignee:@sarah
+```
+
+## Integration
+
+### Note Integration
+
+Tasks embedded in notes:
+
+**In-Note Tasks:**
+- Create tasks anywhere in notes
+- Tasks appear in task views
+- Click to jump to note
+- Context shown in task panel
+
+**Task Blocks:**
+```markdown
+## Tasks for Today
+- [ ] Review PR #123
+- [ ] Update documentation
+- [ ] Team meeting at 2pm
+
+## Project Tasks
+- [ ] Design mockups 📅 2024-03-20
+- [ ] Implement feature 📅 2024-03-22
+```
+
+### Calendar Integration
+
+Sync with external calendars:
+
+**Supported Calendars:**
+- Google Calendar
+- Outlook Calendar
+- Apple Calendar
+- CalDAV
+
+**Sync Features:**
+- Two-way sync
+- Due dates to events
+- Tasks to calendar
+- Event to task creation
+- Conflict resolution
+
+### Email Integration
+
+Create tasks from emails:
+
+**Gmail Integration:**
+- Forward email to create task
+- Email content becomes task description
+- Attachments preserved
+- Reply-to link
+- See [Gmail Integration](/features/gmail)
+
+**Email Actions:**
+- "Add to Lokus" button
+- Create task with email context
+- Link back to email
+- Set due date from email
+
+### API Integration
+
+Connect with external tools:
+
+**REST API:**
+```javascript
+// Create task
+POST /api/tasks
+{
+  "title": "Review documentation",
+  "status": "todo",
+  "priority": "high",
+  "due_date": "2024-03-20",
+  "tags": ["docs", "review"]
+}
+
+// Update task
+PATCH /api/tasks/:id
+{
+  "status": "done"
+}
+```
+
+**Webhook Events:**
+- Task created
+- Task updated
+- Task completed
+- Task deleted
+- Due date approaching
+
+## Collaboration
+
+### Shared Tasks
+
+Collaborate on tasks:
+
+**Features:**
+- Assign to multiple users
+- Mention users in comments
+- Real-time updates
+- Activity history
+- Notifications
+
+**Permissions:**
+- View: See tasks
+- Comment: Add comments
+- Edit: Modify tasks
+- Admin: Manage permissions
+
+### Task Comments
+
+Discuss tasks:
+
+**Comment Features:**
+- Threaded discussions
+- Markdown support
+- @mentions
+- File attachments
+- Emoji reactions
+
+**Comment Actions:**
+- Reply to comment
+- Edit/delete own comments
+- Resolve threads
+- Pin important comments
+
+### Activity Feed
+
+Track task changes:
+
+**Events Logged:**
+- Status changes
+- Property updates
+- Comments added
+- Assignments
+- Due date changes
+
+**Activity Display:**
+- User who made change
+- Timestamp
+- Change description
+- Before/after values
+
+## Automation
+
+### Task Rules
+
+Automate task management:
+
+**Rule Examples:**
+```
+IF status changes to "done"
+THEN move to "Completed" project
+
+IF due date is tomorrow
+THEN set priority to "high"
+
+IF assigned to @john
+THEN add tag #johns-tasks
+
+IF overdue by 3 days
+THEN notify @manager
+```
+
+**Rule Components:**
+- Trigger (when)
+- Condition (if)
+- Action (then)
+
+### Recurring Tasks
+
+Automatic task creation:
+
+**Recurrence Setup:**
+1. Create task
+2. Set recurrence pattern
+3. Define end condition
+4. Configure behavior
+
+**Recurrence Options:**
+- Create on completion
+- Create on schedule
+- Skip weekends
+- Adjust for holidays
+
+### Task Templates
+
+Template-based task creation:
+
+**Template Usage:**
+1. Create template with tasks
+2. Apply template to project
+3. Tasks auto-created
+4. Dates calculated
+5. Dependencies preserved
+
+## Mobile Support
+
+### Mobile Task Management
+
+Tasks on mobile devices:
+
+**Features:**
+- Quick task creation
+- Voice input
+- Swipe actions (complete, delete)
+- Offline support
+- Sync when online
+
+**Mobile Views:**
+- List view (optimized)
+- Card view
+- Today view
+- Quick capture
+
+### Widgets
+
+Home screen task widgets:
+
+**Widget Types:**
+- Today's tasks
+- Overdue tasks
+- Task counter
+- Quick add
+
+## Configuration
+
+### Task Settings
+
+Configure in Settings > Tasks:
+
+**General:**
+- Default task state
+- Auto-complete subtasks
+- Show completed tasks
+- Task counter badge
+
+**Appearance:**
+- Task checkbox style
+- Completed task strikethrough
+- Priority colors
+- Date format
+
+**Behavior:**
+- Move completed to bottom
+- Auto-archive completed
+- Confirm delete
+- Default due date
+
+**Notifications:**
+- Due date reminders
+- Overdue alerts
+- Assignment notifications
+- Comment mentions
+
+### Keyboard Shortcuts
+
+| Action | Shortcut |
+|--------|----------|
+| New Task | Cmd/Ctrl + N |
+| Toggle Complete | Cmd/Ctrl + Enter |
+| Set Due Date | Cmd/Ctrl + D |
+| Set Priority | Cmd/Ctrl + P |
+| Assign Task | Cmd/Ctrl + Shift + A |
+| Add Tag | Cmd/Ctrl + Shift + T |
+| Open in Editor | Cmd/Ctrl + Shift + E |
+| Delete Task | Delete |
+
+## Best Practices
+
+### Task Organization
+
+**Effective Tasking:**
+- Break large tasks into subtasks
+- Use clear, actionable descriptions
+- Set realistic due dates
+- Assign priorities appropriately
+- Add relevant context and links
+
+**Project Structure:**
+```markdown
+# Project: Website Redesign
+
+## Planning Phase
+- [ ] Conduct user research 📅 2024-03-25 @sarah #research
+- [ ] Create wireframes 📅 2024-03-28 @john #design
+- [ ] Review stakeholder feedback 📅 2024-03-30 #review
+
+## Design Phase
+- [ ] Design homepage 📅 2024-04-05 @john #design
+  - [ ] Header design
+  - [ ] Hero section
+  - [ ] Footer design
+- [ ] Design inner pages 📅 2024-04-10 @john #design
+
+## Development Phase
+- [ ] Setup development environment 📅 2024-04-15 @mike #dev
+- [ ] Implement frontend 📅 2024-04-25 @mike #dev
+```
+
+### Productivity Tips
+
+**Daily Workflow:**
+1. Review today's tasks (morning)
+2. Prioritize top 3 tasks
+3. Focus on high-priority items first
+4. Update task status as you work
+5. Review completed tasks (evening)
+
+**Weekly Review:**
+1. Complete overdue tasks
+2. Review upcoming week
+3. Adjust priorities
+4. Archive completed tasks
+5. Plan next week's focus
+
+## Troubleshooting
+
+### Common Issues
+
+**Issue:** Tasks not appearing in views
+**Solution:** Check filters, rebuild task index, verify task syntax
+
+**Issue:** Subtask progress not updating
+**Solution:** Enable auto-progress in settings, manually refresh
+
+**Issue:** Recurring tasks not creating
+**Solution:** Check recurrence pattern, verify future date, check errors
+
+**Issue:** Task sync not working
+**Solution:** Check internet connection, verify permissions, re-authenticate
+
+## Next Steps
+
+- Explore [Templates](/features/templates) for task workflows
+- Use [Canvas](/features/canvas) for visual task planning
+- Integrate with [Gmail](/features/gmail) for email-based tasks
+- See [Search](/features/search) for advanced task queries

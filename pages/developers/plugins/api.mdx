@@ -1,0 +1,1062 @@
+# API Reference
+
+Complete reference for the Lokus Plugin API. All plugins receive an `api` object through the `PluginContext` during activation.
+
+## Getting the API
+
+```typescript
+import { Plugin, PluginContext, LokusAPI } from '@lokus/plugin-sdk'
+
+export default class MyPlugin implements Plugin {
+  private api!: LokusAPI
+
+  async activate(context: PluginContext) {
+    // Access the API
+    this.api = context.api
+
+    // Use any API
+    await this.api.commands.register({
+      id: 'myPlugin.hello',
+      title: 'Say Hello',
+      handler: () => this.api.ui.showNotification('Hello!', 'info')
+    })
+  }
+}
+```
+
+## API Overview
+
+Lokus provides 8 specialized APIs:
+
+| API | Purpose |
+|-----|---------|
+| [Commands](#commands-api) | Register and execute commands |
+| [Editor](#editor-api) | Text editor operations |
+| [UI](#ui-api) | User interface extensions |
+| [Workspace](#workspace-api) | Workspace and project operations |
+| [File System](#file-system-api) | File operations |
+| [Network](#network-api) | HTTP requests |
+| [Storage](#storage-api) | Plugin-scoped storage |
+| [Events](#events-api) | Event system |
+
+Additional APIs (Lokus 2.0+):
+
+| API | Purpose |
+|-----|---------|
+| [Tasks](#tasks-api) | Task execution |
+| [Debug](#debug-api) | Debugging support |
+| [Languages](#languages-api) | Language features |
+| [Themes](#themes-api) | Theme registration |
+| [Configuration](#configuration-api) | Settings management |
+| [Terminal](#terminal-api) | Terminal operations |
+
+---
+
+## Commands API
+
+Register and execute commands, create keyboard shortcuts.
+
+### api.commands.register()
+
+Register a new command.
+
+```typescript
+api.commands.register(command: CommandDefinition): Disposable
+```
+
+**Parameters:**
+
+```typescript
+interface CommandDefinition {
+  id: string                    // Unique command ID
+  title: string                 // Display title
+  handler: CommandHandler       // Command handler function
+  category?: string             // Command category
+  description?: string          // Description
+  icon?: string | ThemeIcon    // Icon
+  when?: string                 // When clause
+  enablement?: string           // Enablement clause
+}
+
+type CommandHandler = (...args: any[]) => any | Promise<any>
+```
+
+**Returns:** `Disposable` - Call `.dispose()` to unregister
+
+**Example:**
+
+```typescript
+const disposable = api.commands.register({
+  id: 'myPlugin.hello',
+  title: 'Say Hello',
+  category: 'My Plugin',
+  description: 'Shows a greeting message',
+  handler: (name?: string) => {
+    api.ui.showNotification(`Hello ${name || 'World'}!`, 'info')
+  }
+})
+
+// Unregister command
+disposable.dispose()
+```
+
+### api.commands.execute()
+
+Execute a command by ID.
+
+```typescript
+api.commands.execute<T>(commandId: string, ...args: any[]): Promise<T>
+```
+
+**Parameters:**
+- `commandId` - Command identifier
+- `args` - Arguments to pass to command handler
+
+**Returns:** Promise resolving to command result
+
+**Example:**
+
+```typescript
+// Execute command without arguments
+await api.commands.execute('myPlugin.hello')
+
+// Execute command with arguments
+await api.commands.execute('myPlugin.hello', 'John')
+
+// Execute with typed return value
+const result = await api.commands.execute<string>('myPlugin.getData')
+```
+
+### api.commands.getAll()
+
+Get all registered commands.
+
+```typescript
+api.commands.getAll(): Promise<CommandInfo[]>
+```
+
+**Returns:** Promise resolving to array of command information
+
+**Example:**
+
+```typescript
+const commands = await api.commands.getAll()
+commands.forEach(cmd => {
+  console.log(`${cmd.id}: ${cmd.title}`)
+})
+```
+
+### api.commands.exists()
+
+Check if command exists.
+
+```typescript
+api.commands.exists(commandId: string): Promise<boolean>
+```
+
+**Example:**
+
+```typescript
+if (await api.commands.exists('myPlugin.hello')) {
+  console.log('Command is registered')
+}
+```
+
+---
+
+## Editor API
+
+Access and manipulate text editor content.
+
+### api.editor.getContent()
+
+Get current editor content.
+
+```typescript
+api.editor.getContent(): Promise<string>
+```
+
+**Returns:** Promise resolving to editor content
+
+**Example:**
+
+```typescript
+const content = await api.editor.getContent()
+console.log('Current content:', content)
+```
+
+### api.editor.setContent()
+
+Set editor content.
+
+```typescript
+api.editor.setContent(content: string): Promise<void>
+```
+
+**Parameters:**
+- `content` - New content
+
+**Example:**
+
+```typescript
+await api.editor.setContent('# Hello World\n\nNew content here')
+```
+
+### api.editor.insertContent()
+
+Insert content at cursor position.
+
+```typescript
+api.editor.insertContent(content: string): Promise<void>
+```
+
+**Example:**
+
+```typescript
+await api.editor.insertContent('Inserted text')
+```
+
+### api.editor.getSelection()
+
+Get current selection.
+
+```typescript
+api.editor.getSelection(): Promise<Selection | undefined>
+```
+
+**Returns:** Promise resolving to current selection
+
+```typescript
+interface Selection {
+  anchor: Position    // Start position
+  active: Position    // End position (cursor)
+  start: Position     // Min position
+  end: Position       // Max position
+}
+
+interface Position {
+  line: number        // Line number (0-based)
+  character: number   // Character offset (0-based)
+}
+```
+
+**Example:**
+
+```typescript
+const selection = await api.editor.getSelection()
+if (selection) {
+  console.log(`Selection from ${selection.start.line}:${selection.start.character} to ${selection.end.line}:${selection.end.character}`)
+}
+```
+
+### api.editor.setSelection()
+
+Set selection.
+
+```typescript
+api.editor.setSelection(selection: Selection): Promise<void>
+```
+
+**Example:**
+
+```typescript
+await api.editor.setSelection({
+  start: { line: 0, character: 0 },
+  end: { line: 2, character: 10 }
+})
+```
+
+### api.editor.getTextInRange()
+
+Get text in specific range.
+
+```typescript
+api.editor.getTextInRange(range: Range): Promise<string>
+```
+
+**Example:**
+
+```typescript
+const text = await api.editor.getTextInRange({
+  start: { line: 0, character: 0 },
+  end: { line: 0, character: 10 }
+})
+```
+
+### api.editor.replaceText()
+
+Replace text in range.
+
+```typescript
+api.editor.replaceText(range: Range, text: string): Promise<void>
+```
+
+**Example:**
+
+```typescript
+await api.editor.replaceText(
+  {
+    start: { line: 0, character: 0 },
+    end: { line: 0, character: 5 }
+  },
+  'New text'
+)
+```
+
+### api.editor.registerCompletionProvider()
+
+Register autocomplete provider.
+
+```typescript
+api.editor.registerCompletionProvider(
+  selector: DocumentSelector,
+  provider: CompletionItemProvider,
+  ...triggerCharacters: string[]
+): Disposable
+```
+
+**Example:**
+
+```typescript
+api.editor.registerCompletionProvider(
+  'markdown',
+  {
+    provideCompletionItems(document, position, token, context) {
+      return [
+        {
+          label: 'hello',
+          kind: CompletionItemKind.Keyword,
+          insertText: 'Hello World!',
+          documentation: 'Insert greeting'
+        }
+      ]
+    }
+  },
+  '['  // Trigger on [
+)
+```
+
+### api.editor.onDidChangeTextDocument()
+
+Listen to document changes.
+
+```typescript
+api.editor.onDidChangeTextDocument(
+  listener: (event: TextDocumentChangeEvent) => void
+): Disposable
+```
+
+**Example:**
+
+```typescript
+api.editor.onDidChangeTextDocument(event => {
+  console.log('Document changed:', event.document.uri)
+  event.contentChanges.forEach(change => {
+    console.log('Change:', change.text)
+  })
+})
+```
+
+---
+
+## UI API
+
+Create panels, dialogs, notifications, and UI elements.
+
+### api.ui.showNotification()
+
+Show notification to user.
+
+```typescript
+api.ui.showNotification(
+  message: string,
+  type?: 'info' | 'warning' | 'error' | 'success',
+  actions?: NotificationAction[]
+): Promise<string | undefined>
+```
+
+**Returns:** Promise resolving to clicked action ID
+
+**Example:**
+
+```typescript
+// Simple notification
+await api.ui.showNotification('Operation completed', 'success')
+
+// With actions
+const result = await api.ui.showNotification(
+  'File has unsaved changes',
+  'warning',
+  [
+    { id: 'save', label: 'Save', primary: true },
+    { id: 'discard', label: 'Discard' }
+  ]
+)
+
+if (result === 'save') {
+  // User clicked Save
+}
+```
+
+### api.ui.showDialog()
+
+Show modal dialog.
+
+```typescript
+api.ui.showDialog(dialog: DialogOptions): Promise<DialogResult>
+```
+
+**Example:**
+
+```typescript
+const result = await api.ui.showDialog({
+  title: 'Confirm Action',
+  message: 'Are you sure you want to continue?',
+  type: 'question',
+  buttons: [
+    { id: 'yes', label: 'Yes', primary: true },
+    { id: 'no', label: 'No' }
+  ],
+  checkboxLabel: 'Don\'t ask again',
+  checkboxChecked: false
+})
+
+if (result.buttonId === 'yes') {
+  console.log('User confirmed')
+  if (result.checkboxChecked) {
+    console.log('User checked "Don\'t ask again"')
+  }
+}
+```
+
+### api.ui.showQuickPick()
+
+Show quick pick menu.
+
+```typescript
+api.ui.showQuickPick<T extends QuickPickItem>(
+  items: T[] | Promise<T[]>,
+  options?: QuickPickOptions
+): Promise<T | undefined>
+```
+
+**Example:**
+
+```typescript
+const items = [
+  { label: 'Option 1', description: 'First option' },
+  { label: 'Option 2', description: 'Second option' },
+  { label: 'Option 3', description: 'Third option' }
+]
+
+const selected = await api.ui.showQuickPick(items, {
+  placeholder: 'Select an option',
+  title: 'Quick Pick Example'
+})
+
+if (selected) {
+  console.log('Selected:', selected.label)
+}
+```
+
+### api.ui.showInputBox()
+
+Show input dialog.
+
+```typescript
+api.ui.showInputBox(options?: InputBoxOptions): Promise<string | undefined>
+```
+
+**Example:**
+
+```typescript
+const name = await api.ui.showInputBox({
+  prompt: 'Enter your name',
+  placeholder: 'John Doe',
+  validateInput: (value) => {
+    if (!value) return 'Name is required'
+    if (value.length < 3) return 'Name must be at least 3 characters'
+    return null
+  }
+})
+
+if (name) {
+  console.log('User entered:', name)
+}
+```
+
+### api.ui.registerPanel()
+
+Register custom panel.
+
+```typescript
+api.ui.registerPanel(panel: PanelDefinition): Disposable
+```
+
+**Example:**
+
+```typescript
+api.ui.registerPanel({
+  id: 'myPlugin.panel',
+  title: 'My Panel',
+  type: 'webview',
+  location: 'sidebar',
+  icon: 'star',
+  html: `
+    <!DOCTYPE html>
+    <html>
+      <body>
+        <h1>Custom Panel</h1>
+        <button onclick="handleClick()">Click Me</button>
+        <script>
+          function handleClick() {
+            window.parent.postMessage({ command: 'buttonClicked' }, '*')
+          }
+        </script>
+      </body>
+    </html>
+  `
+})
+```
+
+### api.ui.registerStatusBarItem()
+
+Create status bar item.
+
+```typescript
+api.ui.registerStatusBarItem(
+  item: StatusBarItemDefinition
+): StatusBarItem
+```
+
+**Example:**
+
+```typescript
+const statusItem = api.ui.registerStatusBarItem({
+  id: 'myPlugin.status',
+  text: '$(check) Ready',
+  tooltip: 'Plugin is ready',
+  command: 'myPlugin.showInfo',
+  alignment: 'left',
+  priority: 100
+})
+
+// Update later
+statusItem.text = '$(sync~spin) Processing...'
+
+// Hide
+statusItem.hide()
+
+// Show
+statusItem.show()
+```
+
+### api.ui.withProgress()
+
+Show progress indicator.
+
+```typescript
+api.ui.withProgress<R>(
+  options: ProgressOptions,
+  task: (progress: Progress, token: CancellationToken) => Promise<R>
+): Promise<R>
+```
+
+**Example:**
+
+```typescript
+await api.ui.withProgress(
+  {
+    location: 'notification',
+    title: 'Processing Files',
+    cancellable: true
+  },
+  async (progress, token) => {
+    for (let i = 0; i < 100; i++) {
+      if (token.isCancellationRequested) {
+        break
+      }
+
+      progress.report({
+        message: `Processing file ${i + 1}/100`,
+        increment: 1
+      })
+
+      await processFile(i)
+    }
+  }
+)
+```
+
+---
+
+## Workspace API
+
+Access workspace files, folders, and settings.
+
+### api.workspace.workspaceFolders
+
+Get workspace folders.
+
+```typescript
+readonly workspaceFolders: WorkspaceFolder[] | undefined
+```
+
+**Example:**
+
+```typescript
+const folders = api.workspace.workspaceFolders
+if (folders) {
+  folders.forEach(folder => {
+    console.log(`Folder: ${folder.name} at ${folder.uri}`)
+  })
+}
+```
+
+### api.workspace.findFiles()
+
+Find files in workspace.
+
+```typescript
+api.workspace.findFiles(
+  include: string,
+  exclude?: string,
+  maxResults?: number,
+  token?: CancellationToken
+): Promise<string[]>
+```
+
+**Example:**
+
+```typescript
+// Find all markdown files
+const mdFiles = await api.workspace.findFiles('**/*.md')
+
+// Find with exclusions
+const tsFiles = await api.workspace.findFiles(
+  '**/*.ts',
+  '**/node_modules/**',
+  100  // Max 100 results
+)
+```
+
+### api.workspace.onDidChangeWorkspaceFolders()
+
+Listen to workspace folder changes.
+
+```typescript
+api.workspace.onDidChangeWorkspaceFolders(
+  listener: (event: WorkspaceFoldersChangeEvent) => void
+): Disposable
+```
+
+**Example:**
+
+```typescript
+api.workspace.onDidChangeWorkspaceFolders(event => {
+  console.log('Added folders:', event.added)
+  console.log('Removed folders:', event.removed)
+})
+```
+
+---
+
+## File System API
+
+Read, write, and watch files.
+
+### api.fs.readFile()
+
+Read file content.
+
+```typescript
+api.fs.readFile(path: string): Promise<string>
+```
+
+**Example:**
+
+```typescript
+const content = await api.fs.readFile('/path/to/file.txt')
+console.log(content)
+```
+
+### api.fs.writeFile()
+
+Write file content.
+
+```typescript
+api.fs.writeFile(path: string, content: string): Promise<void>
+```
+
+**Example:**
+
+```typescript
+await api.fs.writeFile('/path/to/file.txt', 'New content')
+```
+
+### api.fs.exists()
+
+Check if file/directory exists.
+
+```typescript
+api.fs.exists(path: string): Promise<boolean>
+```
+
+**Example:**
+
+```typescript
+if (await api.fs.exists('/path/to/file.txt')) {
+  console.log('File exists')
+}
+```
+
+### api.fs.watch()
+
+Watch file or directory for changes.
+
+```typescript
+api.fs.watch(
+  path: string,
+  listener: (event: FileSystemEvent) => void
+): Disposable
+```
+
+**Example:**
+
+```typescript
+const watcher = api.fs.watch('/path/to/directory', event => {
+  console.log(`File ${event.type}: ${event.path}`)
+})
+
+// Stop watching
+watcher.dispose()
+```
+
+---
+
+## Network API
+
+Make HTTP requests.
+
+### api.network.fetch()
+
+Make HTTP request.
+
+```typescript
+api.network.fetch(
+  url: string,
+  options?: RequestInit
+): Promise<Response>
+```
+
+**Example:**
+
+```typescript
+// GET request
+const response = await api.network.fetch('https://api.example.com/data')
+const data = await response.json()
+
+// POST request
+const response = await api.network.fetch('https://api.example.com/data', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({ name: 'John' })
+})
+```
+
+---
+
+## Storage API
+
+Store and retrieve plugin data.
+
+### api.storage.get()
+
+Get stored value.
+
+```typescript
+api.storage.get<T>(key: string, defaultValue?: T): Promise<T | undefined>
+```
+
+**Example:**
+
+```typescript
+const settings = await api.storage.get('settings', { enabled: true })
+```
+
+### api.storage.set()
+
+Store value.
+
+```typescript
+api.storage.set(key: string, value: any): Promise<void>
+```
+
+**Example:**
+
+```typescript
+await api.storage.set('settings', { enabled: true, mode: 'advanced' })
+```
+
+### api.storage.delete()
+
+Delete stored value.
+
+```typescript
+api.storage.delete(key: string): Promise<void>
+```
+
+**Example:**
+
+```typescript
+await api.storage.delete('tempData')
+```
+
+### api.storage.keys()
+
+Get all keys.
+
+```typescript
+api.storage.keys(): Promise<string[]>
+```
+
+**Example:**
+
+```typescript
+const keys = await api.storage.keys()
+console.log('Stored keys:', keys)
+```
+
+---
+
+## Events API
+
+Subscribe to and emit events.
+
+### api.events.on()
+
+Subscribe to event.
+
+```typescript
+api.events.on(
+  event: string,
+  listener: (data: any) => void
+): Disposable
+```
+
+**Example:**
+
+```typescript
+const disposable = api.events.on('myPlugin.dataUpdated', data => {
+  console.log('Data updated:', data)
+})
+
+// Unsubscribe
+disposable.dispose()
+```
+
+### api.events.emit()
+
+Emit event.
+
+```typescript
+api.events.emit(event: string, data?: any): void
+```
+
+**Example:**
+
+```typescript
+api.events.emit('myPlugin.dataUpdated', { count: 42 })
+```
+
+### api.events.once()
+
+Subscribe to event once.
+
+```typescript
+api.events.once(
+  event: string,
+  listener: (data: any) => void
+): Disposable
+```
+
+**Example:**
+
+```typescript
+api.events.once('myPlugin.initialized', () => {
+  console.log('Plugin initialized')
+})
+```
+
+---
+
+## Common Types
+
+### Disposable
+
+Object that can be disposed to clean up resources.
+
+```typescript
+interface Disposable {
+  dispose(): void
+}
+```
+
+### Position
+
+Position in text document.
+
+```typescript
+interface Position {
+  line: number        // Line number (0-based)
+  character: number   // Character offset (0-based)
+}
+```
+
+### Range
+
+Text range.
+
+```typescript
+interface Range {
+  start: Position
+  end: Position
+}
+```
+
+### Selection
+
+Text selection (extends Range).
+
+```typescript
+interface Selection extends Range {
+  anchor: Position    // Selection start
+  active: Position    // Cursor position
+}
+```
+
+---
+
+## Error Handling
+
+All API methods can throw errors. Always use try-catch:
+
+```typescript
+try {
+  await api.editor.setContent('New content')
+} catch (error) {
+  api.ui.showNotification(`Error: ${error.message}`, 'error')
+  console.error(error)
+}
+```
+
+### APIError
+
+Specialized error class for API errors:
+
+```typescript
+class APIError extends Error {
+  code: APIErrorCode
+  details?: Record<string, unknown>
+}
+
+enum APIErrorCode {
+  PERMISSION_DENIED = 'PERMISSION_DENIED',
+  INVALID_PARAMS = 'INVALID_PARAMS',
+  NOT_FOUND = 'NOT_FOUND',
+  NOT_SUPPORTED = 'NOT_SUPPORTED',
+  RATE_LIMITED = 'RATE_LIMITED',
+  INTERNAL_ERROR = 'INTERNAL_ERROR'
+}
+```
+
+**Example:**
+
+```typescript
+try {
+  await api.commands.execute('unknown.command')
+} catch (error) {
+  if (error instanceof APIError) {
+    if (error.code === APIErrorCode.NOT_FOUND) {
+      console.log('Command not found')
+    }
+  }
+}
+```
+
+---
+
+## Best Practices
+
+### Always Clean Up
+
+Store disposables and dispose them in deactivate:
+
+```typescript
+export default class MyPlugin implements Plugin {
+  private disposables: Disposable[] = []
+
+  async activate(context: PluginContext) {
+    this.disposables.push(
+      api.commands.register({ /* ... */ }),
+      api.editor.onDidChangeTextDocument(/* ... */),
+      api.fs.watch('/path', /* ... */)
+    )
+  }
+
+  async deactivate() {
+    this.disposables.forEach(d => d.dispose())
+    this.disposables = []
+  }
+}
+```
+
+### Use Context Subscriptions
+
+Alternatively, use context.subscriptions for automatic cleanup:
+
+```typescript
+async activate(context: PluginContext) {
+  context.subscriptions.push(
+    api.commands.register({ /* ... */ }),
+    api.editor.onDidChangeTextDocument(/* ... */)
+  )
+  // Automatically disposed when plugin deactivates
+}
+```
+
+### Handle Async Operations
+
+Always await async operations:
+
+```typescript
+// Good
+await api.editor.setContent('New content')
+await api.storage.set('key', 'value')
+
+// Bad - operations may not complete
+api.editor.setContent('New content')
+api.storage.set('key', 'value')
+```
+
+### Validate User Input
+
+Always validate input from dialogs:
+
+```typescript
+const input = await api.ui.showInputBox({
+  validateInput: (value) => {
+    if (!value) return 'Input is required'
+    if (value.length < 3) return 'Must be at least 3 characters'
+    return null  // Valid
+  }
+})
+```
+
+## Next Steps
+
+- [Editor Plugins](/developers/plugins/editor-plugins)
+- [UI Plugins](/developers/plugins/ui-plugins)
+- [Lifecycle & Hooks](/developers/plugins/lifecycle)

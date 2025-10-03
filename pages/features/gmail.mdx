@@ -1,0 +1,715 @@
+# Gmail Integration
+
+Lokus seamlessly integrates with Gmail, allowing you to import emails as notes, maintain threading context, and manage email-based tasks directly within your knowledge base. The integration uses OAuth 2.0 for secure authentication and respects your privacy by processing emails locally.
+
+## Overview
+
+The Gmail integration bridges your email workflow with your note-taking system, enabling you to capture important conversations, convert emails into actionable tasks, and reference email content alongside your notes without constantly switching between applications.
+
+### Key Features
+
+- **OAuth 2.0 authentication** for secure access
+- **Import emails as notes** with full formatting
+- **Preserve threading** and conversation context
+- **Attachment handling** with local storage
+- **Email search** within Lokus
+- **Two-way sync** (optional)
+- **Privacy-focused** local processing
+
+## Setup
+
+### Connecting Gmail
+
+Connect your Gmail account:
+
+**Initial Setup:**
+1. Open Settings → Integrations
+2. Click "Connect Gmail"
+3. Sign in with Google
+4. Review permissions
+5. Grant access
+6. Confirm connection
+
+**Permissions Required:**
+- Read email messages
+- Read email metadata
+- Search messages
+- Modify labels (optional)
+- Send email (optional, for two-way sync)
+
+### OAuth Authentication
+
+Secure authentication flow:
+
+**Process:**
+1. Redirects to Google Sign-In
+2. Choose Google account
+3. Review requested permissions
+4. Grant access
+5. Return to Lokus
+6. Connection established
+
+**Security:**
+- OAuth 2.0 protocol
+- No password stored
+- Revokable access
+- Token encryption
+- Local token storage
+
+### Multiple Accounts
+
+Connect multiple Gmail accounts:
+
+**Adding Accounts:**
+1. Settings → Integrations → Gmail
+2. Click "Add Another Account"
+3. Follow authentication flow
+4. Select as default or alternate
+
+**Account Management:**
+- Switch between accounts
+- Set default account
+- Remove accounts
+- Re-authenticate
+- View sync status
+
+## Importing Emails
+
+### Manual Import
+
+Import individual emails:
+
+**Method 1: From Gmail**
+1. Open email in Gmail
+2. Use Lokus browser extension
+3. Click "Import to Lokus"
+4. Choose destination folder
+5. Configure import options
+6. Import
+
+**Method 2: From Lokus**
+1. Open Gmail panel in Lokus
+2. Browse or search emails
+3. Select email
+4. Click "Import as Note"
+5. Email saved as note
+
+**Method 3: Forward to Lokus**
+- Forward email to your Lokus email
+- Email auto-imported
+- Creates note in inbox folder
+- Preserves all content
+
+### Batch Import
+
+Import multiple emails at once:
+
+**Process:**
+1. Gmail panel → Select emails
+2. Shift+click for range
+3. Cmd/Ctrl+click for multiple
+4. Click "Import Selected"
+5. Choose options
+6. Import
+
+**Import Options:**
+- Destination folder
+- Preserve labels as tags
+- Include attachments
+- Download inline images
+- Create links between thread emails
+
+### Automatic Import
+
+Set up automatic email import:
+
+**Auto-import Rules:**
+```yaml
+rules:
+  - condition: from:important@company.com
+    action: import
+    folder: /Work/Important
+    tags: [email, important]
+
+  - condition: label:project-alpha
+    action: import
+    folder: /Projects/Alpha
+    tags: [project, email]
+
+  - condition: subject:contains:"meeting"
+    action: import
+    folder: /Meetings
+    template: meeting-notes
+```
+
+**Configuration:**
+1. Settings → Gmail → Auto-import
+2. Create new rule
+3. Define condition
+4. Set action
+5. Enable rule
+
+## Email as Notes
+
+### Note Structure
+
+Imported emails become structured notes:
+
+```markdown
+---
+type: email
+email_id: msg_abc123
+from: sender@example.com
+to: recipient@example.com
+cc: [cc1@example.com, cc2@example.com]
+date: 2024-03-20T10:30:00Z
+subject: Project Update
+thread_id: thread_xyz789
+labels: [inbox, important]
+tags: [email, project]
+---
+
+# Project Update
+
+**From:** John Doe <sender@example.com>
+**To:** You <recipient@example.com>
+**Date:** March 20, 2024 at 10:30 AM
+**Thread:** [[Email Thread: Project Discussion]]
+
+## Email Content
+
+[Email body content preserved with formatting]
+
+## Attachments
+
+- [[Project_Document.pdf]]
+- [[Screenshot.png]]
+
+## Related
+
+- [[Previous Email in Thread]]
+- [[Project Notes]]
+
+---
+
+*Imported from Gmail on {{import_date}}*
+*[View in Gmail](https://mail.google.com/mail/u/0/#inbox/msg_abc123)*
+```
+
+![Gmail Integration and Email Import](/placeholder.svg)
+
+### Email Metadata
+
+Preserved email properties:
+
+**Standard Fields:**
+- Message ID
+- Thread ID
+- From, To, CC, BCC
+- Subject
+- Date sent/received
+- Labels/categories
+- Read/unread status
+- Starred status
+
+**Custom Fields:**
+- Import date
+- Gmail link
+- Attachments list
+- Thread position
+- Related notes
+
+### Threading
+
+Email threads maintained:
+
+**Thread Features:**
+- All thread emails linked
+- Thread overview note
+- Chronological order
+- Quick navigation
+- Thread visualization
+
+**Thread Note:**
+```markdown
+# Email Thread: Project Discussion
+
+**Participants:** John, Sarah, Mike
+**Messages:** 8
+**Start Date:** 2024-03-15
+**Last Updated:** 2024-03-20
+
+## Thread Overview
+
+Brief summary of conversation
+
+## Messages
+
+1. [[2024-03-15 Initial Question]] - John
+2. [[2024-03-15 Response]] - Sarah
+3. [[2024-03-16 Follow-up]] - John
+4. [[2024-03-18 Update]] - Mike
+5. [[2024-03-20 Final Decision]] - Sarah
+
+## Related
+
+- [[Project Plan]]
+- [[Meeting Notes]]
+```
+
+## Attachments
+
+### Attachment Handling
+
+Email attachments managed:
+
+**Import Options:**
+- **Download All:** Save all attachments locally
+- **Download On-Demand:** Download when clicked
+- **Link Only:** Keep in Gmail, link to it
+- **Inline Images:** Embed in note
+
+**Storage:**
+- Stored in attachments folder
+- Organized by date or sender
+- Deduplicated
+- Searchable
+
+### Attachment Notes
+
+Attachments become notes:
+
+```markdown
+---
+type: attachment
+source: email
+email_id: msg_abc123
+filename: Document.pdf
+size: 2.5 MB
+mime_type: application/pdf
+date: 2024-03-20
+---
+
+# Document.pdf
+
+**From Email:** [[Project Update]]
+**Sender:** sender@example.com
+**Date Received:** 2024-03-20
+
+## File Details
+
+- **Size:** 2.5 MB
+- **Type:** PDF
+- **Pages:** 15
+
+## Preview
+
+[PDF preview or thumbnail]
+
+## Related
+
+- [[Email: Project Update]]
+- [[Project Documentation]]
+
+[Download](file://path/to/Document.pdf) | [View in Gmail](https://mail.google.com/...)
+```
+
+## Email Search
+
+### Search Within Lokus
+
+Search imported emails:
+
+**Search Syntax:**
+```
+type:email
+from:sender@example.com
+to:recipient@example.com
+subject:"project update"
+email-date:>2024-03-01
+has:attachment
+label:important
+thread:thread_xyz789
+```
+
+**Search Features:**
+- Full-text search in email body
+- Search by sender/recipient
+- Search by date
+- Search attachments
+- Search threads
+- Filter by labels
+
+### Gmail Search
+
+Search Gmail directly from Lokus:
+
+**Gmail Search Panel:**
+1. Open Gmail panel
+2. Use Gmail search syntax
+3. Results load from Gmail
+4. Preview in Lokus
+5. Import if needed
+
+**Gmail Operators:**
+```
+from:user@example.com
+subject:meeting
+has:attachment
+after:2024/03/01
+before:2024/03/31
+is:unread
+is:starred
+label:work
+```
+
+## Two-Way Sync
+
+### Sync Configuration
+
+Enable bidirectional sync:
+
+**Sync Options:**
+- **One-way (Import Only):** Gmail → Lokus
+- **Two-way:** Gmail ↔ Lokus
+- **Selective:** Specific labels/folders
+
+**Configuration:**
+1. Settings → Gmail → Sync
+2. Choose sync mode
+3. Select labels to sync
+4. Set sync interval
+5. Enable sync
+
+### Sync Behavior
+
+How sync works:
+
+**Import (Gmail → Lokus):**
+- New emails imported
+- Email updates synced
+- Label changes reflected
+- Attachments downloaded
+
+**Export (Lokus → Gmail):**
+- Note changes sent to Gmail
+- Tags become labels
+- Content updates synced
+- Status changes reflected
+
+**Conflict Resolution:**
+- Last write wins
+- Manual resolution option
+- Version history
+- Undo capability
+
+## Email Actions
+
+### Create Tasks from Email
+
+Convert emails to tasks:
+
+**Quick Task Creation:**
+1. Select email note
+2. Click "Create Task"
+3. Task pre-filled from email
+4. Set due date and priority
+5. Task linked to email
+
+**Example Task:**
+```markdown
+- [ ] Review project document @john 📅 2024-03-25 !high
+  From: [[Email: Project Update]]
+  Attachment: [[Project_Document.pdf]]
+  Context: John sent the final draft for review
+```
+
+### Reply from Lokus
+
+Reply to emails (two-way sync enabled):
+
+**Reply Process:**
+1. Open email note
+2. Click "Reply"
+3. Compose response in editor
+4. Send reply
+5. Reply synced to Gmail
+
+**Reply Features:**
+- Markdown formatting
+- Attachment support
+- Threading preserved
+- Draft saving
+- Template support
+
+### Email Labels
+
+Manage Gmail labels:
+
+**Label Actions:**
+- Add labels to email
+- Remove labels
+- Create new labels
+- Rename labels
+- Color labels
+
+**Label Sync:**
+- Labels sync as tags
+- Tags sync as labels
+- Bidirectional updates
+- Custom mapping
+
+## Privacy and Security
+
+### Data Storage
+
+Where email data is stored:
+
+**Local Storage:**
+- Emails stored locally
+- Encrypted at rest
+- No cloud dependency
+- Full data control
+
+**Token Storage:**
+- OAuth tokens encrypted
+- Secure key storage
+- OS keychain integration
+- No password storage
+
+### Privacy Controls
+
+Control your data:
+
+**Privacy Options:**
+- Disable sync
+- Delete imported emails
+- Clear cache
+- Revoke access
+- Export data
+
+**Data Retention:**
+- Configure retention period
+- Auto-delete old emails
+- Archive options
+- Selective deletion
+
+### Permissions
+
+Granular permission control:
+
+**Permission Levels:**
+- Read-only (view emails)
+- Read and modify (manage labels)
+- Full access (send/receive)
+
+**Revoke Access:**
+1. Settings → Gmail → Accounts
+2. Select account
+3. Click "Revoke Access"
+4. Confirm revocation
+5. Access removed
+
+## Automation
+
+### Email Rules
+
+Automate email handling:
+
+**Rule Types:**
+- Auto-import by criteria
+- Auto-tag based on sender
+- Auto-create tasks
+- Auto-link to projects
+- Auto-archive
+
+**Example Rules:**
+```yaml
+# Client emails
+- condition: from:client@company.com
+  actions:
+    - import: /Clients/Company
+    - tag: client, important
+    - create_task: "Review client email"
+
+# Meeting invites
+- condition: subject:contains:"meeting" AND has:calendar_invite
+  actions:
+    - import: /Meetings
+    - apply_template: meeting-notes
+    - extract_date_to_calendar
+
+# Newsletters
+- condition: from:newsletter@*
+  actions:
+    - import: /Reading/Newsletters
+    - tag: newsletter, reading-list
+```
+
+### Email Templates
+
+Template-based email import:
+
+**Template Application:**
+- Detect email type
+- Apply matching template
+- Extract key information
+- Structure as note
+- Link related content
+
+**Template Examples:**
+- Meeting invites → Meeting notes
+- Bug reports → Issue tracker
+- Customer feedback → Feedback log
+- Receipts → Expense tracking
+
+## Mobile Support
+
+### Mobile Email Import
+
+Import emails on mobile:
+
+**Mobile Features:**
+- Share to Lokus (iOS/Android)
+- Quick import
+- Offline queuing
+- Sync when online
+
+**Share Sheet:**
+1. Open email in Gmail app
+2. Tap Share
+3. Select "Lokus"
+4. Choose folder
+5. Import
+
+## Configuration
+
+### Gmail Settings
+
+Configure in Settings → Gmail:
+
+**General:**
+- Connected accounts
+- Default account
+- Import folder
+- Attachment storage
+
+**Sync:**
+- Sync mode (one-way/two-way)
+- Sync interval
+- Labels to sync
+- Conflict resolution
+
+**Privacy:**
+- Data retention
+- Cache settings
+- Encryption
+- Analytics
+
+**Advanced:**
+- API rate limits
+- Batch size
+- Retry logic
+- Debug logging
+
+### Keyboard Shortcuts
+
+| Action | Shortcut |
+|--------|----------|
+| Open Gmail Panel | Cmd/Ctrl + Shift + G |
+| Import Selected | Cmd/Ctrl + I |
+| Create Task from Email | Cmd/Ctrl + Shift + T |
+| Reply to Email | R |
+| Forward Email | F |
+| Archive Email | E |
+| Search Gmail | Cmd/Ctrl + Shift + F |
+
+## Integration Examples
+
+### Project Management
+
+Link emails to projects:
+
+**Workflow:**
+1. Import project-related emails
+2. Auto-tag with project name
+3. Link to project note
+4. Create tasks from action items
+5. Track in project dashboard
+
+### Client Communication
+
+Track client conversations:
+
+**Setup:**
+- Folder per client
+- Auto-import client emails
+- Thread visualization
+- Task creation for follow-ups
+- Timeline view
+
+### Meeting Preparation
+
+Prepare using emails:
+
+**Process:**
+1. Import meeting invite
+2. Extract attendees and agenda
+3. Gather related emails
+4. Create meeting note
+5. Link all context
+
+## Troubleshooting
+
+### Common Issues
+
+**Issue:** Authentication failed
+**Solution:** Re-authenticate, check permissions, verify account
+
+**Issue:** Emails not importing
+**Solution:** Check sync settings, verify connection, review rules
+
+**Issue:** Attachments not downloading
+**Solution:** Check storage space, verify permissions, retry download
+
+**Issue:** Sync conflicts
+**Solution:** Review conflict resolution, check modification times
+
+### Re-authentication
+
+Refresh Gmail connection:
+
+**Process:**
+1. Settings → Gmail → Accounts
+2. Select account showing error
+3. Click "Re-authenticate"
+4. Sign in again
+5. Grant permissions
+6. Connection restored
+
+## Best Practices
+
+### Email Organization
+
+**Effective Practices:**
+- Use labels in Gmail for auto-import
+- Create folder structure in Lokus
+- Regular email cleanup
+- Archive old emails
+- Link related content
+
+### Import Strategy
+
+**Selective Importing:**
+- Don't import everything
+- Focus on important emails
+- Use filters liberally
+- Regular review of imported emails
+- Prune unnecessary imports
+
+## Next Steps
+
+- Use [Templates](/features/templates) for email import
+- Create [Tasks](/features/tasks) from emails
+- Link emails in [Wiki Links](/features/wiki-links)
+- Search emails with [Search System](/features/search)

@@ -1,0 +1,723 @@
+# Security Features
+
+Comprehensive guide to Lokus security features, best practices, and threat mitigation strategies.
+
+## Security Architecture
+
+Lokus implements defense-in-depth security:
+
+1. **File System Sandboxing** - Restricted file access
+2. **Plugin Permissions** - Granular permission system
+3. **Secure Storage** - Platform-native credential storage
+4. **Input Validation** - XSS and injection prevention
+5. **Network Security** - HTTPS enforcement, CORS protection
+6. **OAuth Security** - Secure authentication flows
+
+## File System Security
+
+### Path Validation
+
+All file operations validate paths to prevent directory traversal attacks:
+
+```typescript
+function isValidPath(path: string): boolean {
+  // Prevent directory traversal
+  if (path.includes('..')) {
+    return false;
+  }
+
+  // Ensure path is within workspace
+  const normalizedPath = normalizePath(path);
+  const workspacePath = getWorkspacePath();
+
+  return normalizedPath.startsWith(workspacePath);
+}
+```
+
+**Protected Against:**
+- `../../../etc/passwd` - Directory traversal
+- `file:///etc/passwd` - Absolute paths outside workspace
+- Symbolic link attacks
+- Race conditions (TOCTOU)
+
+---
+
+### File Type Validation
+
+```typescript
+const ALLOWED_FILE_TYPES = [
+  '.md', '.txt', '.json',
+  '.js', '.ts', '.jsx', '.tsx',
+  '.html', '.css', '.yaml', '.toml'
+];
+
+function validateFileType(path: string): boolean {
+  const ext = path.toLowerCase().match(/\.[^.]+$/)?.[0];
+  return ALLOWED_FILE_TYPES.includes(ext);
+}
+```
+
+**Configure allowed types:**
+```json
+{
+  "security": {
+    "allowedFileTypes": [".md", ".txt", ".json"],
+    "validateFileTypes": true
+  }
+}
+```
+
+---
+
+### File Size Limits
+
+```json
+{
+  "security": {
+    "maxFileSize": 10485760,
+    "maxUploadSize": 5242880
+  }
+}
+```
+
+**Default limits:**
+- Max file size: 10MB
+- Max upload size: 5MB
+- Max workspace size: Unlimited (user discretion)
+
+---
+
+## Plugin Security
+
+### Permission System
+
+Plugins must declare required permissions:
+
+```json
+{
+  "name": "example-plugin",
+  "permissions": [
+    "read:files",
+    "write:files",
+    "network:https"
+  ]
+}
+```
+
+**Available Permissions:**
+- `read:files` - Read workspace files
+- `write:files` - Write to workspace files
+- `read:workspace` - Read workspace metadata
+- `write:workspace` - Modify workspace
+- `execute:commands` - Execute system commands
+- `network:http` - HTTP requests
+- `network:https` - HTTPS requests
+- `ui:editor` - Modify editor
+- `ui:sidebar` - Add UI panels
+- `storage:local` - Local storage access
+- `clipboard:read` - Read clipboard
+- `clipboard:write` - Write clipboard
+
+---
+
+### Permission Enforcement
+
+```typescript
+class PluginAPI {
+  async readFile(path: string): Promise<string> {
+    // Check permission
+    if (!this.hasPermission('read:files')) {
+      throw new Error('Plugin lacks read:files permission');
+    }
+
+    // Validate path
+    if (!isValidPath(path)) {
+      throw new Error('Invalid file path');
+    }
+
+    // Perform operation
+    return await invoke('read_file_content', { path });
+  }
+}
+```
+
+---
+
+### Plugin Sandboxing
+
+```json
+{
+  "security": {
+    "sandboxPlugins": true,
+    "pluginTimeout": 30000,
+    "maxPluginMemory": 104857600
+  }
+}
+```
+
+**Sandbox Features:**
+- Isolated execution context
+- Memory limits (100MB default)
+- Timeout protection (30s default)
+- No access to Node.js APIs
+- No eval() or Function() constructor
+
+---
+
+### Plugin Validation
+
+```typescript
+async function validatePlugin(manifest: PluginManifest): Promise<ValidationResult> {
+  const errors: ValidationError[] = [];
+
+  // Validate name
+  if (!/^[a-zA-Z0-9-_]+$/.test(manifest.name)) {
+    errors.push({
+      field: 'name',
+      message: 'Invalid plugin name'
+    });
+  }
+
+  // Validate version
+  if (!semver.valid(manifest.version)) {
+    errors.push({
+      field: 'version',
+      message: 'Invalid semantic version'
+    });
+  }
+
+  // Validate permissions
+  for (const permission of manifest.permissions) {
+    if (!VALID_PERMISSIONS.includes(permission)) {
+      errors.push({
+        field: 'permissions',
+        message: `Invalid permission: ${permission}`
+      });
+    }
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+    warnings: []
+  };
+}
+```
+
+---
+
+## Authentication Security
+
+### OAuth Security
+
+**Gmail OAuth Flow:**
+
+1. Generate state parameter (CSRF protection)
+2. Request authorization with state
+3. Validate state on callback
+4. Exchange code for tokens
+5. Store tokens securely
+
+```typescript
+async function initiateOAuth(): Promise<string> {
+  // Generate random state
+  const state = generateRandomString(32);
+
+  // Store state temporarily
+  sessionStorage.setItem('oauth_state', state);
+
+  // Build auth URL
+  const authUrl = buildOAuthUrl({
+    client_id: CLIENT_ID,
+    redirect_uri: REDIRECT_URI,
+    scope: SCOPES,
+    state,
+    response_type: 'code'
+  });
+
+  return authUrl;
+}
+
+async function handleCallback(code: string, state: string) {
+  // Validate state
+  const savedState = sessionStorage.getItem('oauth_state');
+  if (state !== savedState) {
+    throw new Error('Invalid OAuth state');
+  }
+
+  // Clear state
+  sessionStorage.removeItem('oauth_state');
+
+  // Exchange code for tokens
+  const tokens = await exchangeCode(code);
+
+  // Store tokens securely
+  await storeTokensSecurely(tokens);
+}
+```
+
+---
+
+### Secure Token Storage
+
+**Platform-specific secure storage:**
+
+**macOS - Keychain:**
+```rust
+use keyring::Keyring;
+
+fn store_token(service: &str, account: &str, token: &str) -> Result<(), String> {
+    let keyring = Keyring::new(service, account);
+    keyring.set_password(token)
+        .map_err(|e| e.to_string())
+}
+
+fn retrieve_token(service: &str, account: &str) -> Result<String, String> {
+    let keyring = Keyring::new(service, account);
+    keyring.get_password()
+        .map_err(|e| e.to_string())
+}
+```
+
+**Windows - Credential Manager:**
+```rust
+use windows::Security::Credentials::PasswordVault;
+
+fn store_token_windows(resource: &str, username: &str, password: &str) {
+    let vault = PasswordVault::new().unwrap();
+    let credential = PasswordCredential::CreatePasswordCredential(
+        resource,
+        username,
+        password
+    ).unwrap();
+    vault.Add(&credential).unwrap();
+}
+```
+
+**Never store tokens in:**
+- Plain text files
+- Local storage
+- Session storage
+- Configuration files
+- Version control
+
+---
+
+### Token Refresh
+
+```typescript
+class TokenManager {
+  private accessToken: string | null = null;
+  private refreshToken: string | null = null;
+  private expiresAt: number = 0;
+
+  async getAccessToken(): Promise<string> {
+    // Check if token is expired
+    if (Date.now() >= this.expiresAt) {
+      await this.refreshAccessToken();
+    }
+
+    return this.accessToken!;
+  }
+
+  async refreshAccessToken() {
+    const newTokens = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET,
+        refresh_token: this.refreshToken,
+        grant_type: 'refresh_token'
+      })
+    }).then(r => r.json());
+
+    this.accessToken = newTokens.access_token;
+    this.expiresAt = Date.now() + (newTokens.expires_in * 1000);
+
+    // Store new token securely
+    await invoke('store_token_securely', {
+      service: 'lokus-gmail',
+      account: 'access_token',
+      token: this.accessToken
+    });
+  }
+}
+```
+
+---
+
+## Network Security
+
+### HTTPS Enforcement
+
+```typescript
+function ensureHttps(url: string): string {
+  if (url.startsWith('http://')) {
+    return url.replace('http://', 'https://');
+  }
+  return url;
+}
+
+// In configuration
+{
+  "security": {
+    "enforceHttps": true,
+    "allowInsecureConnections": false
+  }
+}
+```
+
+---
+
+### CORS Protection
+
+```typescript
+const ALLOWED_ORIGINS = [
+  'https://api.example.com',
+  'https://mail.google.com'
+];
+
+function validateOrigin(origin: string): boolean {
+  return ALLOWED_ORIGINS.includes(origin);
+}
+```
+
+---
+
+### Request Validation
+
+```typescript
+interface RequestOptions {
+  url: string;
+  method: string;
+  headers?: Record<string, string>;
+  body?: string;
+}
+
+async function makeSecureRequest(options: RequestOptions) {
+  // Validate URL
+  if (!isValidUrl(options.url)) {
+    throw new Error('Invalid URL');
+  }
+
+  // Enforce HTTPS
+  if (!options.url.startsWith('https://')) {
+    throw new Error('HTTPS required');
+  }
+
+  // Validate headers
+  validateHeaders(options.headers);
+
+  // Make request
+  return await fetch(options.url, {
+    method: options.method,
+    headers: options.headers,
+    body: options.body
+  });
+}
+
+function validateHeaders(headers?: Record<string, string>) {
+  if (!headers) return;
+
+  // Block dangerous headers
+  const dangerous = ['Cookie', 'Set-Cookie', 'Authorization'];
+  for (const header of Object.keys(headers)) {
+    if (dangerous.includes(header)) {
+      throw new Error(`Header ${header} not allowed`);
+    }
+  }
+}
+```
+
+---
+
+## Content Security
+
+### XSS Prevention
+
+**Input Sanitization:**
+
+```typescript
+import DOMPurify from 'dompurify';
+
+function sanitizeHTML(dirty: string): string {
+  return DOMPurify.sanitize(dirty, {
+    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'a', 'code', 'pre'],
+    ALLOWED_ATTR: ['href', 'class']
+  });
+}
+
+// Usage
+function renderUserContent(content: string) {
+  const clean = sanitizeHTML(content);
+  return <div dangerouslySetInnerHTML={{ __html: clean }} />;
+}
+```
+
+**Output Encoding:**
+
+```typescript
+function escapeHTML(text: string): string {
+  const map: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#x27;',
+    '/': '&#x2F;'
+  };
+
+  return text.replace(/[&<>"'\/]/g, (char) => map[char]);
+}
+```
+
+---
+
+### Content Security Policy
+
+```html
+<meta http-equiv="Content-Security-Policy"
+  content="default-src 'self';
+           script-src 'self' 'unsafe-inline';
+           style-src 'self' 'unsafe-inline';
+           img-src 'self' data: https:;
+           connect-src 'self' https://api.example.com;">
+```
+
+---
+
+### External Content
+
+```json
+{
+  "security": {
+    "allowExternalImages": true,
+    "allowExternalLinks": true,
+    "blockTrackers": true,
+    "validateImageUrls": true
+  }
+}
+```
+
+**Image URL Validation:**
+
+```typescript
+function isValidImageUrl(url: string): boolean {
+  // Only allow HTTPS
+  if (!url.startsWith('https://')) {
+    return false;
+  }
+
+  // Check allowed domains
+  const allowedDomains = ['imgur.com', 'github.com'];
+  const domain = new URL(url).hostname;
+
+  return allowedDomains.some(allowed =>
+    domain.endsWith(allowed)
+  );
+}
+```
+
+---
+
+## Data Protection
+
+### Encryption at Rest
+
+**Encrypt sensitive settings:**
+
+```rust
+use aes_gcm::{Aes256Gcm, Key, Nonce};
+use aes_gcm::aead::{Aead, NewAead};
+
+fn encrypt_data(data: &str, key: &[u8]) -> Result<Vec<u8>, String> {
+    let cipher = Aes256Gcm::new(Key::from_slice(key));
+    let nonce = Nonce::from_slice(b"unique nonce");
+
+    cipher.encrypt(nonce, data.as_bytes())
+        .map_err(|e| e.to_string())
+}
+
+fn decrypt_data(encrypted: &[u8], key: &[u8]) -> Result<String, String> {
+    let cipher = Aes256Gcm::new(Key::from_slice(key));
+    let nonce = Nonce::from_slice(b"unique nonce");
+
+    let decrypted = cipher.decrypt(nonce, encrypted)
+        .map_err(|e| e.to_string())?;
+
+    String::from_utf8(decrypted)
+        .map_err(|e| e.to_string())
+}
+```
+
+---
+
+### Encryption in Transit
+
+All network communication uses TLS 1.3:
+
+```typescript
+const agent = new https.Agent({
+  minVersion: 'TLSv1.3',
+  maxVersion: 'TLSv1.3',
+  rejectUnauthorized: true
+});
+
+await fetch(url, { agent });
+```
+
+---
+
+## Security Best Practices
+
+### For Users
+
+1. **Keep Lokus Updated** - Install security updates promptly
+2. **Use Strong Passwords** - For workspace encryption
+3. **Review Plugin Permissions** - Only install trusted plugins
+4. **Enable 2FA** - For connected services (Gmail, etc.)
+5. **Regular Backups** - Protect against data loss
+6. **Secure Workspace** - Use full disk encryption
+7. **Log Out** - When using shared computers
+
+---
+
+### For Plugin Developers
+
+1. **Minimal Permissions** - Request only needed permissions
+2. **Validate Input** - Sanitize all user input
+3. **Secure API Keys** - Use plugin settings storage
+4. **HTTPS Only** - Never use HTTP
+5. **Error Handling** - Don't expose sensitive info
+6. **Regular Updates** - Fix security issues promptly
+7. **Code Review** - Review for vulnerabilities
+
+---
+
+### For Self-Hosters
+
+1. **Firewall Rules** - Restrict network access
+2. **Regular Updates** - Update OS and dependencies
+3. **Access Control** - Limit user permissions
+4. **Monitoring** - Log and monitor access
+5. **Backup Strategy** - Automated, encrypted backups
+6. **Incident Response** - Have a plan
+7. **Security Audits** - Regular security reviews
+
+---
+
+## Security Auditing
+
+### Logging
+
+```typescript
+class SecurityLogger {
+  logAuthAttempt(user: string, success: boolean) {
+    console.log(`[AUTH] ${user} - ${success ? 'SUCCESS' : 'FAILURE'}`);
+  }
+
+  logFileAccess(plugin: string, path: string, operation: string) {
+    console.log(`[FILE] ${plugin} - ${operation} - ${path}`);
+  }
+
+  logPermissionDenied(plugin: string, permission: string) {
+    console.warn(`[SECURITY] ${plugin} denied ${permission}`);
+  }
+
+  logSuspiciousActivity(activity: string, details: any) {
+    console.error(`[SECURITY ALERT] ${activity}`, details);
+  }
+}
+```
+
+---
+
+### Monitoring
+
+```typescript
+class SecurityMonitor {
+  private failedAttempts = new Map<string, number>();
+
+  recordFailedAuth(user: string) {
+    const attempts = this.failedAttempts.get(user) || 0;
+    this.failedAttempts.set(user, attempts + 1);
+
+    // Alert after 5 failed attempts
+    if (attempts >= 5) {
+      this.alertSecurityIncident('Brute force attempt', { user });
+    }
+  }
+
+  alertSecurityIncident(type: string, details: any) {
+    // Send alert notification
+    console.error(`SECURITY INCIDENT: ${type}`, details);
+
+    // Could integrate with external monitoring
+  }
+}
+```
+
+---
+
+## Vulnerability Reporting
+
+If you discover a security vulnerability:
+
+1. **Do Not** publicly disclose the vulnerability
+2. **Email** security@lokus.app with details
+3. **Include** steps to reproduce
+4. **Wait** for response before disclosure
+5. **Receive** credit in security advisories
+
+**Bug Bounty Program:** Coming soon
+
+---
+
+## Security Updates
+
+Stay informed about security updates:
+
+1. **GitHub Security Advisories** - Watch repository
+2. **Release Notes** - Read security sections
+3. **Newsletter** - Subscribe for alerts
+4. **RSS Feed** - Follow security feed
+
+---
+
+## Compliance
+
+### GDPR Compliance
+
+Lokus is designed for GDPR compliance:
+
+- **Data Minimization** - Collect only necessary data
+- **Right to Access** - Export all user data
+- **Right to Erasure** - Delete user data
+- **Data Portability** - Standard file formats
+- **Privacy by Design** - Security by default
+- **Transparency** - Clear privacy policy
+
+---
+
+### Data Retention
+
+```json
+{
+  "security": {
+    "dataRetention": {
+      "logs": 90,
+      "cache": 7,
+      "backups": 365
+    }
+  }
+}
+```
+
+---
+
+## Next Steps
+
+- [Troubleshooting](/advanced/troubleshooting) - Security issues
+- [Configuration](/reference/configuration) - Security settings
+- [Plugin API](/reference/plugin-api) - Secure plugin development

@@ -1,0 +1,663 @@
+# MCP API Reference
+
+Complete reference documentation for Lokus's Model Context Protocol implementation.
+
+## Core Classes
+
+### MCPProtocol
+
+The foundation of the MCP implementation.
+
+```typescript
+class MCPProtocol extends EventEmitter {
+  constructor(serverId: string, options?: MCPProtocolOptions)
+
+  // Protocol lifecycle
+  async initialize(clientInfo?: ClientInfo): Promise<InitializeResponse>
+  async handleMessage(message: JSONRPCMessage): Promise<void>
+  dispose(): void
+
+  // Resource management
+  registerResource(resource: MCPResource): MCPResource
+  unregisterResource(uri: string): MCPResource | undefined
+  updateResource(uri: string, content: string, metadata?: Record<string, any>): MCPResource
+
+  // Tool management
+  registerTool(tool: MCPTool): MCPTool
+  unregisterTool(name: string): MCPTool | undefined
+
+  // Prompt management
+  registerPrompt(prompt: MCPPrompt): MCPPrompt
+  unregisterPrompt(name: string): MCPPrompt | undefined
+
+  // Communication
+  async sendRequest(method: string, params?: any): Promise<any>
+  sendNotification(method: string, params?: any): void
+
+  // Statistics
+  getStats(): MCPProtocolStats
+}
+
+interface MCPProtocolOptions {
+  enableResourceSubscriptions?: boolean
+  enableToolExecution?: boolean
+  enablePromptTemplates?: boolean
+  enableLogging?: boolean
+  maxConcurrentRequests?: number
+  requestTimeout?: number
+}
+```
+
+### MCPClient
+
+High-level client for consuming MCP services.
+
+```typescript
+class MCPClient extends EventEmitter {
+  constructor(clientId: string, options?: MCPClientOptions)
+
+  // Connection management
+  async connect(transport: Transport, clientInfo?: ClientInfo): Promise<void>
+  async disconnect(): Promise<void>
+
+  // Resource operations
+  async listResources(params?: { cursor?: string }): Promise<ResourcesListResponse>
+  async readResource(uri: string): Promise<ResourcesReadResponse>
+  async subscribeToResource(uri: string): Promise<Subscription>
+  async unsubscribeFromResource(uri: string): Promise<void>
+
+  // Tool operations
+  async listTools(params?: { cursor?: string }): Promise<ToolsListResponse>
+  async callTool(name: string, args: Record<string, any>): Promise<ToolsCallResponse>
+
+  // Prompt operations
+  async listPrompts(params?: { cursor?: string }): Promise<PromptsListResponse>
+  async getPrompt(name: string, args?: Record<string, any>): Promise<PromptsGetResponse>
+
+  // Logging
+  async setLogLevel(level: LogLevel): Promise<void>
+
+  // State
+  readonly state: MCPClientState
+  readonly serverInfo: ServerInfo | null
+  readonly serverCapabilities: MCPCapabilities | null
+
+  // Statistics
+  getStats(): MCPClientStats
+}
+
+interface MCPClientOptions {
+  autoReconnect?: boolean
+  reconnectDelay?: number
+  maxReconnectAttempts?: number
+  requestTimeout?: number
+  enableResourceCaching?: boolean
+  enableToolCaching?: boolean
+}
+```
+
+### MCPServerHost
+
+Manages MCP server processes.
+
+```typescript
+class MCPServerHost extends EventEmitter {
+  constructor(securityManager: SecurityManager, options?: MCPServerHostOptions)
+
+  // Lifecycle
+  async initialize(): Promise<void>
+  async shutdown(): Promise<void>
+
+  // Server management
+  async startServer(serverId: string, config: MCPServerConfig): Promise<MCPServerInstance>
+  async stopServer(serverId: string, force?: boolean): Promise<void>
+  async restartServer(serverId: string): Promise<MCPServerInstance>
+
+  // Server access
+  getServer(serverId: string): MCPServerInstance | undefined
+  getAllServers(): MCPServerInstance[]
+
+  // Statistics
+  getStats(): MCPServerHostStats
+}
+
+interface MCPServerHostOptions {
+  maxServers?: number
+  serverStartupTimeout?: number
+  serverShutdownTimeout?: number
+  healthCheckInterval?: number
+  restartOnCrash?: boolean
+  enableProcessIsolation?: boolean
+  memoryLimit?: number
+  cpuLimit?: number
+}
+```
+
+### MCPPluginManager
+
+Coordinates MCP-enabled plugins.
+
+```typescript
+class MCPPluginManager extends EventEmitter {
+  constructor(
+    pluginManager: PluginManager,
+    securityManager: SecurityManager,
+    options?: MCPPluginManagerOptions
+  )
+
+  // Lifecycle
+  async initialize(): Promise<void>
+  async shutdown(): Promise<void>
+
+  // Plugin management
+  getMCPPlugin(pluginId: string): MCPPluginWrapper | undefined
+  getAllMCPPlugins(): MCPPluginWrapper[]
+
+  // Global registry
+  findGlobalResources(filter?: ResourceFilter): MCPResource[]
+  findGlobalTools(filter?: ToolFilter): MCPTool[]
+  findGlobalPrompts(filter?: PromptFilter): MCPPrompt[]
+
+  // Statistics
+  getStats(): MCPPluginManagerStats
+}
+
+interface MCPPluginManagerOptions {
+  autoDiscoverMCPPlugins?: boolean
+  scanInterval?: number
+  lazyActivation?: boolean
+  activationTimeout?: number
+  enableGlobalRegistry?: boolean
+}
+```
+
+### MCPIntegration
+
+High-level integration layer.
+
+```typescript
+class MCPIntegration {
+  constructor(pluginManager: PluginManager, securityManager: SecurityManager)
+
+  // Initialization
+  async initialize(options?: MCPIntegrationOptions): Promise<void>
+  async shutdown(): Promise<void>
+
+  // Component access
+  readonly mcpPluginManager: MCPPluginManager
+  readonly mcpServerHost: MCPServerHost
+  readonly mcpClientFactory: MCPClientFactory
+
+  // Client creation
+  createClient(clientId: string, options?: MCPClientOptions): MCPClient
+
+  // Global queries
+  findGlobalResources(filter?: any): MCPResource[]
+  findGlobalTools(filter?: any): MCPTool[]
+  findGlobalPrompts(filter?: any): MCPPrompt[]
+
+  // Statistics
+  getStats(): MCPIntegrationStats
+}
+```
+
+## Type Definitions
+
+### Resource Types
+
+```typescript
+interface MCPResource {
+  uri: string
+  name: string
+  description?: string
+  type: MCPResourceType
+  mimeType?: string
+  lastModified?: string
+  metadata?: Record<string, any>
+  content?: string
+  blob?: Uint8Array
+}
+
+type MCPResourceType = 'file' | 'directory' | 'database' | 'api' | 'memory' | 'web' | 'custom'
+
+interface ResourcesListResponse {
+  resources: MCPResource[]
+  nextCursor?: string
+}
+
+interface ResourcesReadResponse {
+  contents: MCPResourceContent[]
+}
+
+interface MCPResourceContent {
+  uri: string
+  mimeType?: string
+  text?: string
+  blob?: Uint8Array
+}
+```
+
+### Tool Types
+
+```typescript
+interface MCPTool {
+  name: string
+  description: string
+  inputSchema: JSONSchema
+  type?: MCPToolType
+  execute?: (args: any) => Promise<any> | any
+}
+
+type MCPToolType = 'function' | 'command' | 'api_call' | 'script' | 'query'
+
+interface ToolsListResponse {
+  tools: MCPTool[]
+  nextCursor?: string
+}
+
+interface ToolsCallRequest {
+  name: string
+  arguments: Record<string, any>
+}
+
+interface ToolsCallResponse {
+  content: ToolCallContent[]
+  isError: boolean
+}
+
+interface ToolCallContent {
+  type: 'text' | 'image' | 'resource'
+  text?: string
+  data?: string
+  mimeType?: string
+}
+```
+
+### Prompt Types
+
+```typescript
+interface MCPPrompt {
+  name: string
+  description: string
+  template: string
+  arguments?: PromptArgument[]
+}
+
+interface PromptArgument {
+  name: string
+  description: string
+  required?: boolean
+  type?: 'string' | 'number' | 'boolean'
+  default?: any
+}
+
+interface PromptsListResponse {
+  prompts: MCPPrompt[]
+  nextCursor?: string
+}
+
+interface PromptsGetRequest {
+  name: string
+  arguments?: Record<string, any>
+}
+
+interface PromptsGetResponse {
+  description?: string
+  messages: PromptMessage[]
+}
+
+interface PromptMessage {
+  role: 'user' | 'assistant' | 'system'
+  content: PromptMessageContent
+}
+
+interface PromptMessageContent {
+  type: 'text' | 'image'
+  text?: string
+  data?: string
+  mimeType?: string
+}
+```
+
+### Protocol Types
+
+```typescript
+type MCPProtocolVersion = '2024-11-05'
+
+interface InitializeRequest {
+  protocolVersion: MCPProtocolVersion
+  capabilities: MCPCapabilities
+  clientInfo: ClientInfo
+}
+
+interface InitializeResponse {
+  protocolVersion: MCPProtocolVersion
+  capabilities: MCPCapabilities
+  serverInfo: ServerInfo
+}
+
+interface MCPCapabilities {
+  resources?: {
+    subscribe?: boolean
+    listChanged?: boolean
+  }
+  tools?: {
+    listChanged?: boolean
+  }
+  prompts?: {
+    listChanged?: boolean
+  }
+  logging?: {
+    enabled?: boolean
+  }
+}
+
+interface ClientInfo {
+  name: string
+  version: string
+  description?: string
+  author?: string
+  license?: string
+}
+
+interface ServerInfo {
+  name: string
+  version: string
+  description?: string
+  author?: string
+  license?: string
+}
+```
+
+### Error Types
+
+```typescript
+enum MCPErrorCode {
+  // JSON-RPC standard
+  PARSE_ERROR = -32700,
+  INVALID_REQUEST = -32600,
+  METHOD_NOT_FOUND = -32601,
+  INVALID_PARAMS = -32602,
+  INTERNAL_ERROR = -32603,
+
+  // Resource errors
+  RESOURCE_NOT_FOUND = -32001,
+  RESOURCE_ACCESS_DENIED = -32002,
+  RESOURCE_UNAVAILABLE = -32003,
+
+  // Tool errors
+  TOOL_NOT_FOUND = -32011,
+  TOOL_EXECUTION_ERROR = -32012,
+  TOOL_INVALID_INPUT = -32013,
+
+  // Prompt errors
+  PROMPT_NOT_FOUND = -32021,
+  PROMPT_INVALID_ARGUMENTS = -32022
+}
+
+interface JSONRPCError {
+  code: number
+  message: string
+  data?: any
+}
+```
+
+## Builder Classes
+
+### MCPResourceBuilder
+
+```typescript
+class MCPResourceBuilder {
+  setUri(uri: string): MCPResourceBuilder
+  setName(name: string): MCPResourceBuilder
+  setDescription(description: string): MCPResourceBuilder
+  setType(type: MCPResourceType): MCPResourceBuilder
+  setMimeType(mimeType: string): MCPResourceBuilder
+  setContent(content: string): MCPResourceBuilder
+  setMetadata(metadata: Record<string, any>): MCPResourceBuilder
+  build(): MCPResource
+}
+```
+
+### MCPToolBuilder
+
+```typescript
+class MCPToolBuilder {
+  setName(name: string): MCPToolBuilder
+  setDescription(description: string): MCPToolBuilder
+  setInputSchema(schema: JSONSchema): MCPToolBuilder
+  setExecutor(executor: (args: any) => Promise<any> | any): MCPToolBuilder
+  build(): MCPTool
+}
+```
+
+### MCPPromptBuilder
+
+```typescript
+class MCPPromptBuilder {
+  setName(name: string): MCPPromptBuilder
+  setDescription(description: string): MCPPromptBuilder
+  setTemplate(template: string): MCPPromptBuilder
+  setArguments(args: PromptArgument[]): MCPPromptBuilder
+  build(): MCPPrompt
+}
+```
+
+## Events
+
+### MCPProtocol Events
+
+```typescript
+interface MCPProtocolEvents {
+  'initialized': { serverInfo: ServerInfo; capabilities: MCPCapabilities }
+  'resource-registered': MCPResource
+  'resource-unregistered': MCPResource
+  'resource-updated': MCPResource
+  'tool-registered': MCPTool
+  'tool-unregistered': MCPTool
+  'prompt-registered': MCPPrompt
+  'prompt-unregistered': MCPPrompt
+  'send-message': JSONRPCMessage
+  'protocol-error': Error
+  'disposed': void
+}
+```
+
+### MCPClient Events
+
+```typescript
+interface MCPClientEvents {
+  'connected': { serverInfo: ServerInfo }
+  'disconnected': void
+  'state-changed': { newState: MCPClientState; oldState: MCPClientState }
+  'resource-updated': { uri: string; content: string; metadata?: Record<string, any> }
+  'resource-list-changed': any
+  'tool-list-changed': any
+  'prompt-list-changed': any
+  'message-sent': JSONRPCMessage
+  'protocol-error': Error
+  'request-error': { method: string; error: Error }
+}
+```
+
+### MCPServerHost Events
+
+```typescript
+interface MCPServerHostEvents {
+  'initialized': void
+  'server-started': { serverId: string; serverInstance: MCPServerInstance }
+  'server-stopped': { serverId: string }
+  'server-restarted': { serverId: string }
+  'server-status-changed': { serverId: string; status: MCPServerStatus }
+  'server-error': { serverId: string; error: Error }
+  'server-resource-usage': { serverId: string; usage: ResourceUsage }
+  'shutdown': void
+}
+```
+
+## Methods
+
+### Protocol Methods
+
+```typescript
+// Initialization
+'initialize': (params: InitializeRequest) => Promise<InitializeResponse>
+
+// Resources
+'resources/list': (params?: { cursor?: string }) => Promise<ResourcesListResponse>
+'resources/read': (params: { uri: string }) => Promise<ResourcesReadResponse>
+'resources/subscribe': (params: { uri: string }) => Promise<{ subscribed: boolean }>
+'resources/unsubscribe': (params: { uri: string }) => Promise<{ unsubscribed: boolean }>
+
+// Tools
+'tools/list': (params?: { cursor?: string }) => Promise<ToolsListResponse>
+'tools/call': (params: ToolsCallRequest) => Promise<ToolsCallResponse>
+
+// Prompts
+'prompts/list': (params?: { cursor?: string }) => Promise<PromptsListResponse>
+'prompts/get': (params: PromptsGetRequest) => Promise<PromptsGetResponse>
+
+// Logging
+'logging/setLevel': (params: { level: LogLevel }) => Promise<{ success: boolean }>
+```
+
+### Notifications
+
+```typescript
+// Resource notifications
+'notifications/resources/updated': { uri: string; content: string; metadata?: any }
+'notifications/resources/list_changed': void
+
+// Tool notifications
+'notifications/tools/list_changed': void
+
+// Prompt notifications
+'notifications/prompts/list_changed': void
+
+// Logging
+'notifications/logging/message': { level: LogLevel; logger?: string; data: any }
+```
+
+## Constants
+
+```typescript
+// Protocol version
+export const MCP_PROTOCOL_VERSION = '2024-11-05'
+
+// Message types
+export enum MCPMessageType {
+  REQUEST = 'request',
+  RESPONSE = 'response',
+  NOTIFICATION = 'notification',
+  RESOURCE_UPDATED = 'notifications/resources/updated',
+  RESOURCE_LIST_CHANGED = 'notifications/resources/list_changed',
+  TOOL_LIST_CHANGED = 'notifications/tools/list_changed',
+  PROMPT_LIST_CHANGED = 'notifications/prompts/list_changed',
+  LOGGING = 'notifications/logging/message'
+}
+
+// Client states
+export enum MCPClientState {
+  DISCONNECTED = 'disconnected',
+  CONNECTING = 'connecting',
+  CONNECTED = 'connected',
+  ERROR = 'error',
+  CLOSED = 'closed'
+}
+
+// Server status
+export enum MCPServerStatus {
+  STOPPED = 'stopped',
+  STARTING = 'starting',
+  RUNNING = 'running',
+  STOPPING = 'stopping',
+  CRASHED = 'crashed',
+  ERROR = 'error'
+}
+```
+
+## Utility Functions
+
+```typescript
+// Initialization
+export async function initializeMCP(
+  pluginManager: PluginManager,
+  securityManager: SecurityManager,
+  options?: MCPIntegrationOptions
+): Promise<MCPIntegration>
+
+// Get integration
+export function getMCPIntegration(): MCPIntegration
+
+// Shutdown
+export async function shutdownMCP(): Promise<void>
+
+// Create plugin API
+export function createMCPPluginAPI(
+  pluginId: string,
+  mcpIntegration?: MCPIntegration
+): MCPPluginAPI
+```
+
+## Complete Usage Example
+
+```typescript
+import {
+  initializeMCP,
+  MCPClient,
+  MCPResourceBuilder,
+  MCPToolBuilder,
+  MCPPromptBuilder
+} from '@lokus/mcp'
+
+// Initialize MCP
+const mcp = await initializeMCP(pluginManager, securityManager, {
+  server: {
+    maxServers: 50,
+    memoryLimit: 134217728
+  }
+})
+
+// Register resource
+const resource = new MCPResourceBuilder()
+  .setUri('myplugin://data')
+  .setName('My Data')
+  .setType('memory')
+  .setContent('data')
+  .build()
+
+mcp.mcpPluginManager.registerGlobalResource(resource)
+
+// Register tool
+const tool = new MCPToolBuilder()
+  .setName('myTool')
+  .setDescription('Does something')
+  .setInputSchema({ type: 'object' })
+  .setExecutor(async (args) => ({ output: 'result' }))
+  .build()
+
+mcp.mcpPluginManager.registerGlobalTool(tool)
+
+// Create client
+const client = mcp.createClient('my-client', {
+  autoReconnect: true,
+  requestTimeout: 30000
+})
+
+// Connect and use
+await client.connect(transport)
+
+const resources = await client.listResources()
+const result = await client.callTool('myTool', { arg: 'value' })
+
+await client.disconnect()
+await mcp.shutdown()
+```
+
+## Next Steps
+
+**Related Documentation:**
+- [Overview](/developers/mcp/overview)
+- [Setup](/developers/mcp/setup)
+- [Plugin Integration](/developers/mcp/plugin-integration)
+- [AI Assistants](/developers/mcp/ai-assistants)

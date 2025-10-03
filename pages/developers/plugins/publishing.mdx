@@ -1,0 +1,614 @@
+# Publishing Plugins
+
+Guide to publishing your Lokus plugin to the official registry and distributing to users.
+
+## Prerequisites
+
+Before publishing:
+
+1. **Complete Plugin**
+   - All features implemented and tested
+   - Documentation written (README.md)
+   - License file included
+   - Icon/logo created (128x128 PNG)
+
+2. **Quality Checks**
+   - Tests passing (`npm test`)
+   - No lint errors (`npm run lint`)
+   - Plugin validated (`lokus-plugin validate`)
+   - Security audit passed (`npm audit`)
+
+3. **Registry Account**
+   - Account on [registry.lokus.dev](https://registry.lokus.dev)
+   - Email verified
+   - Publisher profile created
+   - Access token generated
+
+## Preparing for Release
+
+### 1. Update Version
+
+Follow semantic versioning:
+
+```bash
+# Patch release (bug fixes)
+npm version patch  # 1.0.0 → 1.0.1
+
+# Minor release (new features, backward compatible)
+npm version minor  # 1.0.0 → 1.1.0
+
+# Major release (breaking changes)
+npm version major  # 1.0.0 → 2.0.0
+
+# Pre-release
+npm version prepatch --preid=beta  # 1.0.0 → 1.0.1-beta.0
+```
+
+### 2. Update Changelog
+
+Create or update `CHANGELOG.md`:
+
+```markdown
+# Changelog
+
+## [1.1.0] - 2024-01-15
+
+### Added
+- New command for bulk operations
+- Support for custom themes
+- Configuration option for auto-save
+
+### Changed
+- Improved performance of data sync
+- Updated UI for better accessibility
+
+### Fixed
+- Fixed crash on large files
+- Resolved memory leak in background tasks
+- Fixed compatibility with Lokus 1.5+
+
+### Deprecated
+- Old sync API (use new async API instead)
+
+## [1.0.0] - 2024-01-01
+
+Initial release
+```
+
+### 3. Verify Manifest
+
+Check `plugin.json`:
+
+```json
+{
+  "id": "publisher.plugin-name",
+  "version": "1.1.0",
+  "name": "My Plugin",
+  "displayName": "My Awesome Plugin",
+  "description": "Clear, concise description (max 200 chars)",
+  "categories": ["Editor", "Productivity"],
+  "keywords": ["editor", "productivity", "automation"],
+  "icon": "assets/icon.png",
+  "author": {
+    "name": "Your Name",
+    "email": "you@example.com",
+    "url": "https://example.com"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/you/plugin",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/you/plugin.git"
+  },
+  "bugs": "https://github.com/you/plugin/issues"
+}
+```
+
+### 4. Create README
+
+Comprehensive `README.md`:
+
+```markdown
+# My Plugin
+
+Brief description of what your plugin does.
+
+## Features
+
+- **Feature 1**: Description
+- **Feature 2**: Description
+- **Feature 3**: Description
+
+## Installation
+
+Install from Lokus marketplace:
+
+1. Open Lokus
+2. Go to Extensions (Ctrl/Cmd + Shift + X)
+3. Search for "My Plugin"
+4. Click Install
+
+## Usage
+
+### Basic Usage
+
+Describe how to use your plugin...
+
+### Commands
+
+- `My Plugin: Command 1` - Description
+- `My Plugin: Command 2` - Description
+
+### Configuration
+
+```json
+{
+  "myPlugin.setting1": true,
+  "myPlugin.setting2": "value"
+}
+```
+
+## Examples
+
+Show examples with screenshots...
+
+## Requirements
+
+- Lokus 1.0.0 or higher
+- Other requirements...
+
+## Known Issues
+
+List any known issues...
+
+## Release Notes
+
+See [CHANGELOG.md](CHANGELOG.md)
+
+## Contributing
+
+Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md)
+
+## License
+
+[MIT](LICENSE)
+```
+
+### 5. Validate Plugin
+
+```bash
+# Run validation
+lokus-plugin validate --strict
+
+# Fix any issues
+lokus-plugin validate --fix
+
+# Run tests
+npm test
+
+# Check coverage
+npm run test:coverage
+
+# Security audit
+npm audit
+```
+
+## Publishing to Registry
+
+### 1. Create Account
+
+Visit [registry.lokus.dev](https://registry.lokus.dev):
+
+1. Click "Sign Up"
+2. Enter email and password
+3. Verify email
+4. Complete profile
+
+### 2. Generate Token
+
+1. Go to Account Settings
+2. Navigate to Access Tokens
+3. Click "Generate New Token"
+4. Name: "CLI Publishing"
+5. Permissions: "publish:plugin"
+6. Copy token (shown once)
+
+### 3. Login via CLI
+
+```bash
+lokus-plugin login --token YOUR_TOKEN
+```
+
+Or set environment variable:
+
+```bash
+export LOKUS_PLUGIN_TOKEN=YOUR_TOKEN
+```
+
+### 4. Publish
+
+```bash
+# Dry run (test without publishing)
+lokus-plugin publish --dry-run
+
+# Publish to registry
+lokus-plugin publish
+
+# Publish beta version
+lokus-plugin publish --tag beta
+
+# Publish to custom registry
+lokus-plugin publish --registry https://registry.example.com
+```
+
+**Output:**
+
+```
+✓ Validating plugin...
+✓ Building plugin...
+✓ Running tests...
+✓ Creating package...
+✓ Uploading to registry...
+✓ Published my-plugin@1.1.0
+
+View at: https://registry.lokus.dev/plugins/my-plugin
+```
+
+### 5. Verify Publication
+
+1. Visit plugin page: `https://registry.lokus.dev/plugins/your-plugin`
+2. Check marketplace in Lokus
+3. Test installation: `lokus-plugin install publisher.plugin-name`
+
+## Versioning Strategy
+
+### Semantic Versioning
+
+```
+MAJOR.MINOR.PATCH
+
+1.2.3
+│ │ │
+│ │ └─ Patch: Bug fixes, no API changes
+│ └─── Minor: New features, backward compatible
+└───── Major: Breaking changes
+```
+
+### Pre-release Versions
+
+```
+1.0.0-alpha.1  # Early testing
+1.0.0-beta.1   # Feature complete, testing
+1.0.0-rc.1     # Release candidate
+1.0.0          # Stable release
+```
+
+### Publishing Tags
+
+```bash
+# Latest (default)
+lokus-plugin publish
+
+# Beta channel
+lokus-plugin publish --tag beta
+
+# Alpha channel
+lokus-plugin publish --tag alpha
+
+# Next (upcoming features)
+lokus-plugin publish --tag next
+```
+
+Users can install specific tags:
+
+```bash
+lokus-plugin install my-plugin        # Latest stable
+lokus-plugin install my-plugin@beta   # Beta version
+lokus-plugin install my-plugin@1.2.3  # Specific version
+```
+
+## Distribution Channels
+
+### Official Registry
+
+Primary distribution method:
+
+- Searchable in Lokus marketplace
+- Automatic updates
+- Version history
+- User reviews and ratings
+- Download statistics
+
+### GitHub Releases
+
+Alternative distribution:
+
+1. Create GitHub release
+2. Attach `.vsix` file
+3. Users download and install manually
+
+```bash
+# Package plugin
+lokus-plugin package
+
+# Upload my-plugin-1.1.0.vsix to GitHub release
+```
+
+### Private Registry
+
+For internal/enterprise plugins:
+
+```json
+{
+  "publishConfig": {
+    "registry": "https://registry.company.com",
+    "access": "restricted"
+  }
+}
+```
+
+```bash
+lokus-plugin publish --registry https://registry.company.com
+```
+
+### Direct Installation
+
+Share `.vsix` file directly:
+
+```bash
+# Create package
+lokus-plugin package
+
+# Users install
+lokus-plugin install /path/to/plugin.vsix
+```
+
+## Updating Plugins
+
+### Publishing Updates
+
+```bash
+# Update version
+npm version patch
+
+# Publish update
+lokus-plugin publish
+```
+
+### Migration Guide
+
+For breaking changes, provide migration guide:
+
+```markdown
+# Migration Guide: v1 to v2
+
+## Breaking Changes
+
+### Renamed Commands
+
+- `oldCommand` → `newCommand`
+- `another.old` → `another.new`
+
+### Changed API
+
+```typescript
+// Old API (v1)
+api.doSomething(param)
+
+// New API (v2)
+api.doSomething({ param, newOption: true })
+```
+
+### Configuration Changes
+
+```json
+// Old
+{
+  "myPlugin.oldSetting": true
+}
+
+// New
+{
+  "myPlugin.newSetting": {
+    "enabled": true,
+    "mode": "advanced"
+  }
+}
+```
+
+## Deprecation
+
+Deprecate features before removal:
+
+```typescript
+/**
+ * @deprecated Use newMethod() instead
+ * Will be removed in v3.0.0
+ */
+export function oldMethod() {
+  console.warn('oldMethod is deprecated, use newMethod')
+  return newMethod()
+}
+```
+
+In manifest:
+
+```json
+{
+  "contributes": {
+    "commands": [
+      {
+        "command": "myPlugin.oldCommand",
+        "title": "Old Command (Deprecated)",
+        "deprecationMessage": "Use 'New Command' instead"
+      }
+    ]
+  }
+}
+```
+
+## Marketplace Optimization
+
+### Good Plugin Names
+
+- Clear and descriptive
+- Include key features
+- Avoid generic names
+- Match user search terms
+
+### Description
+
+- First sentence is critical (shown in search)
+- Highlight key features
+- Use keywords naturally
+- Max 200 characters
+
+### Keywords
+
+```json
+{
+  "keywords": [
+    "editor",
+    "markdown",
+    "productivity",
+    "automation",
+    "notes"
+  ]
+}
+```
+
+### Icon
+
+- 128x128 PNG
+- Clear and recognizable
+- Matches plugin purpose
+- Looks good on light and dark backgrounds
+
+### Screenshots
+
+Include in README:
+
+```markdown
+## Screenshots
+
+![Feature 1](screenshots/feature1.png)
+![Feature 2](screenshots/feature2.png)
+```
+
+### Categories
+
+Choose appropriate categories:
+
+- Editor
+- Languages
+- Themes
+- Productivity
+- Data & APIs
+- Visualization
+- Other
+
+## Analytics
+
+### Track Usage
+
+```typescript
+// Send anonymous usage stats
+context.api.telemetry.sendEvent('feature-used', {
+  feature: 'command-executed',
+  commandId: 'myPlugin.hello'
+})
+```
+
+### Monitor Health
+
+```typescript
+// Report errors
+context.api.telemetry.sendError(error, {
+  context: 'data-sync',
+  operation: 'fetch'
+})
+
+// Track performance
+const startTime = Date.now()
+await performOperation()
+const duration = Date.now() - startTime
+
+context.api.telemetry.sendMetric('operation-duration', duration)
+```
+
+## Best Practices
+
+### Do's
+
+- Follow semantic versioning
+- Write comprehensive documentation
+- Provide examples and screenshots
+- Keep changelog updated
+- Respond to user feedback
+- Test on all platforms
+- Keep dependencies minimal
+- Monitor analytics
+
+### Don'ts
+
+- Don't publish untested code
+- Don't break backward compatibility in minor versions
+- Don't ignore security vulnerabilities
+- Don't spam with frequent updates
+- Don't use misleading names/descriptions
+- Don't bundle unnecessary dependencies
+- Don't collect user data without consent
+
+## Legal Considerations
+
+### License
+
+Choose appropriate license:
+
+- **MIT** - Permissive, allows commercial use
+- **Apache 2.0** - Permissive with patent grant
+- **GPL-3.0** - Copyleft, requires open source
+- **ISC** - Simple permissive license
+
+### Privacy
+
+If collecting data:
+
+1. Disclose in README
+2. Provide opt-out mechanism
+3. Follow GDPR/privacy laws
+4. Be transparent about usage
+
+### Trademarks
+
+Don't use trademarked names without permission.
+
+## Support
+
+### Documentation
+
+- Comprehensive README
+- API documentation
+- Examples repository
+- Tutorial videos
+
+### Community
+
+- GitHub Discussions
+- Issue tracker
+- Support email
+- Discord/Slack channel
+
+### Maintenance
+
+- Fix critical bugs quickly
+- Respond to issues within 48 hours
+- Keep dependencies updated
+- Monitor security advisories
+
+## Resources
+
+- [Plugin Registry](https://registry.lokus.dev)
+- [Publishing Guidelines](https://docs.lokus.dev/publishing-guidelines)
+- [Marketplace Guidelines](https://docs.lokus.dev/marketplace-guidelines)
+- [CLI Documentation](/developers/plugins/cli)

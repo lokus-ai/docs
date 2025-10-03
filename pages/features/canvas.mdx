@@ -1,0 +1,917 @@
+# Canvas & Whiteboard
+
+The Canvas feature in Lokus provides an infinite digital whiteboard where you can visually organize ideas, create diagrams, and arrange notes spatially. Built on TLDraw, the canvas combines freeform drawing with structured note-taking, enabling visual thinking alongside traditional text-based workflows.
+
+## Overview
+
+Canvas allows you to move beyond linear note-taking, creating visual representations of ideas, brainstorming concepts, and organizing information spatially. It's perfect for mind mapping, diagramming, project planning, and visual collaboration.
+
+### Key Features
+
+- **Infinite canvas** with smooth panning and zooming
+- **Drawing tools** including shapes, arrows, and freehand
+- **Note embedding** directly on canvas
+- **Collaborative editing** with real-time updates
+- **Export options** to PNG, SVG, and PDF
+- **Touch and stylus support** for tablets and drawing displays
+
+## Getting Started
+
+### Creating a Canvas
+
+**Method 1: New Canvas**
+1. File → New Canvas
+2. Name your canvas
+3. Start drawing
+
+**Method 2: Convert Note**
+1. Open existing note
+2. View → Open in Canvas
+3. Note becomes canvas element
+
+**Method 3: Command Palette**
+1. Press `Cmd/Ctrl + P`
+2. Type "new canvas"
+3. Press Enter
+
+### Canvas Interface
+
+The canvas interface includes:
+
+**Toolbar (Top):**
+- Selection tool
+- Drawing tools
+- Shapes
+- Text
+- Sticky notes
+- Connector lines
+
+**Properties Panel (Right):**
+- Element properties
+- Styling options
+- Alignment tools
+- Layer controls
+
+**Minimap (Bottom Right):**
+- Overview of entire canvas
+- Quick navigation
+- Zoom controls
+
+![Canvas Interface Overview](/placeholder.svg)
+
+## Drawing Tools
+
+### Selection Tool
+
+Select and manipulate elements:
+
+**Actions:**
+- Click to select single element
+- Drag to select multiple elements
+- Shift+click to add to selection
+- Cmd/Ctrl+A to select all
+
+**Selection Operations:**
+- Move: Drag selection
+- Resize: Drag handles
+- Rotate: Drag rotation handle
+- Duplicate: Alt/Option + drag
+
+### Hand Tool
+
+Navigate the canvas:
+
+**Controls:**
+- Click and drag to pan
+- Space + drag (temporary hand)
+- Trackpad: Two-finger drag
+- Mouse wheel: Scroll
+
+### Draw Tool
+
+Freehand drawing:
+
+**Features:**
+- Pressure sensitivity (stylus)
+- Smoothing algorithm
+- Multiple pen sizes
+- Color selection
+- Fill options
+
+**Shortcuts:**
+- `D` to activate
+- `Shift` to draw straight line
+- `Alt` to erase
+
+### Shape Tools
+
+Create geometric shapes:
+
+**Available Shapes:**
+- Rectangle
+- Ellipse
+- Triangle
+- Diamond
+- Hexagon
+- Star
+- Arrow
+- Line
+
+**Drawing:**
+1. Select shape tool
+2. Click and drag to draw
+3. Hold Shift for proportional
+4. Hold Alt for center origin
+
+**Shape Properties:**
+- Fill color
+- Stroke color
+- Stroke width
+- Opacity
+- Corner radius (rectangles)
+
+### Text Tool
+
+Add text anywhere on canvas:
+
+**Features:**
+- Click to place text
+- Drag to create text box
+- Rich text formatting
+- Auto-sizing or fixed width
+- Font selection
+- Alignment options
+
+**Text Formatting:**
+- Bold, italic, underline
+- Font size
+- Text color
+- Alignment (left, center, right)
+- List formatting
+
+### Sticky Notes
+
+Quick note-taking on canvas:
+
+**Types:**
+- Yellow (default)
+- Pink (important)
+- Blue (info)
+- Green (success)
+- Orange (warning)
+
+**Features:**
+- Auto-sizing
+- Markdown support
+- Moveable and resizable
+- Color-coded
+- Quick text entry
+
+**Shortcut:** `S` to create sticky note
+
+![Canvas Drawing Tools and Shapes](/placeholder.svg)
+
+## Connectors and Arrows
+
+### Arrow Tool
+
+Connect elements with arrows:
+
+**Arrow Types:**
+- Straight arrow
+- Curved arrow
+- Elbow arrow (orthogonal)
+- Double-headed arrow
+
+**Connection:**
+1. Select arrow tool
+2. Click start element
+3. Drag to end element
+4. Arrow connects automatically
+
+**Features:**
+- Auto-routing around shapes
+- Connection points
+- Arrowhead styles
+- Label text
+- Line styles (solid, dashed, dotted)
+
+### Connection Points
+
+Elements have smart connection points:
+
+**Auto-connect:**
+- Hover over element edge
+- Connection point highlights
+- Click to attach
+- Maintains connection on move
+
+**Manual Points:**
+- Create waypoints
+- Drag to adjust path
+- Add/remove points
+- Snap to grid
+
+## Note Integration
+
+### Embedding Notes
+
+Add existing notes to canvas:
+
+**Method 1: Drag and Drop**
+1. Open file explorer sidebar
+2. Drag note onto canvas
+3. Note appears as card
+
+**Method 2: Link Creation**
+1. Type `[[Note Name]]` in text
+2. Click to embed
+3. Choose display mode
+
+**Display Modes:**
+- **Card:** Title and preview
+- **Full:** Entire note content
+- **Link:** Just the link
+- **Icon:** Icon only
+
+### Note Cards
+
+Note cards on canvas show:
+
+**Card Elements:**
+- Title
+- Preview (first lines)
+- Tags
+- Last modified date
+- Connection indicators
+
+**Interactions:**
+- Click title to open in editor
+- Double-click card to edit inline
+- Drag to move
+- Resize to show more/less
+
+### Bidirectional Links
+
+Canvas and notes stay connected:
+
+**Features:**
+- Changes sync both ways
+- Canvas updates on note edit
+- Backlinks show canvas
+- Navigate between views
+
+## Organization
+
+### Frames
+
+Group related elements:
+
+**Creating Frames:**
+1. Select frame tool
+2. Draw frame area
+3. Add elements inside
+4. Name the frame
+
+**Frame Features:**
+- Collapsible
+- Named labels
+- Color coding
+- Move as unit
+- Nested frames
+
+**Use Cases:**
+- Project sections
+- Topic grouping
+- Timeline segments
+- Category containers
+
+### Layers
+
+Control element stacking:
+
+**Layer Controls:**
+- Bring to front
+- Send to back
+- Bring forward
+- Send backward
+
+**Layer Panel:**
+- View all layers
+- Lock/unlock layers
+- Hide/show layers
+- Rename layers
+
+### Alignment
+
+Align multiple elements:
+
+**Alignment Options:**
+- Align left/center/right
+- Align top/middle/bottom
+- Distribute horizontally
+- Distribute vertically
+- Space evenly
+
+**Smart Guides:**
+- Auto-show when moving
+- Snap to other elements
+- Distance indicators
+- Center alignment guides
+
+### Grid and Snapping
+
+**Grid Display:**
+- Show/hide grid
+- Adjust grid size
+- Snap to grid
+- Snap strength
+
+**Snap Options:**
+- Snap to grid
+- Snap to objects
+- Snap to guides
+- Snap threshold
+
+## Styling
+
+### Colors
+
+Apply colors to elements:
+
+**Color Picker:**
+- Preset palette
+- Custom colors
+- Eyedropper tool
+- Recent colors
+- Transparency slider
+
+**Application:**
+- Fill color
+- Stroke color
+- Text color
+- Shadow color
+
+### Stroke Styles
+
+Customize borders and lines:
+
+**Options:**
+- Stroke width (1-20px)
+- Stroke style (solid, dashed, dotted)
+- Stroke color
+- Rounded corners
+- Arrow heads
+
+### Shadows and Effects
+
+Add depth to elements:
+
+**Shadow:**
+- X/Y offset
+- Blur radius
+- Color
+- Opacity
+
+**Effects:**
+- Glow
+- Blur
+- Opacity
+- Blend modes
+
+### Themes
+
+Canvas appearance themes:
+
+**Built-in Themes:**
+- Light (default)
+- Dark
+- High contrast
+- Sepia
+- Blueprint
+
+**Theme Elements:**
+- Background color
+- Grid color
+- Element defaults
+- Text color
+- Selection color
+
+## Templates
+
+### Canvas Templates
+
+Start with pre-made layouts:
+
+**Available Templates:**
+- Blank canvas
+- Mind map
+- Flowchart
+- Wireframe
+- Timeline
+- SWOT analysis
+- User journey map
+- Architecture diagram
+
+**Using Templates:**
+1. File → New from Template
+2. Select canvas template
+3. Customize content
+4. Save as new canvas
+
+### Custom Templates
+
+Create your own templates:
+
+1. Design canvas layout
+2. Add placeholder elements
+3. File → Save as Template
+4. Name and categorize
+5. Use for future canvases
+
+## Collaboration
+
+### Real-time Editing
+
+Multiple users on same canvas:
+
+**Features:**
+- Live cursors show positions
+- User names displayed
+- Selection highlights per user
+- Conflict resolution
+- Auto-save
+
+**Collaboration UI:**
+- Active users list
+- User colors
+- Presence indicators
+- Chat panel (optional)
+
+### Permissions
+
+Control access levels:
+
+**Permission Types:**
+- **View:** Read-only access
+- **Comment:** View and comment
+- **Edit:** Full editing rights
+- **Admin:** Manage permissions
+
+**Sharing:**
+1. Click Share button
+2. Enter user email
+3. Set permission level
+4. Send invitation
+
+### Comments
+
+Add comments to canvas elements:
+
+**Creating Comments:**
+1. Select element
+2. Click comment icon
+3. Type comment
+4. Mention users with `@`
+
+**Comment Features:**
+- Thread discussions
+- Resolve/unresolve
+- Edit/delete
+- Timestamps
+- Notifications
+
+## Export and Sharing
+
+### Image Export
+
+Export canvas as image:
+
+**Formats:**
+- **PNG:** Standard raster format
+- **SVG:** Vector graphics (scalable)
+- **JPG:** Compressed format
+- **WebP:** Modern format
+
+**Export Options:**
+- Entire canvas or selection
+- Scale (1x, 2x, 4x)
+- Transparent background
+- Include grid
+- Quality settings
+
+**Process:**
+1. File → Export → Image
+2. Choose format
+3. Select area
+4. Configure options
+5. Save file
+
+### PDF Export
+
+Export for printing or sharing:
+
+**Features:**
+- Multi-page support
+- Vector graphics
+- Embedded fonts
+- Hyperlinks preserved
+- Print-ready
+
+**Page Setup:**
+- Paper size (A4, Letter, etc.)
+- Orientation (portrait/landscape)
+- Margins
+- Scale to fit
+
+### JSON Export
+
+Export canvas data:
+
+**Format:**
+```json
+{
+  "version": "2.0",
+  "elements": [
+    {
+      "id": "shape-1",
+      "type": "rectangle",
+      "x": 100,
+      "y": 150,
+      "width": 200,
+      "height": 100,
+      "fill": "#3b82f6",
+      "stroke": "#1e40af"
+    }
+  ],
+  "connections": []
+}
+```
+
+**Use Cases:**
+- Backup canvas data
+- Version control
+- Import to other tools
+- Programmatic generation
+
+### Sharing Links
+
+Share canvas via link:
+
+**Link Types:**
+- **Public:** Anyone with link
+- **Private:** Invited users only
+- **Read-only:** View but not edit
+- **Expiring:** Time-limited access
+
+**Embedding:**
+- Generate embed code
+- Customize size
+- Share on web
+- Embed in docs
+
+## Mobile and Touch
+
+### Touch Gestures
+
+Canvas supports touch input:
+
+**Gestures:**
+- **One finger:** Select and drag
+- **Two fingers:** Pan canvas
+- **Pinch:** Zoom in/out
+- **Two-finger rotate:** Rotate selection
+- **Long press:** Context menu
+
+### Stylus Support
+
+Enhanced for drawing tablets:
+
+**Features:**
+- Pressure sensitivity
+- Tilt detection
+- Palm rejection
+- Hover preview
+- Button mapping
+
+**Supported Devices:**
+- iPad with Apple Pencil
+- Wacom tablets
+- Surface Pen
+- Other stylus devices
+
+### Mobile App
+
+Canvas on mobile (iOS/Android):
+
+**Features:**
+- Full canvas functionality
+- Touch-optimized UI
+- Offline support
+- Sync with desktop
+- Gesture shortcuts
+
+## Advanced Features
+
+### Custom Shapes
+
+Create reusable custom shapes:
+
+**Shape Editor:**
+1. Draw custom shape
+2. Tools → Create Shape
+3. Define connection points
+4. Set default properties
+5. Save to library
+
+**Shape Library:**
+- Personal shapes
+- Team shapes
+- Community shapes
+- Import/export shapes
+
+### Scripting
+
+Automate canvas operations:
+
+**Canvas API:**
+```javascript
+// Add rectangle
+canvas.addShape({
+  type: 'rectangle',
+  x: 100,
+  y: 100,
+  width: 200,
+  height: 150,
+  fill: '#3b82f6'
+});
+
+// Connect shapes
+canvas.connect('shape-1', 'shape-2', {
+  type: 'arrow',
+  style: 'curved'
+});
+```
+
+**Use Cases:**
+- Generate diagrams
+- Batch operations
+- Data visualization
+- Automated layouts
+
+### Plugins
+
+Extend canvas functionality:
+
+**Plugin Types:**
+- Custom tools
+- Shape libraries
+- Export formats
+- Layout algorithms
+- Data integrations
+
+**Example Plugins:**
+- Flowchart validator
+- Architecture diagram templates
+- UML diagram support
+- Chart generators
+
+## Use Cases
+
+### Mind Mapping
+
+Visual brainstorming:
+
+**Workflow:**
+1. Start with central idea
+2. Add main branches
+3. Add sub-branches
+4. Use colors for categories
+5. Connect related ideas
+6. Refine structure
+
+**Tips:**
+- Use sticky notes for ideas
+- Color-code by theme
+- Keep text concise
+- Use images/icons
+- Review and reorganize
+
+### Flowcharts
+
+Process visualization:
+
+**Elements:**
+- Start/end (rounded rectangles)
+- Process (rectangles)
+- Decision (diamonds)
+- Data (parallelograms)
+- Arrows (flow direction)
+
+**Best Practices:**
+- Clear labels
+- Consistent symbols
+- Top-to-bottom or left-to-right
+- Avoid crossed lines
+- Use swim lanes for actors
+
+### Project Planning
+
+Visual project organization:
+
+**Components:**
+- Timeline view
+- Task cards
+- Dependencies
+- Milestones
+- Resources
+
+**Layout:**
+- Horizontal timeline
+- Vertical stages
+- Kanban style
+- Network diagram
+
+### Wireframing
+
+UI/UX design:
+
+**Elements:**
+- Screens/pages
+- UI components
+- Navigation flows
+- User interactions
+- Annotations
+
+**Tips:**
+- Use standard UI shapes
+- Show user flow with arrows
+- Add interaction notes
+- Keep it low-fidelity
+- Iterate quickly
+
+### Architecture Diagrams
+
+System design:
+
+**Diagram Types:**
+- System architecture
+- Network topology
+- Data flow
+- Component diagrams
+- Deployment diagrams
+
+**Symbols:**
+- Servers/services
+- Databases
+- APIs
+- Users/clients
+- Network connections
+
+## Performance
+
+### Optimization
+
+Canvas performance with large diagrams:
+
+**Techniques:**
+- Viewport culling
+- Level-of-detail rendering
+- Lazy loading
+- Element pooling
+- Debounced updates
+
+**Benchmarks:**
+- 1,000+ elements: Smooth
+- 10,000+ elements: Supported
+- Real-time collaboration: less than 50ms latency
+
+### Performance Settings
+
+Adjust for your needs:
+
+**Quality:**
+- High: All effects
+- Medium: Balanced
+- Low: Performance priority
+- Auto: Adaptive
+
+**Limits:**
+- Max undo history
+- Autosave interval
+- Collaboration updates
+- Render distance
+
+## Keyboard Shortcuts
+
+| Action | Shortcut |
+|--------|----------|
+| Selection Tool | V or 1 |
+| Hand Tool | H or Space |
+| Draw Tool | D or 2 |
+| Rectangle | R or 3 |
+| Ellipse | E or 4 |
+| Arrow | A or 5 |
+| Text | T or 6 |
+| Sticky Note | S or 7 |
+| Delete | Delete/Backspace |
+| Duplicate | Cmd/Ctrl + D |
+| Group | Cmd/Ctrl + G |
+| Ungroup | Cmd/Ctrl + Shift + G |
+| Bring Forward | Cmd/Ctrl + ] |
+| Send Backward | Cmd/Ctrl + [ |
+| Zoom In | Cmd/Ctrl + Plus |
+| Zoom Out | Cmd/Ctrl + Minus |
+| Fit to Screen | Cmd/Ctrl + 0 |
+| Undo | Cmd/Ctrl + Z |
+| Redo | Cmd/Ctrl + Shift + Z |
+
+## Configuration
+
+### Canvas Settings
+
+Configure in Settings > Canvas:
+
+**General:**
+- Default canvas size
+- Grid size
+- Snap threshold
+- Auto-save interval
+
+**Appearance:**
+- Theme
+- Grid visibility
+- Background color
+- Minimap position
+
+**Performance:**
+- Quality preset
+- Max elements
+- Render distance
+- Collaboration updates
+
+**Shortcuts:**
+- Customize keys
+- Tool shortcuts
+- Action shortcuts
+
+## Integration
+
+### Graph Integration
+
+Convert between graph and canvas:
+
+**Graph to Canvas:**
+1. Open graph view
+2. Select nodes
+3. "Send to Canvas"
+4. Positions preserved
+
+**Canvas to Graph:**
+- Canvas connections become graph edges
+- Note cards become nodes
+- Layout preserved
+
+### Task Integration
+
+Canvas for task planning:
+
+**Features:**
+- Task cards on canvas
+- Visual dependencies
+- Timeline views
+- Kanban layouts
+- See [Task Management](/features/tasks)
+
+### Note Integration
+
+Seamless with editor:
+
+**Workflows:**
+- Brainstorm on canvas → create notes
+- Notes → visualize on canvas
+- Canvas → export as notes
+- Bidirectional updates
+
+## Troubleshooting
+
+### Common Issues
+
+**Issue:** Canvas lagging
+**Solution:** Reduce quality, limit elements, close other panes
+
+**Issue:** Elements not connecting
+**Solution:** Ensure snap-to-objects enabled, hover on connection points
+
+**Issue:** Can't export
+**Solution:** Check permissions, reduce canvas size, try different format
+
+**Issue:** Lost changes
+**Solution:** Enable auto-save, check version history, recover from backup
+
+## Next Steps
+
+- Explore [Templates](/features/templates) for canvas layouts
+- Learn [Graph Visualization](/features/graph) for automatic layouts
+- Try [Task Management](/features/tasks) with canvas views
+- See [Developer Guide](/developers) for canvas plugins

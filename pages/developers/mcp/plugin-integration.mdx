@@ -1,0 +1,523 @@
+# MCP Plugin Integration
+
+Learn how to create plugins that integrate with Lokus's MCP system to expose resources, tools, and prompts to AI assistants.
+
+## Plugin Types
+
+### MCP Server Plugin
+
+Exposes capabilities to AI assistants:
+
+```json
+{
+  "id": "my-mcp-server",
+  "name": "My MCP Server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "mcp-server",
+  "permissions": [
+    "mcp:serve",
+    "mcp:resources:read",
+    "mcp:resources:write",
+    "mcp:tools:execute"
+  ],
+  "mcp": {
+    "type": "mcp-server",
+    "capabilities": {
+      "resources": {
+        "subscribe": true,
+        "listChanged": true
+      },
+      "tools": {
+        "listChanged": true
+      }
+    }
+  }
+}
+```
+
+```javascript
+export default class MyMCPServer {
+  async activate(context) {
+    const { mcp } = context
+
+    // Register resources
+    mcp.registerResource({
+      uri: 'myplugin://data',
+      name: 'Plugin Data',
+      type: 'memory',
+      content: 'data'
+    })
+
+    // Register tools
+    mcp.registerTool({
+      name: 'myTool',
+      description: 'My tool',
+      inputSchema: { type: 'object' },
+      execute: async (args) => ({ output: 'result' })
+    })
+
+    // Register prompts
+    mcp.registerPrompt({
+      name: 'myPrompt',
+      description: 'My prompt',
+      template: 'Template text with {{variable}}'
+    })
+  }
+}
+```
+
+### MCP Client Plugin
+
+Consumes MCP services:
+
+```json
+{
+  "id": "my-mcp-client",
+  "name": "My MCP Client",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "mcp-client",
+  "permissions": [
+    "mcp:client",
+    "mcp:resources:read",
+    "mcp:tools:execute"
+  ]
+}
+```
+
+```javascript
+export default class MyMCPClient {
+  async activate(context) {
+    const { mcp } = context
+
+    // Create client
+    this.client = mcp.createClient()
+
+    // Connect to server
+    await this.client.connect(transport)
+
+    // Use resources
+    const resources = await this.client.listResources()
+
+    // Call tools
+    const result = await this.client.callTool('someTool', { arg: 'value' })
+  }
+
+  async deactivate() {
+    await this.client.disconnect()
+  }
+}
+```
+
+### Hybrid Plugin
+
+Acts as both server and client:
+
+```json
+{
+  "id": "my-hybrid-plugin",
+  "name": "My Hybrid Plugin",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "mcp-hybrid",
+  "permissions": [
+    "mcp:serve",
+    "mcp:client",
+    "mcp:resources:read",
+    "mcp:resources:write",
+    "mcp:tools:execute"
+  ]
+}
+```
+
+```javascript
+export default class MyHybridPlugin {
+  async activate(context) {
+    const { mcp } = context
+
+    // Expose own capabilities
+    mcp.registerTool({
+      name: 'exportData',
+      description: 'Export data',
+      inputSchema: { type: 'object' },
+      execute: async (args) => this.exportData(args)
+    })
+
+    // Consume other plugins' capabilities
+    const tools = mcp.findTools({ category: 'import' })
+    for (const tool of tools) {
+      console.log('Available tool:', tool.name)
+    }
+  }
+}
+```
+
+## Complete Example
+
+Here's a full-featured MCP plugin:
+
+```javascript
+// manifest.json
+{
+  "id": "lokus-note-tools",
+  "name": "Lokus Note Tools",
+  "version": "1.0.0",
+  "description": "MCP tools for note management",
+  "main": "index.js",
+  "type": "mcp-server",
+  "author": "Your Name",
+  "license": "MIT",
+  "permissions": [
+    "mcp:serve",
+    "mcp:resources:read",
+    "mcp:resources:write",
+    "mcp:tools:execute",
+    "workspace:read",
+    "workspace:write",
+    "editor:read",
+    "editor:write"
+  ],
+  "mcp": {
+    "type": "mcp-server",
+    "enableResourceSubscriptions": true,
+    "enableToolExecution": true,
+    "enablePromptTemplates": true,
+    "memoryLimit": 134217728,
+    "cpuTimeLimit": 1000
+  }
+}
+```
+
+```javascript
+// index.js
+import { MCPResourceBuilder, MCPToolBuilder, MCPPromptBuilder } from '@lokus/mcp'
+
+export default class NoteToolsPlugin {
+  constructor() {
+    this.subscriptions = []
+  }
+
+  async activate(context) {
+    const { mcp, workspace, editor, events } = context
+
+    // Register resources
+    await this.registerResources(mcp, workspace, editor)
+
+    // Register tools
+    await this.registerTools(mcp, workspace, editor)
+
+    // Register prompts
+    await this.registerPrompts(mcp)
+
+    // Set up event handlers
+    this.setupEventHandlers(mcp, workspace, editor, events)
+
+    console.log('Note Tools MCP Plugin activated')
+  }
+
+  async registerResources(mcp, workspace, editor) {
+    // Current note resource
+    const currentNote = new MCPResourceBuilder()
+      .setUri('lokus://notes/current')
+      .setName('Current Note')
+      .setDescription('Currently active note in the editor')
+      .setType('file')
+      .setMimeType('text/markdown')
+      .setMetadata({ dynamic: true })
+      .build()
+
+    mcp.registerResource(currentNote)
+
+    // All notes resource
+    const allNotes = new MCPResourceBuilder()
+      .setUri('lokus://notes/all')
+      .setName('All Notes')
+      .setDescription('List of all notes in the workspace')
+      .setType('database')
+      .setMimeType('application/json')
+      .setMetadata({ dynamic: true })
+      .build()
+
+    mcp.registerResource(allNotes)
+
+    // Handle dynamic resource reads
+    mcp.onResourceRead('lokus://notes/current', async () => {
+      const note = await editor.getCurrentNote()
+      return {
+        contents: [{
+          uri: 'lokus://notes/current',
+          mimeType: 'text/markdown',
+          text: note ? note.content : ''
+        }]
+      }
+    })
+
+    mcp.onResourceRead('lokus://notes/all', async () => {
+      const notes = await workspace.getAllNotes()
+      return {
+        contents: [{
+          uri: 'lokus://notes/all',
+          mimeType: 'application/json',
+          text: JSON.stringify(notes, null, 2)
+        }]
+      }
+    })
+  }
+
+  async registerTools(mcp, workspace, editor) {
+    // Create note tool
+    const createNote = new MCPToolBuilder()
+      .setName('note.create')
+      .setDescription('Create a new note')
+      .setInputSchema({
+        type: 'object',
+        properties: {
+          title: { type: 'string', description: 'Note title' },
+          content: { type: 'string', description: 'Note content', default: '' },
+          tags: { type: 'array', items: { type: 'string' }, default: [] }
+        },
+        required: ['title']
+      })
+      .setExecutor(async ({ title, content, tags }) => {
+        const note = await workspace.createNote({ title, content, tags })
+        await editor.openNote(note.id)
+        return {
+          output: `Created note: ${title}`,
+          noteId: note.id,
+          path: note.path
+        }
+      })
+      .build()
+
+    mcp.registerTool(createNote)
+
+    // Search notes tool
+    const searchNotes = new MCPToolBuilder()
+      .setName('note.search')
+      .setDescription('Search notes by content or title')
+      .setInputSchema({
+        type: 'object',
+        properties: {
+          query: { type: 'string', description: 'Search query' },
+          limit: { type: 'number', default: 10, minimum: 1, maximum: 100 }
+        },
+        required: ['query']
+      })
+      .setExecutor(async ({ query, limit }) => {
+        const results = await workspace.searchNotes({ query, limit })
+        return {
+          output: `Found ${results.length} notes`,
+          count: results.length,
+          results
+        }
+      })
+      .build()
+
+    mcp.registerTool(searchNotes)
+
+    // Update note tool
+    const updateNote = new MCPToolBuilder()
+      .setName('note.update')
+      .setDescription('Update an existing note')
+      .setInputSchema({
+        type: 'object',
+        properties: {
+          noteId: { type: 'string', description: 'Note ID' },
+          content: { type: 'string', description: 'New content' }
+        },
+        required: ['noteId', 'content']
+      })
+      .setExecutor(async ({ noteId, content }) => {
+        await workspace.updateNote(noteId, { content })
+        return {
+          output: `Updated note: ${noteId}`,
+          noteId
+        }
+      })
+      .build()
+
+    mcp.registerTool(updateNote)
+  }
+
+  async registerPrompts(mcp) {
+    // Summarize note prompt
+    const summarize = new MCPPromptBuilder()
+      .setName('note.summarize')
+      .setDescription('Generate a summary of a note')
+      .setTemplate(`Summarize the following note in 2-3 sentences:
+
+Title: {{title}}
+
+Content:
+{{content}}`)
+      .setArguments([
+        { name: 'title', required: true, type: 'string' },
+        { name: 'content', required: true, type: 'string' }
+      ])
+      .build()
+
+    mcp.registerPrompt(summarize)
+
+    // Improve note prompt
+    const improve = new MCPPromptBuilder()
+      .setName('note.improve')
+      .setDescription('Suggest improvements for a note')
+      .setTemplate(`Review and suggest improvements for this note:
+
+Title: {{title}}
+Content:
+{{content}}
+
+Provide specific suggestions for:
+1. Content organization
+2. Clarity and readability
+3. Missing information
+4. Overall structure`)
+      .setArguments([
+        { name: 'title', required: true, type: 'string' },
+        { name: 'content', required: true, type: 'string' }
+      ])
+      .build()
+
+    mcp.registerPrompt(improve)
+  }
+
+  setupEventHandlers(mcp, workspace, editor, events) {
+    // Update current note resource when active note changes
+    this.subscriptions.push(
+      editor.onDidChangeActiveDocument((doc) => {
+        if (doc) {
+          mcp.updateResource('lokus://notes/current', doc.content, {
+            noteId: doc.id,
+            path: doc.path,
+            modified: doc.isDirty
+          })
+        }
+      })
+    )
+
+    // Update notes list when workspace changes
+    this.subscriptions.push(
+      workspace.onDidChangeFiles((event) => {
+        if (event.changes.some(c => c.type === 'note')) {
+          mcp.sendNotification('notifications/resources/list_changed')
+        }
+      })
+    )
+  }
+
+  async deactivate() {
+    // Clean up subscriptions
+    this.subscriptions.forEach(sub => sub.dispose())
+    this.subscriptions = []
+
+    console.log('Note Tools MCP Plugin deactivated')
+  }
+}
+```
+
+## Testing Your Plugin
+
+```javascript
+// test/plugin.test.js
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { createMockMCPServer, createMockMCPClient } from '@lokus/mcp/testing'
+import NoteToolsPlugin from '../index.js'
+
+describe('Note Tools MCP Plugin', () => {
+  let plugin
+  let mockContext
+  let mcpServer
+  let mcpClient
+
+  beforeEach(async () => {
+    // Create mock MCP server
+    mcpServer = createMockMCPServer()
+
+    // Create mock context
+    mockContext = {
+      mcp: mcpServer,
+      workspace: createMockWorkspace(),
+      editor: createMockEditor(),
+      events: createMockEvents()
+    }
+
+    // Create and activate plugin
+    plugin = new NoteToolsPlugin()
+    await plugin.activate(mockContext)
+
+    // Create client to test
+    mcpClient = createMockMCPClient()
+    await mcpClient.connect(mcpServer.getTransport())
+  })
+
+  afterEach(async () => {
+    await plugin.deactivate()
+    await mcpClient.disconnect()
+    await mcpServer.stop()
+  })
+
+  it('should register resources', async () => {
+    const resources = await mcpClient.listResources()
+    expect(resources.resources).toContainEqual(
+      expect.objectContaining({ uri: 'lokus://notes/current' })
+    )
+    expect(resources.resources).toContainEqual(
+      expect.objectContaining({ uri: 'lokus://notes/all' })
+    )
+  })
+
+  it('should register tools', async () => {
+    const tools = await mcpClient.listTools()
+    const toolNames = tools.tools.map(t => t.name)
+    expect(toolNames).toContain('note.create')
+    expect(toolNames).toContain('note.search')
+    expect(toolNames).toContain('note.update')
+  })
+
+  it('should create a note', async () => {
+    const result = await mcpClient.callTool('note.create', {
+      title: 'Test Note',
+      content: 'Test content',
+      tags: ['test']
+    })
+
+    expect(result.isError).toBe(false)
+    expect(result.content[0].text).toContain('Created note')
+  })
+
+  it('should search notes', async () => {
+    const result = await mcpClient.callTool('note.search', {
+      query: 'test',
+      limit: 5
+    })
+
+    expect(result.isError).toBe(false)
+    expect(result.content[0].text).toContain('Found')
+  })
+})
+```
+
+## Publishing
+
+```bash
+# Build plugin
+npm run build
+
+# Validate
+lokus-plugin validate
+
+# Package
+lokus-plugin package
+
+# Publish
+lokus-plugin publish
+```
+
+## Next Steps
+
+**Related Documentation:**
+- [AI Assistants](/developers/mcp/ai-assistants)
+- [API Reference](/developers/mcp/api-reference)
+- [Plugin Development](/developers/plugins/overview)

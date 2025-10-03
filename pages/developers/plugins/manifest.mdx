@@ -1,0 +1,1000 @@
+# Plugin Manifest
+
+The plugin manifest (`plugin.json`) is the core configuration file that defines your plugin's metadata, capabilities, and contribution points. This document covers both v1 and v2 manifest formats.
+
+## Manifest Version
+
+Lokus supports two manifest versions:
+
+- **v1** - Original format, suitable for most plugins
+- **v2** - Enhanced format with additional features (Lokus 2.0+)
+
+Specify version in your manifest:
+
+```json
+{
+  "manifestVersion": "2",
+  "id": "my-plugin",
+  ...
+}
+```
+
+If not specified, v1 is assumed for backward compatibility.
+
+## Core Fields
+
+### Required Fields
+
+```json
+{
+  "id": "publisher.plugin-name",
+  "version": "1.0.0",
+  "name": "My Plugin",
+  "description": "A brief description of what your plugin does",
+  "author": "Your Name",
+  "license": "MIT",
+  "lokusVersion": "^1.0.0"
+}
+```
+
+#### id
+**Type:** `string`
+**Required:** Yes
+
+Unique identifier for your plugin. Must follow the format `publisher.name` or just `name`.
+
+**Rules:**
+- Lowercase letters, numbers, hyphens only
+- No spaces or special characters
+- Must be globally unique
+- Cannot start with `lokus.` (reserved)
+
+```json
+{
+  "id": "mycompany.awesome-plugin"
+}
+```
+
+#### version
+**Type:** `string`
+**Required:** Yes
+
+Plugin version following semantic versioning (semver).
+
+**Format:** `MAJOR.MINOR.PATCH[-prerelease][+build]`
+
+```json
+{
+  "version": "1.2.3",
+  "version": "2.0.0-beta.1",
+  "version": "1.0.0+20231015"
+}
+```
+
+#### name
+**Type:** `string`
+**Required:** Yes
+
+Human-readable display name.
+
+```json
+{
+  "name": "Awesome Plugin"
+}
+```
+
+#### description
+**Type:** `string`
+**Required:** Yes
+
+Brief description (max 200 characters). Shown in plugin marketplace and info dialogs.
+
+```json
+{
+  "description": "Add amazing features to your Lokus workspace"
+}
+```
+
+#### author
+**Type:** `string | AuthorObject`
+**Required:** Yes
+
+Plugin author information.
+
+```json
+{
+  "author": "John Doe"
+}
+```
+
+Or detailed format:
+
+```json
+{
+  "author": {
+    "name": "John Doe",
+    "email": "john@example.com",
+    "url": "https://example.com"
+  }
+}
+```
+
+#### license
+**Type:** `string`
+**Required:** Yes
+
+SPDX license identifier.
+
+```json
+{
+  "license": "MIT"
+}
+```
+
+Common licenses: `MIT`, `Apache-2.0`, `GPL-3.0`, `BSD-3-Clause`, `ISC`
+
+#### lokusVersion
+**Type:** `string`
+**Required:** Yes
+
+Minimum Lokus version required. Uses semver ranges.
+
+```json
+{
+  "lokusVersion": "^1.0.0",    // 1.x.x
+  "lokusVersion": ">=1.5.0",   // 1.5.0 or higher
+  "lokusVersion": "~1.2.0"     // 1.2.x
+}
+```
+
+### Optional Fields
+
+#### displayName
+**Type:** `string`
+
+Alternative display name. Falls back to `name` if not provided.
+
+```json
+{
+  "name": "my-plugin",
+  "displayName": "My Awesome Plugin"
+}
+```
+
+#### categories
+**Type:** `string[]`
+
+Plugin categories for marketplace organization.
+
+**Available Categories:**
+- `Editor` - Editor enhancements
+- `Themes` - Visual themes
+- `Languages` - Language support
+- `Snippets` - Code snippets
+- `Debuggers` - Debug adapters
+- `Formatters` - Code formatters
+- `Linters` - Code linters
+- `SCM` - Source control
+- `Testing` - Test frameworks
+- `Data` - Data providers
+- `Visualization` - Visualizations
+- `Other` - Miscellaneous
+
+```json
+{
+  "categories": ["Editor", "Languages"]
+}
+```
+
+#### keywords
+**Type:** `string[]`
+
+Keywords for search and discovery.
+
+```json
+{
+  "keywords": ["markdown", "editor", "preview", "syntax"]
+}
+```
+
+#### icon
+**Type:** `string`
+
+Path to plugin icon (128x128 PNG recommended).
+
+```json
+{
+  "icon": "assets/icon.png"
+}
+```
+
+#### homepage
+**Type:** `string`
+
+Plugin homepage URL.
+
+```json
+{
+  "homepage": "https://github.com/myorg/my-plugin"
+}
+```
+
+#### repository
+**Type:** `string | RepositoryObject`
+
+Source code repository.
+
+```json
+{
+  "repository": "https://github.com/myorg/my-plugin"
+}
+```
+
+Or detailed format:
+
+```json
+{
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/myorg/my-plugin.git",
+    "directory": "packages/plugin"
+  }
+}
+```
+
+#### bugs
+**Type:** `string | BugsObject`
+
+Bug tracker URL.
+
+```json
+{
+  "bugs": "https://github.com/myorg/my-plugin/issues"
+}
+```
+
+Or:
+
+```json
+{
+  "bugs": {
+    "url": "https://github.com/myorg/my-plugin/issues",
+    "email": "bugs@example.com"
+  }
+}
+```
+
+## Entry Points
+
+### main
+**Type:** `string`
+
+Path to compiled JavaScript entry point.
+
+```json
+{
+  "main": "./dist/index.js"
+}
+```
+
+### types
+**Type:** `string`
+
+Path to TypeScript declarations.
+
+```json
+{
+  "types": "./dist/index.d.ts"
+}
+```
+
+### browser
+**Type:** `string`
+
+Entry point for browser/webview contexts (v2 only).
+
+```json
+{
+  "browser": "./dist/browser.js"
+}
+```
+
+## Activation
+
+### activationEvents
+**Type:** `string[]`
+
+Events that trigger plugin activation.
+
+```json
+{
+  "activationEvents": [
+    "onStartup",
+    "onLanguage:markdown",
+    "onCommand:myPlugin.command",
+    "onView:myPlugin.view",
+    "workspaceContains:**/*.custom",
+    "onFileSystem:custom-fs",
+    "onDebug",
+    "onUri"
+  ]
+}
+```
+
+**Activation Event Types:**
+
+#### onStartup
+Activate immediately on Lokus startup.
+
+```json
+{ "activationEvents": ["onStartup"] }
+```
+
+Use sparingly - impacts startup performance.
+
+#### onLanguage:{languageId}
+Activate when file with specific language is opened.
+
+```json
+{ "activationEvents": ["onLanguage:markdown"] }
+```
+
+#### onCommand:{commandId}
+Activate when specific command is executed.
+
+```json
+{ "activationEvents": ["onCommand:myPlugin.hello"] }
+```
+
+#### onView:{viewId}
+Activate when view is opened.
+
+```json
+{ "activationEvents": ["onView:myPlugin.sidebar"] }
+```
+
+#### workspaceContains:{pattern}
+Activate when workspace contains matching files.
+
+```json
+{
+  "activationEvents": [
+    "workspaceContains:**/package.json",
+    "workspaceContains:**/*.ts"
+  ]
+}
+```
+
+#### onFileSystem:{scheme}
+Activate when URI with specific scheme is accessed.
+
+```json
+{ "activationEvents": ["onFileSystem:custom"] }
+```
+
+#### onDebug
+Activate when debug session starts.
+
+```json
+{ "activationEvents": ["onDebug"] }
+```
+
+#### onUri
+Activate when plugin URI is opened.
+
+```json
+{ "activationEvents": ["onUri"] }
+```
+
+## Permissions
+
+### permissions
+**Type:** `string[]`
+
+Required permissions for plugin functionality.
+
+```json
+{
+  "permissions": [
+    "editor:read",
+    "editor:write",
+    "filesystem:read",
+    "filesystem:write",
+    "network:fetch",
+    "workspace:read",
+    "workspace:write",
+    "ui:create",
+    "commands:register",
+    "commands:execute",
+    "storage:read",
+    "storage:write",
+    "shell:execute",
+    "clipboard:read",
+    "clipboard:write"
+  ]
+}
+```
+
+**Permission Categories:**
+
+**Editor Permissions:**
+- `editor:read` - Read editor content
+- `editor:write` - Modify editor content
+- `editor:create` - Create editors
+
+**Filesystem Permissions:**
+- `filesystem:read` - Read files
+- `filesystem:write` - Write files
+- `filesystem:delete` - Delete files
+- `filesystem:watch` - Watch file changes
+
+**Network Permissions:**
+- `network:fetch` - Make HTTP requests
+- `network:websocket` - Create WebSocket connections
+
+**Workspace Permissions:**
+- `workspace:read` - Read workspace settings
+- `workspace:write` - Modify workspace settings
+
+**UI Permissions:**
+- `ui:create` - Create UI elements
+- `ui:modify` - Modify existing UI
+- `ui:notifications` - Show notifications
+
+**Command Permissions:**
+- `commands:register` - Register commands
+- `commands:execute` - Execute commands
+
+**Storage Permissions:**
+- `storage:read` - Read plugin storage
+- `storage:write` - Write plugin storage
+- `storage:secrets` - Access secret storage
+
+**System Permissions:**
+- `shell:execute` - Execute shell commands
+- `clipboard:read` - Read clipboard
+- `clipboard:write` - Write clipboard
+- `process:spawn` - Spawn processes
+
+## Contributions
+
+The `contributes` section declares what your plugin adds to Lokus.
+
+### commands
+
+Register commands that users can execute.
+
+```json
+{
+  "contributes": {
+    "commands": [
+      {
+        "command": "myPlugin.hello",
+        "title": "Say Hello",
+        "category": "My Plugin",
+        "icon": "$(heart)",
+        "when": "editorTextFocus",
+        "enablement": "!editorReadonly"
+      }
+    ]
+  }
+}
+```
+
+**Fields:**
+- `command` - Unique command ID
+- `title` - Display title
+- `category` - Command category (optional)
+- `icon` - Icon (optional)
+- `when` - When clause for visibility (optional)
+- `enablement` - When clause for enablement (optional)
+
+### keybindings
+
+Define keyboard shortcuts.
+
+```json
+{
+  "contributes": {
+    "keybindings": [
+      {
+        "command": "myPlugin.hello",
+        "key": "ctrl+shift+h",
+        "mac": "cmd+shift+h",
+        "linux": "ctrl+shift+h",
+        "win": "ctrl+shift+h",
+        "when": "editorTextFocus"
+      }
+    ]
+  }
+}
+```
+
+**Key Modifiers:**
+- `ctrl` / `cmd` - Control/Command
+- `shift` - Shift
+- `alt` / `option` - Alt/Option
+- `meta` - Windows/Command key
+
+### menus
+
+Add items to context menus and toolbars.
+
+```json
+{
+  "contributes": {
+    "menus": {
+      "editor/context": [
+        {
+          "command": "myPlugin.hello",
+          "when": "editorTextFocus",
+          "group": "navigation"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "myPlugin.action",
+          "when": "resourceExtname == .md",
+          "group": "navigation"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "myPlugin.refresh",
+          "when": "view == myPlugin.view",
+          "group": "navigation"
+        }
+      ]
+    }
+  }
+}
+```
+
+**Menu Locations:**
+- `editor/context` - Editor right-click menu
+- `editor/title` - Editor title bar
+- `editor/title/context` - Editor title right-click
+- `view/title` - View title bar
+- `view/item/context` - View item right-click
+- `commandPalette` - Command palette
+
+### configuration
+
+Define plugin settings.
+
+```json
+{
+  "contributes": {
+    "configuration": {
+      "title": "My Plugin",
+      "properties": {
+        "myPlugin.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable plugin features"
+        },
+        "myPlugin.mode": {
+          "type": "string",
+          "enum": ["simple", "advanced"],
+          "enumDescriptions": [
+            "Simple mode for basic use",
+            "Advanced mode with all features"
+          ],
+          "default": "simple",
+          "description": "Operation mode"
+        },
+        "myPlugin.maxItems": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 10,
+          "description": "Maximum number of items"
+        },
+        "myPlugin.customColors": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^#[0-9a-fA-F]{6}$"
+          },
+          "default": ["#FF0000", "#00FF00"],
+          "description": "Custom colors (hex format)"
+        },
+        "myPlugin.settings": {
+          "type": "object",
+          "properties": {
+            "api": {
+              "type": "string",
+              "description": "API endpoint"
+            },
+            "timeout": {
+              "type": "number",
+              "description": "Request timeout (ms)"
+            }
+          },
+          "default": {
+            "api": "https://api.example.com",
+            "timeout": 5000
+          },
+          "description": "Plugin settings object"
+        }
+      }
+    }
+  }
+}
+```
+
+**Configuration Types:**
+- `boolean` - True/false
+- `string` - Text
+- `number` - Numeric
+- `array` - List
+- `object` - Nested object
+- `null` - Null value
+
+### themes
+
+Contribute color themes.
+
+```json
+{
+  "contributes": {
+    "themes": [
+      {
+        "id": "my-dark-theme",
+        "label": "My Dark Theme",
+        "uiTheme": "vs-dark",
+        "path": "./themes/dark-theme.json"
+      }
+    ]
+  }
+}
+```
+
+### languages
+
+Add language support.
+
+```json
+{
+  "contributes": {
+    "languages": [
+      {
+        "id": "mylang",
+        "aliases": ["MyLang", "mylanguage"],
+        "extensions": [".ml"],
+        "filenames": ["MyFile"],
+        "filenamePatterns": ["**/myfiles/**"],
+        "firstLine": "^#!/.*\\bmylang\\b",
+        "configuration": "./language-configuration.json"
+      }
+    ]
+  }
+}
+```
+
+### grammars
+
+Define syntax highlighting.
+
+```json
+{
+  "contributes": {
+    "grammars": [
+      {
+        "language": "mylang",
+        "scopeName": "source.mylang",
+        "path": "./syntaxes/mylang.tmLanguage.json"
+      }
+    ]
+  }
+}
+```
+
+### snippets
+
+Provide code snippets.
+
+```json
+{
+  "contributes": {
+    "snippets": [
+      {
+        "language": "javascript",
+        "path": "./snippets/javascript.json"
+      }
+    ]
+  }
+}
+```
+
+### views
+
+Create custom views.
+
+```json
+{
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "myPlugin",
+          "title": "My Plugin",
+          "icon": "resources/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "myPlugin": [
+        {
+          "id": "myPlugin.view",
+          "name": "My View",
+          "when": "workspaceHasFiles"
+        }
+      ]
+    }
+  }
+}
+```
+
+## Dependencies
+
+### dependencies
+**Type:** `object`
+
+Runtime dependencies.
+
+```json
+{
+  "dependencies": {
+    "axios": "^1.0.0",
+    "lodash": "^4.17.21"
+  }
+}
+```
+
+### devDependencies
+**Type:** `object`
+
+Development dependencies.
+
+```json
+{
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^18.0.0"
+  }
+}
+```
+
+### peerDependencies
+**Type:** `object`
+
+Peer dependencies (must be provided by host or other plugins).
+
+```json
+{
+  "peerDependencies": {
+    "@lokus/plugin-sdk": "^1.0.0"
+  }
+}
+```
+
+### extensionDependencies
+**Type:** `string[]`
+
+Other Lokus plugins this plugin depends on.
+
+```json
+{
+  "extensionDependencies": [
+    "publisher.other-plugin"
+  ]
+}
+```
+
+## Scripts
+
+### scripts
+**Type:** `object`
+
+npm scripts for development and building.
+
+```json
+{
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile",
+    "test": "node ./out/test/runTest.js",
+    "lint": "eslint src --ext ts",
+    "build": "npm run compile",
+    "package": "lokus-plugin package",
+    "publish": "lokus-plugin publish"
+  }
+}
+```
+
+## Platform-Specific
+
+### engines
+**Type:** `object`
+
+Platform requirements.
+
+```json
+{
+  "engines": {
+    "lokus": "^1.0.0",
+    "node": ">=18.0.0"
+  }
+}
+```
+
+### os
+**Type:** `string[]`
+
+Supported operating systems.
+
+```json
+{
+  "os": ["darwin", "linux", "win32"]
+}
+```
+
+### cpu
+**Type:** `string[]`
+
+Supported CPU architectures.
+
+```json
+{
+  "cpu": ["x64", "arm64"]
+}
+```
+
+## Publishing
+
+### publishConfig
+**Type:** `object`
+
+Publishing configuration for registry.
+
+```json
+{
+  "publishConfig": {
+    "registry": "https://registry.lokus.dev",
+    "access": "public",
+    "tag": "latest"
+  }
+}
+```
+
+### private
+**Type:** `boolean`
+
+Prevent accidental publishing.
+
+```json
+{
+  "private": true
+}
+```
+
+## Complete Example
+
+Here's a comprehensive manifest example:
+
+```json
+{
+  "manifestVersion": "2",
+  "id": "mycompany.awesome-plugin",
+  "version": "1.2.0",
+  "name": "Awesome Plugin",
+  "displayName": "Awesome Plugin for Lokus",
+  "description": "Add amazing features to your Lokus workspace",
+  "categories": ["Editor", "Languages"],
+  "keywords": ["editor", "markdown", "productivity"],
+  "author": {
+    "name": "John Doe",
+    "email": "john@example.com",
+    "url": "https://example.com"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/mycompany/awesome-plugin",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mycompany/awesome-plugin.git"
+  },
+  "bugs": "https://github.com/mycompany/awesome-plugin/issues",
+  "icon": "assets/icon.png",
+  "lokusVersion": "^1.0.0",
+
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+
+  "activationEvents": [
+    "onLanguage:markdown",
+    "onCommand:awesomePlugin.hello"
+  ],
+
+  "permissions": [
+    "editor:read",
+    "editor:write",
+    "ui:create",
+    "commands:register",
+    "storage:read",
+    "storage:write"
+  ],
+
+  "contributes": {
+    "commands": [
+      {
+        "command": "awesomePlugin.hello",
+        "title": "Say Hello",
+        "category": "Awesome Plugin",
+        "icon": "$(heart)"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "awesomePlugin.hello",
+        "key": "ctrl+shift+h",
+        "mac": "cmd+shift+h"
+      }
+    ],
+    "configuration": {
+      "title": "Awesome Plugin",
+      "properties": {
+        "awesomePlugin.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable plugin features"
+        }
+      }
+    }
+  },
+
+  "dependencies": {
+    "@lokus/plugin-sdk": "^1.0.0"
+  },
+
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^18.0.0"
+  },
+
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "package": "lokus-plugin package"
+  },
+
+  "engines": {
+    "lokus": "^1.0.0",
+    "node": ">=18.0.0"
+  }
+}
+```
+
+## Validation
+
+Validate your manifest before publishing:
+
+```bash
+lokus-plugin validate
+```
+
+This checks for:
+- Required fields
+- Valid JSON syntax
+- Semver version format
+- Permission validity
+- Contribution point validity
+- Dependency conflicts
+
+## Next Steps
+
+- [API Reference](/developers/plugins/api)
+- [CLI Tool](/developers/plugins/cli)
+- [Publishing Guide](/developers/plugins/publishing)

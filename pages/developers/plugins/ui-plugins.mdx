@@ -1,0 +1,705 @@
+# UI Plugins
+
+Create custom user interface elements for Lokus. Add panels, toolbars, menus, status bar items, and more.
+
+## UI Extension Types
+
+Lokus supports multiple UI extension points:
+
+- **Panels** - Sidebar and bottom panels with custom content
+- **Webview Panels** - Full-featured web views with HTML/CSS/JS
+- **Status Bar Items** - Information and controls in the status bar
+- **Toolbars** - Custom toolbar buttons
+- **Menus** - Context menu items
+- **Dialogs** - Modal and non-modal dialogs
+- **Tree Views** - Hierarchical data displays
+
+## Creating Panels
+
+### Basic Panel
+
+```typescript
+export default class UIPanelPlugin implements Plugin {
+  async activate(context: PluginContext) {
+    // Register a simple panel
+    context.subscriptions.push(
+      context.api.ui.registerPanel({
+        id: 'myPlugin.panel',
+        title: 'My Panel',
+        type: 'webview',
+        location: 'sidebar',
+        icon: 'star',
+        html: this.getPanelHTML()
+      })
+    )
+  }
+
+  private getPanelHTML(): string {
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            body {
+              padding: 20px;
+              font-family: var(--font-family);
+              color: var(--text-color);
+              background: var(--background-color);
+            }
+            .header {
+              font-size: 18px;
+              font-weight: bold;
+              margin-bottom: 16px;
+            }
+            .button {
+              background: var(--primary-color);
+              color: white;
+              border: none;
+              padding: 8px 16px;
+              border-radius: 4px;
+              cursor: pointer;
+            }
+            .button:hover {
+              opacity: 0.9;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">Welcome to My Panel</div>
+          <button class="button" onclick="handleAction()">
+            Click Me
+          </button>
+
+          <script>
+            function handleAction() {
+              // Send message to plugin
+              window.parent.postMessage({
+                command: 'action',
+                data: { clicked: true }
+              }, '*')
+            }
+
+            // Receive messages from plugin
+            window.addEventListener('message', event => {
+              if (event.data.command === 'update') {
+                console.log('Update from plugin:', event.data)
+              }
+            })
+          </script>
+        </body>
+      </html>
+    `
+  }
+}
+```
+
+### Interactive Webview Panel
+
+```typescript
+class WebviewPanelPlugin implements Plugin {
+  private panel?: WebviewPanel
+
+  async activate(context: PluginContext) {
+    const panel = context.api.ui.registerWebviewPanel({
+      id: 'myPlugin.webview',
+      title: 'Interactive Panel',
+      type: 'webview',
+      location: 'sidebar',
+      icon: 'extensions',
+      options: {
+        enableScripts: true,
+        localResourceRoots: [context.assetUri]
+      }
+    })
+
+    this.panel = panel
+
+    // Handle messages from webview
+    panel.webview.onDidReceiveMessage(message => {
+      this.handleMessage(message)
+    })
+
+    // Set initial content
+    panel.webview.html = this.getWebviewContent(panel.webview)
+
+    context.subscriptions.push(panel)
+  }
+
+  private handleMessage(message: any) {
+    switch (message.command) {
+      case 'getData':
+        this.panel?.webview.postMessage({
+          command: 'dataResponse',
+          data: { items: this.getItems() }
+        })
+        break
+
+      case 'itemClicked':
+        console.log('Item clicked:', message.itemId)
+        break
+    }
+  }
+
+  private getWebviewContent(webview: Webview): string {
+    // Convert local file URIs for webview
+    const scriptUri = webview.asWebviewUri('/path/to/script.js')
+    const styleUri = webview.asWebviewUri('/path/to/style.css')
+
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <link rel="stylesheet" href="${styleUri}">
+        </head>
+        <body>
+          <div id="root"></div>
+          <script src="${scriptUri}"></script>
+        </body>
+      </html>
+    `
+  }
+
+  private getItems() {
+    return [
+      { id: 1, name: 'Item 1' },
+      { id: 2, name: 'Item 2' },
+      { id: 3, name: 'Item 3' }
+    ]
+  }
+}
+```
+
+### React-based Panel
+
+```typescript
+import React, { useState, useEffect } from 'react'
+import { render } from 'react-dom'
+
+// React component for panel
+function PanelComponent({ api }) {
+  const [items, setItems] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    loadItems()
+  }, [])
+
+  async function loadItems() {
+    setLoading(true)
+    const data = await api.storage.get('items', [])
+    setItems(data)
+    setLoading(false)
+  }
+
+  async function addItem() {
+    const name = await api.ui.showInputBox({
+      prompt: 'Enter item name'
+    })
+
+    if (name) {
+      const newItems = [...items, { id: Date.now(), name }]
+      setItems(newItems)
+      await api.storage.set('items', newItems)
+    }
+  }
+
+  return (
+    <div className="panel">
+      <div className="header">
+        <h2>My Items</h2>
+        <button onClick={addItem}>Add Item</button>
+      </div>
+
+      {loading ? (
+        <div>Loading...</div>
+      ) : (
+        <ul>
+          {items.map(item => (
+            <li key={item.id}>{item.name}</li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+// Plugin
+class ReactPanelPlugin implements Plugin {
+  async activate(context: PluginContext) {
+    const panel = context.api.ui.registerWebviewPanel({
+      id: 'myPlugin.reactPanel',
+      title: 'React Panel',
+      type: 'webview',
+      location: 'sidebar',
+      options: {
+        enableScripts: true
+      }
+    })
+
+    // Render React component in webview
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            /* Panel styles */
+          </style>
+        </head>
+        <body>
+          <div id="root"></div>
+          <script>
+            // React will be rendered here
+          </script>
+        </body>
+      </html>
+    `
+
+    panel.webview.html = html
+
+    // Use webview API bridge
+    panel.webview.postMessage({
+      command: 'init',
+      api: context.api
+    })
+  }
+}
+```
+
+## Status Bar Items
+
+### Creating Status Bar Item
+
+```typescript
+class StatusBarPlugin implements Plugin {
+  private statusItem?: StatusBarItem
+
+  async activate(context: PluginContext) {
+    // Create status bar item
+    this.statusItem = context.api.ui.registerStatusBarItem({
+      id: 'myPlugin.status',
+      text: '$(check) Ready',
+      tooltip: 'Plugin Status',
+      alignment: 'left',
+      priority: 100
+    })
+
+    this.statusItem.show()
+
+    // Update on editor changes
+    context.api.editor.onDidChangeTextDocument(() => {
+      this.updateStatus()
+    })
+
+    context.subscriptions.push(this.statusItem)
+  }
+
+  private async updateStatus() {
+    const content = await this.context.api.editor.getContent()
+    const wordCount = content.split(/\s+/).length
+
+    this.statusItem!.text = `$(file-text) ${wordCount} words`
+    this.statusItem!.tooltip = `Word count: ${wordCount}`
+  }
+}
+```
+
+### Clickable Status Bar Item
+
+```typescript
+// Create status item with command
+const statusItem = api.ui.registerStatusBarItem({
+  id: 'myPlugin.info',
+  text: '$(info) Plugin Info',
+  command: 'myPlugin.showInfo',
+  alignment: 'right',
+  priority: 50
+})
+
+// Register command
+api.commands.register({
+  id: 'myPlugin.showInfo',
+  title: 'Show Plugin Info',
+  handler: () => {
+    api.ui.showDialog({
+      title: 'Plugin Information',
+      message: 'Detailed plugin information here',
+      type: 'info'
+    })
+  }
+})
+```
+
+## Tree Views
+
+### Creating Tree View
+
+```typescript
+class TreeViewPlugin implements Plugin {
+  async activate(context: PluginContext) {
+    // Register tree data provider
+    context.subscriptions.push(
+      context.api.ui.registerTreeDataProvider(
+        'myPlugin.treeView',
+        new MyTreeDataProvider()
+      )
+    )
+
+    // Add to manifest contributes.views
+    // "views": {
+    //   "explorer": [
+    //     {
+    //       "id": "myPlugin.treeView",
+    //       "name": "My Tree View"
+    //     }
+    //   ]
+    // }
+  }
+}
+
+class MyTreeDataProvider implements TreeDataProvider<TreeNode> {
+  private _onDidChangeTreeData = new EventEmitter<TreeNode | undefined>()
+  readonly onDidChangeTreeData = this._onDidChangeTreeData.event
+
+  getTreeItem(element: TreeNode): TreeItem {
+    return {
+      label: element.label,
+      collapsibleState: element.children
+        ? TreeItemCollapsibleState.Collapsed
+        : TreeItemCollapsibleState.None,
+      iconPath: element.icon,
+      command: element.command,
+      contextValue: element.contextValue
+    }
+  }
+
+  async getChildren(element?: TreeNode): Promise<TreeNode[]> {
+    if (!element) {
+      // Root nodes
+      return [
+        {
+          label: 'Category 1',
+          children: [
+            { label: 'Item 1.1', command: { command: 'open', args: ['item1.1'] } },
+            { label: 'Item 1.2', command: { command: 'open', args: ['item1.2'] } }
+          ]
+        },
+        {
+          label: 'Category 2',
+          children: [
+            { label: 'Item 2.1' }
+          ]
+        }
+      ]
+    }
+
+    return element.children || []
+  }
+
+  refresh() {
+    this._onDidChangeTreeData.fire(undefined)
+  }
+}
+
+interface TreeNode {
+  label: string
+  children?: TreeNode[]
+  icon?: string
+  command?: { command: string; args?: any[] }
+  contextValue?: string
+}
+```
+
+## Menus and Toolbars
+
+### Context Menus
+
+Add items to context menus via manifest:
+
+```json
+{
+  "contributes": {
+    "menus": {
+      "editor/context": [
+        {
+          "command": "myPlugin.action",
+          "when": "editorTextFocus",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "myPlugin.itemAction",
+          "when": "view == myPlugin.treeView",
+          "group": "inline"
+        }
+      ]
+    }
+  }
+}
+```
+
+### Custom Toolbar
+
+```typescript
+// Register toolbar
+context.api.ui.registerToolbar({
+  id: 'myPlugin.toolbar',
+  title: 'My Toolbar',
+  location: 'editor',
+  items: [
+    {
+      id: 'action1',
+      command: 'myPlugin.action1',
+      icon: 'rocket',
+      title: 'Action 1',
+      tooltip: 'Perform Action 1'
+    },
+    {
+      id: 'action2',
+      command: 'myPlugin.action2',
+      icon: 'zap',
+      title: 'Action 2'
+    }
+  ]
+})
+```
+
+## Notifications and Dialogs
+
+### Notifications
+
+```typescript
+// Simple notification
+await api.ui.showNotification('Operation completed', 'success')
+
+// With actions
+const result = await api.ui.showNotification(
+  'File has unsaved changes',
+  'warning',
+  [
+    { id: 'save', label: 'Save', primary: true },
+    { id: 'discard', label: 'Discard' },
+    { id: 'cancel', label: 'Cancel' }
+  ]
+)
+
+if (result === 'save') {
+  // Handle save
+}
+```
+
+### Dialogs
+
+```typescript
+// Confirm dialog
+const result = await api.ui.showDialog({
+  title: 'Confirm Delete',
+  message: 'Are you sure you want to delete this item?',
+  type: 'question',
+  buttons: [
+    { id: 'delete', label: 'Delete', primary: true },
+    { id: 'cancel', label: 'Cancel' }
+  ]
+})
+
+// Input dialog
+const name = await api.ui.showInputBox({
+  prompt: 'Enter name',
+  placeholder: 'Name...',
+  validateInput: (value) => {
+    if (!value) return 'Name is required'
+    return null
+  }
+})
+
+// Quick pick
+const selected = await api.ui.showQuickPick([
+  { label: 'Option 1', description: 'First option' },
+  { label: 'Option 2', description: 'Second option' }
+], {
+  placeholder: 'Select an option',
+  canPickMany: false
+})
+```
+
+## Progress Indicators
+
+```typescript
+// With notification
+await api.ui.withProgress(
+  {
+    location: 'notification',
+    title: 'Processing',
+    cancellable: true
+  },
+  async (progress, token) => {
+    for (let i = 0; i < 100; i++) {
+      if (token.isCancellationRequested) {
+        return
+      }
+
+      progress.report({
+        message: `Step ${i + 1}/100`,
+        increment: 1
+      })
+
+      await doWork(i)
+    }
+  }
+)
+
+// Window progress (in status bar)
+await api.ui.withProgress(
+  {
+    location: 'window',
+    title: 'Loading data'
+  },
+  async (progress) => {
+    progress.report({ message: 'Fetching data...' })
+    const data = await fetchData()
+
+    progress.report({ message: 'Processing data...' })
+    await processData(data)
+  }
+)
+```
+
+## Styling
+
+### Using CSS Variables
+
+Lokus provides CSS variables for theming:
+
+```css
+.my-panel {
+  color: var(--text-color);
+  background: var(--background-color);
+  border: 1px solid var(--border-color);
+  font-family: var(--font-family);
+  font-size: var(--font-size);
+}
+
+.button {
+  background: var(--primary-color);
+  color: var(--primary-text-color);
+}
+
+.button:hover {
+  background: var(--primary-hover-color);
+}
+
+.danger {
+  color: var(--danger-color);
+}
+
+.success {
+  color: var(--success-color);
+}
+```
+
+### Common Variables
+
+```css
+/* Colors */
+--primary-color
+--secondary-color
+--success-color
+--warning-color
+--danger-color
+--info-color
+
+/* Text */
+--text-color
+--text-muted-color
+--text-disabled-color
+
+/* Background */
+--background-color
+--background-secondary-color
+--background-hover-color
+
+/* Borders */
+--border-color
+--border-hover-color
+
+/* Typography */
+--font-family
+--font-size
+--font-size-small
+--font-size-large
+--line-height
+
+/* Spacing */
+--spacing-xs: 4px
+--spacing-sm: 8px
+--spacing-md: 16px
+--spacing-lg: 24px
+--spacing-xl: 32px
+```
+
+## Best Practices
+
+### Performance
+
+```typescript
+// Bad: Update on every keystroke
+api.editor.onDidChangeTextDocument(() => {
+  updatePanel()
+})
+
+// Good: Debounce updates
+import { debounce } from 'lodash'
+
+const debouncedUpdate = debounce(() => {
+  updatePanel()
+}, 300)
+
+api.editor.onDidChangeTextDocument(() => {
+  debouncedUpdate()
+})
+```
+
+### Accessibility
+
+```html
+<!-- Use semantic HTML -->
+<button aria-label="Close panel">
+  <span aria-hidden="true">&times;</span>
+</button>
+
+<!-- Keyboard navigation -->
+<div tabindex="0" role="button" onKeyPress={handleKeyPress}>
+  Clickable div
+</div>
+
+<!-- Screen reader text -->
+<span class="sr-only">Additional context for screen readers</span>
+```
+
+### Resource Management
+
+```typescript
+async deactivate() {
+  // Dispose all UI elements
+  this.statusItem?.dispose()
+  this.panel?.dispose()
+
+  // Clear timers
+  if (this.timer) {
+    clearInterval(this.timer)
+  }
+}
+```
+
+## Examples
+
+- [File Explorer Panel](https://github.com/lokus-ai/plugin-examples/tree/main/file-explorer)
+- [Outline View](https://github.com/lokus-ai/plugin-examples/tree/main/outline)
+- [Status Bar Extensions](https://github.com/lokus-ai/plugin-examples/tree/main/status-bar)
+
+## Resources
+
+- [UI API Reference](/developers/plugins/api#ui-api)
+- [Theming Guide](/developers/theming)

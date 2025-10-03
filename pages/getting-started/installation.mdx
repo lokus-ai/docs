@@ -1,0 +1,252 @@
+# Installation
+
+Lokus is available for Windows, macOS, and Linux. Choose your platform below for installation instructions.
+
+## System Requirements
+
+### Minimum Requirements
+
+| Component | Windows | macOS | Linux |
+|-----------|---------|-------|-------|
+| OS Version | Windows 10 (1903+) | macOS 10.15+ | Ubuntu 20.04+ |
+| RAM | 4GB (8GB recommended) | 4GB (8GB recommended) | 2GB (4GB recommended) |
+| Storage | 500MB | 500MB | 300MB |
+| Display | 1024x768 | 1024x768 | 1024x768 |
+
+## Download
+
+### Pre-built Binaries
+
+Download the latest release from [GitHub Releases](https://github.com/lokus-ai/lokus/releases).
+
+**Windows**
+- MSI Installer (recommended)
+- Portable EXE
+
+**macOS**
+- DMG Image (Universal Binary - Intel + Apple Silicon)
+- .app Bundle
+
+**Linux**
+- AppImage (universal)
+- DEB package (Debian/Ubuntu)
+- RPM package (Fedora/RHEL)
+
+## Platform-Specific Installation
+
+### Windows
+
+**Option 1: MSI Installer (Recommended)**
+
+1. Download `Lokus-Setup-x64.msi`
+2. Double-click to run the installer
+3. Follow the installation wizard
+4. Launch Lokus from Start Menu
+
+**Option 2: Portable EXE**
+
+1. Download `Lokus-Portable-x64.exe`
+2. Place in desired folder
+3. Double-click to run
+4. No installation required
+
+**Prerequisites:**
+- WebView2 Runtime (usually pre-installed on Windows 10+)
+- If missing, download from [Microsoft](https://developer.microsoft.com/en-us/microsoft-edge/webview2/)
+
+### macOS
+
+**Installation Steps:**
+
+1. Download `Lokus-macOS-Universal.dmg`
+2. Open the DMG file
+3. Drag Lokus.app to Applications folder
+4. First launch: Right-click > Open (to bypass Gatekeeper)
+5. Grant necessary permissions when prompted
+
+**Supported Architectures:**
+- Intel (x86_64)
+- Apple Silicon (aarch64)
+- Universal Binary (works on both)
+
+**Prerequisites:**
+- macOS 10.15 (Catalina) or later
+- Xcode Command Line Tools (for development only)
+
+### Linux
+
+**Ubuntu/Debian (DEB Package)**
+
+```bash
+# Download DEB package
+wget https://github.com/lokus-ai/lokus/releases/latest/download/lokus_1.0.0_amd64.deb
+
+# Install
+sudo dpkg -i lokus_1.0.0_amd64.deb
+
+# Fix dependencies if needed
+sudo apt-get install -f
+
+# Launch
+lokus
+```
+
+**Fedora/RHEL (RPM Package)**
+
+```bash
+# Download RPM package
+wget https://github.com/lokus-ai/lokus/releases/latest/download/lokus-1.0.0.x86_64.rpm
+
+# Install
+sudo rpm -i lokus-1.0.0.x86_64.rpm
+
+# Or using dnf
+sudo dnf install lokus-1.0.0.x86_64.rpm
+
+# Launch
+lokus
+```
+
+**AppImage (Universal)**
+
+```bash
+# Download AppImage
+wget https://github.com/lokus-ai/lokus/releases/latest/download/Lokus-1.0.0.AppImage
+
+# Make executable
+chmod +x Lokus-1.0.0.AppImage
+
+# Run
+./Lokus-1.0.0.AppImage
+```
+
+**Linux Dependencies:**
+
+Most distributions will have these pre-installed. If not:
+
+```bash
+# Ubuntu/Debian
+sudo apt-get install -y \
+    libgtk-3-0 \
+    libwebkit2gtk-4.1-0 \
+    libayatana-appindicator3-1
+
+# Fedora
+sudo dnf install -y \
+    gtk3 \
+    webkit2gtk4.1 \
+    libappindicator-gtk3
+
+# Arch
+sudo pacman -S \
+    gtk3 \
+    webkit2gtk \
+    libappindicator-gtk3
+```
+
+## Building from Source
+
+For developers who want to build from source:
+
+### Prerequisites
+
+**All Platforms:**
+- Node.js 18+ with npm
+- Rust (latest stable via rustup)
+- Git
+
+**Platform-Specific:**
+
+Windows:
+```powershell
+# Visual Studio Build Tools
+winget install Microsoft.VisualStudio.2022.BuildTools
+
+# WebView2
+winget install Microsoft.EdgeWebView2
+```
+
+macOS:
+```bash
+# Xcode Command Line Tools
+xcode-select --install
+```
+
+Linux (Ubuntu/Debian):
+```bash
+sudo apt-get install -y \
+    build-essential \
+    libgtk-3-dev \
+    libwebkit2gtk-4.1-dev \
+    libappindicator3-dev \
+    librsvg2-dev \
+    patchelf \
+    pkg-config
+```
+
+### Build Steps
+
+```bash
+# Clone repository
+git clone https://github.com/lokus-ai/lokus.git
+cd lokus
+
+# Install dependencies
+npm install
+
+# Development build
+npm run tauri dev
+
+# Production build
+npm run build:windows  # Windows
+npm run build:macos    # macOS
+npm run build:linux    # Linux
+```
+
+Build artifacts will be in `src-tauri/target/release/bundle/`.
+
+## First Launch
+
+1. Launch Lokus
+2. Choose or create a workspace folder
+3. Start taking notes
+
+See [Quick Start](/getting-started/quick-start) for a guided tour.
+
+## Troubleshooting
+
+### Windows
+
+**Issue:** "App can't be opened"
+**Solution:** Install WebView2 Runtime from Microsoft
+
+**Issue:** Antivirus blocks installation
+**Solution:** Add exception for Lokus installer
+
+### macOS
+
+**Issue:** "App is damaged and can't be opened"
+**Solution:** Remove quarantine attribute:
+```bash
+xattr -cr /Applications/Lokus.app
+```
+
+**Issue:** "Developer cannot be verified"
+**Solution:** Right-click > Open (first launch only)
+
+### Linux
+
+**Issue:** AppImage won't run
+**Solution:** Install FUSE:
+```bash
+sudo apt-get install fuse libfuse2
+```
+
+**Issue:** Missing dependencies
+**Solution:** Install required libraries (see Linux Dependencies above)
+
+## Next Steps
+
+- [Quick Start Guide](/getting-started/quick-start)
+- [Workspace Setup](/getting-started/workspace-setup)
+- [Features Overview](/features)

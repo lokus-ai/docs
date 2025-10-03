@@ -1,0 +1,926 @@
+# Database Views (Bases)
+
+Bases in Lokus bring structured database functionality to your notes, allowing you to organize, filter, and visualize information in multiple views. Think of Bases as lightweight databases that live alongside your markdown notes, providing spreadsheet-like power without leaving your knowledge base.
+
+## Overview
+
+Bases transform collections of notes into structured data that can be viewed as tables, cards, galleries, calendars, or lists. Each Base is a special note that aggregates other notes based on criteria you define, displaying them with customizable properties and views.
+
+### Key Features
+
+- **Multiple view types** (table, card, gallery, list, calendar)
+- **Custom properties** with typed fields
+- **Filtering and sorting** with advanced queries
+- **Aggregations and rollups** for data analysis
+- **Relations between Bases** for complex data models
+- **Templates** for consistent data entry
+- **Export capabilities** to CSV and other formats
+
+## Creating Bases
+
+### New Base
+
+Create a Base from scratch:
+
+**Method 1: From Menu**
+1. File → New Base
+2. Name your Base
+3. Choose initial view type
+4. Define source (folder, tag, or query)
+
+**Method 2: From Folder**
+1. Right-click folder
+2. "Create Base from Folder"
+3. Base auto-configured for folder
+
+**Method 3: Command Palette**
+1. Press `Cmd/Ctrl + P`
+2. Type "new base"
+3. Follow prompts
+
+### Base Sources
+
+Define what notes to include:
+
+**Source Types:**
+- **Folder:** All notes in folder
+- **Tag:** All notes with tag
+- **Query:** Custom filter query
+- **Manual:** Manually selected notes
+
+**Example Sources:**
+```
+Folder: /Projects/Active
+Tag: #task
+Query: tag:#project AND status:active
+Manual: [[Note 1]], [[Note 2]], [[Note 3]]
+```
+
+### Base Templates
+
+Start with pre-built Base templates:
+
+**Available Templates:**
+- Project tracker
+- Task manager
+- Book library
+- Contact database
+- Meeting notes
+- Blog posts
+- Recipe collection
+- Habit tracker
+
+## View Types
+
+### Table View
+
+Spreadsheet-like view of your data:
+
+**Features:**
+- Sortable columns
+- Resizable columns
+- Freeze columns
+- Cell editing
+- Row selection
+- Column hiding
+- Column reordering
+
+**Table Display:**
+```
+| Title          | Status | Due Date   | Priority | Assignee |
+|----------------|--------|------------|----------|----------|
+| Design mockups | Doing  | 2024-03-20 | High     | Sarah    |
+| Write tests    | Todo   | 2024-03-22 | Medium   | John     |
+| Deploy feature | Todo   | 2024-03-25 | High     | Mike     |
+```
+
+**Interactions:**
+- Click cell to edit
+- Drag column border to resize
+- Click header to sort
+- Right-click for options
+
+![Database Table View with Properties](/placeholder.svg)
+
+### Card View
+
+Visual card-based layout:
+
+**Features:**
+- Customizable card size
+- Image previews
+- Property display control
+- Multi-column layout
+- Drag to reorder
+
+**Card Elements:**
+- Cover image (optional)
+- Title
+- Selected properties
+- Tags/labels
+- Preview text
+
+**Use Cases:**
+- Project boards
+- Product catalogs
+- Gallery views
+- Contact cards
+
+### Gallery View
+
+Image-focused view:
+
+**Features:**
+- Large image thumbnails
+- Hover for details
+- Lightbox on click
+- Adjustable image size
+- Grid or masonry layout
+
+**Display Options:**
+- Image property to display
+- Aspect ratio (square, 16:9, 4:3, original)
+- Images per row
+- Show captions
+- Show metadata
+
+![Database Views - Card, Gallery, and Calendar](/placeholder.svg)
+
+**Best For:**
+- Photo collections
+- Design portfolios
+- Product galleries
+- Visual research
+
+### List View
+
+Compact list display:
+
+**Features:**
+- Dense information display
+- Hierarchical grouping
+- Expandable rows
+- Quick actions
+- Keyboard navigation
+
+**List Configuration:**
+- Primary field (title)
+- Secondary field (subtitle)
+- Tertiary field (metadata)
+- Icon/thumbnail
+- Action buttons
+
+**Grouping:**
+- Group by property
+- Nested groups
+- Expand/collapse all
+- Group headers
+
+### Calendar View
+
+Time-based visualization:
+
+**Features:**
+- Month/week/day views
+- Drag to reschedule
+- Multi-day events
+- Color coding
+- Event popups
+
+**Calendar Properties:**
+- Date field (required)
+- End date field (optional)
+- All-day toggle
+- Color property
+- Display properties
+
+**Use Cases:**
+- Event planning
+- Content calendar
+- Project timeline
+- Meeting schedule
+
+### Kanban View
+
+Workflow visualization:
+
+**Features:**
+- Customizable columns
+- Drag between columns
+- WIP limits
+- Swim lanes
+- Card customization
+
+**Kanban Configuration:**
+- Column property (status, stage, etc.)
+- Column order
+- Column limits
+- Card properties to show
+- Swim lane grouping
+
+**Example:**
+```
+Backlog     Todo        Doing       Review      Done
+-------     ----        -----       ------      ----
+Task A      Task B      Task C      Task D      Task E
+Task F      Task G      Task H      Task I      Task J
+```
+
+## Properties
+
+### Property Types
+
+Define custom fields for your data:
+
+**Basic Types:**
+- **Text:** Single-line text
+- **Long Text:** Multi-line text (markdown)
+- **Number:** Numeric values
+- **Checkbox:** True/false
+- **Date:** Date picker
+- **Select:** Single choice dropdown
+- **Multi-select:** Multiple choice
+
+**Advanced Types:**
+- **URL:** Validated URLs
+- **Email:** Email addresses
+- **Phone:** Phone numbers
+- **File:** File attachments
+- **Relation:** Link to other Base entries
+- **Rollup:** Aggregate related data
+- **Formula:** Calculated values
+
+### Creating Properties
+
+Add properties to Base:
+
+**Steps:**
+1. Click "+" in property header
+2. Name the property
+3. Choose type
+4. Configure options
+5. Set default value (optional)
+
+**Property Configuration:**
+```markdown
+Property: Status
+Type: Select
+Options:
+  - Backlog (gray)
+  - Todo (blue)
+  - In Progress (yellow)
+  - Review (purple)
+  - Done (green)
+  - Cancelled (red)
+Default: Backlog
+```
+
+### Property Options
+
+Configure property behavior:
+
+**Common Options:**
+- Name and description
+- Type and validation
+- Default value
+- Required field
+- Show in views
+- Color coding
+
+**Type-Specific Options:**
+
+**Number:**
+- Format (integer, decimal, percentage, currency)
+- Min/max values
+- Precision
+- Prefix/suffix
+
+**Date:**
+- Include time
+- Date format
+- Time format
+- Relative display
+
+**Select:**
+- Options list
+- Colors
+- Allow new options
+- Sort order
+
+### Formula Properties
+
+Calculate values from other properties:
+
+**Formula Syntax:**
+```javascript
+// Simple calculation
+{Price} * {Quantity}
+
+// Conditional
+if({Status} = "Done", "✓", "○")
+
+// Date difference
+dateDiff({Due Date}, now(), "days")
+
+// Text manipulation
+upper(substring({Title}, 0, 10))
+
+// Aggregation
+sum({Related Tasks.Hours})
+```
+
+**Available Functions:**
+- Math: `add`, `subtract`, `multiply`, `divide`, `round`, `abs`
+- Logic: `if`, `and`, `or`, `not`
+- Text: `concat`, `upper`, `lower`, `substring`, `length`
+- Date: `now`, `today`, `dateDiff`, `dateAdd`, `formatDate`
+- Aggregation: `sum`, `average`, `min`, `max`, `count`
+
+### Rollup Properties
+
+Aggregate related data:
+
+**Rollup Configuration:**
+1. Create relation property
+2. Create rollup property
+3. Select relation to follow
+4. Choose property to aggregate
+5. Select aggregation function
+
+**Example:**
+```
+Projects Base → Tasks Base relation
+
+In Projects:
+- Rollup: Total Hours
+- Relation: Tasks
+- Property: Estimated Hours
+- Function: Sum
+
+Result: Sum of all related task hours
+```
+
+## Relations
+
+### Creating Relations
+
+Link entries between Bases:
+
+**Relation Types:**
+- **One-to-One:** Single related entry
+- **One-to-Many:** Multiple related entries
+- **Many-to-Many:** Multiple on both sides
+
+**Creating Relation:**
+1. Add Relation property
+2. Select target Base
+3. Configure relationship
+4. Optional: Create reverse relation
+
+**Example Relations:**
+- Projects → Tasks (one-to-many)
+- Tasks → Person (many-to-one)
+- Notes → Tags (many-to-many)
+
+### Linked Records
+
+View and manage relations:
+
+**Features:**
+- Click to view related record
+- Add new related records
+- Remove relations
+- Filter related records
+- Sort related records
+
+**Display:**
+```markdown
+## Project: Website Redesign
+
+Related Tasks: [3]
+- [Todo] Design homepage
+- [Doing] Setup repository
+- [Todo] Write documentation
+
+Team Members: [2]
+- Sarah (Designer)
+- John (Developer)
+```
+
+### Reverse Relations
+
+Automatic back-references:
+
+**Configuration:**
+- Enable reverse relation
+- Name reverse property
+- Appears in related Base
+- Auto-maintained
+
+**Example:**
+```
+Projects Base:
+- Property: Tasks (Relation → Tasks Base)
+
+Tasks Base:
+- Property: Project (auto-created reverse relation)
+```
+
+## Filtering
+
+### Filter Types
+
+Filter Base entries:
+
+**Simple Filters:**
+- Equals
+- Does not equal
+- Contains
+- Does not contain
+- Is empty
+- Is not empty
+
+**Number Filters:**
+- Equal to
+- Not equal to
+- Greater than
+- Less than
+- Between
+
+**Date Filters:**
+- Is (exact date)
+- Is before
+- Is after
+- Is within (last/next X days)
+- Is empty
+
+**Advanced Filters:**
+- Matches regex
+- In list
+- Custom formula
+
+### Filter Groups
+
+Combine multiple filters:
+
+**Operators:**
+- AND: All conditions must be true
+- OR: Any condition must be true
+- NOT: Invert condition
+
+**Example:**
+```
+Show entries where:
+  Status = "Active"
+  AND (
+    Priority = "High"
+    OR Due Date < Today
+  )
+  AND Assignee is not empty
+```
+
+### Saved Filters
+
+Save and reuse filters:
+
+**Creating Saved Filters:**
+1. Configure filters
+2. Click "Save Filter"
+3. Name the filter
+4. Set as default (optional)
+
+**Pre-built Filters:**
+- Active items
+- Completed items
+- Overdue items
+- Assigned to me
+- Unassigned
+- This week
+
+## Sorting
+
+### Sort Options
+
+Order entries by properties:
+
+**Sort Configuration:**
+- Primary sort property
+- Sort direction (ascending/descending)
+- Secondary sort property
+- Tertiary sort property
+
+**Sort Types:**
+- Alphabetical (A-Z or Z-A)
+- Numeric (0-9 or 9-0)
+- Date (earliest-latest or latest-earliest)
+- Custom (manual order)
+
+**Example:**
+```
+Sort by:
+1. Priority (High to Low)
+2. Due Date (Earliest to Latest)
+3. Title (A to Z)
+```
+
+### Manual Sorting
+
+Custom order with drag-and-drop:
+
+**Features:**
+- Drag rows to reorder
+- Persists across sessions
+- Override automatic sorting
+- Reset to automatic sort
+
+## Grouping
+
+### Group By Property
+
+Organize entries into groups:
+
+**Grouping Options:**
+- Group by any property
+- Multi-level grouping
+- Expand/collapse groups
+- Group headers with counts
+- Custom group order
+
+**Example:**
+```
+Group by: Status
+├─ Backlog (5)
+│  ├─ Task A
+│  └─ Task B
+├─ In Progress (3)
+│  ├─ Task C
+│  └─ Task D
+└─ Done (12)
+   └─ Task E
+```
+
+### Group Aggregations
+
+Show statistics per group:
+
+**Aggregation Types:**
+- Count
+- Sum
+- Average
+- Min/Max
+- Percentage
+
+**Display:**
+```
+Status: In Progress (3 items, 15 hours total)
+Status: Done (12 items, 48 hours total, avg 4 hours)
+```
+
+## Templates
+
+### Entry Templates
+
+Create consistent entries:
+
+**Template Fields:**
+- Pre-filled property values
+- Default content
+- Placeholders
+- Auto-generated values
+
+**Example Template:**
+```markdown
+---
+template: project
+status: planning
+priority: medium
+---
+
+# {{title}}
+
+## Overview
+{{description}}
+
+## Goals
+- Goal 1
+- Goal 2
+
+## Tasks
+- [ ] Initial task 1
+- [ ] Initial task 2
+
+## Timeline
+Start: {{start_date}}
+End: {{due_date}}
+```
+
+### Template Variables
+
+Dynamic template content:
+
+**Available Variables:**
+- `{{now}}` - Current timestamp
+- `{{today}}` - Today's date
+- `{{user}}` - Current user
+- `{{title}}` - Entry title
+- `{{property_name}}` - Any property value
+
+## Aggregations
+
+### Summary Statistics
+
+View aggregate data:
+
+**Statistics:**
+- Count of entries
+- Sum of numeric fields
+- Average values
+- Min/Max values
+- Median
+- Standard deviation
+
+**Display:**
+```
+Total Projects: 24
+Active: 8
+Completed: 12
+On Hold: 4
+
+Total Budget: $125,000
+Average Budget: $5,208
+Highest Budget: $25,000
+```
+
+### Charts and Visualizations
+
+Visual data representation:
+
+**Chart Types:**
+- Bar chart
+- Pie chart
+- Line chart
+- Scatter plot
+- Timeline
+- Heatmap
+
+**Configuration:**
+- X-axis property
+- Y-axis property
+- Grouping
+- Aggregation function
+- Colors
+
+## Export and Import
+
+### Export Options
+
+Export Base data:
+
+**Formats:**
+- **CSV:** Spreadsheet compatible
+- **JSON:** Structured data
+- **Markdown:** Notes format
+- **HTML:** Web display
+
+**Export Settings:**
+- Include all properties
+- Filter before export
+- Include relations
+- Formatting options
+
+### Import Data
+
+Bring data into Bases:
+
+**Import Sources:**
+- CSV files
+- JSON files
+- Existing notes
+- External databases
+
+**Import Process:**
+1. Choose import source
+2. Map columns to properties
+3. Preview import
+4. Configure options
+5. Import data
+
+**Import Options:**
+- Create new entries
+- Update existing entries
+- Skip duplicates
+- Auto-create properties
+
+## Collaboration
+
+### Shared Bases
+
+Collaborate on Bases:
+
+**Features:**
+- Real-time updates
+- Multi-user editing
+- Permissions control
+- Activity history
+- Comments per entry
+
+**Permissions:**
+- View only
+- Comment
+- Edit
+- Admin
+
+### Comments and Discussion
+
+Discuss entries:
+
+**Comment Features:**
+- Per-entry comments
+- Thread discussions
+- @mentions
+- File attachments
+- Edit history
+
+## Performance
+
+### Optimization
+
+Base performance:
+
+**Techniques:**
+- Lazy loading
+- Virtual scrolling
+- Indexed properties
+- Cached aggregations
+- Progressive rendering
+
+**Limits:**
+- 10,000+ entries supported
+- Complex queries under 100ms
+- Real-time updates under 50ms
+
+## Configuration
+
+### Base Settings
+
+Configure Base behavior:
+
+**General:**
+- Base name
+- Description
+- Icon
+- Source configuration
+- Default view
+
+**Properties:**
+- Add/edit/delete properties
+- Property order
+- Visibility
+- Validation rules
+
+**Views:**
+- Create/edit views
+- View permissions
+- Default view
+- View layout
+
+**Permissions:**
+- Who can view
+- Who can edit
+- Who can admin
+- Public access
+
+## Use Cases
+
+### Project Management
+
+Track projects with Bases:
+
+**Properties:**
+- Project name
+- Status (select)
+- Priority (select)
+- Start date
+- Due date
+- Budget (number)
+- Team members (relation)
+- Tasks (relation)
+- Progress (formula)
+
+**Views:**
+- Table: All projects overview
+- Kanban: By status
+- Calendar: By timeline
+- Card: Visual grid
+
+### Content Management
+
+Manage blog posts, articles:
+
+**Properties:**
+- Title
+- Author (relation)
+- Status (draft, review, published)
+- Publish date
+- Categories (multi-select)
+- Tags (multi-select)
+- Word count (number)
+- Featured image (file)
+
+**Views:**
+- Table: Editorial calendar
+- Calendar: Publishing schedule
+- Gallery: Featured posts
+- List: By category
+
+### CRM (Contacts)
+
+Customer relationship management:
+
+**Properties:**
+- Name
+- Company
+- Email
+- Phone
+- Status (select)
+- Last contact (date)
+- Next follow-up (date)
+- Notes (long text)
+- Related deals (relation)
+
+**Views:**
+- Table: All contacts
+- Card: Contact cards
+- Kanban: By status
+- Calendar: Follow-up schedule
+
+### Inventory Management
+
+Track items and assets:
+
+**Properties:**
+- Item name
+- SKU
+- Category
+- Quantity (number)
+- Location
+- Status (in stock, low, out)
+- Cost (number)
+- Supplier (relation)
+- Last ordered (date)
+
+**Views:**
+- Table: Full inventory
+- List: By category
+- Gallery: Product images
+- Chart: Stock levels
+
+## Best Practices
+
+### Base Design
+
+**Effective Bases:**
+- Clear naming conventions
+- Logical property structure
+- Appropriate property types
+- Consistent data entry
+- Regular maintenance
+
+**Property Guidelines:**
+- Required fields first
+- Group related properties
+- Use templates for consistency
+- Validate data entry
+- Document property meanings
+
+### Performance Tips
+
+**Optimization:**
+- Limit visible properties
+- Use filters to reduce entries
+- Archive completed items
+- Optimize formulas
+- Use relations wisely
+
+## Troubleshooting
+
+### Common Issues
+
+**Issue:** Base loading slowly
+**Solution:** Reduce visible entries, optimize formulas, check filters
+
+**Issue:** Relations not working
+**Solution:** Verify target Base exists, check permissions, rebuild index
+
+**Issue:** Formula errors
+**Solution:** Check syntax, verify property names, test incrementally
+
+**Issue:** Import failed
+**Solution:** Verify CSV format, check property types, review error log
+
+## Next Steps
+
+- Use [Templates](/features/templates) for Base entry templates
+- Integrate with [Tasks](/features/tasks) for task management
+- Explore [Search](/features/search) for Base queries
+- See [Developer Guide](/developers) for Base API

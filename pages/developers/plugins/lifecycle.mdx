@@ -1,0 +1,558 @@
+# Plugin Lifecycle & Hooks
+
+Understanding the plugin lifecycle and available hooks for responding to events in Lokus.
+
+## Lifecycle States
+
+A plugin goes through several states:
+
+```
+NOT_LOADED → LOADING → LOADED → ACTIVATING → ACTIVE → DEACTIVATING → DEACTIVATED
+                                      ↕
+                                    ERROR
+```
+
+### State Descriptions
+
+**NOT_LOADED**
+- Plugin manifest not yet loaded
+- No resources allocated
+
+**LOADING**
+- Reading manifest
+- Validating dependencies
+- Checking permissions
+
+**LOADED**
+- Manifest validated
+- Ready for activation
+- Waiting for activation event
+
+**ACTIVATING**
+- Running `activate()` method
+- Registering contributions
+- Setting up resources
+
+**ACTIVE**
+- Plugin fully operational
+- Responding to events
+- Executing commands
+
+**DEACTIVATING**
+- Running `deactivate()` method
+- Cleaning up resources
+- Unregistering contributions
+
+**DEACTIVATED**
+- All resources released
+- No longer responding to events
+
+**ERROR**
+- Plugin encountered fatal error
+- Requires user intervention
+- Can be reactivated after fix
+
+## Activation
+
+### Activation Events
+
+Plugins activate based on events defined in manifest:
+
+```json
+{
+  "activationEvents": [
+    "onStartup",
+    "onLanguage:markdown",
+    "onCommand:myPlugin.hello",
+    "onView:myPlugin.sidebar",
+    "workspaceContains:**/*.md",
+    "onDebug",
+    "onUri"
+  ]
+}
+```
+
+### activate() Method
+
+```typescript
+export default class MyPlugin implements Plugin {
+  async activate(context: PluginContext) {
+    console.log('Plugin activating...')
+
+    // Initialize services
+    await this.initializeServices(context)
+
+    // Register commands
+    this.registerCommands(context)
+
+    // Set up event listeners
+    this.setupEventListeners(context)
+
+    // Start background tasks
+    this.startBackgroundTasks()
+
+    console.log('Plugin activated successfully')
+  }
+}
+```
+
+### Plugin Context
+
+The `PluginContext` provides:
+
+```typescript
+interface PluginContext {
+  // Plugin identification
+  pluginId: string
+  manifest: PluginManifest
+
+  // API access
+  api: LokusAPI
+
+  // Storage paths
+  storageUri: string          // Plugin-specific storage
+  globalStorageUri: string    // Shared across workspaces
+  assetUri: string           // Plugin assets
+
+  // State management
+  globalState: Memento        // Persistent state
+  workspaceState: Memento     // Workspace-specific state
+  secrets: SecretStorage      // Secure storage
+
+  // Environment info
+  extensionMode: ExtensionMode  // Production/Development/Test
+  environment: PluginEnvironment
+
+  // Permissions
+  permissions: ReadonlySet<Permission>
+
+  // Resource management
+  subscriptions: Disposable[]  // Auto-disposed on deactivation
+}
+```
+
+## Deactivation
+
+### deactivate() Method
+
+```typescript
+export default class MyPlugin implements Plugin {
+  private timers: NodeJS.Timeout[] = []
+  private watchers: Disposable[] = []
+
+  async activate(context: PluginContext) {
+    // Setup...
+  }
+
+  async deactivate() {
+    console.log('Plugin deactivating...')
+
+    // Clear timers
+    this.timers.forEach(timer => clearTimeout(timer))
+    this.timers = []
+
+    // Dispose watchers
+    this.watchers.forEach(watcher => watcher.dispose())
+    this.watchers = []
+
+    // Close connections
+    await this.closeConnections()
+
+    // Save state
+    await this.saveState()
+
+    console.log('Plugin deactivated')
+  }
+}
+```
+
+### Automatic Cleanup
+
+Resources registered in `context.subscriptions` are automatically disposed:
+
+```typescript
+async activate(context: PluginContext) {
+  // These will be automatically disposed
+  context.subscriptions.push(
+    api.commands.register({ /* ... */ }),
+    api.editor.onDidChangeTextDocument(() => {}),
+    api.fs.watch('/path', () => {})
+  )
+}
+
+// No need to manually dispose in deactivate()
+```
+
+## Event Hooks
+
+### Editor Events
+
+```typescript
+// Document changes
+context.api.editor.onDidChangeTextDocument(event => {
+  console.log('Document changed:', event.document.uri)
+  event.contentChanges.forEach(change => {
+    console.log('Change:', change.text)
+  })
+})
+
+// Selection changes
+context.api.editor.onDidChangeTextEditorSelection(event => {
+  console.log('Selection changed:', event.selections)
+})
+
+// Active editor changes
+context.api.editor.onDidChangeActiveTextEditor(editor => {
+  if (editor) {
+    console.log('Active editor:', editor.document.uri)
+  }
+})
+
+// Document open/close
+context.api.workspace.onDidOpenTextDocument(doc => {
+  console.log('Document opened:', doc.uri)
+})
+
+context.api.workspace.onDidCloseTextDocument(doc => {
+  console.log('Document closed:', doc.uri)
+})
+
+// Document save
+context.api.workspace.onDidSaveTextDocument(doc => {
+  console.log('Document saved:', doc.uri)
+})
+```
+
+### Workspace Events
+
+```typescript
+// Workspace folders changed
+context.api.workspace.onDidChangeWorkspaceFolders(event => {
+  console.log('Added folders:', event.added)
+  console.log('Removed folders:', event.removed)
+})
+
+// Configuration changed
+context.api.config.onDidChange((key, value) => {
+  console.log(`Config changed: ${key} = ${value}`)
+})
+
+// File system events
+context.api.fs.watch('/path', event => {
+  console.log(`File ${event.type}: ${event.path}`)
+})
+```
+
+### Custom Events
+
+```typescript
+// Subscribe to custom events
+context.api.events.on('myPlugin.customEvent', data => {
+  console.log('Custom event received:', data)
+})
+
+// Emit custom events
+context.api.events.emit('myPlugin.customEvent', {
+  message: 'Hello'
+})
+
+// One-time event
+context.api.events.once('myPlugin.initialized', () => {
+  console.log('Plugin initialized')
+})
+```
+
+## State Management
+
+### Workspace State
+
+State specific to current workspace:
+
+```typescript
+async activate(context: PluginContext) {
+  // Read workspace state
+  const lastOpened = context.workspaceState.get<string>('lastOpened')
+
+  // Update workspace state
+  await context.workspaceState.update('lastOpened', new Date().toISOString())
+
+  // Get all keys
+  const keys = context.workspaceState.keys()
+}
+```
+
+### Global State
+
+State shared across all workspaces:
+
+```typescript
+async activate(context: PluginContext) {
+  // Read global state
+  const settings = context.globalState.get('settings', {
+    theme: 'dark',
+    autoSave: true
+  })
+
+  // Update global state
+  await context.globalState.update('settings', {
+    ...settings,
+    lastSync: Date.now()
+  })
+}
+```
+
+### Secrets
+
+Secure storage for sensitive data:
+
+```typescript
+async activate(context: PluginContext) {
+  // Store secret
+  await context.secrets.store('api-key', 'secret-value')
+
+  // Retrieve secret
+  const apiKey = await context.secrets.get('api-key')
+
+  // Delete secret
+  await context.secrets.delete('api-key')
+
+  // Listen to changes
+  context.secrets.onDidChange(event => {
+    console.log('Secret changed:', event.key)
+  })
+}
+```
+
+## Background Tasks
+
+### Periodic Tasks
+
+```typescript
+class MyPlugin implements Plugin {
+  private syncInterval?: NodeJS.Timeout
+
+  async activate(context: PluginContext) {
+    // Start periodic sync
+    this.syncInterval = setInterval(() => {
+      this.syncData()
+    }, 60000) // Every minute
+  }
+
+  async deactivate() {
+    // Stop periodic task
+    if (this.syncInterval) {
+      clearInterval(this.syncInterval)
+    }
+  }
+
+  private async syncData() {
+    try {
+      await this.api.network.fetch('https://api.example.com/sync')
+    } catch (error) {
+      console.error('Sync failed:', error)
+    }
+  }
+}
+```
+
+### One-time Initialization
+
+```typescript
+async activate(context: PluginContext) {
+  // Check if first run
+  const isFirstRun = !context.globalState.get('initialized')
+
+  if (isFirstRun) {
+    await this.runFirstTimeSetup()
+    await context.globalState.update('initialized', true)
+  }
+
+  // Check for updates
+  const lastVersion = context.globalState.get<string>('version')
+  if (lastVersion !== context.manifest.version) {
+    await this.runMigration(lastVersion, context.manifest.version)
+    await context.globalState.update('version', context.manifest.version)
+  }
+}
+```
+
+## Error Handling
+
+### Graceful Degradation
+
+```typescript
+async activate(context: PluginContext) {
+  try {
+    await this.initializeCriticalFeature()
+  } catch (error) {
+    context.api.log('error', 'Failed to initialize feature', error)
+
+    // Show user notification
+    const retry = await context.api.ui.showNotification(
+      'Failed to initialize plugin',
+      'error',
+      [
+        { id: 'retry', label: 'Retry' },
+        { id: 'disable', label: 'Disable' }
+      ]
+    )
+
+    if (retry === 'retry') {
+      await this.activate(context)
+    }
+  }
+}
+```
+
+### Error Recovery
+
+```typescript
+class ResilientPlugin implements Plugin {
+  private retryCount = 0
+  private maxRetries = 3
+
+  async activate(context: PluginContext) {
+    try {
+      await this.initialize()
+      this.retryCount = 0 // Reset on success
+    } catch (error) {
+      if (this.retryCount < this.maxRetries) {
+        this.retryCount++
+
+        // Exponential backoff
+        const delay = Math.pow(2, this.retryCount) * 1000
+
+        setTimeout(() => {
+          this.activate(context)
+        }, delay)
+      } else {
+        // Give up after max retries
+        context.api.ui.showNotification(
+          'Plugin initialization failed after multiple attempts',
+          'error'
+        )
+      }
+    }
+  }
+}
+```
+
+## Performance Optimization
+
+### Lazy Loading
+
+```typescript
+async activate(context: PluginContext) {
+  // Register command immediately
+  context.subscriptions.push(
+    context.api.commands.register({
+      id: 'myPlugin.heavyOperation',
+      title: 'Heavy Operation',
+      handler: async () => {
+        // Load heavy dependency only when needed
+        const { default: heavyLib } = await import('./heavy-lib')
+        return heavyLib.process()
+      }
+    })
+  )
+
+  // Don't load heavy dependencies during activation
+}
+```
+
+### Debouncing
+
+```typescript
+import { debounce } from 'lodash'
+
+async activate(context: PluginContext) {
+  // Debounce expensive operations
+  const debouncedUpdate = debounce(() => {
+    this.updateView()
+  }, 300)
+
+  context.api.editor.onDidChangeTextDocument(() => {
+    debouncedUpdate()
+  })
+}
+```
+
+### Caching
+
+```typescript
+class CachedPlugin implements Plugin {
+  private cache = new Map()
+
+  async getData(key: string) {
+    // Check cache first
+    if (this.cache.has(key)) {
+      return this.cache.get(key)
+    }
+
+    // Fetch and cache
+    const data = await this.fetchData(key)
+    this.cache.set(key, data)
+
+    return data
+  }
+
+  async deactivate() {
+    // Clear cache on deactivation
+    this.cache.clear()
+  }
+}
+```
+
+## Testing Lifecycle
+
+```typescript
+import { createMockContext, TestHelper } from '@lokus/plugin-sdk/testing'
+
+describe('Plugin Lifecycle', () => {
+  let context: PluginContext
+  let plugin: MyPlugin
+
+  beforeEach(() => {
+    context = createMockContext()
+    plugin = new MyPlugin()
+  })
+
+  it('should activate successfully', async () => {
+    await plugin.activate(context)
+    expect(context.subscriptions.length).toBeGreaterThan(0)
+  })
+
+  it('should deactivate cleanly', async () => {
+    await plugin.activate(context)
+    await plugin.deactivate()
+
+    // Verify all resources disposed
+    expect(context.subscriptions.every(s => s.disposed)).toBe(true)
+  })
+
+  it('should handle activation error', async () => {
+    // Simulate error
+    jest.spyOn(plugin as any, 'initialize').mockRejectedValue(
+      new Error('Init failed')
+    )
+
+    await expect(plugin.activate(context)).rejects.toThrow()
+  })
+})
+```
+
+## Best Practices
+
+1. **Fast Activation** - Keep activation code minimal
+2. **Cleanup Resources** - Always dispose resources in deactivate
+3. **Handle Errors** - Gracefully handle activation/deactivation errors
+4. **Use Subscriptions** - Leverage context.subscriptions for auto-cleanup
+5. **State Management** - Use provided state APIs, not global variables
+6. **Background Tasks** - Clean up timers and intervals
+7. **Test Lifecycle** - Write tests for activation/deactivation
+
+## Resources
+
+- [API Reference](/developers/plugins/api)
+- [State Management Guide](/developers/plugins/state-management)
+- [Testing Guide](/developers/plugins/testing)

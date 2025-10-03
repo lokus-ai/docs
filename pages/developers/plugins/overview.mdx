@@ -1,0 +1,617 @@
+# Plugin System Overview
+
+Lokus features a powerful, extensible plugin system that allows developers to extend and customize the application's functionality. Built with security, performance, and developer experience in mind, the plugin system provides comprehensive APIs for editor extensions, UI customization, data integration, and more.
+
+## Architecture
+
+### Plugin Runtime
+
+The Lokus plugin system is built on a sandboxed architecture that ensures plugin safety and application stability:
+
+```
+┌─────────────────────────────────────────────────┐
+│              Lokus Application                  │
+├─────────────────────────────────────────────────┤
+│                                                 │
+│  ┌──────────────┐      ┌──────────────┐       │
+│  │   Plugin     │      │   Plugin     │       │
+│  │  Sandbox 1   │      │  Sandbox 2   │       │
+│  │              │      │              │       │
+│  │  ┌────────┐  │      │  ┌────────┐  │       │
+│  │  │ Plugin │  │      │  │ Plugin │  │       │
+│  │  │   A    │  │      │  │   B    │  │       │
+│  │  └────────┘  │      │  └────────┘  │       │
+│  │      ↕       │      │      ↕       │       │
+│  │  ┌────────┐  │      │  ┌────────┐  │       │
+│  │  │  API   │  │      │  │  API   │  │       │
+│  │  │ Proxy  │  │      │  │ Proxy  │  │       │
+│  │  └────────┘  │      │  └────────┘  │       │
+│  └──────┬───────┘      └──────┬───────┘       │
+│         │                     │               │
+│         └─────────┬───────────┘               │
+│                   ↓                           │
+│         ┌──────────────────┐                  │
+│         │   Plugin Host    │                  │
+│         │   (Core APIs)    │                  │
+│         └──────────────────┘                  │
+│                   ↓                           │
+│         ┌──────────────────┐                  │
+│         │  Lokus Core      │                  │
+│         │  (Editor, UI)    │                  │
+│         └──────────────────┘                  │
+└─────────────────────────────────────────────────┘
+```
+
+### Core Components
+
+**Plugin Manager**
+- Loads, activates, and manages plugin lifecycle
+- Enforces permissions and resource limits
+- Handles plugin dependencies and compatibility
+
+**Plugin Host**
+- Provides sandboxed execution environment
+- Exposes controlled API surface
+- Manages inter-plugin communication
+
+**API Layer**
+- 8 specialized APIs covering all extension points
+- Type-safe with full TypeScript support
+- Versioned for backward compatibility
+
+## Plugin Types
+
+Lokus supports multiple plugin types for different use cases:
+
+### 1. Editor Plugins
+Extend the TipTap-based rich text editor with custom nodes, marks, and extensions.
+
+**Use Cases:**
+- Custom markdown syntax
+- Specialized content types
+- Editor behaviors and interactions
+- Syntax highlighting
+
+**Example:** Math equation editor, Mermaid diagrams, custom task lists
+
+### 2. UI Plugins
+Add custom panels, toolbars, menus, and visualizations to the Lokus interface.
+
+**Use Cases:**
+- Custom sidebars and panels
+- Toolbar buttons and context menus
+- Status bar items
+- Tree views and lists
+
+**Example:** File explorer, outline view, minimap
+
+### 3. Data Provider Plugins
+Integrate external data sources and services into Lokus.
+
+**Use Cases:**
+- External API integration
+- Database connections
+- Cloud service integration
+- Real-time data synchronization
+
+**Example:** Jira integration, GitHub issues, Trello boards
+
+### 4. Command Plugins
+Register custom commands and keyboard shortcuts.
+
+**Use Cases:**
+- Workflow automation
+- Batch operations
+- Custom tools
+- Quick actions
+
+**Example:** Bulk rename, format on save, template generator
+
+### 5. Theme Plugins
+Create and distribute custom themes and visual styles.
+
+**Use Cases:**
+- Color schemes
+- Typography customization
+- Icon packs
+- Visual effects
+
+**Example:** Dracula theme, Material Design, high contrast themes
+
+### 6. Language Support Plugins
+Add syntax highlighting and language features for programming languages.
+
+**Use Cases:**
+- Code syntax highlighting
+- Language-specific features
+- Code snippets
+- Linting and formatting
+
+**Example:** Rust support, Python highlighting, JSON formatting
+
+### 7. Tool Plugins
+Integrate external tools and utilities.
+
+**Use Cases:**
+- Build systems
+- Testing frameworks
+- Linters and formatters
+- Version control
+
+**Example:** Git integration, ESLint, Prettier
+
+### 8. Visualization Plugins
+Create custom data visualizations and diagrams.
+
+**Use Cases:**
+- Chart types
+- Graph layouts
+- Interactive visualizations
+- 3D renderings
+
+**Example:** Gantt charts, mind maps, network diagrams
+
+## API Surface
+
+Lokus provides 8 comprehensive APIs for plugin development:
+
+### Commands API
+Register and execute commands, create keyboard shortcuts, and integrate with command palette.
+
+```typescript
+api.commands.register({
+  id: 'myPlugin.hello',
+  title: 'Say Hello',
+  handler: () => {
+    api.ui.showNotification('Hello from my plugin!', 'info')
+  }
+})
+```
+
+### Editor API
+Access and manipulate the text editor, register content providers, and add editor features.
+
+```typescript
+const content = await api.editor.getContent()
+await api.editor.insertContent('New text')
+api.editor.onDidChangeTextDocument(event => {
+  console.log('Document changed:', event.document.uri)
+})
+```
+
+### UI API
+Create panels, dialogs, notifications, and customize the user interface.
+
+```typescript
+api.ui.registerPanel({
+  id: 'myPlugin.sidebar',
+  title: 'My Panel',
+  type: 'webview',
+  location: 'sidebar',
+  html: '<h1>Hello from my panel!</h1>'
+})
+```
+
+### Workspace API
+Access workspace files, folders, and settings.
+
+```typescript
+const folders = api.workspace.workspaceFolders
+const files = await api.workspace.findFiles('**/*.md')
+api.workspace.onDidChangeWorkspaceFolders(event => {
+  console.log('Workspace changed:', event)
+})
+```
+
+### File System API
+Read, write, and watch files and directories.
+
+```typescript
+const content = await api.fs.readFile('/path/to/file.txt')
+await api.fs.writeFile('/path/to/file.txt', 'New content')
+api.fs.watch('/path/to/directory', event => {
+  console.log('File changed:', event.path)
+})
+```
+
+### Network API
+Make HTTP requests and handle network operations.
+
+```typescript
+const response = await api.network.fetch('https://api.example.com/data')
+const data = await response.json()
+```
+
+### Storage API
+Store and retrieve plugin-specific data.
+
+```typescript
+await api.storage.set('myKey', { value: 'myData' })
+const data = await api.storage.get('myKey')
+```
+
+### Events API
+Subscribe to and emit custom events.
+
+```typescript
+api.events.on('myPlugin.customEvent', data => {
+  console.log('Custom event received:', data)
+})
+
+api.events.emit('myPlugin.customEvent', { message: 'Hello' })
+```
+
+## Security Model
+
+### Permissions System
+
+Plugins must declare required permissions in their manifest:
+
+```json
+{
+  "permissions": [
+    "editor:read",
+    "editor:write",
+    "filesystem:read",
+    "network:fetch"
+  ]
+}
+```
+
+**Available Permissions:**
+- `editor:read` - Read editor content
+- `editor:write` - Modify editor content
+- `filesystem:read` - Read files
+- `filesystem:write` - Write files
+- `network:fetch` - Make HTTP requests
+- `workspace:read` - Read workspace data
+- `workspace:write` - Modify workspace
+- `ui:create` - Create UI elements
+- `commands:execute` - Execute commands
+- `storage:read` - Read plugin storage
+- `storage:write` - Write plugin storage
+
+### Sandboxing
+
+Plugins run in isolated contexts with:
+- Memory limits (default: 128MB)
+- CPU throttling for expensive operations
+- No direct access to Node.js APIs
+- Controlled access to Lokus APIs
+- No access to other plugin contexts
+
+### Code Review
+
+All plugins submitted to the official registry undergo:
+- Automated security scanning
+- Manual code review
+- Permission validation
+- Dependency auditing
+
+## Performance
+
+### Resource Management
+
+The plugin system enforces resource limits:
+
+**Memory Limits**
+- Default: 128MB per plugin
+- Configurable in plugin settings
+- Automatic cleanup of inactive plugins
+
+**CPU Throttling**
+- Expensive operations are throttled
+- Background tasks use idle time
+- Prevents UI freezing
+
+**API Rate Limits**
+- 1000 API calls per second per plugin
+- Batch operations encouraged
+- Automatic backpressure
+
+### Optimization Best Practices
+
+**Lazy Loading**
+```typescript
+// Load heavy dependencies only when needed
+async function processData() {
+  const { heavyLibrary } = await import('./heavy-lib')
+  return heavyLibrary.process()
+}
+```
+
+**Debouncing**
+```typescript
+// Use built-in debounce utilities
+const debouncedHandler = debounce((text) => {
+  // Process text
+}, 300)
+```
+
+**Caching**
+```typescript
+// Cache expensive computations
+const cache = new Map()
+function expensiveOperation(key) {
+  if (cache.has(key)) return cache.get(key)
+  const result = computeExpensive(key)
+  cache.set(key, result)
+  return result
+}
+```
+
+## Development Tools
+
+### Plugin CLI
+
+Comprehensive command-line tool for plugin development:
+
+```bash
+# Create new plugin
+lokus-plugin create my-plugin
+
+# Development mode with hot reload
+lokus-plugin dev
+
+# Validate plugin
+lokus-plugin validate
+
+# Package for distribution
+lokus-plugin package
+
+# Publish to registry
+lokus-plugin publish
+```
+
+### TypeScript Support
+
+Full TypeScript definitions included:
+
+```bash
+npm install --save-dev @lokus/plugin-sdk
+```
+
+```typescript
+import { Plugin, PluginContext } from '@lokus/plugin-sdk'
+
+export default class MyPlugin implements Plugin {
+  async activate(context: PluginContext) {
+    // Full type safety and IntelliSense
+  }
+}
+```
+
+### Testing Framework
+
+Built-in testing utilities:
+
+```typescript
+import { createMockContext, TestHelper } from '@lokus/plugin-sdk/testing'
+
+describe('MyPlugin', () => {
+  let context: PluginContext
+  let helper: TestHelper
+
+  beforeEach(() => {
+    context = createMockContext()
+    helper = new TestHelper(context)
+  })
+
+  it('should register command', async () => {
+    const plugin = new MyPlugin()
+    await plugin.activate(context)
+
+    const commands = await helper.getRegisteredCommands()
+    expect(commands).toContain('myPlugin.hello')
+  })
+})
+```
+
+### Debugging
+
+Debug plugins with full source map support:
+
+```json
+{
+  "dev": {
+    "hotReload": true,
+    "debug": true,
+    "sourceMaps": true,
+    "verboseLogging": true
+  }
+}
+```
+
+## Plugin Lifecycle
+
+### Activation
+
+Plugins are activated based on triggers defined in the manifest:
+
+```json
+{
+  "activationEvents": [
+    "onStartup",
+    "onLanguage:markdown",
+    "onCommand:myPlugin.hello",
+    "workspaceContains:**/*.custom"
+  ]
+}
+```
+
+**Activation Flow:**
+1. Plugin manifest validated
+2. Dependencies checked and loaded
+3. Permissions verified
+4. Plugin code loaded into sandbox
+5. `activate()` method called
+6. Contributions registered
+
+### Deactivation
+
+Clean plugin shutdown:
+
+```typescript
+export default class MyPlugin implements Plugin {
+  async activate(context: PluginContext) {
+    // Setup
+  }
+
+  async deactivate() {
+    // Cleanup: Close connections, dispose resources
+  }
+}
+```
+
+**Deactivation Triggers:**
+- User disables plugin
+- Plugin uninstalled
+- Application shutdown
+- Plugin error/crash
+- Resource limit exceeded
+
+## Versioning
+
+### Semantic Versioning
+
+Plugins use semantic versioning (semver):
+
+```json
+{
+  "version": "1.2.3",
+  "lokusVersion": "^1.0.0"
+}
+```
+
+### API Compatibility
+
+APIs are versioned for backward compatibility:
+
+```typescript
+// API version checking
+if (api.version.major >= 2) {
+  // Use new API features
+} else {
+  // Fallback to old API
+}
+```
+
+### Breaking Changes
+
+Major version changes indicate breaking changes:
+- Plugin manifest format changes
+- API signature changes
+- Behavior changes
+- Deprecated feature removal
+
+## Distribution
+
+### Plugin Registry
+
+Official plugin registry at `registry.lokus.dev`:
+- Searchable catalog
+- Version management
+- Download statistics
+- User reviews and ratings
+
+### Private Distribution
+
+Alternative distribution methods:
+- Direct VSIX file installation
+- Private npm registry
+- GitHub releases
+- Custom registry servers
+
+### Marketplace
+
+Web marketplace for discovering plugins:
+- Categories and tags
+- Featured plugins
+- Editor's picks
+- Trending plugins
+
+## Best Practices
+
+### Design Principles
+
+1. **Do One Thing Well** - Focus on a specific use case
+2. **Be Unobtrusive** - Don't interfere with core workflows
+3. **Respect Resources** - Minimize memory and CPU usage
+4. **Handle Errors Gracefully** - Never crash the host application
+5. **Document Well** - Clear README and API documentation
+
+### Code Quality
+
+- Use TypeScript for type safety
+- Write comprehensive tests
+- Follow Lokus coding standards
+- Use ESLint and Prettier
+- Keep dependencies minimal
+
+### User Experience
+
+- Provide clear error messages
+- Show progress for long operations
+- Use consistent UI patterns
+- Support keyboard shortcuts
+- Respect user settings and themes
+
+### Performance
+
+- Lazy load heavy dependencies
+- Debounce/throttle expensive operations
+- Cache computed results
+- Use web workers for heavy tasks
+- Profile and optimize hot paths
+
+## Migration Guide
+
+### From Extension APIs
+
+If you're familiar with other extension systems:
+
+**VS Code Extensions**
+- Similar API structure
+- Compatible manifest format
+- Same activation events
+- Familiar contribution points
+
+**Atom Packages**
+- Command registration similar
+- Different package format
+- Migration tool available
+
+**Sublime Text Plugins**
+- Event-based architecture
+- Python → TypeScript migration
+- API mapping documentation
+
+## Support and Resources
+
+### Documentation
+
+- [Getting Started Guide](/developers/plugins/getting-started)
+- [API Reference](/developers/plugins/api)
+- [Plugin Examples](https://github.com/lokus-ai/plugin-examples)
+
+### Community
+
+- [GitHub Discussions](https://github.com/lokus-ai/lokus/discussions)
+- [Plugin Development Forum](https://forum.lokus.dev)
+- [Discord Server](https://discord.gg/lokus)
+
+### Contributing
+
+- [Contribution Guidelines](https://github.com/lokus-ai/lokus/CONTRIBUTING.md)
+- [Plugin Guidelines](https://github.com/lokus-ai/lokus/PLUGIN_GUIDELINES.md)
+- [Code of Conduct](https://github.com/lokus-ai/lokus/CODE_OF_CONDUCT.md)
+
+## Next Steps
+
+Ready to build your first plugin?
+
+**Related Documentation:**
+- [Getting Started](/developers/plugins/getting-started)
+- [Plugin Manifest](/developers/plugins/manifest)
+- [API Reference](/developers/plugins/api)
+- [CLI Tool](/developers/plugins/cli)
