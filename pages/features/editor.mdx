@@ -1,220 +1,69 @@
 # Rich Text Editor
 
-Lokus features a powerful rich text editor built on TipTap 3.4.x, a headless editor framework based on ProseMirror. The editor combines markdown's simplicity with rich text's flexibility, providing an intuitive writing experience for both technical and non-technical users.
-
-## Overview
-
-The Lokus editor is designed for speed, extensibility, and seamless markdown integration. Whether you're writing documentation, taking meeting notes, or crafting long-form content, the editor adapts to your workflow.
-
-### Key Features
-
-- Full markdown support with real-time rendering
-- Custom TipTap extensions for enhanced functionality
-- Keyboard shortcuts for power users
-- Smart paste with content type detection
-- Collaborative editing capabilities
-- Extensive customization options
-
-![Rich Text Editor Interface](/placeholder.svg)
+Lokus features a powerful rich text editor built on TipTap, providing an intuitive writing experience for both technical and non-technical users.
 
 ## Text Formatting
 
-### Inline Formatting
+### Basic Formatting
+- **Bold**: Cmd/Ctrl + B
+- *Italic*: Cmd/Ctrl + I
+- ~~Strikethrough~~: Cmd/Ctrl + Shift + S
+- Inline code
+- Highlight text
+- Underline: Cmd/Ctrl + U
 
-The editor supports standard inline formatting with intuitive keyboard shortcuts:
-
-**Basic Formatting**
-- **Bold**: `Cmd/Ctrl + B` or `**text**`
-- *Italic*: `Cmd/Ctrl + I` or `*text*`
-- ~~Strikethrough~~: `Cmd/Ctrl + Shift + S` or `~~text~~`
-- `Inline Code`: `` `code` ``
-- ==Highlight==: `==text==`
-- Underline: `Cmd/Ctrl + U`
-
-**Advanced Formatting**
-- Subscript: `H~2~O` renders as H₂O
-- Superscript: `E=mc^2^` renders as E=mc²
-- Custom colors: `<span style="color: red">colored text</span>`
-- Font sizing: `<small>small</small>` or `<big>large</big>`
-
-### Keyboard Shortcuts
-
-| Action | Windows/Linux | macOS |
-|--------|---------------|-------|
-| Bold | Ctrl + B | Cmd + B |
-| Italic | Ctrl + I | Cmd + I |
-| Underline | Ctrl + U | Cmd + U |
-| Strikethrough | Ctrl + Shift + S | Cmd + Shift + S |
-| Code | Ctrl + E | Cmd + E |
-| Link | Ctrl + K | Cmd + K |
-| Command Palette | Ctrl + P | Cmd + P |
-| Save | Ctrl + S | Cmd + S |
-| Undo | Ctrl + Z | Cmd + Z |
-| Redo | Ctrl + Shift + Z | Cmd + Shift + Z |
+### Advanced Features
+- Subscript and superscript
+- Custom colors
+- Font sizing options
 
 ## Headers and Structure
 
-### Header Levels
-
-The editor supports six levels of headers with automatic styling:
-
-```markdown
-# Heading 1
-## Heading 2
-### Heading 3
-#### Heading 4
-##### Heading 5
-###### Heading 6
-```
-
-**Features:**
+The editor supports six levels of headers with automatic styling. Features include:
 - Automatic table of contents generation
-- Collapsible sections (click header to fold)
+- Collapsible sections
 - Anchor links for deep linking
 - Header numbering (optional)
-- Custom header IDs: `## Header {#custom-id}`
-
-### Horizontal Rules
-
-Create visual separators with:
-
-```markdown
----
-***
-___
-```
+- Custom header IDs
 
 ## Lists and Organization
 
-### Ordered Lists
-
-Create numbered lists with automatic renumbering:
-
-```markdown
-1. First item
-2. Second item
-   1. Nested item
-   2. Another nested item
-3. Third item
-```
-
-**List Features:**
-- Auto-continuation (press Enter to continue)
-- Smart indentation (Tab/Shift+Tab)
-- Drag-and-drop reordering
-- Multiple numbering styles (1, a, i, A, I)
-
-### Unordered Lists
-
-Create bullet lists with multiple styles:
-
-```markdown
-- Bullet item
-  - Nested bullet
-    - Double nested
-+ Plus bullet
-* Asterisk bullet
-```
-
 ### Task Lists
-
-Create interactive checkboxes:
-
-```markdown
-- [ ] Incomplete task
-- [x] Completed task
-- [>] In progress (custom extension)
-- [-] Cancelled task
-```
-
-**Task Features:**
+Create interactive checkboxes with full task management:
 - Click to toggle completion
 - Task statistics display
 - Due date integration
 - Priority markers
 - Subtask support
 
+### Ordered and Unordered Lists
+- Auto-continuation
+- Smart indentation
+- Drag-and-drop reordering
+- Multiple numbering styles
+
 ## Code Blocks
 
-### Syntax Highlighting
-
-The editor supports 100+ programming languages with syntax highlighting:
-
-```javascript
-// JavaScript example
-function fibonacci(n) {
-  if (n <= 1) return n;
-  return fibonacci(n - 1) + fibonacci(n - 2);
-}
-```
-
-```python
-# Python example
-def fibonacci(n):
-    if n <= 1:
-        return n
-    return fibonacci(n - 1) + fibonacci(n - 2)
-```
-
-```rust
-// Rust example
-fn fibonacci(n: u32) -> u32 {
-    match n {
-        0 | 1 => n,
-        _ => fibonacci(n - 1) + fibonacci(n - 2),
-    }
-}
-```
+The editor supports 100+ programming languages with syntax highlighting.
 
 **Code Block Features:**
-- Line numbers (toggle with button)
+- Line numbers
 - Copy code button
 - Language badge
 - Wrap lines toggle
 - Expand/collapse
 - Custom themes
-- Filename display: Add filename like `js:filename.js` after language
-
-### Inline Code
-
-Use backticks for inline code: `const value = 42`
-
-**Inline Code Features:**
-- Automatic language detection
-- Syntax highlighting (for short snippets)
-- Hover tooltips (for functions/APIs)
-- Click to edit in code block
-
-![Code Block with Syntax Highlighting](/placeholder.svg)
+- Filename display
 
 ## Math Equations
 
 Lokus uses KaTeX for beautiful mathematical typesetting.
 
 ### Inline Math
-
-Use single dollar signs for inline equations: `$E = mc^2$`
-
-Examples:
-- Pythagorean theorem: $a^2 + b^2 = c^2$
-- Quadratic formula: $x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}$
-- Greek letters: $\alpha, \beta, \gamma, \Delta, \Sigma$
+Use single dollar signs for inline equations like E=mc²
 
 ### Block Math
-
-Use double dollar signs for display equations:
-
-```markdown
-$$
-\int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}
-$$
-```
-
-**Renders as:**
-
-$$
-\int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}
-$$
+Use double dollar signs for display equations with full LaTeX support.
 
 **Math Features:**
 - KaTeX 0.16+ support
@@ -224,276 +73,69 @@ $$
 - Copy LaTeX source
 - Error highlighting
 
-### Common Math Symbols
-
-| Category | Symbols |
-|----------|---------|
-| Greek | `\alpha, \beta, \gamma, \Delta, \Omega` |
-| Operators | `\sum, \prod, \int, \nabla, \partial` |
-| Relations | `\leq, \geq, \neq, \approx, \equiv` |
-| Arrows | `\to, \leftarrow, \Rightarrow, \iff` |
-| Sets | `\in, \subset, \cup, \cap, \emptyset` |
-| Logic | `\forall, \exists, \neg, \land, \lor` |
-
-![Math Equations with KaTeX](/placeholder.svg)
-
 ## Tables
 
-Create structured data with markdown tables:
-
-```markdown
-| Header 1 | Header 2 | Header 3 |
-|----------|----------|----------|
-| Cell 1   | Cell 2   | Cell 3   |
-| Cell 4   | Cell 5   | Cell 6   |
-```
-
-**Table Features:**
+Create structured data with markdown tables featuring:
 - Column alignment (left, center, right)
-- Resizable columns (drag border)
-- Sortable columns (click header)
+- Resizable columns
+- Sortable columns
 - Row/column insertion
 - Cell merging
 - CSV import/export
 - Excel paste support
 
-### Table Alignment
-
-```markdown
-| Left | Center | Right |
-|:-----|:------:|------:|
-| L1   | C1     | R1    |
-| L2   | C2     | R2    |
-```
-
-![Markdown Tables with Formatting](/placeholder.svg)
-
 ## Images and Media
 
-### Image Embedding
-
-Add images with markdown or drag-and-drop:
-
-```markdown
-![Alt text](/path/to/image.png)
-![Alt text](/path/to/image.png "Title")
-```
-
-**Image Features:**
+### Image Features
 - Drag-and-drop upload
 - Paste from clipboard
 - Resize handles
-- Alignment options (left, center, right)
+- Alignment options
 - Captions
-- Lightbox view (click to expand)
+- Lightbox view
 - Lazy loading
 - Image optimization
 
-### Image Size Control
-
-```markdown
-![Alt text](/image.png =100x100)
-![Alt text](/image.png =50%)
-```
-
 ### Videos and Audio
-
-Embed media files:
-
-```markdown
-![Video](/path/to/video.mp4)
-<audio src="/path/to/audio.mp3" controls></audio>
-```
+Support for embedding video and audio files.
 
 ## Links
 
 ### Standard Links
-
-Create hyperlinks:
-
-```markdown
-[Link text](https://example.com)
-[Link with title](https://example.com "Title")
-```
+Create hyperlinks with markdown syntax.
 
 ### Auto-linking
-
-URLs are automatically converted to links:
-
-```markdown
-https://lokus.app
-user@example.com
-```
+URLs and email addresses are automatically converted to links.
 
 ### Wiki Links
-
 See [Wiki Links](/features/wiki-links) for internal linking.
-
-## Blockquotes
-
-Create quoted text:
-
-```markdown
-> Single line quote
-
-> Multi-line quote
-> continues here
-> and here
-
-> Nested quote
->> Second level
->>> Third level
-```
-
-**Blockquote Features:**
-- Nested blockquotes
-- Citation support
-- Custom styling
-- Callout blocks (info, warning, error)
-
-## Callouts
-
-Special callout blocks for emphasis:
-
-```markdown
-> [!NOTE]
-> This is a note callout
-
-> [!TIP]
-> This is a tip callout
-
-> [!WARNING]
-> This is a warning callout
-
-> [!DANGER]
-> This is a danger callout
-```
-
-**Callout Types:**
-- `NOTE` (blue) - General information
-- `TIP` (green) - Helpful suggestions
-- `WARNING` (yellow) - Cautions
-- `DANGER` (red) - Critical warnings
-- `INFO` (gray) - Additional details
-- `SUCCESS` (green) - Positive outcomes
 
 ## Smart Features
 
 ### Smart Paste
-
-The editor intelligently handles pasted content:
-
-**From Web:**
-- Preserves formatting
-- Converts to markdown
-- Cleans HTML
-- Handles images
-
-**From Code Editors:**
-- Detects language
-- Preserves indentation
-- Maintains syntax
-
-**From Spreadsheets:**
-- Converts to tables
-- Preserves structure
-- Handles formulas
+The editor intelligently handles pasted content from:
+- Web pages (preserves formatting)
+- Code editors (detects language)
+- Spreadsheets (converts to tables)
 
 ### Auto-completion
-
-The editor provides context-aware suggestions:
-
-**Wiki Links:**
-- Type `[[` to trigger
-- Shows all notes
-- Fuzzy search
-- Recent notes first
-
-**Tags:**
-- Type `#` to trigger
-- Existing tags shown
-- Create new tags
-- Tag hierarchy support
-
-**Mentions:**
-- Type `@` to trigger (if enabled)
-- User mentions
-- Note references
+Context-aware suggestions for:
+- Wiki links
+- Tags
+- Mentions
 
 ### Smart Formatting
-
-**Auto-formatting:**
-- Convert `-->` to `→`
-- Convert `(c)` to `©`
-- Convert `(tm)` to `™`
-- Convert `1/2` to `½`
-- Smart quotes: `"text"` to `"text"`
-- Em dash: `--` to `—`
-
-### Markdown Shortcuts
-
-**Input Rules:**
-- Type `#` + `Space` for header
-- Type `1.` + `Space` for ordered list
-- Type `-` + `Space` for bullet list
-- Type `[]` + `Space` for task
-- Type `` ``` `` for code block
-- Type `>` + `Space` for blockquote
+Automatic conversions for common symbols and typography.
 
 ## Extensions and Customization
 
 ### Built-in Extensions
-
-Lokus includes these TipTap extensions:
-
-**Core Extensions:**
-- Document
-- Paragraph
-- Text
-- Heading
-- Bold, Italic, Strike
-- Code, CodeBlock
-- Link
-- Image
-- HardBreak
-- HorizontalRule
-
-**Custom Extensions:**
-- WikiLink
-- Backlink
-- TaskList
-- Mathematics (KaTeX)
-- Callout
-- Canvas
-- Embed
+Lokus includes comprehensive TipTap extensions for all core features.
 
 ### Custom Extensions
-
-Developers can create custom extensions:
-
-```javascript
-import { Node } from '@tiptap/core'
-
-const CustomNode = Node.create({
-  name: 'customNode',
-
-  addAttributes() {
-    return {
-      value: { default: null }
-    }
-  },
-
-  renderHTML({ HTMLAttributes }) {
-    return ['div', HTMLAttributes, 0]
-  }
-})
-```
-
-See [Developer Guide](/developers) for extension development.
+Developers can create custom extensions. See [Developer Guide](/developers) for details.
 
 ## Editor Configuration
-
-### Settings
 
 Configure editor behavior in Settings:
 
@@ -516,108 +158,17 @@ Configure editor behavior in Settings:
 - CommonMark compliance
 - Custom extensions
 
-### Keyboard Customization
+## Writing Modes
 
-Remap keyboard shortcuts:
+**Focus Mode:** Hides sidebars and reduces distractions
 
-1. Open Settings > Keyboard
-2. Find command
-3. Click shortcut
-4. Press new key combination
-5. Save
+**Typewriter Mode:** Keeps cursor line centered
 
-### Writing Modes
-
-**Focus Mode:**
-- Hides sidebars
-- Dims interface
-- Centers content
-- Reduces distractions
-
-**Typewriter Mode:**
-- Keeps line centered
-- Smooth scrolling
-- Writer-friendly
-
-**Zen Mode:**
-- Fullscreen
-- No UI
-- Pure writing
-
-## Collaboration Features
-
-### Real-time Editing
-
-Multiple users can edit simultaneously:
-
-**Features:**
-- Cursors show user position
-- Selection highlighting
-- Conflict resolution
-- Presence indicators
-- User avatars
-
-### Comments
-
-Add inline comments:
-
-```markdown
-This is text [comment: needs revision] more text
-```
-
-**Comment Features:**
-- Thread discussions
-- Resolve/unresolve
-- Mentions (@user)
-- Timestamps
-- Edit history
-
-## Performance
-
-### Optimization
-
-The editor is optimized for large documents:
-
-**Techniques:**
-- Virtual scrolling
-- Lazy rendering
-- Efficient diff algorithm
-- Web Worker for parsing
-- IndexedDB caching
-
-**Benchmarks:**
-- 100,000+ character documents
-- Smooth 60fps scrolling
-- under 50ms keystroke latency
-- under 100ms save time
-
-## Accessibility
-
-### Keyboard Navigation
-
-Full keyboard support:
-
-- Arrow keys for cursor movement
-- Home/End for line navigation
-- Page Up/Down for scrolling
-- Tab for indentation
-- Esc to exit modes
-
-### Screen Readers
-
-ARIA labels and semantic HTML ensure screen reader compatibility:
-
-- Heading structure
-- List semantics
-- Image alt text
-- Link descriptions
-- Button labels
+**Zen Mode:** Fullscreen with no UI
 
 ## Export Options
 
 Export your content in multiple formats:
-
-**Supported Formats:**
 - Markdown (.md)
 - HTML (.html)
 - PDF (.pdf)
@@ -625,57 +176,22 @@ Export your content in multiple formats:
 - LaTeX (.tex)
 - Plain Text (.txt)
 
-**Export Features:**
-- Preserve formatting
-- Include images
-- Custom templates
-- Batch export
-- Pandoc integration
-
 ## Best Practices
 
 ### Writing Tips
-
-1. **Use Headers:** Structure with H1-H6
-2. **Break Up Text:** Short paragraphs
-3. **Use Lists:** Organize information
-4. **Add Links:** Connect related notes
-5. **Code Blocks:** Format technical content
-6. **Images:** Enhance understanding
+1. Use headers to structure content
+2. Break up text with short paragraphs
+3. Use lists to organize information
+4. Add links to connect related notes
+5. Use code blocks for technical content
+6. Add images to enhance understanding
 
 ### Markdown Style
-
-Follow these conventions:
-
 - One blank line between sections
 - Consistent list markers
 - ATX headers (# not =)
-- Fenced code blocks (not indented)
+- Fenced code blocks
 - Reference-style links for readability
-
-### Performance Tips
-
-- Keep notes focused (under 10,000 words)
-- Use image optimization
-- Limit real-time collaboration users
-- Close unused notes
-- Regular cleanup of old notes
-
-## Troubleshooting
-
-### Common Issues
-
-**Issue:** Formatting not working
-**Solution:** Check markdown syntax, ensure extension enabled
-
-**Issue:** Slow performance
-**Solution:** Split large notes, disable unused extensions
-
-**Issue:** Images not loading
-**Solution:** Check file path, ensure image exists, verify permissions
-
-**Issue:** Math not rendering
-**Solution:** Check LaTeX syntax, ensure KaTeX extension enabled
 
 ## Next Steps
 
