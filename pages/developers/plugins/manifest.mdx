@@ -332,29 +332,29 @@ Activate immediately on Lokus startup.
 
 Use sparingly - impacts startup performance.
 
-#### onLanguage:{languageId}
-Activate when file with specific language is opened.
+#### onLanguage
+Activate when file with specific language is opened. Format: `onLanguage:languageId`
 
 ```json
 { "activationEvents": ["onLanguage:markdown"] }
 ```
 
-#### onCommand:{commandId}
-Activate when specific command is executed.
+#### onCommand
+Activate when specific command is executed. Format: `onCommand:commandId`
 
 ```json
 { "activationEvents": ["onCommand:myPlugin.hello"] }
 ```
 
-#### onView:{viewId}
-Activate when view is opened.
+#### onView
+Activate when view is opened. Format: `onView:viewId`
 
 ```json
 { "activationEvents": ["onView:myPlugin.sidebar"] }
 ```
 
-#### workspaceContains:{pattern}
-Activate when workspace contains matching files.
+#### workspaceContains
+Activate when workspace contains matching files. Format: `workspaceContains:pattern`
 
 ```json
 {
@@ -365,8 +365,8 @@ Activate when workspace contains matching files.
 }
 ```
 
-#### onFileSystem:{scheme}
-Activate when URI with specific scheme is accessed.
+#### onFileSystem
+Activate when URI with specific scheme is accessed. Format: `onFileSystem:scheme`
 
 ```json
 { "activationEvents": ["onFileSystem:custom"] }
