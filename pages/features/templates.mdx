@@ -1,6 +1,56 @@
 # Templates
 
+**Version:** 1.3.1 | **Status:** Production Ready
+
 Templates in Lokus provide reusable structures for common note types, saving time and ensuring consistency across your workspace. From meeting notes to project plans, templates help you start with the right structure every time.
+
+## What's New in v1.3
+
+Version 1.3 introduces a universal template system that works across all of Lokus:
+
+- **Universal Template System** - Templates now work everywhere:
+  - Note templates for structured documents
+  - Daily note templates with automatic date variables
+  - Project templates with multi-file scaffolding
+  - Meeting templates with attendee tracking
+  - Custom templates for any use case
+  - Template inheritance for building on base templates
+  - Template composition to combine multiple templates
+- **Powerful Template Variables** - Dynamic content generation:
+  - `{{title}}` - Note title with automatic capitalization
+  - `{{date}}` - Current date in your preferred format (YYYY-MM-DD default)
+  - `{{time}}` - Current time with 12/24 hour support
+  - `{{datetime}}` - Combined date and time
+  - `{{author}}` - Current user from workspace settings
+  - `{{uuid}}` - Unique identifier for tracking and linking
+  - `{{date+N}}` / `{{date-N}}` - Relative dates (e.g., `{{date+7}}` for one week from now)
+  - Custom variables with prompts: `{{prompt:variable_name:Description}}`
+  - Select variables: `{{select:status:draft,review,published}}`
+  - Multiline variables: `{{multiline:description:Enter details}}`
+  - Conditional content: `{{#if variable}}...{{/if}}`
+- **Smart Template Types** - Pre-configured templates for common workflows:
+  - Note templates with frontmatter, headings, and sections
+  - Daily note templates with automatic date-based naming
+  - Project templates with task lists, milestones, and timelines
+  - Meeting templates with agenda, attendees, and action items
+  - Blog post templates with SEO metadata and structure
+  - Technical documentation with code blocks and API references
+  - Research note templates with citations and methodology
+- **Intelligent Insertion** - Multiple ways to use templates:
+  - Command palette (`Cmd/Ctrl + P` → "new from template")
+  - Slash commands (`/template-name` in editor)
+  - Quick template picker (`Cmd/Ctrl + Shift + N`)
+  - Right-click "New from Template" in file explorer
+  - Keyboard shortcuts for frequently used templates
+  - Auto-apply templates based on folder or tags
+- **Template Management** - Complete control over your templates:
+  - Create templates from UI with visual editor
+  - Edit templates with live preview
+  - Organize templates in categories (Personal, Work, Development, etc.)
+  - Share templates as JSON files or via template marketplace
+  - Import templates from files or URLs
+  - Version control for template changes
+  - Duplicate and customize existing templates
 
 ## Overview
 

@@ -1,6 +1,23 @@
 # Graph Visualization
 
+**Version:** 1.3.1 | **Status:** Production Ready
+
 The graph visualization in Lokus transforms your notes and their connections into an interactive network diagram, providing a visual representation of your knowledge structure. The graph helps you discover patterns, identify clusters, and navigate your notes in ways traditional folders and search cannot.
+
+## What's New in v1.3
+
+Version 1.3 brings major performance and visualization improvements to the graph system:
+
+- **High-Performance Physics Engine** - Force-directed layout using D3-force with quadtree acceleration, handling 1000+ nodes smoothly at 60fps
+- **WebGL Rendering** - Hardware-accelerated graphics for massive graphs (10,000+ nodes with WebGL, 5,000+ in 3D)
+- **3D Spatial Graph Mode** - Explore your knowledge in three dimensions with Three.js rendering, camera rotation, and depth perception
+- **Advanced Clustering** - Automatic community detection using Louvain, Label Propagation, and Betweenness algorithms with visual cluster boundaries
+- **Animation Tour Feature** - Guided graph exploration with smooth animated transitions between nodes and topics
+- **Level-of-Detail System** - Smart rendering that shows more detail when zoomed in, less when zoomed out for optimal performance
+- **Frustum & Occlusion Culling** - Only renders visible nodes, dramatically improving performance for large graphs
+- **Enhanced Export Options** - Export to PNG (1x-4x resolution), SVG (vector), and JSON formats with customizable options
+- **Improved Node Interactions** - Hover previews, multi-select with keyboard, drag-to-reposition with physics feedback
+- **Performance Monitoring** - Real-time FPS counter, adaptive quality settings, and optimization recommendations
 
 ## Overview
 

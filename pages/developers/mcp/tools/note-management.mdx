@@ -1,0 +1,769 @@
+# Note Management Tools
+
+Complete reference for the 11 note management tools in Lokus's built-in MCP server. These tools enable AI assistants to create, read, update, and delete notes in your workspace.
+
+**Category:** Note Management
+**Tools:** 11
+**Version:** 1.3.1
+
+## Overview
+
+Note management tools provide full CRUD (Create, Read, Update, Delete) operations on markdown notes. All tools respect workspace boundaries and file permissions.
+
+## Tools Reference
+
+### 1. create_note
+
+Create a new markdown note in the workspace.
+
+**Input Schema:**
+```typescript
+{
+  title: string          // Note title (used for filename)
+  content: string        // Markdown content
+  folder?: string        // Optional folder path (default: root)
+  tags?: string[]        // Optional tags
+  frontmatter?: object   // Optional YAML frontmatter
+}
+```
+
+**Output:**
+```typescript
+{
+  success: boolean
+  noteId: string
+  path: string
+  message: string
+}
+```
+
+**Example:**
+```typescript
+const result = await mcpClient.callTool('create_note', {
+  title: 'Meeting Notes',
+  content: '# Meeting with Team\n\n## Action Items\n- [ ] Review proposal',
+  folder: 'work/meetings',
+  tags: ['meeting', 'team', 'q4'],
+  frontmatter: {
+    date: '2025-10-15',
+    attendees: ['Alice', 'Bob']
+  }
+})
+
+// Result:
+{
+  success: true,
+  noteId: 'abc123',
+  path: 'work/meetings/meeting-notes.md',
+  message: 'Created note "Meeting Notes" at work/meetings/meeting-notes.md'
+}
+```
+
+**Use Cases:**
+- Capture meeting notes from voice transcripts
+- Generate daily notes automatically
+- Create templates programmatically
+- Import content from external sources
+
+---
+
+### 2. read_note
+
+Read the full content of a note by ID or path.
+
+**Input Schema:**
+```typescript
+{
+  noteId?: string      // Note ID
+  path?: string        // Or file path (one required)
+  includeMetadata?: boolean  // Include frontmatter (default: true)
+}
+```
+
+**Output:**
+```typescript
+{
+  success: boolean
+  note: {
+    id: string
+    title: string
+    content: string
+    path: string
+    frontmatter?: object
+    created: string
+    modified: string
+    size: number
+    wordCount: number
+  }
+}
+```
+
+**Example:**
+```typescript
+const note = await mcpClient.callTool('read_note', {
+  path: 'projects/lokus/roadmap.md',
+  includeMetadata: true
+})
+
+// Result:
+{
+  success: true,
+  note: {
+    id: 'xyz789',
+    title: 'Lokus Roadmap',
+    content: '# Lokus Roadmap\n\n## v1.4...',
+    path: 'projects/lokus/roadmap.md',
+    frontmatter: {
+      tags: ['roadmap', 'planning'],
+      status: 'in-progress'
+    },
+    created: '2025-09-01T10:00:00Z',
+    modified: '2025-10-15T14:30:00Z',
+    size: 15420,
+    wordCount: 2341
+  }
+}
+```
+
+**Use Cases:**
+- Retrieve note content for analysis
+- Extract information from existing notes
+- Copy content between notes
+- Validate note structure
+
+---
+
+### 3. update_note
+
+Update an existing note's content or metadata.
+
+**Input Schema:**
+```typescript
+{
+  noteId?: string        // Note ID
+  path?: string          // Or file path (one required)
+  content?: string       // New content (optional)
+  frontmatter?: object   // Update frontmatter (optional)
+  append?: boolean       // Append instead of replace (default: false)
+}
+```
+
+**Output:**
+```typescript
+{
+  success: boolean
+  noteId: string
+  path: string
+  message: string
+  previousVersion?: string  // Previous content hash
+}
+```
+
+**Example:**
+```typescript
+// Append to existing note
+const result = await mcpClient.callTool('update_note', {
+  path: 'daily/2025-10-15.md',
+  content: '\n\n## Evening Review\n\nCompleted all action items!',
+  append: true
+})
+
+// Update frontmatter only
+const result2 = await mcpClient.callTool('update_note', {
+  noteId: 'abc123',
+  frontmatter: {
+    status: 'completed',
+    completed_date: '2025-10-15'
+  }
+})
+```
+
+**Use Cases:**
+- Add daily journal entries
+- Update task statuses
+- Append new information
+- Modify metadata
+
+---
+
+### 4. delete_note
+
+Delete a note (moves to trash by default).
+
+**Input Schema:**
+```typescript
+{
+  noteId?: string      // Note ID
+  path?: string        // Or file path (one required)
+  permanent?: boolean  // Skip trash (default: false)
+}
+```
+
+**Output:**
+```typescript
+{
+  success: boolean
+  path: string
+  trashed: boolean
+  message: string
+}
+```
+
+**Example:**
+```typescript
+const result = await mcpClient.callTool('delete_note', {
+  path: 'drafts/old-idea.md',
+  permanent: false  // Move to trash
+})
+
+// Result:
+{
+  success: true,
+  path: 'drafts/old-idea.md',
+  trashed: true,
+  message: 'Moved "old-idea.md" to trash'
+}
+```
+
+**Use Cases:**
+- Clean up old drafts
+- Remove duplicate notes
+- Archive completed projects
+- Batch delete operations
+
+---
+
+### 5. list_notes
+
+List all notes in workspace or specific folder.
+
+**Input Schema:**
+```typescript
+{
+  folder?: string          // Filter by folder (default: all)
+  tag?: string             // Filter by tag
+  sortBy?: 'title' | 'created' | 'modified'  // Sort order
+  limit?: number           // Max results (default: 100)
+  offset?: number          // Pagination offset
+  includeMetadata?: boolean  // Include full metadata
+}
+```
+
+**Output:**
+```typescript
+{
+  success: boolean
+  notes: Array<{
+    id: string
+    title: string
+    path: string
+    created: string
+    modified: string
+    tags?: string[]
+  }>
+  total: number
+  hasMore: boolean
+}
+```
+
+**Example:**
+```typescript
+const result = await mcpClient.callTool('list_notes', {
+  folder: 'projects',
+  tag: 'active',
+  sortBy: 'modified',
+  limit: 10
+})
+
+// Result:
+{
+  success: true,
+  notes: [
+    {
+      id: 'abc123',
+      title: 'Lokus v1.4 Planning',
+      path: 'projects/lokus/v1.4-planning.md',
+      created: '2025-10-01T09:00:00Z',
+      modified: '2025-10-15T14:00:00Z',
+      tags: ['planning', 'active', 'lokus']
+    },
+    // ... more notes
+  ],
+  total: 47,
+  hasMore: true
+}
+```
+
+**Use Cases:**
+- Browse workspace contents
+- Generate note indexes
+- Find recently modified notes
+- Batch operations
+
+---
+
+### 6. search_notes
+
+Full-text search across all notes.
+
+**Input Schema:**
+```typescript
+{
+  query: string          // Search query
+  folder?: string        // Limit to folder
+  tags?: string[]        // Filter by tags
+  caseSensitive?: boolean  // Case-sensitive search
+  limit?: number         // Max results (default: 20)
+}
+```
+
+**Output:**
+```typescript
+{
+  success: boolean
+  results: Array<{
+    noteId: string
+    title: string
+    path: string
+    score: number          // Relevance score (0-1)
+    excerpt: string        // Matching excerpt
+    highlights: string[]   // Highlighted matches
+  }>
+  query: string
+  total: number
+}
+```
+
+**Example:**
+```typescript
+const results = await mcpClient.callTool('search_notes', {
+  query: 'quantum architecture performance',
+  tags: ['technical', 'lokus'],
+  limit: 5
+})
+
+// Result:
+{
+  success: true,
+  results: [
+    {
+      noteId: 'xyz789',
+      title: 'Quantum Search Implementation',
+      path: 'technical/quantum-search.md',
+      score: 0.95,
+      excerpt: '...the quantum architecture provides 100x performance improvements...',
+      highlights: ['quantum architecture', 'performance']
+    }
+  ],
+  query: 'quantum architecture performance',
+  total: 3
+}
+```
+
+**Use Cases:**
+- Find relevant notes
+- Content discovery
+- Research assistance
+- Knowledge retrieval
+
+---
+
+### 7. get_note_backlinks
+
+Get all notes that link to a specific note.
+
+**Input Schema:**
+```typescript
+{
+  noteId?: string        // Note ID
+  path?: string          // Or file path
+  includeContext?: boolean  // Include link context
+}
+```
+
+**Output:**
+```typescript
+{
+  success: boolean
+  backlinks: Array<{
+    noteId: string
+    title: string
+    path: string
+    context?: string      // Surrounding text
+    count: number         // Number of links from this note
+  }>
+  total: number
+}
+```
+
+**Example:**
+```typescript
+const backlinks = await mcpClient.callTool('get_note_backlinks', {
+  path: 'concepts/zettelkasten.md',
+  includeContext: true
+})
+
+// Result:
+{
+  success: true,
+  backlinks: [
+    {
+      noteId: 'abc123',
+      title: 'Note-taking Methods',
+      path: 'guides/note-taking.md',
+      context: 'The [[Zettelkasten]] method emphasizes atomic notes...',
+      count: 3
+    }
+  ],
+  total: 12
+}
+```
+
+**Use Cases:**
+- Find related notes
+- Understand note connections
+- Navigate knowledge graph
+- Impact analysis before editing
+
+---
+
+### 8. get_note_links
+
+Get all outgoing links from a note.
+
+**Input Schema:**
+```typescript
+{
+  noteId?: string        // Note ID
+  path?: string          // Or file path
+  includeExternal?: boolean  // Include HTTP links
+}
+```
+
+**Output:**
+```typescript
+{
+  success: boolean
+  links: {
+    internal: Array<{
+      target: string       // Target note path
+      alias?: string       // Link display text
+      exists: boolean      // Target exists
+    }>
+    external?: Array<{
+      url: string
+      text?: string
+    }>
+  }
+}
+```
+
+**Example:**
+```typescript
+const links = await mcpClient.callTool('get_note_links', {
+  path: 'projects/documentation.md',
+  includeExternal: true
+})
+
+// Result:
+{
+  success: true,
+  links: {
+    internal: [
+      { target: 'guides/setup.md', alias: 'Setup Guide', exists: true },
+      { target: 'api/reference.md', exists: true }
+    ],
+    external: [
+      { url: 'https://docs.lokus.dev', text: 'Official Docs' }
+    ]
+  }
+}
+```
+
+**Use Cases:**
+- Validate links
+- Build site maps
+- Find broken links
+- Analyze note structure
+
+---
+
+### 9. rename_note
+
+Rename a note and update all references.
+
+**Input Schema:**
+```typescript
+{
+  noteId?: string        // Current note ID
+  path?: string          // Or current path
+  newTitle: string       // New title
+  updateLinks?: boolean  // Update backlinks (default: true)
+}
+```
+
+**Output:**
+```typescript
+{
+  success: boolean
+  oldPath: string
+  newPath: string
+  linksUpdated: number   // Number of backlinks updated
+  message: string
+}
+```
+
+**Example:**
+```typescript
+const result = await mcpClient.callTool('rename_note', {
+  path: 'drafts/temp-notes.md',
+  newTitle: 'Project Brainstorm',
+  updateLinks: true
+})
+
+// Result:
+{
+  success: true,
+  oldPath: 'drafts/temp-notes.md',
+  newPath: 'drafts/project-brainstorm.md',
+  linksUpdated: 5,
+  message: 'Renamed note and updated 5 backlinks'
+}
+```
+
+**Use Cases:**
+- Reorganize notes
+- Fix typos in titles
+- Standardize naming
+- Refactor note structure
+
+---
+
+### 10. move_note
+
+Move a note to a different folder.
+
+**Input Schema:**
+```typescript
+{
+  noteId?: string        // Note ID
+  path?: string          // Or current path
+  targetFolder: string   // Destination folder
+  updateLinks?: boolean  // Update references (default: true)
+}
+```
+
+**Output:**
+```typescript
+{
+  success: boolean
+  oldPath: string
+  newPath: string
+  linksUpdated: number
+  message: string
+}
+```
+
+**Example:**
+```typescript
+const result = await mcpClient.callTool('move_note', {
+  path: 'inbox/meeting-notes.md',
+  targetFolder: 'work/meetings/2025',
+  updateLinks: true
+})
+
+// Result:
+{
+  success: true,
+  oldPath: 'inbox/meeting-notes.md',
+  newPath: 'work/meetings/2025/meeting-notes.md',
+  linksUpdated: 3,
+  message: 'Moved note and updated 3 references'
+}
+```
+
+**Use Cases:**
+- Organize notes
+- Archive completed work
+- Restructure workspace
+- Batch move operations
+
+---
+
+### 11. duplicate_note
+
+Create a copy of an existing note.
+
+**Input Schema:**
+```typescript
+{
+  noteId?: string        // Source note ID
+  path?: string          // Or source path
+  newTitle?: string      // New title (default: "Copy of X")
+  targetFolder?: string  // Destination (default: same folder)
+  includeLinks?: boolean // Copy with same links (default: false)
+}
+```
+
+**Output:**
+```typescript
+{
+  success: boolean
+  originalPath: string
+  duplicatePath: string
+  duplicateId: string
+  message: string
+}
+```
+
+**Example:**
+```typescript
+const result = await mcpClient.callTool('duplicate_note', {
+  path: 'templates/meeting-template.md',
+  newTitle: 'Team Meeting 2025-10-15',
+  targetFolder: 'work/meetings',
+  includeLinks: true
+})
+
+// Result:
+{
+  success: true,
+  originalPath: 'templates/meeting-template.md',
+  duplicatePath: 'work/meetings/team-meeting-2025-10-15.md',
+  duplicateId: 'new123',
+  message: 'Duplicated note to work/meetings/'
+}
+```
+
+**Use Cases:**
+- Use templates
+- Create note variants
+- Backup before major edits
+- Clone project structures
+
+## Integration Patterns
+
+### Batch Operations
+
+Process multiple notes efficiently:
+
+```typescript
+// Batch create daily notes for a week
+const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
+const results = await Promise.all(
+  days.map(day => mcpClient.callTool('create_note', {
+    title: `Daily Note - ${day}`,
+    content: `# ${day}\n\n## Tasks\n\n## Notes\n`,
+    folder: 'daily/2025-10-week-42',
+    tags: ['daily', 'october']
+  }))
+)
+```
+
+### Error Handling
+
+Handle errors gracefully:
+
+```typescript
+try {
+  const note = await mcpClient.callTool('read_note', {
+    path: 'nonexistent.md'
+  })
+} catch (error) {
+  if (error.code === 'NOTE_NOT_FOUND') {
+    // Create the note instead
+    await mcpClient.callTool('create_note', {
+      title: 'New Note',
+      content: 'Content here'
+    })
+  }
+}
+```
+
+### Transactional Updates
+
+Ensure atomic operations:
+
+```typescript
+// Read -> Modify -> Update pattern
+const { note } = await mcpClient.callTool('read_note', {
+  path: 'tasks.md'
+})
+
+const updatedContent = note.content + '\n- [ ] New task'
+
+await mcpClient.callTool('update_note', {
+  path: 'tasks.md',
+  content: updatedContent
+})
+```
+
+## Best Practices
+
+**1. Use Paths for Deterministic Operations**
+```typescript
+// Good - Explicit path
+await mcpClient.callTool('read_note', { path: 'exact/path.md' })
+
+// Avoid - Relies on ID stability
+await mcpClient.callTool('read_note', { noteId: 'abc123' })
+```
+
+**2. Always Update Links When Moving/Renaming**
+```typescript
+await mcpClient.callTool('rename_note', {
+  path: 'old-name.md',
+  newTitle: 'new-name',
+  updateLinks: true  // Important!
+})
+```
+
+**3. Handle Pagination for Large Results**
+```typescript
+let offset = 0
+const limit = 100
+let hasMore = true
+
+while (hasMore) {
+  const { notes, hasMore: more } = await mcpClient.callTool('list_notes', {
+    limit,
+    offset
+  })
+
+  processNotes(notes)
+  offset += limit
+  hasMore = more
+}
+```
+
+**4. Use Frontmatter for Structured Data**
+```typescript
+await mcpClient.callTool('create_note', {
+  title: 'Task',
+  content: '# Task Description',
+  frontmatter: {
+    status: 'pending',
+    priority: 'high',
+    due_date: '2025-10-31',
+    assigned_to: 'Alice'
+  }
+})
+```
+
+## Error Codes
+
+| Code | Description | Resolution |
+|------|-------------|------------|
+| `NOTE_NOT_FOUND` | Note doesn't exist | Check path/ID, create if needed |
+| `PERMISSION_DENIED` | Insufficient permissions | Check file permissions |
+| `INVALID_PATH` | Invalid file path | Validate path format |
+| `FOLDER_NOT_FOUND` | Target folder missing | Create folder first |
+| `DUPLICATE_NOTE` | Note already exists | Use different title or update existing |
+| `WORKSPACE_ERROR` | Workspace not accessible | Check workspace path |
+
+## Next Steps
+
+- [Workspace Operations](/developers/mcp/tools/workspace-operations) - File system tools
+- [Advanced Search](/developers/mcp/tools/advanced-search) - Powerful search capabilities
+- [AI Analysis](/developers/mcp/tools/ai-analysis) - Content analysis tools
+- [Complete MCP Guide](/developers/mcp/overview) - Full MCP documentation

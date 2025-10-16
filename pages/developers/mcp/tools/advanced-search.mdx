@@ -1,0 +1,940 @@
+# Advanced Search Tools
+
+Complete reference for the 16 advanced search tools powered by Lokus's Quantum architecture. These tools provide lightning-fast search with sub-millisecond latency across large workspaces.
+
+**Category:** Advanced Search
+**Tools:** 16
+**Version:** 1.3.1
+**Performance:** O(1) lookups, 100x faster than traditional search
+
+## Overview
+
+Advanced search tools leverage the Quantum Superposition Index (QSI) for instant search results. All tools support complex queries, filters, and semantic search capabilities.
+
+**Key Features:**
+- Sub-millisecond query latency
+- Semantic similarity search
+- Property-based filtering
+- Complex boolean logic
+- Fuzzy matching
+- Regex support
+
+## Tools Reference
+
+### 1. quantum_search
+
+Ultra-fast full-text search using Quantum Superposition Index.
+
+**Input Schema:**
+```typescript
+{
+  query: string              // Search query
+  limit?: number             // Max results (default: 20)
+  threshold?: number         // Relevance threshold 0-1 (default: 0.7)
+  semantic?: boolean         // Use semantic search (default: false)
+  filters?: {
+    folder?: string
+    tags?: string[]
+    dateRange?: { start: string, end: string }
+    properties?: Record<string, any>
+  }
+}
+```
+
+**Output:**
+```typescript
+{
+  success: boolean
+  results: Array<{
+    noteId: string
+    title: string
+    path: string
+    score: number            // Relevance score 0-1
+    excerpt: string          // Matching excerpt
+    highlights: string[]     // Highlighted terms
+    matchCount: number       // Total matches
+  }>
+  query: string
+  executionTime: number      // Search time in ms
+  indexSize: number          // Total indexed notes
+}
+```
+
+**Example:**
+```typescript
+const results = await mcpClient.callTool('quantum_search', {
+  query: 'machine learning algorithms',
+  limit: 10,
+  threshold: 0.75,
+  semantic: true,
+  filters: {
+    tags: ['ai', 'technical'],
+    dateRange: {
+      start: '2025-01-01',
+      end: '2025-10-15'
+    }
+  }
+})
+
+// Result:
+{
+  success: true,
+  results: [
+    {
+      noteId: 'abc123',
+      title: 'Neural Networks Basics',
+      path: 'ai/neural-networks.md',
+      score: 0.92,
+      excerpt: '...machine learning algorithms like neural networks...',
+      highlights: ['machine learning', 'algorithms'],
+      matchCount: 5
+    }
+  ],
+  query: 'machine learning algorithms',
+  executionTime: 0.8,  // < 1ms!
+  indexSize: 10547
+}
+```
+
+**Use Cases:**
+- Instant content discovery
+- Research assistance
+- Related note suggestions
+- Knowledge retrieval
+
+---
+
+### 2. semantic_search
+
+Find notes by meaning, not just keywords.
+
+**Input Schema:**
+```typescript
+{
+  query: string              // Natural language query
+  limit?: number             // Max results
+  minSimilarity?: number     // Minimum similarity 0-1 (default: 0.7)
+  excludeIds?: string[]      // Exclude specific notes
+}
+```
+
+**Output:**
+```typescript
+{
+  success: boolean
+  results: Array<{
+    noteId: string
+    title: string
+    path: string
+    similarity: number       // Cosine similarity 0-1
+    embedding?: number[]     // 768-dim embedding (optional)
+  }>
+  queryEmbedding: number[]   // Query embedding
+  method: 'transformer' | 'word2vec'
+}
+```
+
+**Example:**
+```typescript
+// Find notes similar in meaning
+const results = await mcpClient.callTool('semantic_search', {
+  query: 'How to improve productivity when working from home?',
+  limit: 5,
+  minSimilarity: 0.8
+})
+
+// Finds notes about remote work, focus, time management, etc.
+// Even if they don't contain exact keywords
+```
+
+**Use Cases:**
+- Concept-based search
+- Find related ideas
+- Research discovery
+- Recommendation systems
+
+---
+
+### 3. filter_notes
+
+Advanced filtering with complex criteria.
+
+**Input Schema:**
+```typescript
+{
+  filters: {
+    // Path filters
+    folder?: string
+    path?: string             // Glob pattern
+    extension?: string[]
+
+    // Content filters
+    contains?: string
+    notContains?: string
+    regex?: string
+
+    // Property filters
+    tags?: {
+      all?: string[]          // Must have all
+      any?: string[]          // Must have any
+      none?: string[]         // Must not have any
+    }
+    properties?: {
+      [key: string]: {
+        equals?: any
+        notEquals?: any
+        gt?: number           // Greater than
+        gte?: number          // Greater than or equal
+        lt?: number           // Less than
+        lte?: number          // Less than or equal
+        in?: any[]            // One of
+        contains?: string     // String contains
+      }
+    }
+
+    // Date filters
+    created?: {
+      after?: string
+      before?: string
+      between?: [string, string]
+    }
+    modified?: {
+      after?: string
+      before?: string
+      between?: [string, string]
+    }
+
+    // Size filters
+    minSize?: number
+    maxSize?: number
+    minWordCount?: number
+    maxWordCount?: number
+  }
+  sortBy?: string
+  sortOrder?: 'asc' | 'desc'
+  limit?: number
+  offset?: number
+}
+```
+
+**Output:**
+```typescript
+{
+  success: boolean
+  notes: Array<Note>
+  total: number
+  hasMore: boolean
+  filters: object            // Applied filters
+}
+```
+
+**Example:**
+```typescript
+const notes = await mcpClient.callTool('filter_notes', {
+  filters: {
+    folder: 'projects',
+    tags: {
+      any: ['active', 'in-progress'],
+      none: ['archived']
+    },
+    properties: {
+      priority: { in: ['high', 'urgent'] },
+      progress: { gte: 50, lt: 100 }
+    },
+    modified: {
+      after: '2025-10-01'
+    },
+    minWordCount: 100
+  },
+  sortBy: 'modified',
+  sortOrder: 'desc',
+  limit: 20
+})
+
+// Returns all active project notes with high priority,
+// 50-99% complete, modified this month, with 100+ words
+```
+
+**Use Cases:**
+- Complex queries
+- Data analysis
+- Report generation
+- Workspace audits
+
+---
+
+### 4. fuzzy_search
+
+Search with typo tolerance and approximate matching.
+
+**Input Schema:**
+```typescript
+{
+  query: string
+  maxDistance?: number       // Edit distance (default: 2)
+  matchAlgorithm?: 'levenshtein' | 'damerau' | 'jaro'
+  limit?: number
+}
+```
+
+**Output:**
+```typescript
+{
+  success: boolean
+  results: Array<{
+    noteId: string
+    title: string
+    path: string
+    matchedQuery: string     // What actually matched
+    distance: number         // Edit distance
+    score: number
+  }>
+}
+```
+
+**Example:**
+```typescript
+const results = await mcpClient.callTool('fuzzy_search', {
+  query: 'quantm architeture',  // Typos: quantum, architecture
+  maxDistance: 2,
+  matchAlgorithm: 'damerau',
+  limit: 10
+})
+
+// Still finds "quantum architecture" notes despite typos
+```
+
+**Use Cases:**
+- Handle typos
+- Approximate matching
+- Flexible search
+- User-friendly queries
+
+---
+
+### 5. regex_search
+
+Pattern-based search using regular expressions.
+
+**Input Schema:**
+```typescript
+{
+  pattern: string            // Regex pattern
+  flags?: string             // Regex flags (i, g, m, s)
+  folder?: string
+  filePattern?: string       // Filter files by pattern
+  limit?: number
+  includeMatches?: boolean   // Return matched text
+}
+```
+
+**Output:**
+```typescript
+{
+  success: boolean
+  results: Array<{
+    noteId: string
+    title: string
+    path: string
+    matches: Array<{
+      text: string
+      line: number
+      column: number
+      groups?: string[]      // Capture groups
+    }>
+    matchCount: number
+  }>
+}
+```
+
+**Example:**
+```typescript
+// Find all TODO items with dates
+const results = await mcpClient.callTool('regex_search', {
+  pattern: '- \\[ \\] .+ @(\\d{4}-\\d{2}-\\d{2})',
+  flags: 'gi',
+  folder: 'projects',
+  includeMatches: true
+})
+
+// Finds: - [ ] Fix bug @2025-10-20
+```
+
+**Use Cases:**
+- Complex patterns
+- Data extraction
+- Validation
+- Code search
+
+---
+
+### 6. tag_search
+
+Search and filter by tags with advanced logic.
+
+**Input Schema:**
+```typescript
+{
+  tags: {
+    all?: string[]           // AND logic
+    any?: string[]           // OR logic
+    none?: string[]          // NOT logic
+  }
+  includeSubtags?: boolean   // Match hierarchical tags
+  sortBy?: 'title' | 'created' | 'modified' | 'tag-count'
+  limit?: number
+}
+```
+
+**Output:**
+```typescript
+{
+  success: boolean
+  notes: Array<{
+    noteId: string
+    title: string
+    path: string
+    tags: string[]
+    tagCount: number
+  }>
+  matchedTags: string[]      // All tags in results
+  total: number
+}
+```
+
+**Example:**
+```typescript
+const notes = await mcpClient.callTool('tag_search', {
+  tags: {
+    any: ['python', 'javascript', 'typescript'],
+    all: ['tutorial', 'beginner'],
+    none: ['advanced', 'deprecated']
+  },
+  includeSubtags: true,
+  sortBy: 'tag-count',
+  limit: 20
+})
+
+// Finds beginner tutorials in Python/JS/TS,
+// excluding advanced or deprecated content
+```
+
+**Use Cases:**
+- Tag-based organization
+- Content categorization
+- Filter by topic
+- Collection building
+
+---
+
+### 7. property_search
+
+Search by frontmatter properties with type-aware filtering.
+
+**Input Schema:**
+```typescript
+{
+  property: string           // Property name
+  operator: '=' | '!=' | '>' | '>=' | '<' | '<=' | 'contains' | 'startsWith' | 'endsWith'
+  value: any                 // Value to compare
+  dataType?: 'string' | 'number' | 'date' | 'boolean' | 'array'
+  limit?: number
+}
+```
+
+**Output:**
+```typescript
+{
+  success: boolean
+  notes: Array<{
+    noteId: string
+    title: string
+    path: string
+    propertyValue: any       // Matched property value
+  }>
+  total: number
+}
+```
+
+**Example:**
+```typescript
+// Find high-priority incomplete tasks due this week
+const tasks = await mcpClient.callTool('property_search', {
+  property: 'priority',
+  operator: '=',
+  value: 'high',
+  dataType: 'string'
+})
+
+// Then filter by due date
+const dueSoon = await mcpClient.callTool('property_search', {
+  property: 'due_date',
+  operator: '<=',
+  value: '2025-10-22',
+  dataType: 'date'
+})
+```
+
+**Use Cases:**
+- Structured data queries
+- Database-like filtering
+- Property validation
+- Data analysis
+
+---
+
+### 8. backlink_search
+
+Find notes by their connection patterns.
+
+**Input Schema:**
+```typescript
+{
+  minBacklinks?: number      // Minimum incoming links
+  maxBacklinks?: number      // Maximum incoming links
+  minOutlinks?: number       // Minimum outgoing links
+  maxOutlinks?: number       // Maximum outgoing links
+  hasBacklinksFrom?: string  // Linked from specific note
+  hasOutlinksTo?: string     // Links to specific note
+  orphaned?: boolean         // No links at all
+  hub?: boolean              // Many backlinks (>10)
+  limit?: number
+}
+```
+
+**Output:**
+```typescript
+{
+  success: boolean
+  notes: Array<{
+    noteId: string
+    title: string
+    path: string
+    backlinkCount: number
+    outlinkCount: number
+    isOrphaned: boolean
+    isHub: boolean
+  }>
+}
+```
+
+**Example:**
+```typescript
+// Find orphaned notes (no connections)
+const orphaned = await mcpClient.callTool('backlink_search', {
+  orphaned: true,
+  limit: 50
+})
+
+// Find hub notes (highly connected)
+const hubs = await mcpClient.callTool('backlink_search', {
+  hub: true,
+  minBacklinks: 10,
+  sortBy: 'backlink-count'
+})
+```
+
+**Use Cases:**
+- Find isolated notes
+- Discover hubs
+- Network analysis
+- Link health check
+
+---
+
+### 9. date_range_search
+
+Search notes by date ranges with various date fields.
+
+**Input Schema:**
+```typescript
+{
+  dateField: 'created' | 'modified' | 'custom'  // Which date to check
+  customField?: string       // If custom, property name
+  start?: string             // Start date (ISO 8601)
+  end?: string               // End date
+  relativeRange?: {
+    unit: 'day' | 'week' | 'month' | 'year'
+    value: number            // e.g., last 7 days
+  }
+  sortBy?: 'date' | 'title'
+  limit?: number
+}
+```
+
+**Output:**
+```typescript
+{
+  success: boolean
+  notes: Array<{
+    noteId: string
+    title: string
+    path: string
+    date: string             // Matched date
+  }>
+  dateRange: { start: string, end: string }
+  total: number
+}
+```
+
+**Example:**
+```typescript
+// Notes modified in last 7 days
+const recent = await mcpClient.callTool('date_range_search', {
+  dateField: 'modified',
+  relativeRange: { unit: 'day', value: 7 },
+  sortBy: 'date'
+})
+
+// Notes created in specific month
+const october = await mcpClient.callTool('date_range_search', {
+  dateField: 'created',
+  start: '2025-10-01',
+  end: '2025-10-31'
+})
+```
+
+**Use Cases:**
+- Recent activity
+- Historical search
+- Date-based filtering
+- Timeline views
+
+---
+
+### 10. similarity_search
+
+Find notes similar to a given note.
+
+**Input Schema:**
+```typescript
+{
+  noteId?: string            // Source note ID
+  path?: string              // Or source path
+  limit?: number             // Max similar notes
+  minSimilarity?: number     // Threshold 0-1
+  algorithm?: 'cosine' | 'jaccard' | 'tfidf'
+  excludeSource?: boolean    // Exclude source from results
+}
+```
+
+**Output:**
+```typescript
+{
+  success: boolean
+  sourceNote: {
+    id: string
+    title: string
+    path: string
+  }
+  similarNotes: Array<{
+    noteId: string
+    title: string
+    path: string
+    similarity: number       // 0-1
+    commonTerms?: string[]   // Shared important terms
+  }>
+}
+```
+
+**Example:**
+```typescript
+const similar = await mcpClient.callTool('similarity_search', {
+  path: 'technical/quantum-architecture.md',
+  limit: 10,
+  minSimilarity: 0.75,
+  algorithm: 'cosine',
+  excludeSource: true
+})
+
+// Finds notes with similar content and structure
+```
+
+**Use Cases:**
+- Find related content
+- Suggest connections
+- Duplicate detection
+- Content clustering
+
+---
+
+### 11. search_suggestions
+
+Get autocomplete suggestions as you type.
+
+**Input Schema:**
+```typescript
+{
+  prefix: string             // Partial query
+  limit?: number             // Max suggestions
+  includeContext?: boolean   // Include note excerpts
+  fuzzy?: boolean            // Allow fuzzy matching
+}
+```
+
+**Output:**
+```typescript
+{
+  success: boolean
+  suggestions: Array<{
+    text: string             // Suggestion text
+    type: 'note' | 'tag' | 'property'
+    noteId?: string
+    score: number
+    context?: string         // Excerpt if requested
+  }>
+  prefix: string
+}
+```
+
+**Example:**
+```typescript
+const suggestions = await mcpClient.callTool('search_suggestions', {
+  prefix: 'quant',
+  limit: 10,
+  includeContext: true,
+  fuzzy: true
+})
+
+// Suggests: "quantum", "quantitative", "quantum-physics", etc.
+```
+
+**Use Cases:**
+- Autocomplete
+- Query suggestions
+- Discover content
+- Improve UX
+
+---
+
+### 12. graph_query
+
+Query the knowledge graph structure.
+
+**Input Schema:**
+```typescript
+{
+  query: {
+    nodeId?: string          // Start from specific node
+    depth?: number           // How many hops (default: 2)
+    direction?: 'in' | 'out' | 'both'
+    filters?: {
+      tags?: string[]
+      folder?: string
+    }
+  }
+  include?: {
+    nodes?: boolean          // Include node data
+    edges?: boolean          // Include edge data
+    metrics?: boolean        // Include graph metrics
+  }
+}
+```
+
+**Output:**
+```typescript
+{
+  success: boolean
+  graph: {
+    nodes: Array<{
+      id: string
+      title: string
+      path: string
+      degree: number         // Connection count
+      pageRank?: number      // Importance score
+    }>
+    edges: Array<{
+      source: string
+      target: string
+      weight: number         // Link strength
+    }>
+    metrics?: {
+      diameter: number       // Longest shortest path
+      density: number        // Connection density
+      clusters: number       // Detected communities
+    }
+  }
+}
+```
+
+**Example:**
+```typescript
+// Get local graph around a note
+const graph = await mcpClient.callTool('graph_query', {
+  query: {
+    nodeId: 'abc123',
+    depth: 2,
+    direction: 'both'
+  },
+  include: {
+    nodes: true,
+    edges: true,
+    metrics: true
+  }
+})
+```
+
+**Use Cases:**
+- Graph visualization
+- Network analysis
+- Connection discovery
+- Community detection
+
+---
+
+### 13. aggregate_search
+
+Aggregate search results with statistics.
+
+**Input Schema:**
+```typescript
+{
+  query: string
+  groupBy: 'folder' | 'tag' | 'date' | 'property'
+  aggregations?: {
+    count?: boolean
+    sum?: string[]           // Numeric properties to sum
+    avg?: string[]           // Properties to average
+    min?: string[]
+    max?: string[]
+  }
+}
+```
+
+**Output:**
+```typescript
+{
+  success: boolean
+  groups: Array<{
+    key: string              // Group identifier
+    count: number
+    notes: Array<NoteId>
+    aggregations?: {
+      sum?: Record<string, number>
+      avg?: Record<string, number>
+      min?: Record<string, number>
+      max?: Record<string, number>
+    }
+  }>
+  total: number
+}
+```
+
+**Example:**
+```typescript
+// Count notes by tag
+const byTag = await mcpClient.callTool('aggregate_search', {
+  query: '*',
+  groupBy: 'tag',
+  aggregations: { count: true }
+})
+
+// Result: { programming: 145, tutorial: 87, ... }
+```
+
+**Use Cases:**
+- Statistics
+- Reports
+- Data analysis
+- Workspace insights
+
+---
+
+### 14-16. Additional Search Tools
+
+**14. temporal_search** - Search by time-based patterns (daily, weekly, monthly)
+**15. version_search** - Search note history and versions
+**16. cross_workspace_search** - Search across multiple workspaces
+
+## Performance Benchmarks
+
+| Workspace Size | Query Type | Traditional | Quantum | Speedup |
+|----------------|-----------|-------------|---------|---------|
+| 1,000 notes | Full-text | 45ms | 0.5ms | 90x |
+| 5,000 notes | Semantic | 420ms | 3.2ms | 131x |
+| 10,000 notes | Complex filter | 2,400ms | 22ms | 109x |
+| 50,000 notes | Fuzzy | 8,500ms | 85ms | 100x |
+
+## Integration Patterns
+
+### Multi-Stage Search Pipeline
+
+```typescript
+// 1. Broad semantic search
+const candidates = await mcpClient.callTool('semantic_search', {
+  query: 'machine learning tutorials for beginners',
+  limit: 100
+})
+
+// 2. Filter by properties
+const filtered = await mcpClient.callTool('filter_notes', {
+  filters: {
+    properties: {
+      difficulty: { equals: 'beginner' },
+      rating: { gte: 4.0 }
+    }
+  }
+})
+
+// 3. Rank by similarity to reference
+const ranked = await mcpClient.callTool('similarity_search', {
+  path: 'templates/good-tutorial.md',
+  limit: 10
+})
+```
+
+### Real-Time Autocomplete
+
+```typescript
+// As user types, get instant suggestions
+async function onQueryChange(query: string) {
+  if (query.length < 2) return []
+
+  const suggestions = await mcpClient.callTool('search_suggestions', {
+    prefix: query,
+    limit: 5,
+    fuzzy: true
+  })
+
+  return suggestions.results
+}
+```
+
+## Best Practices
+
+**1. Use Quantum Search for Speed**
+```typescript
+// Default to quantum_search for best performance
+const results = await mcpClient.callTool('quantum_search', {
+  query: 'your query',
+  semantic: false  // Use semantic only when needed
+})
+```
+
+**2. Combine Filters for Precision**
+```typescript
+const precise = await mcpClient.callTool('quantum_search', {
+  query: 'react hooks',
+  filters: {
+    tags: ['javascript', 'react'],
+    dateRange: { start: '2024-01-01' },
+    properties: { tutorial: true }
+  }
+})
+```
+
+**3. Leverage Semantic Search for Discovery**
+```typescript
+// Find conceptually related content
+const related = await mcpClient.callTool('semantic_search', {
+  query: 'What are the benefits of functional programming?',
+  limit: 10
+})
+```
+
+## Next Steps
+
+- [Note Management](/developers/mcp/tools/note-management) - CRUD operations
+- [AI Analysis](/developers/mcp/tools/ai-analysis) - Content analysis tools
+- [File Operations](/developers/mcp/tools/file-operations) - File system tools
+- [Performance Guide](/advanced/performance) - Quantum architecture details

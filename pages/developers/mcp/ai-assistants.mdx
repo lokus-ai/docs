@@ -2,6 +2,135 @@
 
 Learn how to connect AI assistants to Lokus using the Model Context Protocol (MCP).
 
+**Version:** 1.3.1 | **Status:** Production Ready
+
+## Built-in MCP Server (v1.3)
+
+Lokus v1.3 includes a **built-in MCP server** that starts automatically when you launch the application. No configuration needed!
+
+### Auto-Start Feature ✨
+
+**What happens when Lokus starts:**
+1. MCP server launches automatically in the background
+2. Starts listening for connections
+3. Exposes 68+ tools across 6 categories
+4. Shows "MCP: Running" (green) in status bar
+
+**Zero Configuration:**
+- No manual setup required
+- No port conflicts - auto-selects available port
+- Works out of the box on macOS, Windows, and Linux
+- Automatically restarts if it crashes
+
+### Dual Transport Support
+
+Lokus v1.3 MCP server supports **both** stdio and HTTP transport:
+
+**Stdio Transport (Default for Desktop Apps):**
+```json
+{
+  "mcpServers": {
+    "lokus": {
+      "command": "node",
+      "args": ["/path/to/lokus/src/mcp-server/stdio-server.js"],
+      "transport": "stdio",
+      "env": {
+        "LOKUS_WORKSPACE": "/path/to/workspace"
+      }
+    }
+  }
+}
+```
+
+**HTTP Transport (Available for CLI/Web):**
+```javascript
+const transport = new HTTPTransport({
+  baseURL: 'http://localhost:3456/mcp',  // Default port: 3456
+  headers: {
+    'Content-Type': 'application/json'
+  }
+})
+```
+
+### 68+ Built-in Tools
+
+The built-in MCP server provides comprehensive tools across 6 categories:
+
+| Category | Tools | Description |
+|----------|-------|-------------|
+| **Note Management** | 11 tools | Create, read, update, delete notes |
+| **Workspace Operations** | 12 tools | File operations, workspace stats |
+| **Advanced Search** | 16 tools | Search, filter, query notes |
+| **AI Analysis** | 10 tools | Analyze content, suggest links |
+| **File Operations** | 6 tools | Move, rename, organize files |
+| **Editor Enhancements** | 10 tools | Format, validate, transform content |
+
+**Example Tools:**
+- `read_file` - Read note content
+- `write_file` - Write to note
+- `search_files` - Search across workspace
+- `create_note` - Create new note
+- `list_files` - List all workspace files
+- `get_workspace_info` - Get workspace metadata
+- `analyze_content` - AI content analysis
+- `suggest_links` - Intelligent link suggestions
+- `backup_workspace` - Create workspace backup
+
+[See complete tools list →](/developers/mcp/tools)
+
+### Verify MCP Server Status
+
+**Check if MCP is running:**
+
+1. **Status Bar** (Bottom of Lokus window):
+   - Green "MCP: Running" = Active
+   - Red "MCP: Stopped" = Not running
+   - Yellow "MCP: Starting..." = Initializing
+
+2. **Via Preferences:**
+   - Lokus → Preferences → MCP Server
+   - View server status, port, and logs
+
+3. **Via Tauri Command:**
+   ```javascript
+   import { invoke } from '@tauri-apps/api/core';
+   const status = await invoke('mcp_status');
+   console.log(status); // { is_running: true, port: 3456, ... }
+   ```
+
+4. **Via API Request:**
+   ```bash
+   curl http://localhost:3456/api/health
+   # Response: { "status": "ok", "version": "1.3.1" }
+   ```
+
+### Connection Example (Built-in Server)
+
+**For AI assistants using stdio:**
+
+```json
+{
+  "mcpServers": {
+    "lokus": {
+      "command": "node",
+      "args": [
+        "/Users/you/Applications/Lokus.app/Contents/Resources/src/mcp-server/stdio-server.js"
+      ],
+      "env": {
+        "LOKUS_WORKSPACE": "/Users/you/Documents/MyWorkspace"
+      }
+    }
+  }
+}
+```
+
+**Server path by platform:**
+- **macOS:** `/Applications/Lokus.app/Contents/Resources/src/mcp-server/stdio-server.js`
+- **Windows:** `C:\Program Files\Lokus\resources\src\mcp-server\stdio-server.js`
+- **Linux:** `/opt/Lokus/resources/src/mcp-server/stdio-server.js`
+
+---
+
 ## Supported AI Assistants
 
 Lokus's MCP implementation works with any AI assistant that supports the MCP protocol:

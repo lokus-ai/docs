@@ -2,19 +2,27 @@
 
 Bases in Lokus bring structured database functionality to your notes, allowing you to organize, filter, and visualize information in multiple views. Think of Bases as lightweight databases that live alongside your markdown notes, providing spreadsheet-like power without leaving your knowledge base.
 
+**Version:** 1.3.1 | **Status:** Production Ready
+
 ## Overview
 
-Bases transform collections of notes into structured data that can be viewed as tables, cards, galleries, calendars, or lists. Each Base is a special note that aggregates other notes based on criteria you define, displaying them with customizable properties and views.
+Bases transform collections of notes into structured data that can be viewed as tables, cards, galleries, calendars, or lists. Each Base is a special note that aggregates other notes based on criteria you define, displaying them with customizable properties and views. **Your notes remain standard markdown files** - Bases simply provide powerful views on top of them.
 
 ### Key Features
 
-- **Multiple view types** (table, card, gallery, list, calendar)
-- **Custom properties** with typed fields
-- **Filtering and sorting** with advanced queries
-- **Aggregations and rollups** for data analysis
-- **Relations between Bases** for complex data models
-- **Templates** for consistent data entry
-- **Export capabilities** to CSV and other formats
+<FeatureStatus>
+- **Table View** ✅ Available - Spreadsheet-like display with inline editing
+- **YAML Frontmatter Properties** ✅ Available - Add metadata without leaving markdown
+- **Advanced Filtering** ✅ Available - Complex queries with multiple operators
+- **Multi-column Sorting** ✅ Available - Sort by multiple properties simultaneously
+- **Inline Editing** ✅ Available - Click cells to edit properties directly
+- **8 Property Types** ✅ Available - Text, number, date, select, tags, checkbox, URL, email
+- **Export capabilities** ✅ Available - Export to CSV, JSON, Markdown
+- **MCP Integration** ✅ Available - AI assistants can query and manipulate bases
+- **Grouping** 🚧 Coming v1.4 - Group by any property with aggregations
+- **Gallery & Calendar Views** 🚧 Coming v1.4 - Additional view types
+- **Formula Support** 🚧 Coming v1.4 - Calculated fields and rollups
+</FeatureStatus>
 
 ## Creating Bases
 
@@ -69,6 +77,72 @@ Start with pre-built Base templates:
 - Blog posts
 - Recipe collection
 - Habit tracker
+
+---
+
+## How Bases Work with Markdown
+
+### YAML Frontmatter Properties
+
+Bases read metadata from YAML frontmatter in your markdown files. Your notes remain standard markdown - no proprietary format!
+
+**Example Note:**
+```markdown
+---
+title: Build Landing Page
+status: In Progress
+priority: High
+tags:
+  - web
+  - design
+due_date: 2025-10-30
+owner: John Doe
+completed: false
+---
+
+# Build Landing Page
+
+Your note content here...
+```
+
+**What Bases Do:**
+1. **Scan** all markdown files in your workspace
+2. **Extract** properties from YAML frontmatter
+3. **Index** values for fast filtering and sorting
+4. **Display** in table view with inline editing
+5. **Auto-update** when files change
+
+### Automatic Property Detection
+
+Lokus automatically detects property types:
+
+| YAML Format | Detected Type | Example |
+|-------------|---------------|---------|
+| `key: "value"` | Text | `title: "My Note"` |
+| `key: 42` | Number | `score: 85` |
+| `key: 2025-10-30` | Date | `due_date: 2025-10-30` |
+| `key: ["a", "b"]` | Tags | `tags: ["work", "urgent"]` |
+| `key: true` | Checkbox | `completed: true` |
+| `key: "https://..."` | URL | `link: "https://site.com"` |
+| `key: "user@..."` | Email | `contact: "john@email.com"` |
+
+### Inline Editing
+
+Edit properties directly in the table view:
+
+**How it works:**
+1. **Click any cell** in the table
+2. **Edit the value** (dropdown for select, date picker for dates, etc.)
+3. **Press Enter** or click away
+4. **Auto-saves** to the markdown file's frontmatter after 300ms
+
+**Behind the scenes:**
+```markdown
+Before:  status: Todo
+After:   status: In Progress  ← Updated in YAML automatically
+```
+
+The entire note content remains unchanged - only the frontmatter property is updated!
 
 ## View Types
 
@@ -430,34 +504,63 @@ Tasks Base:
 
 ### Filter Types
 
-Filter Base entries:
+Lokus Bases v1.3 supports comprehensive filtering with multiple operator types.
 
-**Simple Filters:**
-- Equals
-- Does not equal
-- Contains
-- Does not contain
-- Is empty
-- Is not empty
+**Text Operators:**
+```
+equals           - Exact match (case-sensitive)
+not_equals       - Not equal
+contains         - Contains substring
+not_contains     - Doesn't contain substring
+starts_with      - Starts with text
+ends_with        - Ends with text
+is_empty         - No value or empty string
+is_not_empty     - Has a value
+matches_regex    - Regular expression match
+```
 
-**Number Filters:**
-- Equal to
-- Not equal to
-- Greater than
-- Less than
-- Between
+**Number Operators:**
+```
+equals                  - Equal to
+not_equals              - Not equal to
+greater_than            - >
+greater_than_or_equal   - >=
+less_than               - <
+less_than_or_equal      - <=
+between                 - Between two values (inclusive)
+```
 
-**Date Filters:**
-- Is (exact date)
-- Is before
-- Is after
-- Is within (last/next X days)
-- Is empty
+**Date Operators:**
+```
+equals           - Exact date match
+before           - Before date
+after            - After date
+between          - Between two dates
+relative         - Relative to today:
+  - last 7 days
+  - last 30 days
+  - this week
+  - this month
+  - next week
+  - next month
+is_empty         - No date set
+is_not_empty     - Has a date
+```
 
-**Advanced Filters:**
-- Matches regex
-- In list
-- Custom formula
+**Array Operators (Tags):**
+```
+contains_any     - Contains any of the specified values
+contains_all     - Contains all specified values
+is_empty         - Empty array or no tags
+is_not_empty     - Has at least one tag
+```
+
+**Boolean (Checkbox) Operators:**
+```
+is_true          - Value is true
+is_false         - Value is false
+is_empty         - No value set
+```
 
 ### Filter Groups
 
@@ -745,19 +848,80 @@ Discuss entries:
 
 ### Optimization
 
-Base performance:
+Lokus Bases are optimized for large workspaces with thousands of notes.
 
-**Techniques:**
-- Lazy loading
-- Virtual scrolling
-- Indexed properties
-- Cached aggregations
-- Progressive rendering
+**Performance Techniques:**
+- **Lazy loading** - Load visible rows only
+- **Virtual scrolling** - Render only visible table area
+- **Indexed properties** - Pre-indexed for fast lookups
+- **Cached aggregations** - Results cached for instant display
+- **Progressive rendering** - Render table incrementally
+- **Quantum Search** - Optional 100x faster indexing system
 
-**Limits:**
-- 10,000+ entries supported
-- Complex queries under 100ms
-- Real-time updates under 50ms
+**Performance Benchmarks (v1.3):**
+- **10,000+ entries** supported smoothly
+- **Complex queries** execute under 100ms
+- **Real-time updates** reflect under 50ms
+- **Inline editing** saves in <300ms
+- **Initial load** <2 seconds for 1,000 notes
+
+### Quantum Search Integration
+
+Enable Quantum Search for dramatically improved performance on large workspaces:
+
+**How to Enable:**
+1. Preferences → Performance
+2. Toggle "Enable Quantum Search"
+3. Restart Lokus
+4. Bases automatically use quantum indexing
+
+**Performance Improvements:**
+- **100x faster** search on 10,000+ files
+- **O(1) lookup** complexity for property queries
+- **90% less memory** usage during queries
+- **Sub-millisecond** filter application
+- **Predictive caching** for frequently-used queries
+
+**Recommended for:**
+- Workspaces with 5,000+ notes
+- Complex multi-filter queries
+- Real-time collaboration scenarios
+- Users experiencing lag in Bases
+
+### Large Workspace Tips
+
+**For workspaces with 1,000+ notes:**
+
+1. **Use specific source folders**
+   ```yaml
+   sourceFolder: "/projects"  # Specific folder
+   # Not:  "/"  # Entire workspace (slower)
+   ```
+
+2. **Add exclude patterns**
+   ```yaml
+   exclude:
+     - "archive/**"
+     - ".lokus/**"
+     - "node_modules/**"
+     - "large-media/**"
+   ```
+
+3. **Limit default view**
+   ```yaml
+   views:
+     - name: "Recent"
+       filters:
+         - property: "modified_date"
+           operator: "after"
+           value: "{{today-30d}}"
+   ```
+
+4. **Close unused Bases tabs**
+   - Each open Base uses memory for indexing
+   - Close tabs you're not actively using
+
+5. **Enable Quantum Search** (see above)
 
 ## Configuration
 
@@ -789,6 +953,128 @@ Configure Base behavior:
 - Who can edit
 - Who can admin
 - Public access
+
+## MCP Integration
+
+### AI Assistant Integration
+
+Lokus Bases integrate with the Model Context Protocol (MCP) server, allowing AI assistants to query and manipulate your bases programmatically.
+
+**Available MCP Tools:**
+
+#### `search_base`
+Query a base with filters and sorting:
+```javascript
+{
+  "tool": "search_base",
+  "arguments": {
+    "base": "projects",
+    "query": "status:Active AND priority:High",
+    "sort": "due_date ASC",
+    "limit": 20
+  }
+}
+```
+
+#### `create_base_view`
+Create a saved view in a base:
+```javascript
+{
+  "tool": "create_base_view",
+  "arguments": {
+    "base": "projects",
+    "name": "Urgent Tasks",
+    "filters": [
+      {
+        "property": "status",
+        "operator": "equals",
+        "value": "In Progress"
+      },
+      {
+        "property": "priority",
+        "operator": "equals",
+        "value": "High"
+      }
+    ],
+    "sortBy": "due_date",
+    "sortOrder": "asc"
+  }
+}
+```
+
+#### `update_base_property`
+Update a property value in a note via Base:
+```javascript
+{
+  "tool": "update_base_property",
+  "arguments": {
+    "base": "projects",
+    "file": "project-a.md",
+    "property": "status",
+    "value": "Done"
+  }
+}
+```
+
+#### `export_base`
+Export base data:
+```javascript
+{
+  "tool": "export_base",
+  "arguments": {
+    "base": "projects",
+    "format": "csv",
+    "includeFilters": true
+  }
+}
+```
+
+### Example AI Workflows
+
+**1. Find overdue tasks:**
+```
+User: "Show me all overdue high-priority tasks"
+
+AI uses MCP:
+search_base({
+  base: "tasks",
+  query: "due_date < today() AND priority:High AND status:!Done"
+})
+```
+
+**2. Bulk status update:**
+```
+User: "Mark all completed tasks in the design project as done"
+
+AI uses MCP:
+1. search_base to find matching tasks
+2. Loop and update_base_property for each
+```
+
+**3. Generate report:**
+```
+User: "Create a summary of active projects by owner"
+
+AI uses MCP:
+1. search_base with filters
+2. Group results by owner
+3. Generate markdown report
+```
+
+### MCP Setup
+
+The MCP server starts automatically with Lokus - no configuration needed!
+
+**Verify MCP Status:**
+- Check status bar at bottom: "MCP: Running" (green)
+- Or use: Preferences → MCP Server → Status
+
+**Learn More:**
+- [MCP Integration Guide](/developers/mcp/overview)
+- [MCP Tools Reference](/reference/mcp-api)
+- [AI Integration Examples](/developers/mcp/examples)
+
+---
 
 ## Use Cases
 

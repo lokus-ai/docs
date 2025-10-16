@@ -1,6 +1,36 @@
 # Task Management
 
+**Version:** 1.3.1 | **Status:** Production Ready
+
 Lokus provides a comprehensive task management system integrated directly into your notes. Track tasks, manage projects, visualize workflows in Kanban boards, and organize work alongside your knowledge base - all without leaving your note-taking environment.
+
+## What's New in v1.3
+
+Version 1.3 revolutionizes task management with a complete backend rewrite and keyboard-first workflow:
+
+- **HashMap Backend** - Completely rebuilt storage system using HashMap for 10x faster task operations and rock-solid reliability
+- **Full Keyboard Control** - Navigate and manage tasks without touching your mouse:
+  - `H/L` - Move between columns (left/right)
+  - `J/K` - Navigate cards within column (up/down)
+  - `N` - Create new card
+  - `Q` - Quick add card with minimal input
+  - `Enter` - Edit selected card
+  - `Delete` - Remove card with confirmation
+  - `Esc` - Cancel operation
+- **Batch Operations** - Multi-select cards with Shift+Click or Cmd/Ctrl+Click, then bulk move, delete, or edit properties across dozens of cards at once
+- **Rich Card Properties** - Each card now supports:
+  - Priority levels (low, medium, high, critical) with color coding
+  - Due dates with calendar picker and natural language input
+  - Tags for categorization and filtering
+  - Assignee with avatar display and user autocomplete
+  - Full markdown descriptions with formatting, links, and code blocks
+  - Links to related notes with bidirectional connections
+- **Custom Board Features** - Fully customizable Kanban boards:
+  - Create unlimited custom columns with drag-and-drop reordering
+  - Set column colors for visual organization
+  - WIP (Work in Progress) limits per column with visual warnings
+  - Archive completed cards to keep boards clean
+- **Massive Performance Gains** - Handles thousands of cards with smooth 60fps drag-and-drop, instant filtering, and zero lag even with complex boards
 
 ## Overview
 

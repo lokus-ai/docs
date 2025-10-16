@@ -1,20 +1,26 @@
 # Gmail Integration
 
-Lokus seamlessly integrates with Gmail, allowing you to import emails as notes, maintain threading context, and manage email-based tasks directly within your knowledge base. The integration uses OAuth 2.0 for secure authentication and respects your privacy by processing emails locally.
+Lokus seamlessly integrates with Gmail, allowing you to import emails as notes, maintain threading context, and manage email-based tasks directly within your knowledge base. The integration uses OAuth 2.0 + PKCE for secure authentication and respects your privacy by processing emails locally.
+
+**Version:** 1.3.1 | **Status:** Production Ready
 
 ## Overview
 
 The Gmail integration bridges your email workflow with your note-taking system, enabling you to capture important conversations, convert emails into actionable tasks, and reference email content alongside your notes without constantly switching between applications.
 
-### Key Features
+### Key Features v1.3
 
-- **OAuth 2.0 authentication** for secure access
-- **Import emails as notes** with full formatting
-- **Preserve threading** and conversation context
-- **Attachment handling** with local storage
-- **Email search** within Lokus
-- **Two-way sync** (optional)
-- **Privacy-focused** local processing
+- ✅ **OAuth 2.0 + PKCE** - Industry-standard secure authentication
+- ✅ **Secure Token Storage** - Keychain (macOS), Credential Manager (Windows)
+- ✅ **Import emails as notes** with full formatting preservation
+- ✅ **Preserve threading** and conversation context
+- ✅ **Attachment handling** with local storage and deduplication
+- ✅ **Email search** within Lokus using full-text search
+- ✅ **Two-way sync** (optional) with conflict resolution
+- ✅ **Privacy-focused** local processing, no cloud dependency
+- ✅ **Offline Queue** - Queue operations when offline, sync when back online
+- ✅ **Auto-refresh tokens** - Seamless token renewal without re-authentication
+- ✅ **Hybrid redirect** - Deep links + localhost fallback for auth
 
 ## Setup
 
