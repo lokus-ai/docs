@@ -1,0 +1,668 @@
+---
+title: "Command Palette - Quick Actions & Commands"
+description: "Master the Command Palette in Lokus: access all commands instantly with Cmd+K, use fuzzy search, create custom commands, navigate recent actions, and boost productivity with keyboard-driven workflows. Complete command reference included."
+keywords: "command palette, quick actions, keyboard shortcuts, fuzzy search, commands list, productivity, keyboard navigation, custom commands, command history, recent commands, slash commands, lokus commands"
+author: "Lokus Documentation Team"
+lastUpdated: "2025-01-23"
+version: "1.3.1"
+category: "features"
+tags: ["command-palette", "commands", "keyboard", "productivity", "shortcuts", "navigation"]
+---
+
+# Command Palette
+
+The Command Palette is your productivity powerhouse in Lokus. Access any feature, file, or action instantly with a few keystrokes. Think of it as a universal search for everything you can do in Lokus.
+
+**Version:** 1.3.1 | **Shortcut:** `Cmd/Ctrl + K` | **Commands:** 100+
+
+## Overview
+
+The Command Palette provides:
+- **Instant Access**: Open any feature in < 2 seconds
+- **Fuzzy Search**: Type partial matches to find commands
+- **Command History**: Recently used commands at your fingertips
+- **File Navigation**: Quick-switch between notes
+- **Custom Commands**: Add your own shortcuts
+- **Plugin Integration**: Commands from plugins appear automatically
+- **Context-Aware**: Shows relevant commands based on current context
+
+## Opening the Command Palette
+
+### Primary Shortcut
+```
+Windows/Linux: Ctrl + K
+macOS: Cmd + K
+```
+
+### Alternative Access
+```
+1. Menu Bar: View → Command Palette
+2. Title Bar: Click command palette icon
+3. Right-click anywhere → "Show Command Palette"
+```
+
+### Quick Tips
+- Press `Cmd+K` twice quickly to dismiss
+- Press `Escape` to close without action
+- Start typing immediately after opening
+- Use arrow keys to navigate results
+
+## Using the Command Palette
+
+### Basic Usage
+
+```
+1. Press Cmd+K
+2. Type what you want to do
+3. Navigate with ↑↓ arrows
+4. Press Enter to execute
+```
+
+**Example Workflows:**
+
+```
+# Create a new file
+Cmd+K → type "new file" → Enter
+
+# Search globally
+Cmd+K → type "search" → Enter
+
+# Open preferences
+Cmd+K → type "pref" → Enter
+
+# Toggle sidebar
+Cmd+K → type "sidebar" → Enter
+```
+
+### Fuzzy Search
+
+The palette uses intelligent fuzzy matching:
+
+```
+Type: "nf"
+Matches: "New File", "New Folder", "Find"
+
+Type: "pref"
+Matches: "Preferences", "PDF Export"
+
+Type: "gmls"
+Matches: "Gmail Search", "Gmail Send"
+```
+
+**Search Tips:**
+- Type abbreviations: "gs" for "Global Search"
+- Use capital letters: "NF" for "New File"
+- Include spaces: "new file" or "newfile" both work
+- Partial words: "pref" matches "Preferences"
+
+### Keyboard Navigation
+
+Once the palette is open:
+
+| Key | Action |
+|-----|--------|
+| `↓` or `Tab` | Move to next command |
+| `↑` or `Shift+Tab` | Move to previous command |
+| `Enter` | Execute selected command |
+| `Escape` | Close palette |
+| `Backspace` | Delete search query |
+| `Cmd+A` | Select all text in search |
+
+## Command Categories
+
+### File Commands
+
+#### Create & Open
+```
+New File                    Cmd+N
+New Folder                  Cmd+Shift+N
+Open File                   Cmd+O
+Open Recent                 Shows recent files
+Reopen Closed Tab           Cmd+Shift+T
+```
+
+#### Save & Close
+```
+Save File                   Cmd+S
+Save All                    Cmd+Alt+S
+Close Tab                   Cmd+W
+Close All Tabs              Cmd+Shift+W
+```
+
+#### File Operations
+```
+Rename File                 F2
+Duplicate File              Cmd+D
+Move File                   -
+Delete File                 Delete
+Copy Path                   Cmd+Shift+C
+Reveal in Finder/Explorer   Cmd+Shift+R
+```
+
+### Edit Commands
+
+```
+Undo                        Cmd+Z
+Redo                        Cmd+Shift+Z
+Cut                         Cmd+X
+Copy                        Cmd+C
+Paste                       Cmd+V
+Select All                  Cmd+A
+Find in Note                Cmd+F
+Find and Replace            Cmd+H
+```
+
+### View Commands
+
+```
+Toggle Sidebar              Cmd+B
+Toggle Right Sidebar        Cmd+Shift+B
+Command Palette             Cmd+K
+Quick Switcher              Cmd+P
+Global Search               Cmd+Shift+F
+Professional Graph View     Cmd+Shift+G
+Toggle Split View           Cmd+\
+Toggle Split Direction      Cmd+Shift+\
+Focus Mode                  F11
+Zoom In                     Cmd++
+Zoom Out                    Cmd+-
+Actual Size                 Cmd+0
+Toggle Fullscreen           F11
+```
+
+### Insert Commands
+
+```
+Insert WikiLink             Cmd+L
+Insert Template             Cmd+Shift+T
+Insert Task                 Cmd+Shift+K
+Insert Code Block           Cmd+Alt+C
+Insert Math Inline          Cmd+M
+Insert Math Block           Cmd+Shift+M
+Insert Table                Cmd+Shift+T
+Insert Image                Drag & drop
+```
+
+### Format Commands
+
+```
+Bold                        Cmd+B
+Italic                      Cmd+I
+Underline                   Cmd+U
+Strikethrough               Cmd+Shift+X
+Inline Code                 Cmd+E
+Highlight                   Cmd+Shift+H
+Heading 1                   Cmd+Alt+1
+Heading 2                   Cmd+Alt+2
+Heading 3                   Cmd+Alt+3
+Bullet List                 Cmd+Shift+8
+Ordered List                Cmd+Shift+7
+Task List                   Cmd+Shift+9
+Blockquote                  Cmd+Shift+B
+```
+
+### Navigation Commands
+
+```
+Go to File                  Cmd+P
+Go to Line                  Cmd+G
+Go to Definition            Cmd+Click
+Back                        Cmd+[
+Forward                     Cmd+]
+Next Tab                    Cmd+Alt+Right
+Previous Tab                Cmd+Alt+Left
+Jump to Heading             Cmd+Shift+O
+```
+
+### Search Commands
+
+```
+Global Search               Cmd+Shift+F
+Find in Note                Cmd+F
+Search by Tag               Cmd+Shift+T
+Search Gmail                -
+Full-Text Search            -
+Search in Folder            -
+```
+
+### Workspace Commands
+
+```
+Open Preferences            Cmd+,
+Switch Workspace            -
+Close Workspace             -
+Open Workspace              -
+Create Workspace            -
+Switch to Local View        Cmd+Shift+L
+Switch to Global View       -
+```
+
+### Gmail Commands
+
+```
+Authenticate Gmail          -
+Search Gmail                -
+Send Gmail                  -
+Save Email as Note          -
+Compose Email               -
+```
+
+### Database (Bases) Commands
+
+```
+Create New Base             Cmd+Shift+B
+Open Base                   -
+View as Table               -
+View as Grid                -
+View as List                -
+Add Filter                  -
+Sort Base                   -
+```
+
+### Tools Commands
+
+```
+Graph View                  Cmd+Shift+G
+Tag Browser                 -
+Backlinks                   -
+Outline                     -
+Canvas                      Cmd+Shift+C
+Kanban Board                Cmd+Shift+K
+Tasks View                  -
+```
+
+### Export Commands
+
+```
+Export to PDF               -
+Export to Markdown          -
+Export to DOCX              -
+Export to HTML              -
+Export Folder               -
+```
+
+### Theme & Appearance
+
+```
+Change Theme                -
+Customize Theme             -
+Import Theme                -
+Export Theme                -
+Cycle Editor Modes          Cmd+E
+Toggle Line Numbers         -
+Toggle Minimap              -
+```
+
+## Advanced Features
+
+### Recent Commands History
+
+The palette remembers your recent actions:
+
+```
+1. Open Command Palette (Cmd+K)
+2. Look for "History" section
+3. Recent commands appear first
+4. Press Enter to repeat
+```
+
+**History Features:**
+- Last 20 commands stored
+- Timestamp shown ("2 min ago")
+- Remove from history with hover → X
+- Clear all history option available
+
+### Command Suggestions
+
+Smart suggestions based on context:
+
+```
+# When editing a note:
+- "Save File" shown prominently
+- "Insert..." commands prioritized
+- Format commands available
+
+# When no file open:
+- "New File" suggested first
+- "Open File" highlighted
+- Recent files shown
+```
+
+### File Switching
+
+Quick-switch between open files:
+
+```
+1. Press Cmd+K
+2. See "Recent Files" section
+3. Select file and press Enter
+4. OR: Press Cmd+P for dedicated file switcher
+```
+
+### Natural Language Commands
+
+Use conversational phrases:
+
+```
+Type: "send email"
+→ Matches: "Send Gmail", "Save Email as Note"
+
+Type: "new note"
+→ Matches: "New File", "New Folder"
+
+Type: "find text"
+→ Matches: "Find in Note", "Global Search"
+```
+
+### Gmail Integration Commands
+
+Special commands for Gmail:
+
+```
+# Send email from file
+Command: "send gmail [filename]"
+Example: "send gmail meeting-notes.md"
+
+# Search emails
+Command: "search emails [query]"
+Example: "search emails from:john project"
+
+# Save email as note
+Command: "save email [subject]"
+Example: "save email Meeting with Client"
+```
+
+**Gmail Command Modes:**
+
+When you enter a Gmail command, the palette enters structured mode:
+
+```
+1. Type "send gmail"
+2. Palette shows file selector
+3. Type filename to filter
+4. Press Enter to send
+```
+
+### Template Commands
+
+Insert templates quickly:
+
+```
+1. Open Command Palette
+2. Type "template"
+3. All templates listed with category
+4. Select and press Enter to insert
+```
+
+**Creating Template from Command Palette:**
+```
+1. Type "save as template"
+2. Enter template name
+3. Choose category
+4. Template saved for future use
+```
+
+### Plugin-Added Commands
+
+Plugins can register custom commands:
+
+```
+# AI Assistant plugin
+"Ask AI"
+"Summarize Note"
+"Generate Outline"
+
+# Spaced Repetition plugin
+"Review Due Cards"
+"Create Flashcard"
+
+# Custom scripts
+"Run Backup Script"
+"Generate TOC"
+"Export to Blog"
+```
+
+## Custom Commands
+
+### Creating Custom Commands
+
+Define your own shortcuts (in settings):
+
+```json
+{
+  "customCommands": [
+    {
+      "id": "daily-note",
+      "name": "Create Daily Note",
+      "action": "create-file",
+      "template": "daily-note-template",
+      "folder": "journal/"
+    },
+    {
+      "id": "weekly-review",
+      "name": "Start Weekly Review",
+      "action": "run-script",
+      "script": "weekly-review.js"
+    }
+  ]
+}
+```
+
+### Command Aliases
+
+Create shortcuts for long commands:
+
+```json
+{
+  "commandAliases": {
+    "dn": "Create Daily Note",
+    "wr": "Start Weekly Review",
+    "gs": "Global Search",
+    "gv": "Professional Graph View"
+  }
+}
+```
+
+Now you can type "dn" instead of "Create Daily Note"!
+
+## Tips & Tricks
+
+### Power User Shortcuts
+
+```
+# Chain commands with multiple palettes
+Cmd+K → "new file" → Enter
+Cmd+K → "template" → Select template
+
+# Use first letters
+"nf" = New File
+"pref" = Preferences
+"gs" = Global Search
+
+# Filter by category
+Type category name: "file", "edit", "view"
+Shows only commands in that category
+```
+
+### Workflow Examples
+
+**Morning Routine:**
+```
+1. Cmd+K → "daily" → Create Daily Note
+2. Cmd+K → "review" → Check Task List
+3. Cmd+K → "gmail" → Check Emails
+```
+
+**Research Workflow:**
+```
+1. Cmd+K → "new" → Create Research Note
+2. Cmd+K → "template research" → Apply Template
+3. Cmd+K → "graph" → Open in Graph View
+```
+
+**Writing Workflow:**
+```
+1. Cmd+K → "focus" → Enter Focus Mode
+2. Write content
+3. Cmd+K → "export pdf" → Export Draft
+```
+
+### Efficiency Hacks
+
+```
+1. Learn 10 most-used commands
+2. Use fuzzy search (2-3 letters)
+3. Access recent commands first
+4. Create custom aliases
+5. Use context-aware suggestions
+6. Combine with other shortcuts
+```
+
+## Command Palette vs Other Access Methods
+
+| Method | Speed | Discoverability | Efficiency |
+|--------|-------|-----------------|------------|
+| Command Palette | ⚡⚡⚡ | ⭐⭐⭐ | ✅ Best |
+| Menu Bar | ⚡ | ⭐⭐⭐ | 👎 Slow |
+| Keyboard Shortcuts | ⚡⚡⚡ | ⭐ | ✅ Fast (if memorized) |
+| Context Menus | ⚡⚡ | ⭐⭐ | 👍 Good |
+| Toolbar Buttons | ⚡⚡ | ⭐⭐ | 👍 Visual |
+
+**Use Command Palette when:**
+- You know what you want to do
+- You want to discover features
+- You forgot the keyboard shortcut
+- You want to search files
+- You need quick access to any feature
+
+## Troubleshooting
+
+### Command Palette Won't Open
+
+```
+1. Check keyboard shortcut in Preferences
+2. Try alternative: View menu → Command Palette
+3. Restart application
+4. Check for conflicting global shortcuts
+```
+
+### Commands Not Showing
+
+```
+1. Update search query (fuzzy matching)
+2. Check if plugin is enabled
+3. Verify file context (some commands context-specific)
+4. Refresh command registry (restart app)
+```
+
+### Slow Search Performance
+
+```
+1. Clear command history
+2. Reduce number of plugins
+3. Check for large workspace (index rebuild)
+4. Update to latest version
+```
+
+### Custom Commands Not Working
+
+```
+1. Validate JSON syntax in settings
+2. Check action type is valid
+3. Verify file paths are correct
+4. Restart app to reload commands
+```
+
+## Keyboard Shortcuts Cheat Sheet
+
+```
+Open Command Palette        Cmd+K
+Quick File Switcher         Cmd+P
+Global Search               Cmd+Shift+F
+Create New File             Cmd+N
+Save File                   Cmd+S
+Close Tab                   Cmd+W
+Toggle Sidebar              Cmd+B
+Graph View                  Cmd+Shift+G
+Preferences                 Cmd+,
+```
+
+## Configuration
+
+### Command Palette Settings
+
+```json
+{
+  "commandPalette": {
+    "maxResults": 20,
+    "fuzzySearchEnabled": true,
+    "showRecentCommands": true,
+    "showKeyboardShortcuts": true,
+    "historySize": 20,
+    "groupByCategory": true,
+    "showFileIcons": true,
+    "theme": "auto"
+  }
+}
+```
+
+### Customizing Appearance
+
+```css
+/* Custom styling (in theme file) */
+.command-palette {
+  --palette-width: 600px;
+  --palette-max-height: 400px;
+  --palette-bg: var(--bg);
+  --palette-border: var(--border);
+}
+```
+
+## Related Documentation
+
+- [Keyboard Shortcuts](/features/keyboard-shortcuts) - Complete shortcut reference
+- [Settings](/features/settings) - Configure command palette behavior
+- [File Management](/features/file-management) - File operation commands
+- [Workspace](/features/workspace) - Workspace commands
+- [Plugins](/developers/plugins) - Add custom commands via plugins
+
+## Best Practices
+
+### For New Users
+```
+1. Start with Cmd+K for everything
+2. Learn one new command per day
+3. Use fuzzy search liberally
+4. Check "Recent Commands" section
+5. Explore by typing categories
+```
+
+### For Power Users
+```
+1. Create custom command aliases
+2. Use first-letter shortcuts
+3. Chain multiple palette calls
+4. Combine with keyboard shortcuts
+5. Build custom commands via plugins
+```
+
+### For Teams
+```
+1. Document custom commands
+2. Share command aliases
+3. Create team templates
+4. Standardize workflows
+5. Train on essential commands
+```
+
+## What's Next?
+
+Master these related features:
+- [Keyboard Shortcuts](/features/keyboard-shortcuts) - Learn all shortcuts
+- [Quick Switcher](/features/search#quick-switcher) - Fast file navigation
+- [Templates](/features/templates) - Template commands
+- [Automation](/features/automation) - Automate workflows
+
+---
+
+**Last Updated:** January 23, 2025 | **Version:** 1.3.1 | **Commands:** 100+

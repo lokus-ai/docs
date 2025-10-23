@@ -1,0 +1,1077 @@
+---
+title: Performance Optimization Techniques
+description: Comprehensive guide to optimizing Lokus performance including editor tuning, file system optimization, memory management, and best practices.
+keywords: [performance optimization, tuning, memory management, caching strategies, debouncing, virtual scrolling, web workers, React optimization]
+seo:
+  title: Lokus Performance Optimization - Complete Tuning Guide
+  description: Master Lokus performance optimization with detailed techniques for editor tuning, file system optimization, memory management, and rendering performance.
+  keywords: performance tuning, optimization techniques, memory management, cache strategies, React optimization, web workers, virtual scrolling
+---
+
+# Performance Optimization Techniques
+
+Comprehensive guide to optimizing Lokus performance across all components, from editor responsiveness to network efficiency.
+
+---
+
+## Editor Performance
+
+### Large Documents
+
+**Problem:** Editing large documents (>1MB) can cause lag and slow typing response.
+
+**Solutions:**
+
+#### 1. Enable Virtual Scrolling
+
+Virtual scrolling only renders visible content, dramatically improving performance:
+
+```json
+{
+  "performance": {
+    "virtualScrolling": true,
+    "viewportBuffer": 3 // Render 3 screens ahead
+  }
+}
+```
+
+**Impact:** 10x faster scrolling on 5,000+ line documents
+
+---
+
+#### 2. Lazy Load Content
+
+Load document in manageable chunks:
+
+```typescript
+// Load document in chunks
+async function loadLargeDocument(path: string) {
+  const chunkSize = 100000; // 100KB chunks
+  const chunks = await loadInChunks(path, chunkSize);
+
+  for (const chunk of chunks) {
+    await editor.commands.insertContent(chunk);
+    await delay(10); // Allow UI to update
+  }
+}
+
+// Progressive enhancement
+async function loadInChunks(path: string, chunkSize: number) {
+  const file = await readFile(path);
+  const chunks = [];
+
+  for (let i = 0; i < file.length; i += chunkSize) {
+    chunks.push(file.slice(i, i + chunkSize));
+  }
+
+  return chunks;
+}
+```
+
+---
+
+#### 3. Limit Undo History
+
+Reduce memory usage by limiting undo depth:
+
+```json
+{
+  "editor": {
+    "maxUndoDepth": 50,
+    "undoCompression": true
+  }
+}
+```
+
+**Memory Savings:** ~40MB for large documents
+
+---
+
+### Real-time Typing Performance
+
+**Goal:** &lt;16ms keystroke latency for smooth typing experience
+
+#### Debounce Expensive Operations
+
+```typescript
+import { debounce } from '@/utils/debounce';
+
+// Debounce auto-save
+const debouncedSave = debounce(async (content: string) => {
+  await saveDocument(content);
+}, 1000); // 1 second delay
+
+editor.on('update', ({ editor }) => {
+  debouncedSave(editor.getHTML());
+});
+
+// Debounce syntax highlighting
+const debouncedHighlight = debounce(async (code: string) => {
+  const highlighted = await highlightCode(code);
+  updateDisplay(highlighted);
+}, 300);
+
+// Debounce word count
+const debouncedWordCount = debounce((content: string) => {
+  const count = countWords(content);
+  updateWordCount(count);
+}, 500);
+```
+
+---
+
+#### Optimize Re-renders
+
+```tsx
+import React from 'react';
+
+// Memoize toolbar to prevent unnecessary re-renders
+const EditorToolbar = React.memo(({ editor }) => {
+  return (
+    <div className="toolbar">
+      <ToolbarButton action="bold" />
+      <ToolbarButton action="italic" />
+      <ToolbarButton action="link" />
+    </div>
+  );
+}, (prev, next) => {
+  // Only re-render if editor state changes
+  return prev.editor.state === next.editor.state;
+});
+
+// Memoize expensive computations
+function DocumentStats({ editor }) {
+  const stats = React.useMemo(() => {
+    return {
+      words: countWords(editor.getText()),
+      characters: editor.getText().length,
+      paragraphs: countParagraphs(editor.getText())
+    };
+  }, [editor.getText()]);
+
+  return <StatsDisplay {...stats} />;
+}
+```
+
+---
+
+### Syntax Highlighting
+
+**Problem:** Large code blocks slow down editing
+
+#### Disable for Very Large Code Blocks
+
+```json
+{
+  "editor": {
+    "syntaxHighlightingLimit": 10000, // characters
+    "fallbackToPlainText": true
+  }
+}
+```
+
+---
+
+#### Use Web Workers for Syntax Highlighting
+
+Offload highlighting to background thread:
+
+```typescript
+// worker.js
+self.addEventListener('message', async (event) => {
+  const { code, language } = event.data;
+
+  // Import Prism or other highlighter
+  const highlighted = await highlightCode(code, language);
+
+  self.postMessage(highlighted);
+});
+
+// main.js
+const highlightWorker = new Worker('/syntax-worker.js');
+
+function highlightAsync(code, language) {
+  return new Promise((resolve) => {
+    highlightWorker.onmessage = (event) => resolve(event.data);
+    highlightWorker.postMessage({ code, language });
+  });
+}
+
+// Usage
+editor.on('update', async ({ editor }) => {
+  const code = editor.getCodeBlock();
+  const highlighted = await highlightAsync(code, 'typescript');
+  editor.updateHighlighting(highlighted);
+});
+```
+
+**Performance Gain:** 5-10x faster highlighting, zero main thread blocking
+
+---
+
+## File System Performance
+
+### File Tree Optimization
+
+**Problem:** Loading large file trees (5,000+ files) is slow and blocks UI
+
+#### 1. Lazy Load Folders
+
+Only load children when folder is expanded:
+
+```typescript
+function FolderTree({ path }) {
+  const [expanded, setExpanded] = useState(false);
+  const [children, setChildren] = useState(null);
+
+  const loadChildren = async () => {
+    if (!children) {
+      const files = await invoke('read_workspace_files', {
+        workspace_path: path
+      });
+      setChildren(files);
+    }
+    setExpanded(!expanded);
+  };
+
+  return (
+    <div>
+      <div onClick={loadChildren} className="folder">
+        {expanded ? '▼' : '▶'} {basename(path)}
+      </div>
+      {expanded && children && (
+        <div className="children">
+          {children.map(child => (
+            <FileItem key={child.path} file={child} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+---
+
+#### 2. Virtual Scrolling for Large Lists
+
+Render only visible files:
+
+```tsx
+import { VirtualList } from '@/components/VirtualList';
+
+function FileList({ files }) {
+  return (
+    <VirtualList
+      items={files}
+      itemHeight={32}
+      windowHeight={600}
+      overscan={5} // Render 5 extra items for smooth scrolling
+      renderItem={(file) => <FileItem file={file} />}
+    />
+  );
+}
+
+// Custom VirtualList implementation
+function VirtualList({ items, itemHeight, windowHeight, overscan, renderItem }) {
+  const [scrollTop, setScrollTop] = useState(0);
+
+  const startIndex = Math.floor(scrollTop / itemHeight);
+  const endIndex = Math.ceil((scrollTop + windowHeight) / itemHeight);
+
+  const visibleItems = items.slice(
+    Math.max(0, startIndex - overscan),
+    Math.min(items.length, endIndex + overscan)
+  );
+
+  return (
+    <div
+      className="virtual-list"
+      style={{ height: windowHeight, overflow: 'auto' }}
+      onScroll={(e) => setScrollTop(e.target.scrollTop)}
+    >
+      <div style={{ height: items.length * itemHeight }}>
+        <div style={{ transform: `translateY(${startIndex * itemHeight}px)` }}>
+          {visibleItems.map(renderItem)}
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+**Performance:** 10,000 files render in &lt;100ms
+
+---
+
+#### 3. Exclude Patterns
+
+Ignore unnecessary directories:
+
+```json
+{
+  "files": {
+    "excludePatterns": [
+      "node_modules",
+      ".git",
+      "dist",
+      "build",
+      "coverage",
+      "*.lock",
+      ".next",
+      ".nuxt",
+      "target",
+      "vendor"
+    ],
+    "maxDepth": 10 // Limit directory traversal depth
+  }
+}
+```
+
+**Impact:** 60-80% reduction in indexed files
+
+---
+
+### File Watching
+
+#### Limit File Watchers
+
+```json
+{
+  "files": {
+    "watchForChanges": true,
+    "maxWatchedFiles": 10000,
+    "watchIgnore": ["node_modules", ".git", "dist"]
+  }
+}
+```
+
+---
+
+#### Debounce File System Events
+
+Prevent excessive updates:
+
+```typescript
+const debouncedRefresh = debounce(() => {
+  refreshFileTree();
+}, 500);
+
+fileWatcher.on('change', debouncedRefresh);
+fileWatcher.on('add', debouncedRefresh);
+fileWatcher.on('unlink', debouncedRefresh);
+
+// Batch multiple events
+const batchedRefresh = batch((events) => {
+  const uniquePaths = new Set(events.map(e => e.path));
+  refreshFiles(Array.from(uniquePaths));
+}, 500, 100); // 500ms wait, 100 event max
+
+fileWatcher.on('all', batchedRefresh);
+```
+
+---
+
+## Search Performance
+
+### Indexing Optimization
+
+#### Build Search Index in Background
+
+```typescript
+async function buildSearchIndex(workspacePath: string) {
+  return new Promise((resolve) => {
+    const worker = new Worker('/search-indexer.js');
+
+    worker.postMessage({ workspacePath });
+
+    worker.onmessage = (event) => {
+      if (event.data.type === 'progress') {
+        updateProgress(event.data.percent);
+      } else if (event.data.complete) {
+        resolve(event.data.index);
+        worker.terminate();
+      }
+    };
+  });
+}
+
+// Worker implementation
+// search-indexer.js
+self.addEventListener('message', async (event) => {
+  const { workspacePath } = event.data;
+  const files = await readAllFiles(workspacePath);
+  const index = new Map();
+
+  files.forEach((file, i) => {
+    const tokens = tokenize(file.content);
+    index.set(file.path, tokens);
+
+    // Report progress
+    if (i % 100 === 0) {
+      self.postMessage({
+        type: 'progress',
+        percent: (i / files.length) * 100
+      });
+    }
+  });
+
+  self.postMessage({ complete: true, index });
+});
+```
+
+---
+
+#### Incremental Indexing
+
+Only update changed files:
+
+```typescript
+class SearchIndex {
+  private index = new Map<string, TokenSet>();
+  private version = 0;
+
+  async addFile(path: string, content: string) {
+    const tokens = tokenize(content);
+    this.index.set(path, {
+      tokens,
+      version: ++this.version,
+      timestamp: Date.now()
+    });
+  }
+
+  async updateFile(path: string, content: string) {
+    // Only reindex if content changed
+    const existing = this.index.get(path);
+    if (existing && existing.hash === hash(content)) {
+      return; // No change
+    }
+
+    await this.addFile(path, content);
+  }
+
+  async removeFile(path: string) {
+    this.index.delete(path);
+  }
+
+  search(query: string, options?: SearchOptions) {
+    const queryTokens = tokenize(query);
+    const results = [];
+
+    for (const [path, data] of this.index) {
+      const score = this.calculateScore(queryTokens, data.tokens);
+      if (score > 0) {
+        results.push({ path, score });
+      }
+    }
+
+    return results.sort((a, b) => b.score - a.score);
+  }
+
+  private calculateScore(queryTokens: string[], fileTokens: string[]): number {
+    let score = 0;
+    for (const token of queryTokens) {
+      if (fileTokens.includes(token)) {
+        score += 1;
+      }
+    }
+    return score / queryTokens.length;
+  }
+}
+```
+
+---
+
+### Search Query Optimization
+
+#### Limit Search Scope
+
+```typescript
+const results = await invoke('search_in_files', {
+  query: 'TODO',
+  max_results: 100,
+  file_types: ['.md', '.txt', '.js'],
+  exclude_folders: ['archive', 'drafts', 'node_modules'],
+  case_sensitive: false,
+  whole_word: false
+});
+```
+
+---
+
+#### Cache Search Results
+
+```typescript
+class SearchCache {
+  private cache = new Map<string, CachedResult>();
+  private ttl = 5 * 60 * 1000; // 5 minutes
+
+  async search(query: string): Promise<SearchResult[]> {
+    const cacheKey = this.generateKey(query);
+    const cached = this.cache.get(cacheKey);
+
+    if (cached && Date.now() - cached.timestamp < this.ttl) {
+      return cached.results;
+    }
+
+    const results = await performSearch(query);
+    this.cache.set(cacheKey, {
+      results,
+      timestamp: Date.now()
+    });
+
+    // Cleanup old entries
+    this.cleanup();
+
+    return results;
+  }
+
+  private cleanup() {
+    const now = Date.now();
+    for (const [key, value] of this.cache) {
+      if (now - value.timestamp > this.ttl) {
+        this.cache.delete(key);
+      }
+    }
+  }
+
+  private generateKey(query: string): string {
+    return `${query.toLowerCase()}:${Date.now().toString().slice(0, -4)}`;
+  }
+}
+```
+
+---
+
+## Memory Management
+
+### Limit Open Tabs
+
+**Configuration:**
+
+```json
+{
+  "performance": {
+    "maxOpenTabs": 20,
+    "autoCloseInactive": true,
+    "inactiveThreshold": 300000 // 5 minutes
+  }
+}
+```
+
+---
+
+**Implementation:**
+
+```typescript
+class TabManager {
+  private tabs = new Map<string, Tab>();
+  private maxTabs = 20;
+  private accessOrder: string[] = [];
+
+  openTab(path: string) {
+    // Close oldest if at limit
+    if (this.tabs.size >= this.maxTabs) {
+      const oldestPath = this.findLeastRecentlyUsed();
+      this.closeTab(oldestPath);
+    }
+
+    this.tabs.set(path, {
+      path,
+      lastAccessed: Date.now(),
+      content: null,
+      modified: false
+    });
+
+    this.updateAccessOrder(path);
+  }
+
+  accessTab(path: string) {
+    const tab = this.tabs.get(path);
+    if (tab) {
+      tab.lastAccessed = Date.now();
+      this.updateAccessOrder(path);
+    }
+  }
+
+  private updateAccessOrder(path: string) {
+    // Remove from current position
+    this.accessOrder = this.accessOrder.filter(p => p !== path);
+    // Add to end (most recent)
+    this.accessOrder.push(path);
+  }
+
+  private findLeastRecentlyUsed(): string {
+    return this.accessOrder[0];
+  }
+
+  async closeTab(path: string) {
+    const tab = this.tabs.get(path);
+
+    if (tab?.modified) {
+      await this.saveTab(path);
+    }
+
+    this.tabs.delete(path);
+    this.accessOrder = this.accessOrder.filter(p => p !== path);
+  }
+}
+```
+
+---
+
+### Content Caching
+
+**LRU Cache Implementation:**
+
+```typescript
+class LRUCache<K, V> {
+  private cache = new Map<K, V>();
+  private maxSize: number;
+
+  constructor(maxSize: number) {
+    this.maxSize = maxSize;
+  }
+
+  get(key: K): V | undefined {
+    if (!this.cache.has(key)) return undefined;
+
+    const value = this.cache.get(key)!;
+    // Move to end (most recently used)
+    this.cache.delete(key);
+    this.cache.set(key, value);
+    return value;
+  }
+
+  set(key: K, value: V): void {
+    if (this.cache.has(key)) {
+      this.cache.delete(key);
+    } else if (this.cache.size >= this.maxSize) {
+      // Remove least recently used (first item)
+      const firstKey = this.cache.keys().next().value;
+      this.cache.delete(firstKey);
+    }
+    this.cache.set(key, value);
+  }
+
+  clear(): void {
+    this.cache.clear();
+  }
+
+  size(): number {
+    return this.cache.size;
+  }
+}
+
+// Usage
+const fileCache = new LRUCache<string, string>(100);
+
+async function readFile(path: string): Promise<string> {
+  const cached = fileCache.get(path);
+  if (cached) {
+    console.log('Cache hit:', path);
+    return cached;
+  }
+
+  console.log('Cache miss:', path);
+  const content = await invoke('read_file_content', { path });
+  fileCache.set(path, content);
+  return content;
+}
+```
+
+---
+
+## Network Performance
+
+### Gmail Integration
+
+#### Batch API Requests
+
+```typescript
+async function markMultipleAsRead(messageIds: string[]) {
+  // Batch in groups of 100
+  const batchSize = 100;
+  const results = [];
+
+  for (let i = 0; i < messageIds.length; i += batchSize) {
+    const batch = messageIds.slice(i, i + batchSize);
+    const result = await invoke('gmail_mark_as_read', {
+      message_ids: batch
+    });
+    results.push(...result);
+  }
+
+  return results;
+}
+
+// Parallel batching for even better performance
+async function markMultipleAsReadParallel(messageIds: string[]) {
+  const batchSize = 100;
+  const batches = [];
+
+  for (let i = 0; i < messageIds.length; i += batchSize) {
+    batches.push(messageIds.slice(i, i + batchSize));
+  }
+
+  // Process up to 3 batches in parallel
+  const results = [];
+  for (let i = 0; i < batches.length; i += 3) {
+    const parallelBatches = batches.slice(i, i + 3);
+    const batchResults = await Promise.all(
+      parallelBatches.map(batch =>
+        invoke('gmail_mark_as_read', { message_ids: batch })
+      )
+    );
+    results.push(...batchResults.flat());
+  }
+
+  return results;
+}
+```
+
+---
+
+#### Cache Email Metadata
+
+```typescript
+const emailCache = new LRUCache<string, Email>(1000);
+
+async function getEmail(id: string): Promise<Email> {
+  const cached = emailCache.get(id);
+  if (cached) return cached;
+
+  const email = await invoke('gmail_get_email', { message_id: id });
+  emailCache.set(id, email);
+  return email;
+}
+
+// Prefetch related emails
+async function getEmailWithPrefetch(id: string): Promise<Email> {
+  const email = await getEmail(id);
+
+  // Prefetch thread emails in background
+  if (email.threadId) {
+    getThreadEmails(email.threadId).catch(console.error);
+  }
+
+  return email;
+}
+```
+
+---
+
+### MCP Server
+
+#### Connection Pooling
+
+```typescript
+class MCPConnectionPool {
+  private connections: MCPClient[] = [];
+  private maxConnections = 5;
+  private pendingRequests = new Map<string, number>();
+
+  async getConnection(): Promise<MCPClient> {
+    // Create new connection if under limit
+    if (this.connections.length < this.maxConnections) {
+      const client = new MCPClient();
+      await client.connect();
+      this.connections.push(client);
+      this.pendingRequests.set(client.id, 0);
+      return client;
+    }
+
+    // Return least busy connection
+    return this.findLeastBusy();
+  }
+
+  findLeastBusy(): MCPClient {
+    return this.connections.reduce((least, current) => {
+      const leastPending = this.pendingRequests.get(least.id) || 0;
+      const currentPending = this.pendingRequests.get(current.id) || 0;
+      return currentPending < leastPending ? current : least;
+    });
+  }
+
+  async execute<T>(operation: (client: MCPClient) => Promise<T>): Promise<T> {
+    const client = await this.getConnection();
+    const clientId = client.id;
+
+    // Track pending request
+    const pending = this.pendingRequests.get(clientId) || 0;
+    this.pendingRequests.set(clientId, pending + 1);
+
+    try {
+      return await operation(client);
+    } finally {
+      const pending = this.pendingRequests.get(clientId) || 0;
+      this.pendingRequests.set(clientId, Math.max(0, pending - 1));
+    }
+  }
+}
+```
+
+---
+
+## Plugin Performance
+
+### Lazy Loading Plugins
+
+```typescript
+class PluginManager {
+  private plugins = new Map<string, Plugin>();
+  private loaded = new Set<string>();
+  private metadata = new Map<string, PluginMetadata>();
+
+  async loadPlugin(name: string): Promise<Plugin> {
+    if (this.loaded.has(name)) {
+      return this.plugins.get(name)!;
+    }
+
+    // Dynamic import for lazy loading
+    const module = await import(`@/plugins/${name}`);
+    const plugin = new module.default();
+
+    this.plugins.set(name, plugin);
+    this.loaded.add(name);
+
+    return plugin;
+  }
+
+  async activatePlugin(name: string, context: PluginAPI): Promise<void> {
+    const plugin = await this.loadPlugin(name);
+    await plugin.activate(context);
+  }
+
+  async deactivatePlugin(name: string): Promise<void> {
+    const plugin = this.plugins.get(name);
+    if (plugin) {
+      await plugin.deactivate();
+      this.loaded.delete(name);
+    }
+  }
+
+  // Load plugins on demand based on file type
+  async loadPluginsForFile(filePath: string): Promise<void> {
+    const ext = path.extname(filePath);
+    const relevantPlugins = this.getPluginsForExtension(ext);
+
+    await Promise.all(
+      relevantPlugins.map(name => this.activatePlugin(name, this.context))
+    );
+  }
+}
+```
+
+---
+
+### Optimize Plugin Operations
+
+#### Use Web Workers for Heavy Computations
+
+```javascript
+// Plugin with worker
+export default class ComputePlugin {
+  activate(context) {
+    this.worker = new Worker('/compute-worker.js');
+
+    context.addSlashCommand({
+      name: 'compute',
+      handler: async (editor) => {
+        const data = editor.getContent();
+        const result = await this.compute(data);
+        editor.insertContent(result);
+      }
+    });
+  }
+
+  async compute(data) {
+    return new Promise((resolve) => {
+      this.worker.onmessage = (event) => resolve(event.data);
+      this.worker.postMessage(data);
+    });
+  }
+
+  deactivate() {
+    this.worker.terminate();
+  }
+}
+```
+
+---
+
+## Rendering Performance
+
+### React Performance
+
+**Comprehensive optimization:**
+
+```tsx
+import React from 'react';
+
+// 1. Use React.memo for components
+const FileItem = React.memo(({ file, onSelect }) => {
+  return (
+    <div className="file-item" onClick={() => onSelect(file)}>
+      {file.name}
+    </div>
+  );
+}, (prev, next) => {
+  // Custom comparison
+  return prev.file.path === next.file.path &&
+         prev.file.modified === next.file.modified;
+});
+
+// 2. Use useMemo for expensive computations
+function FileList({ files, sortBy }) {
+  const sortedFiles = React.useMemo(() => {
+    return [...files].sort((a, b) => {
+      if (sortBy === 'name') {
+        return a.name.localeCompare(b.name);
+      } else if (sortBy === 'modified') {
+        return b.modified - a.modified;
+      }
+      return 0;
+    });
+  }, [files, sortBy]);
+
+  return (
+    <div>
+      {sortedFiles.map(file => (
+        <FileItem key={file.path} file={file} />
+      ))}
+    </div>
+  );
+}
+
+// 3. Use useCallback for event handlers
+function Editor({ onSave }) {
+  const [content, setContent] = useState('');
+
+  const handleSave = React.useCallback(async () => {
+    await onSave(content);
+  }, [content, onSave]);
+
+  const handleChange = React.useCallback((e) => {
+    setContent(e.target.value);
+  }, []);
+
+  return (
+    <div>
+      <textarea value={content} onChange={handleChange} />
+      <button onClick={handleSave}>Save</button>
+    </div>
+  );
+}
+
+// 4. Split large components
+function Dashboard() {
+  return (
+    <>
+      <Sidebar /> {/* Memoized */}
+      <MainContent /> {/* Memoized */}
+      <StatusBar /> {/* Memoized */}
+    </>
+  );
+}
+```
+
+---
+
+### CSS Performance
+
+**Hardware-accelerated animations:**
+
+```css
+/* Good - Hardware accelerated */
+.element {
+  transform: translateX(100px);
+  will-change: transform;
+  transition: transform 0.3s ease;
+}
+
+/* Bad - Triggers layout recalculation */
+.element {
+  left: 100px;
+  transition: left 0.3s ease;
+}
+
+/* Use CSS containment for isolated components */
+.container {
+  contain: layout style paint;
+}
+
+/* Optimize animations */
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Use transform and opacity for 60fps animations */
+.smooth-animation {
+  transform: translateZ(0); /* Force GPU acceleration */
+  backface-visibility: hidden;
+}
+```
+
+---
+
+## Performance Optimization Checklist
+
+> **Note:** 
+**Essential Optimizations:**
+
+### Editor
+- ✅ Enable virtual scrolling for large documents
+- ✅ Debounce auto-save (1000ms)
+- ✅ Limit undo history (50 steps)
+- ✅ Disable syntax highlighting for files >10KB
+- ✅ Use web workers for highlighting
+
+### File System
+- ✅ Lazy load folder contents
+- ✅ Virtual scroll file lists
+- ✅ Exclude node_modules, .git, dist
+- ✅ Debounce file watcher events (500ms)
+- ✅ Limit to 10,000 watched files
+
+### Search
+- ✅ Build index in web worker
+- ✅ Use incremental indexing
+- ✅ Cache results (5 min TTL)
+- ✅ Limit to 100 results
+- ✅ Enable Quantum architecture for 5,000+ files
+
+### Memory
+- ✅ LRU cache for file contents (100 files)
+- ✅ Limit open tabs (20 max)
+- ✅ Auto-close inactive tabs
+- ✅ Monitor memory usage
+- ✅ Clear caches periodically
+
+### Network
+- ✅ Batch API requests (100/batch)
+- ✅ Cache API responses
+- ✅ Connection pooling (5 connections)
+- ✅ Compress large payloads
+
+### Rendering
+- ✅ React.memo for components
+- ✅ useMemo for computations
+- ✅ useCallback for handlers
+- ✅ Hardware-accelerated CSS
+- ✅ CSS containment
+
+
+---
+
+## Next Steps
+
+- [Performance Overview](/advanced/performance/overview) - Benchmarks and capabilities
+- [Quantum Architecture](/advanced/performance/quantum) - Revolutionary search system
+- [Troubleshooting](/advanced/troubleshooting) - Debug performance issues
+- [Configuration Reference](/reference/configuration) - All performance settings

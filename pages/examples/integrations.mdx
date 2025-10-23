@@ -1,0 +1,1201 @@
+---
+title: Integration Examples
+description: Complete integration examples for connecting Lokud with Gmail, MCP servers, Git, and external tools. Includes setup instructions, configuration examples, and workflow implementations.
+keywords: [integrations, gmail integration, mcp server, git integration, api integration, external tools]
+---
+
+# Integration Examples
+
+Connect Lokud with your favorite tools and services to create a seamless workflow. This guide provides complete integration examples with step-by-step setup instructions.
+
+## Overview
+
+Each integration example includes:
+- Complete setup instructions
+- Configuration files
+- API credentials setup
+- Workflow examples
+- Troubleshooting tips
+- Security best practices
+
+---
+
+## Gmail Integration
+
+**Use Case**: Capture emails as notes, create tasks from emails, sync calendar events
+
+**Difficulty**: Intermediate
+
+### Setup Instructions
+
+#### 1. Enable Gmail API
+
+First, enable the Gmail API in your Google Cloud Console:
+
+```bash
+# Visit Google Cloud Console
+https://console.cloud.google.com/
+
+# Steps:
+# 1. Create a new project or select existing
+# 2. Enable Gmail API
+# 3. Create OAuth 2.0 credentials
+# 4. Download credentials.json
+```
+
+#### 2. Configure Lokud Gmail Plugin
+
+Create a configuration file for the Gmail integration:
+
+```yaml
+# config/integrations/gmail.yaml
+integration:
+  name: gmail
+  enabled: true
+  version: 1.0
+
+authentication:
+  type: oauth2
+  credentials_path: ./credentials.json
+  token_path: ./token.json
+  scopes:
+    - https://www.googleapis.com/auth/gmail.readonly
+    - https://www.googleapis.com/auth/gmail.modify
+    - https://www.googleapis.com/auth/calendar.readonly
+
+settings:
+  # Auto-sync settings
+  auto_sync: true
+  sync_interval: 300  # seconds (5 minutes)
+
+  # Email capture settings
+  capture_labels:
+    - Important
+    - Follow-up
+    - Action-Required
+
+  # Folder mapping
+  email_folder: 03-resources/emails
+
+  # Template for email notes
+  email_template: email-note-template
+
+  # Calendar settings
+  calendar_sync: true
+  calendar_folder: 05-daily
+
+# Email filters
+filters:
+  # Only sync emails matching these criteria
+  - from: ["important-sender@example.com"]
+    subject_contains: ["PROJECT", "URGENT"]
+
+  - has_label: ["Important", "Follow-up"]
+
+  - starred: true
+
+  # Exclude certain emails
+  exclude:
+    - from: ["noreply@*", "*@notifications.*"]
+    - subject_contains: ["unsubscribe", "newsletter"]
+
+# Automation rules
+automation:
+  # Create tasks from specific emails
+  - trigger: email_received
+    conditions:
+      subject_contains: "TODO"
+    actions:
+      - create_task:
+          title: "{{email.subject}}"
+          description: "{{email.body}}"
+          due_date: "{{email.date + 2 days}}"
+          tags: ["email", "task"]
+
+  # Save important attachments
+  - trigger: email_received
+    conditions:
+      has_attachment: true
+      label: "Important"
+    actions:
+      - save_attachments:
+          folder: 04-resources/attachments
+
+  # Create meeting notes from calendar invites
+  - trigger: calendar_event_created
+    conditions:
+      type: "meeting"
+    actions:
+      - create_note:
+          template: meeting-notes-template
+          folder: 10-meetings
+          title: "{{event.title}} - {{event.date}}"
+```
+
+#### 3. Email Note Template
+
+Create a template for email notes:
+
+```markdown
+---
+title: "{{email.subject}}"
+type: email-note
+source: gmail
+date: "{{email.date}}"
+from: "{{email.from}}"
+tags: [email, "{{email.labels}}"]
+---
+
+# {{email.subject}}
+
+## Email Details
+
+**From**: {{email.from}}
+**To**: {{email.to}}
+**Date**: {{email.date}}
+**Labels**: {{email.labels}}
+
+## Original Message
+
+{{email.body}}
+
+## Attachments
+
+{{#if email.attachments}}
+{{#each email.attachments}}
+- [{{this.name}}]({{this.path}})
+{{/each}}
+{{/if}}
+
+## Notes
+
+<!-- Add your notes here -->
+
+## Action Items
+
+- [ ]
+
+## Related
+
+<!-- Link to related notes -->
+```
+
+### Workflow Examples
+
+#### Workflow 1: Email to Task Pipeline
+
+Automatically create tasks from important emails:
+
+```yaml
+# workflows/email-to-task.yaml
+name: Email to Task Pipeline
+description: Convert important emails into actionable tasks
+
+triggers:
+  - type: email_received
+    conditions:
+      - label: "Action-Required"
+      - OR:
+        - subject_contains: "TODO"
+        - subject_contains: "ACTION"
+        - subject_contains: "REVIEW"
+
+actions:
+  # 1. Create task in task base
+  - create_database_entry:
+      base: Tasks
+      fields:
+        title: "{{email.subject}}"
+        description: |
+          **From**: {{email.from}}
+          **Date**: {{email.date}}
+
+          {{email.body}}
+        status: "To Do"
+        priority: "{{#if email.hasLabel('Urgent')}}High{{else}}Medium{{/if}}"
+        due_date: "{{date.today + 2 days}}"
+        source: "{{email.link}}"
+        tags: ["email", "{{email.from.domain}}"]
+
+  # 2. Archive the email
+  - gmail_api:
+      action: modify_labels
+      email_id: "{{email.id}}"
+      add_labels: ["Processed"]
+      remove_labels: ["Action-Required"]
+
+  # 3. Send notification
+  - notify:
+      title: "New task created from email"
+      message: "{{email.subject}}"
+      link: "{{task.link}}"
+```
+
+#### Workflow 2: Meeting Prep from Calendar
+
+Automatically create meeting notes before calendar events:
+
+```yaml
+# workflows/meeting-prep.yaml
+name: Meeting Preparation
+description: Auto-create meeting notes before scheduled meetings
+
+triggers:
+  - type: calendar_event
+    timing: 1_hour_before
+    conditions:
+      - type: "meeting"
+      - attendees_count: ">1"
+
+actions:
+  # 1. Create meeting note
+  - create_note:
+      template: meeting-notes-template
+      folder: 10-meetings
+      filename: "{{event.date}}-{{event.title | slug}}.md"
+      frontmatter:
+        title: "{{event.title}}"
+        date: "{{event.date}}"
+        attendees: "{{event.attendees}}"
+        location: "{{event.location}}"
+        calendar_link: "{{event.link}}"
+
+  # 2. Gather context
+  - search_vault:
+      query: "{{event.attendees | map: 'name'}}"
+      limit: 5
+      insert_at: "## Background & Previous Notes"
+
+  # 3. Add to daily note
+  - append_to_note:
+      target: "{{date.today | daily_note}}"
+      content: |
+        ## Meeting: {{event.title}}
+        **Time**: {{event.start}} - {{event.end}}
+        **Link**: [[{{meeting.note.path}}]]
+
+  # 4. Set reminder
+  - notify:
+      title: "Meeting in 1 hour"
+      message: "{{event.title}}"
+      link: "{{meeting.note.link}}"
+      timing: 10_minutes_before
+```
+
+#### Workflow 3: Email Newsletter Archive
+
+Save newsletter emails for later reading:
+
+```yaml
+# workflows/newsletter-archive.yaml
+name: Newsletter Archiving
+description: Automatically save newsletters to reading list
+
+triggers:
+  - type: email_received
+    conditions:
+      - from_contains: ["newsletter", "digest", "weekly"]
+      - OR:
+        - label: "Newsletters"
+        - subject_contains: ["Newsletter", "Digest", "Weekly Roundup"]
+
+actions:
+  # 1. Create article entry
+  - create_database_entry:
+      base: Reading List
+      fields:
+        title: "{{email.subject}}"
+        source: "{{email.from}}"
+        date_received: "{{email.date}}"
+        content: "{{email.body | html_to_markdown}}"
+        status: "To Read"
+        tags: ["newsletter", "{{email.from.domain}}"]
+        original_link: "{{email.link}}"
+
+  # 2. Extract and save links
+  - extract_links:
+      from: "{{email.body}}"
+      save_to:
+        base: Bookmarks
+        tags: ["from-newsletter", "{{email.from.domain}}"]
+
+  # 3. Archive email
+  - gmail_api:
+      action: archive
+      email_id: "{{email.id}}"
+```
+
+### Security Best Practices
+
+```yaml
+# security/gmail-integration-security.yaml
+
+# OAuth 2.0 Configuration
+oauth:
+  # Use minimal required scopes
+  scopes:
+    - gmail.readonly        # Only if you only need read access
+    - gmail.modify         # If you need to modify labels/archive
+
+  # Rotate tokens regularly
+  token_expiry: 7_days
+  auto_refresh: true
+
+  # Secure credential storage
+  credentials:
+    storage: encrypted
+    encryption_key_path: ./secrets/encryption.key
+
+# API Rate Limiting
+rate_limiting:
+  # Respect Gmail API quotas
+  max_requests_per_second: 25
+  max_requests_per_day: 1_000_000
+
+  # Batch operations when possible
+  batch_size: 100
+
+# Data Privacy
+privacy:
+  # Don't sync sensitive emails
+  exclude_labels:
+    - Confidential
+    - Private
+    - Banking
+
+  # Encrypt local cache
+  cache:
+    enabled: true
+    encryption: true
+    max_age: 30_days
+
+  # Audit logging
+  audit_log:
+    enabled: true
+    log_path: ./logs/gmail-integration.log
+    retention_days: 90
+```
+
+---
+
+## MCP Server Integration
+
+**Use Case**: Connect AI assistants to Lokud for intelligent note-taking and knowledge retrieval
+
+**Difficulty**: Advanced
+
+### Setup Instructions
+
+#### 1. Install MCP Server
+
+```bash
+# Install Lokud MCP server
+npm install -g lokud-mcp-server
+
+# Or use Docker
+docker pull lokud/mcp-server:latest
+```
+
+#### 2. Configure MCP Server
+
+Create the MCP server configuration:
+
+```json
+// config/mcp-server.json
+{
+  "server": {
+    "name": "lokud-mcp",
+    "version": "1.0.0",
+    "port": 3000,
+    "host": "localhost"
+  },
+
+  "lokud": {
+    "vault_path": "/path/to/your/vault",
+    "api_key": "${LOKUD_API_KEY}",
+    "base_url": "http://localhost:8080"
+  },
+
+  "capabilities": {
+    // Read capabilities
+    "read_note": true,
+    "search_notes": true,
+    "list_tags": true,
+    "get_backlinks": true,
+
+    // Write capabilities
+    "create_note": true,
+    "update_note": true,
+    "delete_note": false,  // Disable for safety
+
+    // Database capabilities
+    "query_database": true,
+    "create_database_entry": true,
+    "update_database_entry": true
+  },
+
+  "tools": [
+    {
+      "name": "search_notes",
+      "description": "Search notes in the Lokud vault",
+      "parameters": {
+        "query": {
+          "type": "string",
+          "description": "Search query",
+          "required": true
+        },
+        "tags": {
+          "type": "array",
+          "description": "Filter by tags",
+          "required": false
+        },
+        "limit": {
+          "type": "integer",
+          "description": "Maximum results",
+          "default": 10
+        }
+      }
+    },
+    {
+      "name": "create_note",
+      "description": "Create a new note in the vault",
+      "parameters": {
+        "title": {
+          "type": "string",
+          "required": true
+        },
+        "content": {
+          "type": "string",
+          "required": true
+        },
+        "folder": {
+          "type": "string",
+          "description": "Folder path",
+          "required": false
+        },
+        "tags": {
+          "type": "array",
+          "required": false
+        }
+      }
+    },
+    {
+      "name": "query_database",
+      "description": "Query a Lokud database",
+      "parameters": {
+        "base": {
+          "type": "string",
+          "description": "Database name",
+          "required": true
+        },
+        "filters": {
+          "type": "object",
+          "required": false
+        },
+        "sort": {
+          "type": "object",
+          "required": false
+        },
+        "limit": {
+          "type": "integer",
+          "default": 20
+        }
+      }
+    }
+  ],
+
+  "security": {
+    "authentication": {
+      "type": "api_key",
+      "header": "X-MCP-Auth",
+      "key": "${MCP_AUTH_KEY}"
+    },
+    "rate_limiting": {
+      "enabled": true,
+      "max_requests_per_minute": 60
+    },
+    "cors": {
+      "enabled": true,
+      "allowed_origins": [
+        "https://app.example-ai-assistant.com"
+      ]
+    }
+  }
+}
+```
+
+#### 3. Start MCP Server
+
+```bash
+# Set environment variables
+export LOKUD_API_KEY="your-api-key"
+export MCP_AUTH_KEY="your-mcp-auth-key"
+
+# Start server
+lokud-mcp-server --config config/mcp-server.json
+
+# Or with Docker
+docker run -d \
+  -p 3000:3000 \
+  -v /path/to/vault:/vault \
+  -v /path/to/config:/config \
+  -e LOKUD_API_KEY=$LOKUD_API_KEY \
+  -e MCP_AUTH_KEY=$MCP_AUTH_KEY \
+  lokud/mcp-server:latest
+```
+
+### AI Assistant Configuration Examples
+
+#### Configuration for AI Assistant
+
+```json
+// AI assistant MCP client configuration
+{
+  "mcp_servers": {
+    "lokud": {
+      "url": "http://localhost:3000",
+      "auth": {
+        "type": "api_key",
+        "key": "${MCP_AUTH_KEY}"
+      },
+      "enabled": true,
+      "tools": [
+        "search_notes",
+        "create_note",
+        "query_database",
+        "get_backlinks"
+      ]
+    }
+  }
+}
+```
+
+### Usage Examples
+
+#### Example 1: AI-Powered Note Creation
+
+Prompt to AI assistant:
+```
+Create a meeting note for my 1-on-1 with Sarah tomorrow at 2pm.
+Include sections for: agenda, discussion points, action items, and follow-up.
+```
+
+MCP tool call:
+```json
+{
+  "tool": "create_note",
+  "parameters": {
+    "title": "1-on-1 with Sarah - 2025-01-21",
+    "folder": "10-meetings/1-on-1s",
+    "tags": ["meeting", "1-on-1", "sarah"],
+    "content": "# 1-on-1 with Sarah - 2025-01-21\n\n## Agenda\n\n- \n\n## Discussion Points\n\n### Updates\n\n### Challenges\n\n### Goals\n\n## Action Items\n\n- [ ] \n\n## Follow-up\n\n**Next meeting**: \n"
+  }
+}
+```
+
+#### Example 2: Intelligent Search
+
+Prompt to AI assistant:
+```
+Find all notes about the Q1 product launch that mention pricing or competitors
+```
+
+MCP tool call:
+```json
+{
+  "tool": "search_notes",
+  "parameters": {
+    "query": "Q1 product launch (pricing OR competitors)",
+    "tags": ["product", "launch", "q1"],
+    "limit": 20
+  }
+}
+```
+
+#### Example 3: Database Queries
+
+Prompt to AI assistant:
+```
+Show me all high-priority tasks due this week that are not completed
+```
+
+MCP tool call:
+```json
+{
+  "tool": "query_database",
+  "parameters": {
+    "base": "Tasks",
+    "filters": {
+      "AND": [
+        {
+          "field": "priority",
+          "operator": "equals",
+          "value": "High"
+        },
+        {
+          "field": "due_date",
+          "operator": "between",
+          "value": ["2025-01-20", "2025-01-26"]
+        },
+        {
+          "field": "status",
+          "operator": "not_equals",
+          "value": "Completed"
+        }
+      ]
+    },
+    "sort": {
+      "field": "due_date",
+      "direction": "asc"
+    }
+  }
+}
+```
+
+---
+
+## Git Integration
+
+**Use Case**: Version control for your notes, collaborative editing, backup
+
+**Difficulty**: Intermediate
+
+### Setup Instructions
+
+#### 1. Initialize Git Repository
+
+```bash
+# Navigate to your vault
+cd /path/to/vault
+
+# Initialize git repo
+git init
+
+# Create .gitignore
+cat > .gitignore << EOF
+# System files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Lokud specific
+.lokud/cache/
+.lokud/temp/
+.lokud/trash/
+
+# Sensitive data
+secrets/
+credentials.json
+token.json
+*.key
+
+# Large files (optional)
+attachments/**/*.mp4
+attachments/**/*.mov
+*.pdf
+
+# Node modules (if using plugins)
+node_modules/
+EOF
+
+# Initial commit
+git add .
+git commit -m "Initial commit: Lokud vault setup"
+```
+
+#### 2. Configure Lokud Git Plugin
+
+```yaml
+# config/integrations/git.yaml
+integration:
+  name: git
+  enabled: true
+  version: 1.0
+
+settings:
+  # Repository settings
+  repo_path: /path/to/vault
+  branch: main
+
+  # Auto-commit settings
+  auto_commit: true
+  commit_frequency: every_change  # Options: every_change, hourly, daily, manual
+
+  # Commit message templates
+  commit_message_template: |
+    {{action}}: {{files_changed}} file(s)
+
+    {{#each files}}
+    - {{this.action}} {{this.path}}
+    {{/each}}
+
+  # Auto-push settings
+  auto_push: false  # Push manually for safety
+  push_frequency: daily
+  push_time: "23:00"
+
+  # Conflict resolution
+  conflict_strategy: manual  # Options: manual, local_wins, remote_wins
+
+  # Sync settings
+  auto_pull: true
+  pull_frequency: startup  # Options: startup, hourly, manual
+
+# File tracking
+tracking:
+  # Include patterns
+  include:
+    - "**/*.md"
+    - "**/*.yaml"
+    - "**/*.json"
+    - "_meta/**"
+
+  # Exclude patterns
+  exclude:
+    - ".lokud/cache/**"
+    - ".lokud/temp/**"
+    - "**/node_modules/**"
+    - "secrets/**"
+
+# Automation
+automation:
+  # Auto-commit on note save
+  - trigger: note_saved
+    conditions:
+      file_extension: ".md"
+    actions:
+      - git_add:
+          files: ["{{note.path}}"]
+      - git_commit:
+          message: "Update: {{note.title}}"
+
+  # Daily backup
+  - trigger: scheduled
+    schedule: "0 23 * * *"  # Every day at 11 PM
+    actions:
+      - git_add:
+          files: ["."]
+      - git_commit:
+          message: "Daily backup: {{date.today}}"
+      - git_push:
+          remote: origin
+          branch: main
+
+  # Sync on startup
+  - trigger: app_start
+    actions:
+      - git_fetch:
+          remote: origin
+      - git_pull:
+          remote: origin
+          branch: main
+          strategy: rebase
+```
+
+### Workflow Examples
+
+#### Workflow 1: Collaborative Note Editing
+
+```yaml
+# workflows/collaborative-editing.yaml
+name: Collaborative Note Editing
+description: Handle concurrent edits with Git
+
+# Pull before editing
+before_edit:
+  - git_pull:
+      remote: origin
+      branch: main
+      strategy: rebase
+
+  - check_conflicts:
+      on_conflict: notify_user
+
+# Commit after editing
+after_edit:
+  - git_add:
+      files: ["{{note.path}}"]
+
+  - git_commit:
+      message: |
+        {{note.title}}: {{edit.summary}}
+
+        Edited by: {{user.name}}
+        Changed: {{edit.lines_added}}+ / {{edit.lines_removed}}-
+
+  # Don't auto-push, let user review
+  - notify:
+      message: "Changes committed. Review and push when ready."
+
+# Handle conflicts
+on_conflict:
+  - create_backup:
+      source: "{{note.path}}"
+      destination: ".lokud/conflicts/{{note.name}}.{{timestamp}}.bak"
+
+  - show_diff:
+      local: "{{note.path}}"
+      remote: "{{note.path}}"
+      tool: visual
+
+  - prompt_user:
+      message: "Conflict detected. Choose resolution:"
+      options:
+        - "Keep my changes"
+        - "Accept remote changes"
+        - "Merge manually"
+```
+
+#### Workflow 2: Feature Branch Workflow
+
+```yaml
+# workflows/feature-branch.yaml
+name: Feature Branch Workflow
+description: Use branches for major changes
+
+# Create feature branch for projects
+on_project_start:
+  - git_checkout:
+      branch: "feature/{{project.name | slug}}"
+      create: true
+
+  - notify:
+      message: "Created feature branch: {{branch.name}}"
+
+# Work on feature branch
+during_project:
+  # All commits go to feature branch
+  auto_commit: true
+  auto_push: true
+  branch: current
+
+# Merge when project complete
+on_project_complete:
+  - git_checkout:
+      branch: main
+
+  - git_merge:
+      branch: "feature/{{project.name | slug}}"
+      strategy: no-ff
+      message: |
+        Merge feature: {{project.name}}
+
+        {{project.description}}
+
+        Completed: {{date.today}}
+
+  - git_push:
+      remote: origin
+      branch: main
+
+  - git_branch_delete:
+      branch: "feature/{{project.name | slug}}"
+      remote: true
+```
+
+#### Workflow 3: Daily Backup and Sync
+
+```bash
+#!/bin/bash
+# scripts/daily-sync.sh
+
+# Daily vault backup and sync script
+
+VAULT_PATH="/path/to/vault"
+REMOTE="origin"
+BRANCH="main"
+
+cd "$VAULT_PATH" || exit 1
+
+echo "Starting daily sync..."
+
+# 1. Check for uncommitted changes
+if [[ -n $(git status -s) ]]; then
+  echo "Committing local changes..."
+  git add .
+  git commit -m "Daily backup: $(date '+%Y-%m-%d')"
+fi
+
+# 2. Pull remote changes
+echo "Pulling remote changes..."
+git fetch "$REMOTE"
+
+if git diff --quiet "$BRANCH" "$REMOTE/$BRANCH"; then
+  echo "Already up to date."
+else
+  echo "Remote changes detected. Rebasing..."
+  git rebase "$REMOTE/$BRANCH"
+
+  # Check for conflicts
+  if [[ -n $(git ls-files -u) ]]; then
+    echo "ERROR: Merge conflicts detected!"
+    echo "Please resolve conflicts manually."
+    exit 1
+  fi
+fi
+
+# 3. Push local changes
+echo "Pushing local changes..."
+git push "$REMOTE" "$BRANCH"
+
+echo "Sync complete!"
+
+# 4. Generate sync report
+cat > ".lokud/sync-report-$(date '+%Y-%m-%d').txt" << EOF
+Sync Report - $(date)
+=====================================
+Branch: $BRANCH
+Remote: $REMOTE
+
+Commits pushed: $(git log --oneline "$REMOTE/$BRANCH..HEAD" | wc -l)
+Commits pulled: $(git log --oneline "HEAD..$REMOTE/$BRANCH" | wc -l)
+
+Files changed: $(git diff --name-only HEAD~1 | wc -l)
+
+Status: Success
+EOF
+
+echo "Report saved to .lokud/sync-report-$(date '+%Y-%m-%d').txt"
+```
+
+### Best Practices
+
+```markdown
+# Git Integration Best Practices
+
+## Commit Messages
+
+### Good Examples
+- "Add meeting notes for Q1 planning session"
+- "Update project roadmap with new features"
+- "Fix broken links in documentation"
+- "Archive completed project: Website Redesign"
+
+### Bad Examples
+- "Update"
+- "Fixed stuff"
+- "asdf"
+- "Commit"
+
+## Branching Strategy
+
+### Personal Vault
+- Use `main` branch for normal work
+- Create feature branches for major reorganizations
+- Use `archive` branch for old content
+
+### Team Vault
+- `main` - stable, reviewed content
+- `develop` - daily work
+- `feature/*` - major changes
+- `personal/*` - personal notes (don't merge to main)
+
+## Merge Conflicts
+
+### Prevention
+1. Pull before editing
+2. Commit frequently
+3. Communicate with team
+4. Use separate folders for personal work
+
+### Resolution
+1. Always create backup first
+2. Use visual diff tool
+3. Preserve both versions if unsure
+4. Test after resolving
+
+## Security
+
+### Never Commit
+- API keys
+- Passwords
+- Personal secrets
+- Large binary files (use Git LFS)
+
+### Use .gitignore
+- Cache files
+- Temporary files
+- Build artifacts
+- Sensitive data
+
+### Encrypted Repositories
+For sensitive content:
+```bash
+# Use git-crypt for encryption
+git-crypt init
+git-crypt add-gpg-user YOUR_GPG_KEY
+
+# Create .gitattributes
+cat > .gitattributes << EOF
+secrets/** filter=git-crypt diff=git-crypt
+*.key filter=git-crypt diff=git-crypt
+EOF
+```
+```
+
+---
+
+## External Tool Integrations
+
+Quick setup guides for other popular integrations.
+
+### Jira Integration (Hypothetical)
+
+```yaml
+# config/integrations/jira.yaml
+integration:
+  name: jira
+  enabled: true
+
+connection:
+  url: https://your-domain.atlassian.net
+  email: your-email@example.com
+  api_token: ${JIRA_API_TOKEN}
+
+sync:
+  # Sync Jira issues to Lokud database
+  issues_to_database:
+    enabled: true
+    base: "Jira Issues"
+    projects: ["PROJ", "DEV"]
+    sync_frequency: 15_minutes
+
+  # Create Jira issues from Lokud tasks
+  tasks_to_issues:
+    enabled: true
+    source_base: "Tasks"
+    filter:
+      tags_include: ["jira-sync"]
+    default_project: "PROJ"
+
+mapping:
+  # Field mapping
+  fields:
+    - lokud: "title"
+      jira: "summary"
+    - lokud: "description"
+      jira: "description"
+    - lokud: "status"
+      jira: "status"
+      mapping:
+        "To Do": "To Do"
+        "In Progress": "In Progress"
+        "Done": "Done"
+    - lokud: "priority"
+      jira: "priority"
+      mapping:
+        "High": "High"
+        "Medium": "Medium"
+        "Low": "Low"
+```
+
+### Slack Integration (Hypothetical)
+
+```yaml
+# config/integrations/slack.yaml
+integration:
+  name: slack
+  enabled: true
+
+connection:
+  workspace: your-workspace
+  bot_token: ${SLACK_BOT_TOKEN}
+
+features:
+  # Save important messages as notes
+  save_messages:
+    enabled: true
+    trigger: reaction  # Save when specific emoji reaction added
+    reaction: "bookmark"
+    folder: "03-resources/slack-saves"
+
+  # Daily summary
+  daily_summary:
+    enabled: true
+    channel: "#team-updates"
+    time: "09:00"
+    content: |
+      Good morning! Here's your daily summary:
+
+      📝 Notes created yesterday: {{stats.notes_created}}
+      ✅ Tasks completed: {{stats.tasks_completed}}
+      🎯 Tasks due today: {{stats.tasks_due_today}}
+
+  # Notifications
+  notifications:
+    enabled: true
+    events:
+      - task_due_soon
+      - meeting_starting
+      - daily_note_reminder
+```
+
+---
+
+## Troubleshooting
+
+### Gmail Integration Issues
+
+**Issue**: OAuth authentication fails
+```bash
+# Solution: Re-generate OAuth credentials
+1. Delete existing token.json
+2. Re-run authentication flow
+3. Check OAuth consent screen configuration
+```
+
+**Issue**: Emails not syncing
+```bash
+# Solution: Check filters and quotas
+1. Verify filter configuration
+2. Check Gmail API quota usage
+3. Review error logs
+```
+
+### MCP Server Issues
+
+**Issue**: Connection refused
+```bash
+# Solution: Verify server is running
+ps aux | grep mcp-server
+
+# Check server logs
+tail -f /var/log/lokud-mcp-server.log
+
+# Test connection
+curl http://localhost:3000/health
+```
+
+**Issue**: Authentication errors
+```bash
+# Solution: Verify API keys
+echo $MCP_AUTH_KEY
+echo $LOKUD_API_KEY
+
+# Regenerate keys if needed
+lokud-mcp-server --generate-key
+```
+
+### Git Integration Issues
+
+**Issue**: Merge conflicts on every sync
+```bash
+# Solution: Use rebase strategy
+git config pull.rebase true
+
+# Or in Lokud config
+pull_strategy: rebase
+```
+
+**Issue**: Large file warnings
+```bash
+# Solution: Use Git LFS
+git lfs install
+git lfs track "*.pdf"
+git lfs track "*.mp4"
+git add .gitattributes
+```
+
+---
+
+**Next Steps**: Choose an integration that fits your workflow, follow the setup instructions, and customize the configuration to your needs. Start with read-only features before enabling write capabilities.

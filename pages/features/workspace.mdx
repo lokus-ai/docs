@@ -1,0 +1,754 @@
+---
+title: Workspace Management
+description: Master workspace management in Lokus - customize layouts, manage panels, use split view, configure multiple workspaces, and optimize your note-taking environment
+keywords: workspace, layout, panels, split view, sidebar, customization, editor layout, workspace configuration
+---
+
+# Workspace Management
+
+Lokus offers a flexible and powerful workspace system that lets you customize your note-taking environment to match your workflow. From split editors to customizable sidebars, every aspect is designed for maximum productivity.
+
+## Overview
+
+The workspace system provides:
+
+- **Flexible Layouts**: Customize panel positions and sizes
+- **Split Editor**: Work with multiple files side-by-side
+- **Sidebar Management**: Toggle and resize left/right sidebars
+- **Panel System**: Organize tools and features
+- **Multiple Workspaces**: Switch between different note collections
+- **Persistent State**: Layouts saved across sessions
+- **Customizable UI**: Adjust to your preferences
+
+---
+
+## Workspace Layout
+
+### Understanding the Layout
+
+The Lokus workspace is divided into several key areas:
+
+```
+┌─────────────────────────────────────────────────────┐
+│                   Title Bar                         │
+│  Logo | Tabs | File Name | Controls                │
+├──────────┬──────────────────────────┬───────────────┤
+│          │                          │               │
+│  Left    │     Main Editor          │     Right     │
+│ Sidebar  │      Content             │   Sidebar     │
+│          │                          │               │
+│ Files    │  ┌──────────────────┐   │  Outline      │
+│ Tags     │  │                  │   │  Backlinks    │
+│ Search   │  │  Your Notes      │   │  Graph        │
+│          │  │                  │   │  History      │
+│          │  └──────────────────┘   │               │
+│          │                          │               │
+├──────────┴──────────────────────────┴───────────────┤
+│                   Status Bar                        │
+│  Path | Word Count | Shortcuts | Mode              │
+└─────────────────────────────────────────────────────┘
+```
+
+### Key Areas
+
+**1. Title Bar**
+- Application logo and name
+- Open file tabs
+- Current file name
+- Window controls (minimize, maximize, close)
+
+**2. Left Sidebar (Default: 280px)**
+- File tree/explorer
+- Tag browser
+- Search panel
+- Gmail integration
+- Bases (databases)
+
+**3. Main Editor**
+- Primary editing area
+- Can split horizontally or vertically
+- Supports multiple panes
+- Tabs for open files
+
+**4. Right Sidebar (Default: 280px)**
+- Document outline
+- Backlinks panel
+- Graph view
+- Version history
+- Editor mode switcher
+- Plugins panel
+
+**5. Status Bar**
+- File path
+- Word/character count
+- Keyboard shortcuts hint
+- Editor mode
+- Sync status
+
+---
+
+## Managing Sidebars
+
+### Left Sidebar
+
+The left sidebar contains your file navigation and organization tools.
+
+#### Toggle Left Sidebar
+```
+Keyboard Shortcut: Cmd+B (Windows: Ctrl+B)
+Or: Click the hamburger menu icon
+```
+
+#### Available Panels
+
+**File Explorer** (Default)
+- Browse your files and folders
+- Create, rename, delete files
+- Drag and drop organization
+
+**Tag Browser**
+- View all tags in workspace
+- Filter by tags
+- Hierarchical tag display
+- Tag statistics
+
+**Search Panel**
+```
+Keyboard Shortcut: Cmd+Shift+F (Windows: Ctrl+Shift+F)
+```
+- Full-text search across all files
+- Advanced search options
+- Search in file names
+- Filter by date, tags
+
+**Gmail Integration**
+- View and manage emails
+- Convert emails to notes
+- Search email archive
+
+**Bases**
+- Database views for structured content
+- Table, board, calendar views
+- Data relationships
+
+#### Resize Left Sidebar
+
+**Method 1: Drag Border**
+```
+1. Hover over right edge of sidebar
+2. Cursor changes to resize arrow
+3. Click and drag left/right
+4. Release to set size
+```
+
+**Method 2: Double-click Border**
+```
+Double-click the border to reset to default width (280px)
+```
+
+**Size Limits:**
+- Minimum: 220px
+- Maximum: 500px
+- Default: 280px
+
+### Right Sidebar
+
+The right sidebar displays contextual information about your current note.
+
+#### Toggle Right Sidebar
+```
+Keyboard Shortcut: Cmd+Shift+B (Windows: Ctrl+Shift+B)
+Or: Click the panel icon in top-right
+```
+
+#### Available Panels
+
+**Editor Mode Switcher**
+- **Edit Mode**: Full editing capabilities
+- **Live Preview**: Real-time preview while editing
+- **Reading Mode**: Distraction-free reading
+
+**Document Outline**
+- Hierarchical heading structure
+- Click to jump to section
+- Auto-updates as you type
+- Collapsible sections
+
+**Backlinks Panel**
+- Shows notes linking to current file
+- Click to navigate
+- Context snippets
+- Unlinked mentions
+
+**Graph View**
+- Visual representation of connections
+- Local graph (current note + links)
+- Interactive node navigation
+- Filter by depth
+
+**Version History**
+- View previous versions
+- Compare changes (diff view)
+- Restore old versions
+- Automatic snapshots
+
+**Plugins Panel**
+- Active plugin list
+- Plugin controls
+- Custom plugin UIs
+
+#### Resize Right Sidebar
+
+Same resize behavior as left sidebar:
+- **Min**: 220px
+- **Max**: 500px
+- **Default**: 280px
+
+---
+
+## Split Editor
+
+Work with multiple files simultaneously using split view.
+
+### Activating Split View
+
+#### Method 1: Keyboard Shortcut
+```
+Toggle Split: Cmd+\ (Windows: Ctrl+\)
+Toggle Direction: Cmd+Shift+\ (Windows: Ctrl+Shift+\)
+```
+
+#### Method 2: Context Menu
+```
+1. Right-click on editor
+2. Select "Split Editor"
+3. Choose "Split Horizontally" or "Split Vertically"
+```
+
+#### Method 3: Command Palette
+```
+1. Press Cmd+K (Windows: Ctrl+K)
+2. Type "split"
+3. Select split option
+```
+
+### Split Configurations
+
+**Vertical Split** (Side-by-side)
+```
+┌────────────────┬────────────────┐
+│                │                │
+│   Editor 1     │   Editor 2     │
+│                │                │
+│  (Active)      │                │
+│                │                │
+└────────────────┴────────────────┘
+```
+
+**Horizontal Split** (Top-bottom)
+```
+┌──────────────────────────────────┐
+│          Editor 1                │
+│         (Active)                 │
+├──────────────────────────────────┤
+│          Editor 2                │
+│                                  │
+└──────────────────────────────────┘
+```
+
+### Managing Split Panes
+
+#### Resize Panes
+
+**Drag Divider**
+```
+1. Hover over divider between panes
+2. Click and drag to resize
+3. Both panes adjust proportionally
+```
+
+#### Reset Pane Sizes
+```
+Keyboard Shortcut: Cmd+Alt+\ (Windows: Ctrl+Alt+\)
+Resets to 50/50 split
+```
+
+#### Switch Active Pane
+
+**Keyboard Navigation:**
+- `Tab`: Switch to next pane
+- `Shift+Tab`: Switch to previous pane
+
+**Mouse:**
+- Click in pane to make it active
+- Active pane has blue border
+
+#### Close Split View
+
+**Method 1: Shortcut**
+```
+Cmd+\ (Windows: Ctrl+\) - Toggles on/off
+```
+
+**Method 2: Close Pane**
+```
+Close file in one pane → Reverts to single editor
+```
+
+### Split View Features
+
+**Synchronized Scrolling**
+```
+Shortcut: Cmd+Alt+S (Windows: Ctrl+Alt+S)
+Toggle: Scroll both panes together
+```
+
+**Independent Files**
+- Each pane can display different file
+- Separate undo/redo history
+- Independent cursor positions
+
+**Drag and Drop**
+```
+1. Drag tab from tab bar
+2. Drop into pane
+3. Opens in that pane
+```
+
+**Copy Content Between Panes**
+```
+1. Select text in one pane
+2. Copy (Cmd+C)
+3. Click other pane
+4. Paste (Cmd+V)
+```
+
+---
+
+## Tab Management
+
+### Working with Tabs
+
+Tabs let you keep multiple files open for quick switching.
+
+#### Tab Bar Features
+
+**Tab Elements:**
+- File icon (indicates file type)
+- File name
+- Modified indicator (dot if unsaved)
+- Close button (×)
+
+**Tab States:**
+- **Active**: Highlighted tab
+- **Modified**: Shows dot before name
+- **Pinned**: Stays left, can't be closed accidentally
+
+#### Opening Files in Tabs
+
+**New Tab**
+```
+1. Click file in sidebar
+2. Or: Cmd+Click to open in new tab
+3. Or: Middle-click file
+```
+
+**Maximum Tabs**: 10 tabs (recommended for performance)
+
+#### Navigating Tabs
+
+**Keyboard:**
+```
+Next Tab: Cmd+Alt+Right (Windows: Ctrl+Alt+Right)
+Previous Tab: Cmd+Alt+Left (Windows: Ctrl+Alt+Left)
+Go to Tab 1-9: Cmd+1 through Cmd+9
+Close Tab: Cmd+W (Windows: Ctrl+W)
+```
+
+**Mouse:**
+```
+Click: Switch to tab
+Middle-click: Close tab
+Drag: Reorder tabs
+```
+
+#### Reopen Closed Tab
+```
+Shortcut: Cmd+Shift+T (Windows: Ctrl+Shift+T)
+Reopens last 20 closed tabs in order
+```
+
+#### Tab Context Menu
+
+Right-click any tab:
+
+| Action | Description |
+|--------|-------------|
+| Close | Close this tab |
+| Close Others | Close all except this |
+| Close to Right | Close tabs to the right |
+| Close All | Close all tabs |
+| Pin Tab | Pin tab to left |
+| Unpin Tab | Unpin tab |
+| Copy Path | Copy file path |
+| Reveal in Finder | Show in file explorer |
+
+---
+
+## Multiple Workspaces
+
+Lokus supports multiple independent workspaces.
+
+### What is a Workspace?
+
+A workspace is a collection of:
+- Note files and folders
+- Configuration settings
+- Open tabs and layout
+- Recent files history
+- Search history
+
+### Creating Workspaces
+
+**Method 1: From Welcome Screen**
+```
+1. File → New Workspace
+2. Choose folder location
+3. Name your workspace
+4. Click Create
+```
+
+**Method 2: Open Folder as Workspace**
+```
+1. File → Open Folder
+2. Select existing folder
+3. Lokus creates workspace
+```
+
+### Switching Workspaces
+
+**Quick Switch**
+```
+1. File → Recent Workspaces
+2. Select workspace from list
+3. Instantly switch
+```
+
+**Open Multiple Windows**
+```
+File → New Window
+Select different workspace
+Work with both simultaneously
+```
+
+### Workspace Settings
+
+Each workspace has independent settings:
+
+**Stored Per Workspace:**
+- Theme preferences
+- Editor settings
+- Sidebar states
+- Plugin configurations
+- Keyboard shortcuts (optional)
+
+**Stored Globally:**
+- Application preferences
+- Update settings
+- Default editor settings
+
+---
+
+## Layout Customization
+
+### Saving Layouts
+
+Lokus automatically saves your layout:
+
+**Auto-saved:**
+- Sidebar widths
+- Split editor configuration
+- Open tabs
+- Active file
+- Panel visibility
+
+**On Exit:**
+- Layout saved when closing Lokus
+- Restored on next launch
+
+### Layout Profiles
+
+Create and switch between layout profiles:
+
+**Use Cases:**
+- **Writing Mode**: Hide sidebars, focus on editor
+- **Research Mode**: Split view with multiple references
+- **Organization Mode**: Show file tree and tags
+- **Review Mode**: Show outline and backlinks
+
+**Quick Layouts** (Coming Soon)
+```
+Cmd+Alt+1: Writing mode
+Cmd+Alt+2: Research mode
+Cmd+Alt+3: Organization mode
+```
+
+### Reset Layout
+
+Return to default layout:
+
+```
+View → Reset Layout
+Or: Hold Shift while launching Lokus
+```
+
+**Default Layout:**
+- Left sidebar: 280px (visible)
+- Right sidebar: 280px (hidden)
+- Single editor (no split)
+- File tree active in left sidebar
+
+---
+
+## Status Bar
+
+The bottom status bar provides real-time information.
+
+### Status Bar Elements
+
+**Left Side:**
+- **File Path**: Current file location
+- **Sync Status**: Cloud sync indicator (if enabled)
+- **Git Status**: Branch and changes (if in git repo)
+
+**Center:**
+- **Word Count**: Total words in document
+- **Character Count**: With and without spaces
+- **Line Count**: Total lines
+- **Selection**: Selected text stats
+
+**Right Side:**
+- **Editor Mode**: Edit/Live/Reading
+- **Line:Column**: Cursor position
+- **File Encoding**: UTF-8, etc.
+- **Line Endings**: LF/CRLF
+
+### Status Bar Actions
+
+**Click Elements:**
+- **File Path**: Open file location
+- **Word Count**: Toggle count type
+- **Editor Mode**: Switch modes
+- **Line:Column**: Go to line dialog
+
+---
+
+## Workspace Tips
+
+### Performance Optimization
+
+**Keep Workspace Fast:**
+1. Close unused tabs (keep under 10)
+2. Limit files in root (use folders)
+3. Archive old notes regularly
+4. Clear search cache monthly
+
+### Organization Strategies
+
+**Folder Structure:**
+```
+workspace/
+├── 0-Inbox/          # Quick capture
+├── 1-Projects/       # Active projects
+├── 2-Areas/          # Ongoing responsibilities
+├── 3-Resources/      # Reference material
+└── 4-Archive/        # Completed items
+```
+
+**PARA Method:**
+```
+workspace/
+├── Projects/         # Short-term efforts
+├── Areas/            # Long-term responsibilities
+├── Resources/        # Topics of interest
+└── Archive/          # Inactive items
+```
+
+**Zettelkasten:**
+```
+workspace/
+├── 0-Index/          # Entry points
+├── 1-Literature/     # Source notes
+├── 2-Permanent/      # Main notes
+└── 3-Projects/       # Project-specific
+```
+
+### Workflow Recommendations
+
+**Daily Workflow:**
+1. Morning: Review outline in right sidebar
+2. Writing: Hide all sidebars (Cmd+B, Cmd+Shift+B)
+3. Research: Use split view
+4. Evening: Review backlinks, organize
+
+**Focus Mode:**
+```
+1. Hide left sidebar (Cmd+B)
+2. Hide right sidebar (Cmd+Shift+B)
+3. Switch to Reading mode
+4. Or: Use Zen Mode (F11 fullscreen)
+```
+
+---
+
+## Keyboard Shortcuts
+
+### Workspace Navigation
+
+| Shortcut | Action |
+|----------|--------|
+| `Cmd+B` | Toggle left sidebar |
+| `Cmd+Shift+B` | Toggle right sidebar |
+| `Cmd+\` | Toggle split editor |
+| `Cmd+Shift+\` | Toggle split direction |
+| `Cmd+Alt+\` | Reset pane sizes |
+
+### Tab Management
+
+| Shortcut | Action |
+|----------|--------|
+| `Cmd+W` | Close current tab |
+| `Cmd+Shift+T` | Reopen closed tab |
+| `Cmd+Alt+Right` | Next tab |
+| `Cmd+Alt+Left` | Previous tab |
+| `Cmd+1-9` | Go to tab 1-9 |
+
+### View Management
+
+| Shortcut | Action |
+|----------|--------|
+| `F11` | Toggle fullscreen |
+| `Cmd+Plus` | Zoom in |
+| `Cmd+Minus` | Zoom out |
+| `Cmd+0` | Reset zoom |
+
+---
+
+## Advanced Features
+
+### Panel Manager
+
+Customize panel positions:
+
+**Panel Regions:**
+- Left Sidebar
+- Right Sidebar
+- Bottom Panel
+- Floating Panels
+
+**Configure Panels:**
+```
+1. View → Panel Settings
+2. Drag panels to regions
+3. Resize and arrange
+4. Save configuration
+```
+
+### Custom Workspace Scripts
+
+Automate workspace setup (Advanced):
+
+```javascript
+// workspace-setup.js
+export default {
+  name: "Research Mode",
+  layout: {
+    leftSidebar: { visible: true, width: 250 },
+    rightSidebar: { visible: true, width: 300 },
+    split: { enabled: true, direction: "vertical" }
+  },
+  files: [
+    "Research/Current-Project.md",
+    "Reference/Sources.md"
+  ]
+};
+```
+
+### Workspace Sync
+
+Sync workspace settings across devices:
+
+**Enable Sync:**
+```
+1. Preferences → Sync
+2. Enable workspace sync
+3. Choose sync service
+4. Login and sync
+```
+
+**What Syncs:**
+- Layout preferences
+- Sidebar states
+- Plugin configurations
+- Custom shortcuts
+
+**What Doesn't Sync:**
+- Note files (use git or cloud)
+- Open tabs
+- Window position
+
+---
+
+## Troubleshooting
+
+### Common Issues
+
+**Sidebar Won't Open**
+- Solution: Press Cmd+B twice to reset
+- Check View menu → Show Left Sidebar
+
+**Split View Not Working**
+- Solution: Close all tabs, try again
+- Check available screen space
+- Reset layout (View → Reset Layout)
+
+**Tabs Not Saving**
+- Solution: Check workspace permissions
+- Verify config file isn't read-only
+- Try creating new workspace
+
+**Layout Resets on Restart**
+- Solution: Check config file location
+- Verify write permissions
+- Don't force quit (exit properly)
+
+**Performance Issues**
+- Close extra tabs
+- Reduce sidebar width
+- Disable unused panels
+- Clear cache
+
+### Getting Help
+
+For more assistance:
+- [Troubleshooting Guide](/docs/troubleshooting)
+- [Community Forum](https://github.com/yourusername/lokus/discussions)
+- [GitHub Issues](https://github.com/yourusername/lokus/issues)
+
+---
+
+## Related Features
+
+- **[File Management](/features/file-management)**: Organize your files
+- **[Editor](/features/editor)**: Master the editor
+- **[Keyboard Shortcuts](/features/keyboard-shortcuts)**: Learn all shortcuts
+- **[Settings](/features/settings)**: Configure Lokus
+
+---
+
+## What's Next?
+
+Explore these related topics:
+- **[Command Palette](/features/command-palette)**: Quick actions
+- **[Split Editor](/features/editor#split-view)**: Advanced editing
+- **[Customization](/features/settings)**: Personalize Lokus

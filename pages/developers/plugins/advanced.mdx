@@ -1,0 +1,593 @@
+---
+title: "Advanced Topics"
+description: "Advanced plugin development - testing, debugging, distribution, best practices, and migration guides"
+keywords: ["plugin testing", "debugging", "plugin distribution", "best practices", "migration guide"]
+author: "Lokus Team"
+lastUpdated: "2025-10-23"
+version: "1.3.1"
+---
+
+# Advanced Topics
+
+This guide covers advanced plugin development topics including testing, debugging, distribution, and best practices for building production-ready plugins.
+
+## API Surface
+
+Lokus provides 8 comprehensive APIs for plugin development:
+
+### Commands API
+
+Register and execute commands, create keyboard shortcuts, and integrate with command palette.
+
+```typescript
+api.commands.register({
+  id: 'myPlugin.hello',
+  title: 'Say Hello',
+  handler: () => {
+    api.ui.showNotification('Hello from my plugin!', 'info')
+  },
+  keybinding: 'Ctrl+Shift+H',
+  when: 'editorFocus'
+})
+```
+
+### Editor API
+
+Access and manipulate the text editor, register content providers, and add editor features.
+
+```typescript
+const content = await api.editor.getContent()
+await api.editor.insertContent('New text')
+
+api.editor.onDidChangeTextDocument(event => {
+  console.log('Document changed:', event.document.uri)
+})
+```
+
+### UI API
+
+Create panels, dialogs, notifications, and customize the user interface.
+
+```typescript
+api.ui.registerPanel({
+  id: 'myPlugin.sidebar',
+  title: 'My Panel',
+  type: 'webview',
+  location: 'sidebar',
+  html: '<h1>Hello from my panel!</h1>'
+})
+```
+
+### Workspace API
+
+Access workspace files, folders, and settings.
+
+```typescript
+const folders = api.workspace.workspaceFolders
+const files = await api.workspace.findFiles('**/*.md')
+
+api.workspace.onDidChangeWorkspaceFolders(event => {
+  console.log('Workspace changed:', event)
+})
+```
+
+### File System API
+
+Read, write, and watch files and directories.
+
+```typescript
+const content = await api.fs.readFile('/path/to/file.txt')
+await api.fs.writeFile('/path/to/file.txt', 'New content')
+
+api.fs.watch('/path/to/directory', event => {
+  console.log('File changed:', event.path)
+})
+```
+
+### Network API
+
+Make HTTP requests and handle network operations.
+
+```typescript
+const response = await api.network.fetch('https://api.example.com/data')
+const data = await response.json()
+```
+
+### Storage API
+
+Store and retrieve plugin-specific data.
+
+```typescript
+await api.storage.set('myKey', { value: 'myData' })
+const data = await api.storage.get('myKey')
+```
+
+### Events API
+
+Subscribe to and emit custom events.
+
+```typescript
+api.events.on('myPlugin.customEvent', data => {
+  console.log('Custom event received:', data)
+})
+
+api.events.emit('myPlugin.customEvent', { message: 'Hello' })
+```
+
+## Testing Framework
+
+Built-in testing utilities for comprehensive plugin testing:
+
+### Basic Testing
+
+```typescript
+import { createMockContext, TestHelper } from '@lokus/plugin-sdk/testing'
+
+describe('MyPlugin', () => {
+  let context: PluginContext
+  let helper: TestHelper
+
+  beforeEach(() => {
+    context = createMockContext()
+    helper = new TestHelper(context)
+  })
+
+  it('should register command', async () => {
+    const plugin = new MyPlugin()
+    await plugin.activate(context)
+
+    const commands = await helper.getRegisteredCommands()
+    expect(commands).toContain('myPlugin.hello')
+  })
+
+  it('should execute command', async () => {
+    const plugin = new MyPlugin()
+    await plugin.activate(context)
+
+    const result = await helper.executeCommand('myPlugin.hello')
+    expect(result).toBeDefined()
+  })
+})
+```
+
+### Testing Editor Integration
+
+```typescript
+it('should insert text into editor', async () => {
+  const plugin = new MyPlugin()
+  await plugin.activate(context)
+
+  // Set editor content
+  await helper.setEditorContent('Hello World')
+
+  // Execute plugin command
+  await helper.executeCommand('myPlugin.transform')
+
+  // Verify result
+  const content = await helper.getEditorContent()
+  expect(content).toBe('HELLO WORLD')
+})
+```
+
+### Testing Async Operations
+
+```typescript
+it('should handle async operations', async () => {
+  const plugin = new MyPlugin()
+  await plugin.activate(context)
+
+  // Mock API responses
+  helper.mockNetworkRequest('https://api.example.com/data', {
+    status: 200,
+    body: { message: 'Success' }
+  })
+
+  // Execute command that makes network request
+  const result = await helper.executeCommand('myPlugin.fetchData')
+
+  expect(result.message).toBe('Success')
+})
+```
+
+### Testing UI Components
+
+```typescript
+it('should create UI panel', async () => {
+  const plugin = new MyPlugin()
+  await plugin.activate(context)
+
+  const panels = helper.getRegisteredPanels()
+  expect(panels).toHaveLength(1)
+  expect(panels[0].id).toBe('myPlugin.sidebar')
+})
+```
+
+## Development Tools
+
+### Plugin CLI
+
+Comprehensive command-line tool for plugin development:
+
+```bash
+# Create new plugin
+lokus-plugin create my-plugin
+
+# Choose template
+? Select plugin type: (Use arrow keys)
+❯ Editor Plugin
+  UI Plugin
+  Data Provider Plugin
+  Command Plugin
+  Theme Plugin
+
+# Development mode with hot reload
+lokus-plugin dev
+
+# Validate plugin
+lokus-plugin validate
+
+# Run tests
+lokus-plugin test
+
+# Package for distribution
+lokus-plugin package
+
+# Publish to registry
+lokus-plugin publish
+```
+
+### TypeScript Support
+
+Full TypeScript definitions included:
+
+```bash
+npm install --save-dev @lokus/plugin-sdk
+```
+
+```typescript
+import { Plugin, PluginContext } from '@lokus/plugin-sdk'
+
+export default class MyPlugin implements Plugin {
+  async activate(context: PluginContext) {
+    // Full type safety and IntelliSense
+  }
+}
+```
+
+### Debugging
+
+Debug plugins with full source map support:
+
+**plugin.json:**
+```json
+{
+  "dev": {
+    "hotReload": true,
+    "debug": true,
+    "sourceMaps": true,
+    "verboseLogging": true
+  }
+}
+```
+
+**Debug Configuration:**
+```typescript
+// Enable debugging
+export default class MyPlugin implements Plugin {
+  async activate(context: PluginContext) {
+    if (context.isDevelopment) {
+      // Add breakpoints here
+      debugger
+
+      // Enable verbose logging
+      context.api.log('debug', 'Plugin activated')
+    }
+  }
+}
+```
+
+## Distribution
+
+### Plugin Registry
+
+Official plugin registry at `registry.lokus.dev`:
+- Searchable catalog
+- Version management
+- Download statistics
+- User reviews and ratings
+
+**Publishing:**
+```bash
+# Login to registry
+lokus-plugin login
+
+# Publish plugin
+lokus-plugin publish
+
+# Update existing plugin
+lokus-plugin publish --version 1.1.0
+```
+
+### Private Distribution
+
+Alternative distribution methods:
+
+**1. Direct VSIX Installation:**
+```bash
+# Package plugin
+lokus-plugin package
+
+# Install locally
+lokus --install-plugin my-plugin-1.0.0.vsix
+```
+
+**2. GitHub Releases:**
+```yaml
+# .github/workflows/release.yml
+name: Release Plugin
+on:
+  push:
+    tags:
+      - 'v*'
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: npm install
+      - run: lokus-plugin package
+      - uses: softprops/action-gh-release@v1
+        with:
+          files: '*.vsix'
+```
+
+**3. Private Registry:**
+```json
+{
+  "publishConfig": {
+    "registry": "https://registry.mycompany.com"
+  }
+}
+```
+
+### Marketplace
+
+Web marketplace for discovering plugins:
+- Categories and tags
+- Featured plugins
+- Editor's picks
+- Trending plugins
+
+## Best Practices
+
+### Design Principles
+
+1. **Do One Thing Well** - Focus on a specific use case
+2. **Be Unobtrusive** - Don't interfere with core workflows
+3. **Respect Resources** - Minimize memory and CPU usage
+4. **Handle Errors Gracefully** - Never crash the host application
+5. **Document Well** - Clear README and API documentation
+
+### Code Quality
+
+**Use TypeScript:**
+```typescript
+// Type-safe plugin development
+interface PluginConfig {
+  apiKey: string
+  timeout: number
+  retries: number
+}
+
+export default class MyPlugin implements Plugin {
+  private config: PluginConfig
+
+  async activate(context: PluginContext) {
+    this.config = await context.api.storage.get<PluginConfig>('config')
+  }
+}
+```
+
+**Write Comprehensive Tests:**
+```typescript
+describe('MyPlugin', () => {
+  // Unit tests
+  it('should parse configuration', () => {})
+
+  // Integration tests
+  it('should integrate with editor', () => {})
+
+  // E2E tests
+  it('should complete user workflow', () => {})
+})
+```
+
+**Follow Coding Standards:**
+```json
+{
+  "eslintConfig": {
+    "extends": "@lokus/eslint-config",
+    "rules": {
+      "no-console": "error",
+      "prefer-const": "error"
+    }
+  }
+}
+```
+
+### User Experience
+
+**Clear Error Messages:**
+```typescript
+try {
+  await processFile(path)
+} catch (error) {
+  api.ui.showNotification(
+    `Failed to process file: ${error.message}\n` +
+    `Please check file permissions and try again.`,
+    'error'
+  )
+}
+```
+
+**Show Progress:**
+```typescript
+await api.ui.withProgress({
+  title: 'Processing files...',
+  location: 'notification',
+  cancellable: true
+}, async (progress, token) => {
+  for (let i = 0; i < files.length; i++) {
+    if (token.isCancellationRequested) break
+
+    await processFile(files[i])
+    progress.report({
+      message: `Processing ${files[i].name}`,
+      increment: (100 / files.length)
+    })
+  }
+})
+```
+
+**Respect User Settings:**
+```typescript
+// Read user theme preference
+const theme = await api.workspace.getConfiguration('theme')
+const isDark = theme.get<boolean>('dark')
+
+// Apply theme-aware styling
+if (isDark) {
+  panel.classList.add('dark-theme')
+}
+```
+
+## Migration Guide
+
+### From VS Code Extensions
+
+VS Code extensions are largely compatible with Lokus:
+
+**Manifest Migration:**
+```json
+// VS Code package.json
+{
+  "name": "my-extension",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "activationEvents": [
+    "onCommand:extension.hello"
+  ]
+}
+
+// Lokus plugin.json (compatible)
+{
+  "name": "my-extension",
+  "engines": {
+    "lokus": "^1.0.0"
+  },
+  "activationEvents": [
+    "onCommand:extension.hello"
+  ]
+}
+```
+
+**API Migration:**
+```typescript
+// VS Code
+import * as vscode from 'vscode'
+
+export function activate(context: vscode.ExtensionContext) {
+  vscode.commands.registerCommand('extension.hello', () => {
+    vscode.window.showInformationMessage('Hello!')
+  })
+}
+
+// Lokus (similar API)
+import { Plugin, PluginContext } from '@lokus/plugin-sdk'
+
+export default class MyPlugin implements Plugin {
+  async activate(context: PluginContext) {
+    context.api.commands.register({
+      id: 'extension.hello',
+      handler: () => {
+        context.api.ui.showNotification('Hello!', 'info')
+      }
+    })
+  }
+}
+```
+
+### From Atom Packages
+
+**Command Registration:**
+```javascript
+// Atom
+module.exports = {
+  activate() {
+    atom.commands.add('atom-workspace', {
+      'my-package:toggle': () => this.toggle()
+    })
+  }
+}
+
+// Lokus
+export default class MyPlugin implements Plugin {
+  async activate(context: PluginContext) {
+    context.api.commands.register({
+      id: 'my-package.toggle',
+      handler: () => this.toggle()
+    })
+  }
+}
+```
+
+### From Sublime Text Plugins
+
+**Event Handling:**
+```python
+# Sublime Text
+class MyPlugin(sublime_plugin.EventListener):
+    def on_modified(self, view):
+        # Handle modification
+        pass
+
+# Lokus
+export default class MyPlugin implements Plugin {
+  async activate(context: PluginContext) {
+    context.api.editor.onDidChangeTextDocument((event) => {
+      // Handle modification
+    })
+  }
+}
+```
+
+## Support and Resources
+
+### Documentation
+
+- [Getting Started Guide](/developers/plugins/getting-started)
+- [API Reference](/developers/plugins/api)
+- [Plugin Examples](https://github.com/lokus-ai/plugin-examples)
+
+### Community
+
+- [GitHub Discussions](https://github.com/lokus-ai/lokus/discussions)
+- [Plugin Development Forum](https://forum.lokus.dev)
+- [Discord Server](https://discord.gg/lokus)
+
+### Contributing
+
+- [Contribution Guidelines](https://github.com/lokus-ai/lokus/CONTRIBUTING.md)
+- [Plugin Guidelines](https://github.com/lokus-ai/lokus/PLUGIN_GUIDELINES.md)
+- [Code of Conduct](https://github.com/lokus-ai/lokus/CODE_OF_CONDUCT.md)
+
+## Next Steps
+
+Ready to build your first plugin?
+
+- **[Overview](/developers/plugins/overview)** - Plugin system introduction
+- **[Architecture](/developers/plugins/architecture)** - Plugin architecture deep dive
+- **[MCP Integration](/developers/plugins/mcp-integration)** - Build AI-powered plugins
+- **[Performance](/developers/plugins/performance)** - Optimization techniques
+- **[Getting Started](/developers/plugins/getting-started)** - Build your first plugin

@@ -1,0 +1,1031 @@
+---
+title: "Creating Custom Templates - Lokus Documentation"
+description: "Learn to create custom templates in Lokus with frontmatter, variables, conditional logic, inheritance, composition, and best practices for powerful automation."
+keywords: [lokus, create templates, custom templates, template design, template inheritance, template composition, best practices]
+---
+
+# Creating Custom Templates
+
+Create powerful custom templates tailored to your specific workflows. This guide covers everything from basic structure to advanced features.
+
+## Template Structure
+
+### Basic Template Format
+
+Every template consists of two parts: frontmatter and content.
+
+```markdown
+---
+template: template-name
+category: {{prompt:category}}
+tags: [{{prompt:tags}}]
+---
+
+# Template Content
+
+Use {{variables}} for dynamic content.
+
+Add sections and structure as needed.
+
+## Section 1
+
+{{prompt:field_name:Optional description}}
+
+## Section 2
+
+Content with default text.
+```
+
+### Template Anatomy
+
+**Essential Components:**
+1. **Frontmatter** - Metadata and configuration (YAML)
+2. **Title** - Template name and structure
+3. **Sections** - Organized content blocks
+4. **Variables** - Dynamic placeholders
+5. **Default Content** - Pre-filled text and examples
+
+## Template Frontmatter
+
+### Basic Frontmatter
+
+Define template metadata and properties:
+
+```yaml
+---
+# Template identification
+template: template-name
+template_version: 1.0
+template_description: Brief description
+
+# Default properties
+tags: [default, tags]
+status: draft
+---
+```
+
+### Advanced Frontmatter
+
+Document variables and requirements:
+
+```yaml
+---
+# Template identification
+template: custom-template-name
+template_version: 1.2
+template_description: Comprehensive project template
+category: Work
+author: Your Name
+
+# Default properties that appear in created notes
+tags: [project, {{prompt:project_type}}]
+status: {{select:status:planning,active,on-hold,completed}}
+priority: {{select:priority:low,medium,high}}
+
+# Variable definitions (for documentation and validation)
+variables:
+  - name: title
+    description: Note title
+    required: true
+  - name: project_lead
+    description: Person leading the project
+    type: text
+    default: "{{author}}"
+  - name: start_date
+    description: Project start date
+    type: date
+    default: "{{date}}"
+  - name: budget
+    description: Project budget
+    type: number
+    required: false
+  - name: status
+    description: Current project status
+    type: select
+    options: [planning, active, on-hold, completed]
+    required: true
+
+# Template behavior
+auto_apply:
+  - folder: "/Projects/"
+  - tag: "project"
+
+# Template inheritance
+extends: base-project-template
+---
+```
+
+### Frontmatter Properties
+
+**Core Properties:**
+- `template` - Unique template identifier (required)
+- `template_version` - Version number for tracking
+- `template_description` - Brief description for gallery
+- `category` - Template category (Personal, Work, etc.)
+- `author` - Template creator
+
+**Default Note Properties:**
+- `tags` - Default tags for created notes
+- `status` - Initial status value
+- `priority` - Default priority level
+- Custom properties specific to your workflow
+
+**Behavior Configuration:**
+- `auto_apply` - Rules for automatic template application
+- `extends` - Base template for inheritance
+- `includes` - Templates to compose together
+
+## Creating Your First Template
+
+### Step-by-Step Guide
+
+**1. Open Template Editor**
+- Settings → Templates → Create New
+- Or use command palette: "Create Template"
+
+**2. Define Basic Information**
+```yaml
+---
+template: weekly-review
+template_version: 1.0
+template_description: Weekly reflection and planning template
+category: Personal
+tags: [weekly, review]
+---
+```
+
+**3. Add Title and Structure**
+```markdown
+# Week of {{date:MMM D, YYYY}}
+
+## Last Week's Highlights
+
+**Accomplishments:**
+-
+-
+
+**Challenges:**
+-
+-
+```
+
+**4. Include Variables**
+```markdown
+## This Week's Goals
+
+**Top Priority:** {{prompt:top_priority:Main focus for this week}}
+
+**Goals:**
+1. {{prompt:goal_1}}
+2. {{prompt:goal_2}}
+3. {{prompt:goal_3}}
+```
+
+**5. Test and Save**
+- Preview template
+- Create test note
+- Verify variables work
+- Save template
+
+### Template Editor Features
+
+**Visual Editor:**
+- Live preview as you type
+- Variable suggestion
+- Syntax highlighting
+- Error detection
+- Auto-formatting
+
+**Testing:**
+- Preview with sample data
+- Test variable prompts
+- Verify conditional logic
+- Check formatting
+
+## Variable Types in Detail
+
+### Text Input Variables
+
+Simple text prompts:
+
+```markdown
+{{prompt:field_name}}
+{{prompt:project_name:Enter project name}}
+{{prompt:client:Client name}}
+```
+
+**Best Practices:**
+- Use descriptive names
+- Add helpful descriptions
+- Provide examples in description
+- Consider default values
+
+### Select Dropdowns
+
+Predefined options:
+
+```markdown
+{{select:status:draft,review,published}}
+{{select:priority:low,medium,high,critical}}
+{{select:type:bug,feature,enhancement,documentation}}
+```
+
+**Best Practices:**
+- Limit to 3-7 options
+- Order logically (severity, alphabetical, etc.)
+- Use consistent option names across templates
+- Include "other" if needed
+
+### Multiline Text Areas
+
+Longer content input:
+
+```markdown
+{{multiline:description}}
+{{multiline:notes:Enter detailed notes here}}
+{{multiline:summary:Provide a brief summary}}
+```
+
+**Use Cases:**
+- Descriptions and summaries
+- Meeting notes
+- Project objectives
+- Detailed explanations
+
+### Date Inputs
+
+Date selection and formatting:
+
+```markdown
+{{date}}                    → Current date
+{{date:YYYY-MM-DD}}         → Formatted date
+{{date+7}}                  → One week from now
+{{prompt:due_date:Select due date}} → User selects date
+```
+
+**Advanced Dates:**
+```markdown
+**Start Date:** {{date}}
+**End Date:** {{date+30}}
+**Milestone 1:** {{date+10}}
+**Milestone 2:** {{date+20}}
+```
+
+### Checkbox Variables
+
+Boolean options:
+
+```markdown
+{{checkbox:urgent:Is this urgent?}}
+{{checkbox:requires_approval}}
+{{checkbox:billable:Billable hours?}}
+```
+
+**Use Cases:**
+- Feature flags
+- Optional sections
+- Status indicators
+- Conditional content triggers
+
+### Number Variables
+
+Numeric input:
+
+```markdown
+{{number:budget:Enter budget amount}}
+{{number:hours:Estimated hours}}
+{{number:team_size:Number of team members}}
+```
+
+**Best Practices:**
+- Specify units in description
+- Set reasonable ranges
+- Consider currency formatting
+- Add validation rules
+
+## Conditional Logic
+
+### Basic Conditionals
+
+Show/hide content based on variables:
+
+```markdown
+{{#if urgent}}
+⚠️ **URGENT TASK**
+
+This requires immediate attention!
+{{/if}}
+```
+
+### If-Else Chains
+
+Multiple conditions:
+
+```markdown
+{{#if priority == "high"}}
+🔴 **High Priority**
+
+This task is critical and should be addressed immediately.
+
+{{else if priority == "medium"}}
+🟡 **Medium Priority**
+
+Important but not urgent. Schedule appropriately.
+
+{{else}}
+🟢 **Low Priority**
+
+Handle when time permits.
+{{/if}}
+```
+
+### Unless Statements
+
+Inverse conditionals:
+
+```markdown
+{{#unless completed}}
+⏳ **Status: In Progress**
+
+Continue working on this task.
+{{/unless}}
+
+{{#if completed}}
+✅ **Completed**
+
+Great job finishing this task!
+{{/if}}
+```
+
+### Complex Conditions
+
+Multiple conditions combined:
+
+```markdown
+{{#if priority == "high" && urgent}}
+🚨 **CRITICAL PRIORITY**
+
+Immediate action required!
+{{/if}}
+
+{{#if status == "active" || status == "in-progress"}}
+📊 **Active Status**
+
+Work in progress...
+{{/if}}
+```
+
+### Conditional Sections
+
+Entire sections based on conditions:
+
+```markdown
+{{#if project_type == "software"}}
+## Technical Stack
+
+**Frontend:** {{prompt:frontend}}
+**Backend:** {{prompt:backend}}
+**Database:** {{prompt:database}}
+{{/if}}
+
+{{#if project_type == "marketing"}}
+## Campaign Details
+
+**Platform:** {{select:platform:Social Media,Email,Content,Paid Ads}}
+**Audience:** {{prompt:target_audience}}
+**Budget:** ${{number:campaign_budget}}
+{{/if}}
+```
+
+## Advanced Features
+
+### Template Inheritance
+
+Build on existing templates:
+
+**Base Template:**
+```markdown
+---
+template: base-note
+---
+
+# {{title}}
+
+**Created:** {{date}}
+**Author:** {{author}}
+
+## Content
+
+{{content}}
+
+---
+*Last modified: {{date}}*
+```
+
+**Extended Template:**
+```markdown
+---
+template: project-note
+extends: base-note
+---
+
+{{inherit:header}}
+
+## Project Details
+
+**Status:** {{status}}
+**Priority:** {{priority}}
+
+{{inherit:content}}
+
+## Timeline
+
+**Start:** {{start_date}}
+**End:** {{end_date}}
+
+{{inherit:footer}}
+```
+
+**Benefits:**
+- Consistent structure across templates
+- Easy maintenance
+- DRY principle
+- Shared sections
+
+### Template Composition
+
+Combine multiple templates:
+
+```markdown
+---
+template: comprehensive-report
+includes:
+  - report-header
+  - executive-summary
+  - detailed-findings
+  - report-footer
+---
+
+{{include:report-header}}
+
+{{include:executive-summary}}
+
+## Main Content
+
+{{multiline:main_content}}
+
+{{include:detailed-findings}}
+
+{{include:report-footer}}
+```
+
+**Use Cases:**
+- Reusable headers/footers
+- Standard sections
+- Modular templates
+- Company branding
+
+### Loops and Repeating Sections
+
+Generate repeated content:
+
+```markdown
+## Team Members
+
+{{#repeat:5}}
+### Member {{index}}
+
+**Name:** {{prompt:member_{{index}}_name}}
+**Role:** {{prompt:member_{{index}}_role}}
+**Email:** {{prompt:member_{{index}}_email}}
+
+{{/repeat}}
+```
+
+**Dynamic Lists:**
+```markdown
+## Tasks
+
+{{#repeat:number:num_tasks:How many tasks?}}
+- [ ] {{prompt:task_{{index}}}} 📅 {{date+index}}
+{{/repeat}}
+```
+
+### Template Scripting
+
+JavaScript for complex logic:
+
+```markdown
+---
+template: advanced-template
+scripts:
+  - calculate-dates.js
+  - format-currency.js
+---
+
+**Project Duration:** {{script:calculateDuration(start_date, end_date)}} days
+**Budget Formatted:** {{script:formatCurrency(budget)}}
+```
+
+**Script Example:**
+```javascript
+// calculate-dates.js
+function calculateDuration(start, end) {
+  const diff = new Date(end) - new Date(start);
+  return Math.ceil(diff / (1000 * 60 * 60 * 24));
+}
+
+function formatCurrency(amount) {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD'
+  }).format(amount);
+}
+```
+
+## Template Design Best Practices
+
+### Structure and Organization
+
+**Clear Hierarchy:**
+```markdown
+# Main Title (H1)
+
+## Primary Section (H2)
+
+### Subsection (H3)
+
+#### Detail Level (H4)
+```
+
+**Logical Flow:**
+1. Title and metadata
+2. Overview/summary
+3. Main content sections
+4. Supporting information
+5. Next steps/related items
+
+### Variable Placement
+
+**Strategic Variable Use:**
+```markdown
+# {{title}} - {{date:YYYY}}
+
+## Overview
+
+**Project:** {{project_name}}
+**Lead:** {{project_lead}}
+**Status:** {{status}}
+
+## Description
+
+{{multiline:description}}
+
+## Next Steps
+
+{{prompt:next_steps}}
+```
+
+**Group Related Variables:**
+```markdown
+## Contact Information
+
+**Name:** {{prompt:contact_name}}
+**Email:** {{prompt:contact_email}}
+**Phone:** {{prompt:contact_phone}}
+**Company:** {{prompt:contact_company}}
+```
+
+### Default Content
+
+Provide helpful defaults and examples:
+
+```markdown
+## Project Objectives
+
+1. {{prompt:objective_1:e.g., Increase user engagement by 25%}}
+2. {{prompt:objective_2:e.g., Reduce load time to under 2 seconds}}
+3. {{prompt:objective_3:e.g., Launch mobile app by Q3}}
+```
+
+**Placeholder Text:**
+```markdown
+## Notes
+
+Start with a brief overview of the project...
+
+Key considerations:
+- What problem are we solving?
+- Who is the target audience?
+- What are the constraints?
+```
+
+### Help and Documentation
+
+Include usage instructions:
+
+```markdown
+---
+template: complex-template
+template_description: |
+  This template is for comprehensive project planning.
+
+  Required fields:
+  - Project name
+  - Project lead
+  - Start date
+
+  Optional fields:
+  - Budget (leave blank if TBD)
+  - Team members (add as many as needed)
+
+  Usage tips:
+  - Fill in objectives before team meeting
+  - Update status weekly
+  - Link to related project docs
+---
+```
+
+## Template Maintenance
+
+### Version Control
+
+Track template changes:
+
+```yaml
+---
+template: project-plan
+template_version: 2.1
+changelog:
+  - version: 2.1
+    date: 2025-10-23
+    changes:
+      - Added risk assessment section
+      - Updated timeline structure
+  - version: 2.0
+    date: 2025-09-15
+    changes:
+      - Redesigned for new project workflow
+      - Added stakeholder matrix
+  - version: 1.0
+    date: 2025-01-10
+    changes:
+      - Initial release
+---
+```
+
+### Regular Reviews
+
+**Review Checklist:**
+- [ ] Are all variables still needed?
+- [ ] Is the structure optimal?
+- [ ] Are descriptions clear?
+- [ ] Do examples help users?
+- [ ] Are conditionals working correctly?
+- [ ] Is default content useful?
+- [ ] Are there unused sections?
+- [ ] Can anything be simplified?
+
+### Deprecation Strategy
+
+Retire outdated templates:
+
+```yaml
+---
+template: old-template
+deprecated: true
+deprecated_date: 2025-10-23
+replacement: new-template-v2
+deprecation_message: |
+  This template has been replaced by new-template-v2.
+  Please use the new version for better features.
+---
+```
+
+## Template Naming Conventions
+
+### Good Naming Practices
+
+**Descriptive Names:**
+```
+✅ Good:
+- meeting-notes-standard
+- daily-note-full
+- project-plan-agile
+- blog-post-technical
+
+❌ Avoid:
+- template1
+- new-template
+- test
+- my-template
+```
+
+**Naming Patterns:**
+- Use lowercase with hyphens
+- Include category prefix (optional)
+- Add variant suffix for versions
+- Be specific about purpose
+
+**Examples:**
+```
+work-meeting-notes
+work-project-kickoff
+personal-daily-journal
+personal-weekly-review
+dev-bug-report
+dev-feature-spec
+content-blog-post
+content-tutorial-article
+```
+
+## Sharing Templates
+
+### Export Templates
+
+Share with others:
+
+**Single Template:**
+```json
+{
+  "name": "Meeting Notes",
+  "version": "1.0",
+  "category": "Work",
+  "description": "Standard meeting notes template",
+  "template": "...",
+  "variables": [...],
+  "examples": [...]
+}
+```
+
+**Template Pack:**
+```json
+{
+  "name": "Startup Pack",
+  "version": "1.0",
+  "templates": [
+    {
+      "name": "Investor Update",
+      "template": "..."
+    },
+    {
+      "name": "Sprint Planning",
+      "template": "..."
+    }
+  ]
+}
+```
+
+### Import Templates
+
+Add templates from others:
+
+**Import Process:**
+1. File → Import Template
+2. Select .json or .md file
+3. Review template preview
+4. Choose category
+5. Customize if needed
+6. Save to library
+
+### Template Marketplace
+
+Share with the community:
+
+**Submission Guidelines:**
+- Clear description
+- Good examples
+- Proper documentation
+- Testing completed
+- Appropriate category
+- Quality screenshots
+
+## Real-World Examples
+
+### Startup Weekly Update
+
+```markdown
+---
+template: startup-weekly-update
+category: Work
+tags: [startup, update, weekly]
+---
+
+# Weekly Update - Week of {{date:MMM D, YYYY}}
+
+**To:** {{prompt:recipients:Investors, Board, Team}}
+**From:** {{author}}
+
+## 📊 Key Metrics
+
+| Metric | This Week | Last Week | Change |
+|--------|-----------|-----------|--------|
+| Revenue | ${{number:revenue}} | ${{number:last_revenue}} | {{script:calculateChange()}} |
+| Users | {{number:users}} | {{number:last_users}} | {{script:calculateChange()}} |
+| MRR | ${{number:mrr}} | ${{number:last_mrr}} | {{script:calculateChange()}} |
+
+## 🎯 Highlights
+
+**Major Wins:**
+1. {{prompt:win_1}}
+2. {{prompt:win_2}}
+3. {{prompt:win_3}}
+
+**Key Learnings:**
+- {{prompt:learning_1}}
+- {{prompt:learning_2}}
+
+## 🚀 Product Updates
+
+{{multiline:product_updates}}
+
+## 📈 Growth Initiatives
+
+**This Week:**
+- {{prompt:initiative_1}}
+- {{prompt:initiative_2}}
+
+**Next Week:**
+- {{prompt:next_initiative_1}}
+- {{prompt:next_initiative_2}}
+
+## 🎯 Goals Progress
+
+{{#repeat:3}}
+- [ ] {{prompt:goal_{{index}}}} ({{number:progress_{{index}}}}%)
+{{/repeat}}
+
+## 🤔 Challenges & Asks
+
+**Challenges:**
+{{multiline:challenges}}
+
+**How you can help:**
+{{multiline:asks}}
+
+## 💰 Runway
+
+**Current Runway:** {{number:runway}} months
+**Burn Rate:** ${{number:burn_rate}}/month
+
+{{#if runway < 6}}
+⚠️ **Note:** Runway under 6 months. Fundraising planning needed.
+{{/if}}
+
+---
+
+*Next update: {{date+7}}*
+```
+
+### Technical RFC Template
+
+```markdown
+---
+template: rfc-technical
+category: Development
+tags: [rfc, technical, proposal]
+status: {{select:status:draft,review,approved,rejected}}
+---
+
+# RFC {{prompt:rfc_number}}: {{prompt:title}}
+
+**Author:** {{author}}
+**Date:** {{date}}
+**Status:** {{status}}
+**Reviewers:** {{prompt:reviewers}}
+
+## Summary
+
+{{multiline:summary:Brief 2-3 sentence summary}}
+
+## Motivation
+
+**Problem Statement:**
+{{multiline:problem}}
+
+**Why Now:**
+{{multiline:why_now}}
+
+## Proposed Solution
+
+### Overview
+
+{{multiline:solution_overview}}
+
+### Technical Design
+
+{{multiline:technical_design}}
+
+### API Changes
+
+` ` `{{prompt:language:typescript}}
+// API examples
+` ` `
+
+### Data Model Changes
+
+{{#if requires_db_changes}}
+` ` `sql
+-- Database schema changes
+` ` `
+{{/if}}
+
+## Alternatives Considered
+
+### Alternative 1: {{prompt:alt_1_name}}
+
+**Pros:**
+- {{prompt:alt_1_pro_1}}
+- {{prompt:alt_1_pro_2}}
+
+**Cons:**
+- {{prompt:alt_1_con_1}}
+- {{prompt:alt_1_con_2}}
+
+**Why not chosen:**
+{{multiline:alt_1_reason}}
+
+## Implementation Plan
+
+### Phase 1: {{prompt:phase_1}} ({{date}} - {{date+14}})
+- [ ] {{prompt:phase_1_task_1}}
+- [ ] {{prompt:phase_1_task_2}}
+
+### Phase 2: {{prompt:phase_2}} ({{date+15}} - {{date+30}})
+- [ ] {{prompt:phase_2_task_1}}
+- [ ] {{prompt:phase_2_task_2}}
+
+## Risks and Mitigation
+
+| Risk | Impact | Likelihood | Mitigation |
+|------|--------|------------|------------|
+| {{prompt:risk_1}} | {{select:impact_1:Low,Medium,High}} | {{select:likelihood_1:Low,Medium,High}} | {{prompt:mitigation_1}} |
+
+## Testing Strategy
+
+{{multiline:testing_strategy}}
+
+## Metrics and Success Criteria
+
+**Success Metrics:**
+1. {{prompt:metric_1}}
+2. {{prompt:metric_2}}
+3. {{prompt:metric_3}}
+
+## Open Questions
+
+- [ ] {{prompt:question_1}}
+- [ ] {{prompt:question_2}}
+
+## References
+
+- [[{{prompt:related_doc_1}}]]
+- [[{{prompt:related_doc_2}}]]
+
+---
+
+**Approval Required From:**
+- [ ] Tech Lead: {{prompt:tech_lead}}
+- [ ] Engineering Manager: {{prompt:eng_manager}}
+- [ ] Product Manager: {{prompt:product_manager}}
+```
+
+## Troubleshooting
+
+### Common Issues
+
+**Issue:** Template not saving
+**Solution:** Check for YAML syntax errors in frontmatter, verify required fields
+
+**Issue:** Variables not prompting
+**Solution:** Ensure proper `{{prompt:name}}` syntax, check variable names don't conflict
+
+**Issue:** Conditional logic not working
+**Solution:** Verify condition syntax, ensure variables exist before use
+
+**Issue:** Template preview broken
+**Solution:** Check for unclosed conditionals, verify all `{{#if}}` have matching `{{/if}}`
+
+### Debugging Templates
+
+**Enable Debug Mode:**
+```yaml
+---
+template: my-template
+debug: true
+---
+```
+
+**Test Variables:**
+- Use preview with test data
+- Check variable substitution
+- Verify conditional paths
+- Test all user inputs
+
+## Next Steps
+
+- **[Template Overview](/features/templates/overview)** - Template system basics
+- **[Template Variables](/features/templates/variables)** - Complete variable reference
+- **[Template Types](/features/templates/types)** - Explore built-in templates
+- **[Developer Guide](/developers)** - Advanced template programming
+- **[API Reference](/api)** - Template API documentation

@@ -1,0 +1,851 @@
+---
+title: "Automation - Workflows & Productivity"
+description: "Automate your workflows in Lokus: template-based automation, triggers and actions, scheduled tasks, workflow examples, plugin-based automation, API automation, scripting, and best practices for efficient knowledge management and productivity."
+keywords: "automation, workflows, templates, triggers, actions, scheduled tasks, productivity, scripting, api automation, plugin automation, workflow automation, task automation, batch operations, productivity tools"
+author: "Lokus Documentation Team"
+lastUpdated: "2025-01-23"
+version: "1.3.1"
+category: "features"
+tags: ["automation", "workflows", "productivity", "templates", "scripting"]
+---
+
+# Automation
+
+Automate repetitive tasks and streamline your workflows in Lokus. From simple templates to complex scripted automations, make your knowledge management more efficient.
+
+**Version:** 1.3.1 | **Automation Types:** 6+ | **Status:** Production Ready
+
+## Overview
+
+### Automation Capabilities
+
+**Template-Based:**
+- File templates with variables
+- Folder templates with structure
+- Daily/weekly note automation
+- Quick capture templates
+
+**Time-Based:**
+- Scheduled note creation
+- Recurring tasks
+- Periodic reviews
+- Auto-archiving
+
+**Event-Based:**
+- File creation triggers
+- Save hooks
+- Link detection
+- Tag automation
+
+**Plugin-Based:**
+- Custom automation scripts
+- API integrations
+- External tool connections
+- Advanced workflows
+
+## Template Automation
+
+### File Templates
+
+**Creating Templates:**
+```
+1. Create template file in templates/ folder
+2. Use template variables
+3. Save as .md file
+4. Access via Command Palette
+```
+
+**Template Variables:**
+```markdown
+---
+title: {{title}}
+date: {{date}}
+created: {{datetime}}
+author: {{author}}
+tags:
+  - {{tag1}}
+  - {{tag2}}
+---
+
+# {{title}}
+
+Created: {{date:YYYY-MM-DD}}
+Modified: {{modified:YYYY-MM-DD HH:mm}}
+
+## Notes
+
+{{cursor}}
+```
+
+**Available Variables:**
+```
+{{title}}           - Note title
+{{date}}            - Current date
+{{time}}            - Current time
+{{datetime}}        - Date and time
+{{year}}            - Current year
+{{month}}           - Current month
+{{day}}             - Current day
+{{weekday}}         - Day of week
+{{author}}          - User name
+{{workspace}}       - Workspace name
+{{cursor}}          - Cursor position
+{{clipboard}}       - Clipboard content
+{{selected}}        - Selected text
+{{random}}          - Random ID
+{{uuid}}            - UUID
+```
+
+**Date Formatting:**
+```markdown
+{{date:YYYY-MM-DD}}              - 2025-01-23
+{{date:DD/MM/YYYY}}              - 23/01/2025
+{{date:MMMM DD, YYYY}}           - January 23, 2025
+{{date:ddd, MMM D}}              - Thu, Jan 23
+{{datetime:YYYY-MM-DD HH:mm}}    - 2025-01-23 14:30
+{{time:HH:mm:ss}}                - 14:30:45
+```
+
+### Daily Note Templates
+
+**Automatic Daily Notes:**
+```markdown
+templates/daily-note.md:
+
+---
+title: {{date:YYYY-MM-DD}}
+tags:
+  - daily-notes
+  - journal
+---
+
+# {{date:dddd, MMMM DD, YYYY}}
+
+## 🎯 Goals
+- [ ]
+- [ ]
+- [ ]
+
+## 📝 Notes
+
+
+## 🧠 Reflections
+
+
+## 🔗 Links
+- [[{{date:YYYY-MM-DD|Yesterday|-1d}}]]
+- [[{{date:YYYY-MM-DD|Tomorrow|+1d}}]]
+
+---
+Created: {{datetime}}
+```
+
+**Configuration:**
+```json
+{
+  "dailyNotes": {
+    "enabled": true,
+    "template": "templates/daily-note.md",
+    "folder": "journal/daily/",
+    "format": "YYYY-MM-DD",
+    "autoCreate": true,
+    "openOnStartup": true
+  }
+}
+```
+
+**Keyboard Shortcut:**
+```
+Cmd+Shift+D - Open/Create Today's Note
+```
+
+### Weekly Note Templates
+
+```markdown
+templates/weekly-note.md:
+
+---
+title: Week {{date:WW}} - {{date:YYYY}}
+tags:
+  - weekly-review
+  - planning
+---
+
+# Week {{date:WW}} - {{date:MMMM YYYY}}
+
+**Week of:** {{date:MMMM DD}} - {{date:MMMM DD|+6d}}
+
+## 📊 Week in Review
+
+### Accomplishments
+-
+
+### Challenges
+-
+
+### Learnings
+-
+
+## 📅 Next Week Planning
+
+### Goals
+- [ ]
+- [ ]
+- [ ]
+
+### Focus Areas
+1.
+2.
+3.
+
+## 📈 Metrics
+
+| Metric | Target | Actual |
+|--------|--------|--------|
+| Notes Created | 10 | |
+| Tasks Completed | 20 | |
+| Hours Focused | 25 | |
+
+---
+Created: {{datetime}}
+```
+
+### Monthly Review Templates
+
+```markdown
+templates/monthly-review.md:
+
+---
+title: {{date:MMMM YYYY}} Review
+tags:
+  - monthly-review
+  - reflection
+---
+
+# {{date:MMMM YYYY}} Review
+
+## 🎯 Goals Review
+
+### Completed
+-
+
+### In Progress
+-
+
+### Not Started
+-
+
+## 📊 Statistics
+
+- Notes Created:
+- Tasks Completed:
+- Projects Advanced:
+
+## 🌟 Highlights
+
+### Wins
+1.
+2.
+3.
+
+### Learnings
+1.
+2.
+3.
+
+## 🔮 Next Month
+
+### Goals
+- [ ]
+- [ ]
+- [ ]
+
+### Focus Areas
+1.
+2.
+3.
+
+---
+Review Date: {{datetime}}
+```
+
+## Scheduled Automation
+
+### Recurring Notes
+
+**Daily Notes:**
+```json
+{
+  "scheduled": {
+    "daily": {
+      "enabled": true,
+      "time": "06:00",
+      "template": "daily-note",
+      "folder": "journal/daily/",
+      "autoOpen": true
+    }
+  }
+}
+```
+
+**Weekly Notes:**
+```json
+{
+  "scheduled": {
+    "weekly": {
+      "enabled": true,
+      "day": "monday",
+      "time": "09:00",
+      "template": "weekly-note",
+      "folder": "journal/weekly/"
+    }
+  }
+}
+```
+
+**Monthly Reviews:**
+```json
+{
+  "scheduled": {
+    "monthly": {
+      "enabled": true,
+      "day": 1,
+      "time": "10:00",
+      "template": "monthly-review",
+      "folder": "reviews/monthly/"
+    }
+  }
+}
+```
+
+### Recurring Tasks
+
+**Task Automation:**
+```markdown
+## Recurring Tasks
+
+- [ ] Daily standup @repeat(daily)
+- [ ] Weekly review @repeat(weekly on monday)
+- [ ] Monthly planning @repeat(monthly on 1st)
+- [ ] Quarterly review @repeat(quarterly)
+- [ ] Backup workspace @repeat(every 3 days)
+```
+
+**Task Recurrence Syntax:**
+```
+@repeat(daily)
+@repeat(weekly)
+@repeat(monthly)
+@repeat(yearly)
+@repeat(every N days)
+@repeat(every N weeks)
+@repeat(every N months)
+@repeat(weekdays)
+@repeat(weekends)
+@repeat(monday,wednesday,friday)
+```
+
+## Trigger-Based Automation
+
+### File Creation Triggers
+
+**Auto-Tag on Creation:**
+```javascript
+// Plugin: auto-tagger
+onFileCreate((file) => {
+  const folder = file.parent.name;
+  const tags = folderTagMap[folder] || [];
+
+  if (tags.length > 0) {
+    addTagsToFile(file, tags);
+  }
+});
+
+folderTagMap = {
+  "projects": ["#project", "#work"],
+  "research": ["#research", "#learning"],
+  "journal": ["#journal", "#personal"]
+};
+```
+
+**Apply Template on Creation:**
+```javascript
+onFileCreate((file) => {
+  const folder = file.parent.name;
+  const template = folderTemplateMap[folder];
+
+  if (template && file.isEmpty) {
+    applyTemplate(file, template);
+  }
+});
+```
+
+### Save Hooks
+
+**Auto-Update Modified Date:**
+```javascript
+onFileSave((file) => {
+  updateFrontmatter(file, {
+    modified: new Date().toISOString()
+  });
+});
+```
+
+**Auto-Generate TOC:**
+```javascript
+onFileSave((file) => {
+  if (hasTOCMarker(file)) {
+    const toc = generateTOC(file);
+    insertTOC(file, toc);
+  }
+});
+```
+
+**Auto-Backup:**
+```javascript
+onFileSave((file) => {
+  if (isImportantFile(file)) {
+    createBackup(file);
+  }
+});
+```
+
+### Link Detection
+
+**Auto-Create Referenced Files:**
+```javascript
+onLinkDetected((link) => {
+  if (!fileExists(link.target)) {
+    if (confirmCreate(link.target)) {
+      createFile(link.target, getTemplate('basic'));
+    }
+  }
+});
+```
+
+**Update Backlinks:**
+```javascript
+onLinkCreated((link) => {
+  updateBacklinkIndex(link.source, link.target);
+});
+
+onLinkDeleted((link) => {
+  removeFromBacklinkIndex(link.source, link.target);
+});
+```
+
+## Workflow Automation Examples
+
+### Morning Routine Automation
+
+```javascript
+// Morning routine automation
+async function morningRoutine() {
+  // 1. Create or open today's note
+  const today = await openDailyNote();
+
+  // 2. Check for overdue tasks
+  const overdueTasks = await getOverdueTasks();
+  if (overdueTasks.length > 0) {
+    appendToNote(today, "## ⚠️ Overdue Tasks\n" +
+      overdueTasks.map(t => `- [ ] ${t.text}`).join('\n'));
+  }
+
+  // 3. Get today's scheduled tasks
+  const scheduledTasks = await getTasksForDate(new Date());
+  if (scheduledTasks.length > 0) {
+    appendToNote(today, "\n## 📅 Today's Tasks\n" +
+      scheduledTasks.map(t => `- [ ] ${t.text}`).join('\n'));
+  }
+
+  // 4. Insert motivational quote
+  const quote = await getRandomQuote();
+  appendToNote(today, `\n## 💡 Today's Inspiration\n> ${quote}`);
+
+  // 5. Open key notes
+  await openNote('projects/active-projects');
+  await openNote('goals/2025-goals');
+}
+
+// Schedule for 6:00 AM daily
+schedule('0 6 * * *', morningRoutine);
+```
+
+### Weekly Review Automation
+
+```javascript
+async function weeklyReview() {
+  // Create weekly review note
+  const weekNote = await createFromTemplate(
+    'weekly-review',
+    `reviews/weekly/week-${getWeekNumber()}.md`
+  );
+
+  // Gather statistics
+  const stats = {
+    notesCreated: await countNotesThisWeek(),
+    tasksCompleted: await countCompletedTasks(),
+    wordsWritten: await countWordsWritten(),
+    linksCreated: await countLinksCreated()
+  };
+
+  // Insert statistics
+  insertIntoNote(weekNote, '## 📊 Week in Numbers',
+    Object.entries(stats)
+      .map(([key, value]) => `- ${key}: ${value}`)
+      .join('\n')
+  );
+
+  // List completed tasks
+  const completedTasks = await getCompletedTasksThisWeek();
+  insertIntoNote(weekNote, '## ✅ Completed This Week',
+    completedTasks.map(t => `- ${t.text}`).join('\n')
+  );
+
+  // Open the review
+  await openNote(weekNote);
+}
+
+// Schedule for Monday 9:00 AM
+schedule('0 9 * * 1', weeklyReview);
+```
+
+### Project Kickoff Automation
+
+```javascript
+async function createProject(projectName) {
+  const folderPath = `projects/${slugify(projectName)}`;
+
+  // Create project folder structure
+  await createFolder(folderPath);
+  await createFolder(`${folderPath}/notes`);
+  await createFolder(`${folderPath}/resources`);
+  await createFolder(`${folderPath}/meetings`);
+
+  // Create project README
+  await createFromTemplate(
+    'project-readme',
+    `${folderPath}/README.md`,
+    {
+      projectName,
+      startDate: new Date().toISOString(),
+      status: 'Planning'
+    }
+  );
+
+  // Create initial task list
+  await createFromTemplate(
+    'project-tasks',
+    `${folderPath}/tasks.md`,
+    { projectName }
+  );
+
+  // Create first meeting note
+  await createFromTemplate(
+    'meeting-notes',
+    `${folderPath}/meetings/kickoff.md`,
+    { projectName, meetingType: 'Kickoff' }
+  );
+
+  // Add to active projects
+  const activeProjects = await openNote('projects/active-projects');
+  appendToNote(activeProjects,
+    `\n- [[${folderPath}/README|${projectName}]] - Started ${formatDate(new Date())}`
+  );
+
+  // Open project README
+  await openNote(`${folderPath}/README.md`);
+}
+```
+
+### Auto-Archive Automation
+
+```javascript
+async function autoArchive() {
+  const cutoffDate = subtractMonths(new Date(), 6);
+
+  // Find old completed projects
+  const oldProjects = await findNotes({
+    folder: 'projects/',
+    tag: '#status/done',
+    modifiedBefore: cutoffDate
+  });
+
+  for (const project of oldProjects) {
+    // Move to archive
+    const archivePath = project.path.replace('projects/', 'archive/projects/');
+    await moveFile(project, archivePath);
+
+    // Remove from active projects list
+    await removeFromList('projects/active-projects', project.name);
+
+    // Add to archive index
+    await addToList('archive/index', project.name, {
+      archivedDate: new Date().toISOString(),
+      originalPath: project.path
+    });
+  }
+
+  // Create archive report
+  if (oldProjects.length > 0) {
+    await createNote('archive/reports/auto-archive-report.md', {
+      date: new Date().toISOString(),
+      archivedCount: oldProjects.length,
+      projects: oldProjects.map(p => p.name)
+    });
+  }
+}
+
+// Run monthly on 1st at midnight
+schedule('0 0 1 * *', autoArchive);
+```
+
+## Plugin-Based Automation
+
+### Creating Automation Plugins
+
+**Basic Plugin Structure:**
+```javascript
+// plugins/my-automation/index.js
+
+module.exports = {
+  name: 'My Automation Plugin',
+  version: '1.0.0',
+
+  activate(app) {
+    // Register commands
+    app.registerCommand({
+      id: 'my-automation',
+      name: 'Run My Automation',
+      callback: () => this.runAutomation(app)
+    });
+
+    // Register event handlers
+    app.on('file:save', (file) => this.onFileSave(file));
+    app.on('file:create', (file) => this.onFileCreate(file));
+
+    // Schedule tasks
+    app.schedule('0 9 * * *', () => this.dailyTask(app));
+  },
+
+  async runAutomation(app) {
+    // Your automation logic
+  },
+
+  onFileSave(file) {
+    // Handle file save
+  },
+
+  onFileCreate(file) {
+    // Handle file creation
+  },
+
+  async dailyTask(app) {
+    // Run daily
+  }
+};
+```
+
+### Example: Auto-Summary Plugin
+
+```javascript
+// plugins/auto-summary/index.js
+
+module.exports = {
+  name: 'Auto Summary',
+
+  async activate(app) {
+    app.registerCommand({
+      id: 'generate-summary',
+      name: 'Generate Summary',
+      callback: () => this.generateSummary(app)
+    });
+  },
+
+  async generateSummary(app) {
+    const file = app.workspace.getActiveFile();
+    const content = await file.read();
+
+    // Extract headings
+    const headings = this.extractHeadings(content);
+
+    // Generate summary
+    const summary = this.createSummary(headings);
+
+    // Insert at top of file
+    await file.prepend(`## Summary\n\n${summary}\n\n---\n\n`);
+
+    app.notice('Summary generated!');
+  },
+
+  extractHeadings(content) {
+    const headingRegex = /^#{1,6} (.+)$/gm;
+    const headings = [];
+    let match;
+
+    while ((match = headingRegex.exec(content)) !== null) {
+      headings.push(match[1]);
+    }
+
+    return headings;
+  },
+
+  createSummary(headings) {
+    return headings
+      .map(h => `- ${h}`)
+      .join('\n');
+  }
+};
+```
+
+## API Automation
+
+### Using Lokus API
+
+**Create Note via API:**
+```javascript
+const response = await fetch('http://localhost:41805/api/notes', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    title: 'New Note',
+    content: '# New Note\n\nContent here',
+    tags: ['api', 'automation']
+  })
+});
+```
+
+**Search Notes:**
+```javascript
+const notes = await fetch('http://localhost:41805/api/search?q=automation')
+  .then(r => r.json());
+```
+
+**Update Note:**
+```javascript
+await fetch(`http://localhost:41805/api/notes/${noteId}`, {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    content: updatedContent
+  })
+});
+```
+
+### External Integrations
+
+**Zapier Integration:**
+```javascript
+// Webhook to create note
+app.post('/zapier/create-note', async (req, res) => {
+  const { title, content, tags } = req.body;
+
+  const note = await createNote({
+    title,
+    content,
+    tags: tags.split(',')
+  });
+
+  res.json({ success: true, noteId: note.id });
+});
+```
+
+**IFTTT Integration:**
+```javascript
+// Email to Note
+app.post('/ifttt/email-to-note', async (req, res) => {
+  const { subject, body, from } = req.body;
+
+  await createNote({
+    title: subject,
+    content: `From: ${from}\n\n${body}`,
+    folder: 'inbox/',
+    tags: ['email', 'imported']
+  });
+
+  res.json({ success: true });
+});
+```
+
+## Best Practices
+
+### Automation Guidelines
+
+```
+✓ Do:
+- Start simple, iterate
+- Test thoroughly
+- Handle errors gracefully
+- Add logging
+- Document workflows
+- Version control scripts
+
+✗ Don't:
+- Over-automate
+- Skip error handling
+- Ignore performance
+- Forget backups
+- Hard-code values
+```
+
+### Performance Considerations
+
+```
+- Batch operations when possible
+- Use async/await properly
+- Debounce frequent events
+- Cache results
+- Limit concurrent operations
+- Monitor resource usage
+```
+
+### Security
+
+```
+- Validate all inputs
+- Sanitize file paths
+- Use secure APIs
+- Protect credentials
+- Review plugin permissions
+- Regular security audits
+```
+
+## Troubleshooting
+
+### Common Issues
+
+**Automation Not Running:**
+```
+- Check enabled in settings
+- Verify schedule syntax
+- Check plugin status
+- Review error logs
+- Test manually first
+```
+
+**Templates Not Working:**
+```
+- Verify template path
+- Check variable syntax
+- Ensure template exists
+- Review template format
+```
+
+**Performance Issues:**
+```
+- Reduce automation frequency
+- Optimize scripts
+- Batch operations
+- Clear logs regularly
+```
+
+## Related Documentation
+
+- [Templates](/features/templates) - Template system
+- [Plugins](/developers/plugins) - Plugin development
+- [API](/developers/api) - API reference
+- [Workflows](/tutorials/workflows) - Workflow examples
+
+---
+
+**Last Updated:** January 23, 2025 | **Version:** 1.3.1

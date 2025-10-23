@@ -1,0 +1,821 @@
+---
+title: "Template Types - Lokus Documentation"
+description: "Explore built-in template types in Lokus including meeting notes, daily notes, project plans, blog posts, technical documentation, and more for every workflow."
+keywords: [lokus, template types, meeting notes, daily notes, project templates, blog templates, documentation templates, task templates]
+---
+
+# Template Types
+
+Lokus includes pre-built templates for common workflows. Each template is designed for specific use cases with optimized structure, variables, and sections.
+
+## Meeting Notes Template
+
+Structured meeting documentation for teams.
+
+### Features
+
+- Automatic date and time insertion
+- Attendee tracking
+- Agenda and discussion sections
+- Action items with assignments
+- Next meeting planning
+
+### Template Structure
+
+```markdown
+---
+template: meeting-notes
+date: {{date}}
+time: {{time}}
+tags: [meeting]
+---
+
+# {{title}}
+
+**Date:** {{date}}
+**Time:** {{time}}
+**Attendees:** {{prompt:attendees}}
+**Location:** {{prompt:location}}
+
+## Agenda
+
+1. {{prompt:agenda_item_1}}
+2. {{prompt:agenda_item_2}}
+3. {{prompt:agenda_item_3}}
+
+## Discussion
+
+### Topic 1
+
+
+
+### Topic 2
+
+
+
+## Action Items
+
+- [ ] {{prompt:action_1}} @{{assignee}} 📅 {{date+7}}
+- [ ] {{prompt:action_2}}
+
+## Next Meeting
+
+**Date:** {{prompt:next_meeting_date}}
+**Topics:**
+-
+
+## Notes
+
+```
+
+### Use Cases
+
+- Team standup meetings
+- Client meetings
+- Project reviews
+- Sprint planning
+- One-on-ones
+- Board meetings
+
+### Customization Tips
+
+- Add recurring attendees as defaults
+- Include standard agenda items
+- Set up automatic task creation
+- Link to related documents
+- Add meeting types (standup, planning, review)
+
+![Template System with Variable Substitution](/placeholder.svg)
+
+## Daily Note Template
+
+Daily journaling, planning, and reflection.
+
+### Features
+
+- Automatic date formatting
+- Morning and evening reflections
+- Task prioritization
+- Schedule blocking
+- Links to previous/next days
+
+### Template Structure
+
+```markdown
+---
+template: daily-note
+date: {{date}}
+tags: [daily]
+---
+
+# {{date:dddd, MMMM D, YYYY}}
+
+## Morning Reflection
+
+**How I'm feeling:**
+
+**Today's priorities:**
+1.
+2.
+3.
+
+## Schedule
+
+- 09:00 -
+- 10:00 -
+- 11:00 -
+- 13:00 -
+- 14:00 -
+- 15:00 -
+
+## Tasks
+
+### Must Do Today
+- [ ]
+- [ ]
+
+### Should Do
+- [ ]
+- [ ]
+
+### Could Do
+- [ ]
+
+## Notes
+
+
+## Evening Reflection
+
+**What went well:**
+
+**What to improve:**
+
+**Tomorrow's focus:**
+
+## Links
+
+**Related Notes:**
+- [[{{yesterday}}]]
+- [[{{tomorrow}}]]
+```
+
+### Use Cases
+
+- Daily journaling
+- Time blocking
+- Productivity tracking
+- Gratitude practice
+- Habit tracking
+- Goal progress
+
+### Customization Tips
+
+- Add custom sections (habits, meals, exercise)
+- Include mood tracking
+- Add weather or location
+- Link to weekly notes
+- Include daily quotes or affirmations
+
+## Project Plan Template
+
+Comprehensive project planning and management.
+
+### Features
+
+- Project overview and objectives
+- Stakeholder tracking
+- Phased timeline
+- Resource allocation
+- Risk management
+- Success metrics
+
+### Template Structure
+
+```markdown
+---
+template: project-plan
+project: {{prompt:project_name}}
+status: planning
+start_date: {{date}}
+tags: [project]
+---
+
+# {{project_name}}
+
+## Project Overview
+
+**Project Lead:** {{prompt:lead}}
+**Start Date:** {{start_date}}
+**Target Completion:** {{prompt:target_date}}
+**Status:** {{status}}
+
+## Objectives
+
+1. {{prompt:objective_1}}
+2. {{prompt:objective_2}}
+3. {{prompt:objective_3}}
+
+## Scope
+
+### In Scope
+
+
+### Out of Scope
+
+
+## Stakeholders
+
+| Name | Role | Contact |
+|------|------|---------|
+| {{prompt:stakeholder_1}} | {{prompt:role_1}} | |
+| | | |
+
+## Timeline
+
+### Phase 1: Planning ({{date}} - {{date+14}})
+- [ ] Define requirements
+- [ ] Create specifications
+- [ ] Get approvals
+
+### Phase 2: Execution ({{date+15}} - {{date+45}})
+- [ ] Development
+- [ ] Testing
+- [ ] Review
+
+### Phase 3: Launch ({{date+46}} - {{date+60}})
+- [ ] Final testing
+- [ ] Deployment
+- [ ] Documentation
+
+## Resources
+
+**Team:**
+-
+
+**Budget:**
+-
+
+**Tools:**
+-
+
+## Risks
+
+| Risk | Impact | Mitigation |
+|------|--------|------------|
+| | | |
+
+## Success Metrics
+
+1.
+2.
+3.
+
+## Related Documents
+
+- [[Project Charter]]
+- [[Requirements Document]]
+- [[Technical Specifications]]
+```
+
+### Use Cases
+
+- Software development projects
+- Marketing campaigns
+- Product launches
+- Research initiatives
+- Construction projects
+- Event planning
+
+### Customization Tips
+
+- Add project-specific phases
+- Include budget tracking
+- Add sprint planning sections
+- Link to Gantt charts
+- Include change log
+
+## Blog Post Template
+
+Professional blog writing with SEO optimization.
+
+### Features
+
+- SEO metadata fields
+- Reading time estimation
+- Category and tag management
+- Structured content sections
+- Related post linking
+
+### Template Structure
+
+```markdown
+---
+template: blog-post
+title: {{prompt:title}}
+date: {{date}}
+author: {{author}}
+status: draft
+tags: [blog, {{prompt:category}}]
+---
+
+# {{title}}
+
+**Author:** {{author}}
+**Published:** {{date}}
+**Reading Time:** {{prompt:reading_time:Estimated reading time}}
+**Category:** {{category}}
+
+## Introduction
+
+{{prompt:intro:Brief introduction}}
+
+## Main Content
+
+### Section 1
+
+
+### Section 2
+
+
+### Section 3
+
+
+## Conclusion
+
+
+## Key Takeaways
+
+-
+-
+-
+
+## Related Posts
+
+- [[{{prompt:related_1}}]]
+- [[{{prompt:related_2}}]]
+
+## Meta
+
+**SEO Title:** {{prompt:seo_title}}
+**Description:** {{prompt:description}}
+**Keywords:** {{prompt:keywords}}
+**Featured Image:** {{prompt:image_url}}
+
+---
+
+*This post was published on {{date}} by {{author}}*
+```
+
+### Use Cases
+
+- Technical blog posts
+- Tutorial articles
+- Opinion pieces
+- Case studies
+- Product announcements
+- Industry analysis
+
+### Customization Tips
+
+- Add author bio section
+- Include social share links
+- Add comment guidelines
+- Link to newsletter signup
+- Include CTA sections
+
+## Technical Documentation Template
+
+Developer-focused documentation.
+
+### Features
+
+- Version tracking
+- Code examples with syntax highlighting
+- API reference structure
+- Prerequisites and installation
+- Troubleshooting section
+
+### Template Structure
+
+```markdown
+---
+template: technical-doc
+title: {{prompt:title}}
+version: {{prompt:version:1.0.0}}
+date: {{date}}
+tags: [documentation, technical]
+---
+
+# {{title}}
+
+**Version:** {{version}}
+**Last Updated:** {{date}}
+**Status:** {{select:status:draft,review,published}}
+
+## Overview
+
+{{prompt:overview}}
+
+## Prerequisites
+
+-
+-
+
+## Installation
+
+` ` `bash
+# Installation steps
+` ` `
+
+## Configuration
+
+` ` `yaml
+# Configuration example
+` ` `
+
+## Usage
+
+### Basic Usage
+
+` ` `{{prompt:language:javascript}}
+// Code example
+` ` `
+
+### Advanced Usage
+
+` ` `{{language}}
+// Advanced example
+` ` `
+
+## API Reference
+
+### Method 1
+
+**Description:**
+
+**Parameters:**
+- `param1` (type): Description
+- `param2` (type): Description
+
+**Returns:**
+
+**Example:**
+` ` `{{language}}
+
+` ` `
+
+## Troubleshooting
+
+### Issue 1
+
+**Problem:**
+
+**Solution:**
+
+## Best Practices
+
+1.
+2.
+3.
+
+## FAQ
+
+**Q: {{prompt:faq_1}}**
+A:
+
+## Related Documentation
+
+- [[{{prompt:related_1}}]]
+- [[API Reference]]
+- [[Changelog]]
+
+## Changelog
+
+### Version {{version}} ({{date}})
+- Initial release
+```
+
+### Use Cases
+
+- API documentation
+- Library documentation
+- Framework guides
+- SDK references
+- CLI tool docs
+- Configuration guides
+
+### Customization Tips
+
+- Add language-specific examples
+- Include video tutorials
+- Add interactive demos
+- Link to GitHub repos
+- Include version matrix
+
+## Task List Template
+
+Organized task tracking and management.
+
+### Features
+
+- Priority-based organization
+- Due date tracking
+- Project association
+- Owner assignment
+- Backlog management
+
+### Template Structure
+
+```markdown
+---
+template: task-list
+title: {{prompt:title}}
+date: {{date}}
+tags: [tasks, {{prompt:project}}]
+---
+
+# {{title}}
+
+**Created:** {{date}}
+**Project:** {{project}}
+**Owner:** {{prompt:owner}}
+
+## High Priority
+
+- [ ] {{prompt:high_1}} !high 📅 {{date+3}}
+- [ ] {{prompt:high_2}} !high 📅 {{date+3}}
+
+## Medium Priority
+
+- [ ] {{prompt:med_1}} !medium 📅 {{date+7}}
+- [ ] {{prompt:med_2}} !medium 📅 {{date+7}}
+
+## Low Priority
+
+- [ ] {{prompt:low_1}} !low
+- [ ] {{prompt:low_2}} !low
+
+## Backlog
+
+- [ ]
+- [ ]
+
+## Completed
+
+- [x]
+
+## Notes
+
+```
+
+### Use Cases
+
+- Sprint planning
+- Personal task management
+- Team task allocation
+- Project milestones
+- Feature checklists
+- Bug tracking
+
+### Customization Tips
+
+- Add status tags
+- Include time estimates
+- Link to related tasks
+- Add progress tracking
+- Include dependencies
+
+## Research Note Template
+
+Academic and research documentation.
+
+### Features
+
+- Research question and hypothesis
+- Methodology documentation
+- Data collection tracking
+- Findings and analysis
+- Citation management
+
+### Template Structure
+
+```markdown
+---
+template: research-note
+title: {{prompt:title}}
+date: {{date}}
+author: {{author}}
+tags: [research, {{prompt:topic}}]
+---
+
+# {{title}}
+
+**Research Topic:** {{topic}}
+**Date:** {{date}}
+**Researcher:** {{author}}
+**Status:** {{select:status:in-progress,completed,on-hold}}
+
+## Research Question
+
+{{prompt:question}}
+
+## Hypothesis
+
+
+## Methodology
+
+
+## Data Collection
+
+
+## Findings
+
+### Key Findings
+
+1.
+2.
+3.
+
+### Supporting Evidence
+
+
+## Analysis
+
+
+## Conclusion
+
+
+## Future Research
+
+
+## References
+
+1. {{prompt:ref_1}}
+2. {{prompt:ref_2}}
+3.
+
+## Related Research
+
+- [[{{prompt:related_1}}]]
+- [[Literature Review]]
+
+## Notes
+
+```
+
+### Use Cases
+
+- Academic research
+- Market research
+- User research
+- Competitive analysis
+- Literature reviews
+- Experiment documentation
+
+### Customization Tips
+
+- Add experiment protocols
+- Include data tables
+- Link to datasets
+- Add visualizations
+- Include ethics approvals
+
+## Template Snippets
+
+Quick text insertion for common patterns.
+
+### Inline Snippets
+
+Use slash commands for instant insertion:
+
+**Common Snippets:**
+```
+/date → {{date}}
+/time → {{time}}
+/meeting → Insert meeting template
+/todo → - [ ] Task item
+/table3 → 3-column table
+/code → Code block with language
+/sig → Email signature
+```
+
+### Creating Snippets
+
+**Snippet Definition:**
+```yaml
+snippets:
+  - trigger: /sig
+    content: |
+      Best regards,
+      {{author}}
+      {{title}}
+  - trigger: /todo
+    content: "- [ ] {{prompt:task}}"
+  - trigger: /table3
+    content: |
+      | Column 1 | Column 2 | Column 3 |
+      |----------|----------|----------|
+      |          |          |          |
+```
+
+### Dynamic Snippets
+
+Snippets with logic:
+
+```markdown
+/greeting →
+{{#if time < 12}}
+Good morning!
+{{else if time < 18}}
+Good afternoon!
+{{else}}
+Good evening!
+{{/if}}
+```
+
+## Automation
+
+### Auto-apply Templates
+
+Automatically apply templates based on rules:
+
+**Rule Configuration:**
+```yaml
+template_rules:
+  - condition: path == "/Daily/"
+    template: daily-note
+  - condition: tags.includes("meeting")
+    template: meeting-notes
+  - condition: title.startsWith("Project:")
+    template: project-plan
+```
+
+### Template Triggers
+
+Event-based template application:
+
+**Trigger Types:**
+- File creation in specific folder
+- Note with specific tag added
+- Time-based (daily, weekly)
+- Calendar event scheduled
+- Workflow stage transition
+
+**Example:**
+```yaml
+triggers:
+  - event: file_created
+    folder: "/Meetings/"
+    template: meeting-notes
+  - event: daily
+    time: "09:00"
+    template: daily-note
+  - event: tag_added
+    tag: "project"
+    template: project-plan
+```
+
+## Use Case Examples
+
+### Startup Use Cases
+
+**Templates for:**
+- Weekly investor updates
+- Product roadmaps
+- Sprint retrospectives
+- Customer discovery notes
+- Pitch deck outlines
+
+### Consulting Use Cases
+
+**Templates for:**
+- Client meeting notes
+- Project proposals
+- Deliverable tracking
+- Status reports
+- Invoice documentation
+
+### Education Use Cases
+
+**Templates for:**
+- Lecture notes
+- Assignment tracking
+- Research papers
+- Study guides
+- Course syllabi
+
+### Personal Use Cases
+
+**Templates for:**
+- Workout logs
+- Meal planning
+- Book notes
+- Travel itineraries
+- Financial tracking
+
+## Next Steps
+
+- **[Template Overview](/features/templates/overview)** - Learn template basics
+- **[Template Variables](/features/templates/variables)** - Master variables and dynamic content
+- **[Creating Templates](/features/templates/creating)** - Build your own templates
+- **[Tasks Integration](/features/tasks)** - Combine templates with task management

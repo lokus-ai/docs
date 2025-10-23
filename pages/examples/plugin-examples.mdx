@@ -1,0 +1,1293 @@
+---
+title: Plugin Examples
+description: Complete plugin implementations for Lokud - automation, data processing, integrations, and custom functionality
+keywords: lokud plugins, plugin development, custom plugins, automation plugins, integration plugins
+---
+
+# Plugin Examples
+
+Complete, production-ready plugin implementations with detailed explanations and customization options.
+
+## Basic Plugin Structure
+
+Every Lokud plugin follows this basic structure:
+
+```javascript
+// plugin-template.js
+export default {
+  // Plugin metadata
+  name: 'my-plugin',
+  version: '1.0.0',
+  description: 'Description of what this plugin does',
+  author: 'Your Name',
+
+  // Plugin configuration options
+  config: {
+    // Default configuration values
+    enabled: true,
+    option1: 'default-value',
+    option2: true
+  },
+
+  // Initialize plugin when Lokud starts
+  async initialize(lokud, config) {
+    console.log('Plugin initialized with config:', config);
+    // Setup code here
+  },
+
+  // Clean up when plugin is disabled/unloaded
+  async cleanup() {
+    console.log('Plugin cleaning up');
+    // Cleanup code here
+  },
+
+  // Register event handlers
+  events: {
+    'record.created': async (event) => {
+      // Handle record creation
+    },
+    'record.updated': async (event) => {
+      // Handle record updates
+    }
+  }
+};
+```
+
+## Auto-Daily Notes Plugin
+
+Automatically creates daily note entries with customizable templates.
+
+```javascript
+// plugins/auto-daily-notes.js
+
+/**
+ * Auto Daily Notes Plugin
+ * Automatically creates a daily note entry every morning
+ * Supports custom templates and time scheduling
+ */
+
+export default {
+  name: 'auto-daily-notes',
+  version: '1.0.0',
+  description: 'Automatically create daily note entries',
+  author: 'Lokud Team',
+
+  config: {
+    enabled: true,
+    // Time to create daily note (24-hour format)
+    creationTime: '06:00',
+    // Base to create notes in
+    targetBase: 'Daily Notes',
+    // Template to use
+    template: `# {{date}}
+
+## 📅 Today's Focus
+-
+
+## 📝 Notes
+
+
+## ✅ Tasks
+- [ ]
+
+## 🎯 Goals
+-
+
+## 💭 Reflections
+
+
+---
+Created automatically by Auto Daily Notes plugin`,
+    // Days to create notes (0=Sunday, 6=Saturday)
+    activeDays: [1, 2, 3, 4, 5], // Monday-Friday
+    // Timezone for scheduling
+    timezone: 'UTC'
+  },
+
+  // Store scheduled job reference
+  scheduledJob: null,
+
+  async initialize(lokud, config) {
+    console.log('Initializing Auto Daily Notes plugin');
+
+    // Validate config
+    if (!config.targetBase) {
+      throw new Error('targetBase configuration is required');
+    }
+
+    // Check if target base exists
+    const base = await lokud.getBase(config.targetBase);
+    if (!base) {
+      throw new Error(`Base "${config.targetBase}" not found`);
+    }
+
+    // Schedule daily note creation
+    this.scheduledJob = lokud.scheduler.schedule(
+      config.creationTime,
+      async () => await this.createDailyNote(lokud, config),
+      { timezone: config.timezone }
+    );
+
+    console.log(`Daily notes scheduled for ${config.creationTime}`);
+  },
+
+  async cleanup() {
+    // Cancel scheduled job
+    if (this.scheduledJob) {
+      this.scheduledJob.cancel();
+      console.log('Daily note creation job cancelled');
+    }
+  },
+
+  async createDailyNote(lokud, config) {
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+
+    // Check if today is an active day
+    if (!config.activeDays.includes(dayOfWeek)) {
+      console.log('Skipping daily note creation - not an active day');
+      return;
+    }
+
+    // Format date
+    const dateStr = lokud.utils.formatDate(now, 'YYYY-MM-DD');
+    const displayDate = lokud.utils.formatDate(now, 'MMMM D, YYYY');
+
+    // Check if note already exists
+    const base = await lokud.getBase(config.targetBase);
+    const existing = await base.findRecord({
+      field: 'Date',
+      value: dateStr
+    });
+
+    if (existing) {
+      console.log(`Daily note for ${dateStr} already exists`);
+      return;
+    }
+
+    // Process template
+    const content = this.processTemplate(config.template, {
+      date: displayDate,
+      dateShort: dateStr,
+      dayOfWeek: lokud.utils.formatDate(now, 'dddd'),
+      weekNumber: lokud.utils.getWeekNumber(now)
+    });
+
+    // Create new record
+    try {
+      await base.createRecord({
+        'Date': dateStr,
+        'Title': `Daily Note - ${displayDate}`,
+        'Content': content
+      });
+
+      console.log(`Created daily note for ${dateStr}`);
+
+      // Send notification
+      await lokud.notifications.send({
+        title: 'Daily Note Created',
+        message: `Your daily note for ${displayDate} is ready!`,
+        priority: 'low'
+      });
+
+    } catch (error) {
+      console.error('Error creating daily note:', error);
+
+      // Send error notification
+      await lokud.notifications.send({
+        title: 'Daily Note Creation Failed',
+        message: error.message,
+        priority: 'high'
+      });
+    }
+  },
+
+  processTemplate(template, variables) {
+    let processed = template;
+
+    // Replace all {{variable}} placeholders
+    for (const [key, value] of Object.entries(variables)) {
+      const regex = new RegExp(`{{${key}}}`, 'g');
+      processed = processed.replace(regex, value);
+    }
+
+    return processed;
+  },
+
+  // Add command to manually create daily note
+  commands: {
+    'create-daily-note': {
+      description: 'Manually create today\'s daily note',
+      async execute(lokud, config) {
+        await this.createDailyNote(lokud, config);
+      }
+    }
+  }
+};
+```
+
+## Habit Tracker Plugin
+
+Track daily habits with streak counting and reminders.
+
+```javascript
+// plugins/habit-tracker.js
+
+/**
+ * Habit Tracker Plugin
+ * Tracks daily habits, calculates streaks, and sends reminders
+ */
+
+export default {
+  name: 'habit-tracker',
+  version: '1.0.0',
+  description: 'Track daily habits with streak counting',
+  author: 'Lokud Team',
+
+  config: {
+    enabled: true,
+    // Base containing habits
+    habitsBase: 'Habits',
+    // Time to send daily reminder
+    reminderTime: '20:00',
+    // Enable notifications
+    sendReminders: true,
+    // Streak threshold for celebration
+    celebrationStreak: 7
+  },
+
+  reminderJob: null,
+
+  async initialize(lokud, config) {
+    console.log('Initializing Habit Tracker plugin');
+
+    // Validate configuration
+    const base = await lokud.getBase(config.habitsBase);
+    if (!base) {
+      throw new Error(`Base "${config.habitsBase}" not found`);
+    }
+
+    // Schedule daily reminder
+    if (config.sendReminders) {
+      this.reminderJob = lokud.scheduler.schedule(
+        config.reminderTime,
+        async () => await this.sendHabitReminders(lokud, config)
+      );
+    }
+
+    // Register event handlers
+    this.registerEventHandlers(lokud, config);
+
+    console.log('Habit Tracker plugin initialized');
+  },
+
+  async cleanup() {
+    if (this.reminderJob) {
+      this.reminderJob.cancel();
+    }
+  },
+
+  registerEventHandlers(lokud, config) {
+    // Update streaks when habit is marked complete
+    lokud.on('record.updated', async (event) => {
+      if (event.base !== config.habitsBase) return;
+
+      const record = event.record;
+      const changes = event.changes;
+
+      // Check if Last Completed field was updated
+      if (changes['Last Completed']) {
+        await this.updateStreaks(lokud, config, record);
+      }
+    });
+  },
+
+  async updateStreaks(lokud, config, habitRecord) {
+    const lastCompleted = new Date(habitRecord['Last Completed']);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const lastCompletedDate = new Date(lastCompleted);
+    lastCompletedDate.setHours(0, 0, 0, 0);
+
+    const daysDiff = Math.floor(
+      (today - lastCompletedDate) / (1000 * 60 * 60 * 24)
+    );
+
+    const base = await lokud.getBase(config.habitsBase);
+    const currentStreak = habitRecord['Current Streak'] || 0;
+    const longestStreak = habitRecord['Longest Streak'] || 0;
+
+    let newStreak = currentStreak;
+
+    if (daysDiff === 0) {
+      // Completed today - increment streak
+      newStreak = currentStreak + 1;
+    } else if (daysDiff === 1) {
+      // Completed yesterday - continue streak
+      newStreak = currentStreak + 1;
+    } else {
+      // Streak broken - reset
+      newStreak = 1;
+    }
+
+    // Update record
+    await base.updateRecord(habitRecord.id, {
+      'Current Streak': newStreak,
+      'Longest Streak': Math.max(newStreak, longestStreak)
+    });
+
+    // Check for celebration milestone
+    if (newStreak % config.celebrationStreak === 0) {
+      await this.celebrateStreak(lokud, habitRecord, newStreak);
+    }
+  },
+
+  async sendHabitReminders(lokud, config) {
+    const base = await lokud.getBase(config.habitsBase);
+
+    // Get all active habits
+    const habits = await base.findRecords({
+      filter: {
+        field: 'Active',
+        operator: 'is',
+        value: true
+      }
+    });
+
+    if (habits.length === 0) return;
+
+    // Check which habits haven't been completed today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const pendingHabits = habits.filter(habit => {
+      const lastCompleted = habit['Last Completed'];
+      if (!lastCompleted) return true;
+
+      const lastDate = new Date(lastCompleted);
+      lastDate.setHours(0, 0, 0, 0);
+
+      return lastDate < today;
+    });
+
+    if (pendingHabits.length > 0) {
+      const habitNames = pendingHabits
+        .map(h => h['Habit Name'])
+        .join(', ');
+
+      await lokud.notifications.send({
+        title: 'Daily Habit Reminder',
+        message: `Don't forget: ${habitNames}`,
+        priority: 'normal',
+        actions: [
+          {
+            label: 'Mark Complete',
+            action: 'open',
+            target: config.habitsBase
+          }
+        ]
+      });
+    }
+  },
+
+  async celebrateStreak(lokud, habitRecord, streak) {
+    await lokud.notifications.send({
+      title: `🎉 ${streak}-Day Streak!`,
+      message: `Congratulations on your ${streak}-day streak for "${habitRecord['Habit Name']}"!`,
+      priority: 'high',
+      celebration: true
+    });
+  },
+
+  // Add commands
+  commands: {
+    'check-habits': {
+      description: 'Check today\'s habit completion status',
+      async execute(lokud, config) {
+        const base = await lokud.getBase(config.habitsBase);
+        const habits = await base.findRecords({
+          filter: { field: 'Active', operator: 'is', value: true }
+        });
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const completed = [];
+        const pending = [];
+
+        habits.forEach(habit => {
+          const lastCompleted = habit['Last Completed'];
+          if (lastCompleted) {
+            const lastDate = new Date(lastCompleted);
+            lastDate.setHours(0, 0, 0, 0);
+
+            if (lastDate >= today) {
+              completed.push(habit['Habit Name']);
+            } else {
+              pending.push(habit['Habit Name']);
+            }
+          } else {
+            pending.push(habit['Habit Name']);
+          }
+        });
+
+        console.log('Completed:', completed);
+        console.log('Pending:', pending);
+
+        return {
+          completed,
+          pending,
+          completionRate: habits.length > 0
+            ? (completed.length / habits.length * 100).toFixed(1) + '%'
+            : '0%'
+        };
+      }
+    }
+  }
+};
+```
+
+## Gmail Integration Plugin
+
+Sync emails to Lokud for better organization.
+
+```javascript
+// plugins/gmail-integration.js
+
+/**
+ * Gmail Integration Plugin
+ * Sync important emails to Lokud bases
+ * Requires Gmail API credentials
+ */
+
+import { google } from 'googleapis';
+
+export default {
+  name: 'gmail-integration',
+  version: '1.0.0',
+  description: 'Integrate Gmail with Lokud',
+  author: 'Lokud Team',
+
+  config: {
+    enabled: false, // Requires API setup
+    // Gmail API credentials (from Google Cloud Console)
+    credentials: {
+      clientId: '',
+      clientSecret: '',
+      redirectUri: 'http://localhost:3000/oauth/callback'
+    },
+    // Refresh token (obtained during OAuth flow)
+    refreshToken: '',
+    // Base to sync emails to
+    targetBase: 'Emails',
+    // Label to watch (null = all)
+    watchLabel: 'Important',
+    // Sync interval in minutes
+    syncInterval: 15,
+    // Maximum emails to fetch per sync
+    maxResults: 50,
+    // Create tasks from starred emails
+    createTasksFromStarred: true,
+    tasksBase: 'Tasks'
+  },
+
+  gmailClient: null,
+  syncJob: null,
+
+  async initialize(lokud, config) {
+    console.log('Initializing Gmail Integration plugin');
+
+    // Validate configuration
+    if (!config.credentials.clientId || !config.credentials.clientSecret) {
+      throw new Error('Gmail API credentials not configured');
+    }
+
+    if (!config.refreshToken) {
+      console.warn('No refresh token - OAuth flow required');
+      return;
+    }
+
+    // Initialize Gmail client
+    const oauth2Client = new google.auth.OAuth2(
+      config.credentials.clientId,
+      config.credentials.clientSecret,
+      config.credentials.redirectUri
+    );
+
+    oauth2Client.setCredentials({
+      refresh_token: config.refreshToken
+    });
+
+    this.gmailClient = google.gmail({
+      version: 'v1',
+      auth: oauth2Client
+    });
+
+    // Test connection
+    try {
+      await this.gmailClient.users.getProfile({ userId: 'me' });
+      console.log('Gmail connection successful');
+    } catch (error) {
+      throw new Error(`Gmail connection failed: ${error.message}`);
+    }
+
+    // Schedule periodic sync
+    this.syncJob = lokud.scheduler.interval(
+      config.syncInterval * 60 * 1000, // Convert to milliseconds
+      async () => await this.syncEmails(lokud, config)
+    );
+
+    // Run initial sync
+    await this.syncEmails(lokud, config);
+
+    console.log('Gmail Integration plugin initialized');
+  },
+
+  async cleanup() {
+    if (this.syncJob) {
+      this.syncJob.cancel();
+    }
+  },
+
+  async syncEmails(lokud, config) {
+    console.log('Starting email sync...');
+
+    try {
+      // Build query
+      let query = '';
+      if (config.watchLabel) {
+        query = `label:${config.watchLabel}`;
+      }
+
+      // Add date filter to only get recent emails
+      const lastSync = await lokud.storage.get('gmail_last_sync');
+      if (lastSync) {
+        const date = new Date(lastSync);
+        const dateStr = date.toISOString().split('T')[0].replace(/-/g, '/');
+        query += ` after:${dateStr}`;
+      }
+
+      // Fetch emails
+      const response = await this.gmailClient.users.messages.list({
+        userId: 'me',
+        q: query,
+        maxResults: config.maxResults
+      });
+
+      if (!response.data.messages) {
+        console.log('No new emails to sync');
+        return;
+      }
+
+      const base = await lokud.getBase(config.targetBase);
+      let syncedCount = 0;
+
+      // Process each email
+      for (const message of response.data.messages) {
+        // Get full message details
+        const email = await this.gmailClient.users.messages.get({
+          userId: 'me',
+          id: message.id,
+          format: 'full'
+        });
+
+        // Extract email data
+        const emailData = this.parseEmail(email.data);
+
+        // Check if email already exists
+        const existing = await base.findRecord({
+          field: 'Gmail ID',
+          value: message.id
+        });
+
+        if (existing) {
+          // Update existing record
+          await base.updateRecord(existing.id, {
+            'Labels': emailData.labels,
+            'Is Read': !emailData.isUnread,
+            'Is Starred': emailData.isStarred
+          });
+        } else {
+          // Create new record
+          await base.createRecord({
+            'Gmail ID': message.id,
+            'Subject': emailData.subject,
+            'From': emailData.from,
+            'To': emailData.to,
+            'Date': emailData.date,
+            'Body': emailData.body,
+            'Labels': emailData.labels,
+            'Is Read': !emailData.isUnread,
+            'Is Starred': emailData.isStarred,
+            'Thread ID': emailData.threadId,
+            'Gmail Link': `https://mail.google.com/mail/u/0/#inbox/${message.id}`
+          });
+
+          syncedCount++;
+
+          // Create task if starred and option enabled
+          if (emailData.isStarred && config.createTasksFromStarred) {
+            await this.createTaskFromEmail(lokud, config, emailData, message.id);
+          }
+        }
+      }
+
+      // Update last sync timestamp
+      await lokud.storage.set('gmail_last_sync', new Date().toISOString());
+
+      console.log(`Email sync complete. Synced ${syncedCount} new emails.`);
+
+      // Send notification if new emails
+      if (syncedCount > 0) {
+        await lokud.notifications.send({
+          title: 'Gmail Sync Complete',
+          message: `Synced ${syncedCount} new email${syncedCount > 1 ? 's' : ''}`,
+          priority: 'low'
+        });
+      }
+
+    } catch (error) {
+      console.error('Email sync failed:', error);
+
+      await lokud.notifications.send({
+        title: 'Gmail Sync Failed',
+        message: error.message,
+        priority: 'high'
+      });
+    }
+  },
+
+  parseEmail(emailData) {
+    const headers = emailData.payload.headers;
+
+    // Extract headers
+    const getHeader = (name) => {
+      const header = headers.find(h => h.name.toLowerCase() === name.toLowerCase());
+      return header ? header.value : '';
+    };
+
+    // Get email body
+    let body = '';
+    if (emailData.payload.body.data) {
+      body = Buffer.from(emailData.payload.body.data, 'base64').toString();
+    } else if (emailData.payload.parts) {
+      // Multi-part email
+      const textPart = emailData.payload.parts.find(
+        part => part.mimeType === 'text/plain'
+      );
+      if (textPart && textPart.body.data) {
+        body = Buffer.from(textPart.body.data, 'base64').toString();
+      }
+    }
+
+    return {
+      subject: getHeader('Subject'),
+      from: getHeader('From'),
+      to: getHeader('To'),
+      date: new Date(getHeader('Date')),
+      body: body.substring(0, 5000), // Limit body length
+      labels: emailData.labelIds || [],
+      isUnread: emailData.labelIds?.includes('UNREAD') || false,
+      isStarred: emailData.labelIds?.includes('STARRED') || false,
+      threadId: emailData.threadId
+    };
+  },
+
+  async createTaskFromEmail(lokud, config, emailData, messageId) {
+    try {
+      const tasksBase = await lokud.getBase(config.tasksBase);
+
+      await tasksBase.createRecord({
+        'Task Name': `Email: ${emailData.subject}`,
+        'Description': `From: ${emailData.from}\n\n${emailData.body.substring(0, 500)}...`,
+        'Status': 'To Do',
+        'Priority': 'Medium',
+        'Source': 'Gmail',
+        'Reference Link': `https://mail.google.com/mail/u/0/#inbox/${messageId}`
+      });
+
+      console.log(`Created task from email: ${emailData.subject}`);
+    } catch (error) {
+      console.error('Error creating task from email:', error);
+    }
+  },
+
+  // Add commands
+  commands: {
+    'gmail-auth': {
+      description: 'Start Gmail OAuth authentication flow',
+      async execute(lokud, config) {
+        const oauth2Client = new google.auth.OAuth2(
+          config.credentials.clientId,
+          config.credentials.clientSecret,
+          config.credentials.redirectUri
+        );
+
+        const authUrl = oauth2Client.generateAuthUrl({
+          access_type: 'offline',
+          scope: ['https://www.googleapis.com/auth/gmail.readonly']
+        });
+
+        console.log('Open this URL to authorize:');
+        console.log(authUrl);
+
+        return { authUrl };
+      }
+    },
+
+    'gmail-sync-now': {
+      description: 'Manually trigger email sync',
+      async execute(lokud, config) {
+        await this.syncEmails(lokud, config);
+      }
+    }
+  }
+};
+```
+
+## Backup Plugin
+
+Automatically backup workspace data to local storage or cloud.
+
+```javascript
+// plugins/backup.js
+
+/**
+ * Backup Plugin
+ * Automatically backup workspace data
+ * Supports local filesystem and cloud storage
+ */
+
+import fs from 'fs/promises';
+import path from 'path';
+import { createWriteStream } from 'fs';
+import archiver from 'archiver';
+
+export default {
+  name: 'backup',
+  version: '1.0.0',
+  description: 'Automatic workspace backups',
+  author: 'Lokud Team',
+
+  config: {
+    enabled: true,
+    // Backup schedule (cron format)
+    schedule: '0 2 * * *', // 2 AM daily
+    // Backup location
+    backupPath: './backups',
+    // Backup format: 'json' or 'zip'
+    format: 'zip',
+    // Maximum number of backups to keep
+    maxBackups: 7,
+    // Include attachments
+    includeAttachments: true,
+    // Cloud backup settings (optional)
+    cloud: {
+      enabled: false,
+      provider: 's3', // 's3', 'dropbox', 'gdrive'
+      credentials: {}
+    },
+    // Bases to backup (empty = all)
+    includeBases: [],
+    // Bases to exclude
+    excludeBases: []
+  },
+
+  backupJob: null,
+
+  async initialize(lokud, config) {
+    console.log('Initializing Backup plugin');
+
+    // Create backup directory if it doesn't exist
+    try {
+      await fs.mkdir(config.backupPath, { recursive: true });
+    } catch (error) {
+      console.error('Failed to create backup directory:', error);
+      throw error;
+    }
+
+    // Schedule backups
+    this.backupJob = lokud.scheduler.cron(
+      config.schedule,
+      async () => await this.performBackup(lokud, config)
+    );
+
+    console.log(`Backups scheduled: ${config.schedule}`);
+  },
+
+  async cleanup() {
+    if (this.backupJob) {
+      this.backupJob.cancel();
+    }
+  },
+
+  async performBackup(lokud, config) {
+    console.log('Starting backup...');
+
+    try {
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const backupName = `lokud-backup-${timestamp}`;
+
+      // Get workspace data
+      const workspaceData = await this.getWorkspaceData(lokud, config);
+
+      let backupPath;
+
+      if (config.format === 'zip') {
+        backupPath = await this.createZipBackup(
+          config.backupPath,
+          backupName,
+          workspaceData,
+          config.includeAttachments
+        );
+      } else {
+        backupPath = await this.createJsonBackup(
+          config.backupPath,
+          backupName,
+          workspaceData
+        );
+      }
+
+      console.log(`Backup created: ${backupPath}`);
+
+      // Upload to cloud if enabled
+      if (config.cloud.enabled) {
+        await this.uploadToCloud(backupPath, config.cloud);
+      }
+
+      // Clean old backups
+      await this.cleanOldBackups(config.backupPath, config.maxBackups);
+
+      // Send success notification
+      await lokud.notifications.send({
+        title: 'Backup Complete',
+        message: `Workspace backed up successfully to ${backupName}`,
+        priority: 'low'
+      });
+
+    } catch (error) {
+      console.error('Backup failed:', error);
+
+      await lokud.notifications.send({
+        title: 'Backup Failed',
+        message: error.message,
+        priority: 'high'
+      });
+    }
+  },
+
+  async getWorkspaceData(lokud, config) {
+    const data = {
+      metadata: {
+        version: lokud.version,
+        timestamp: new Date().toISOString(),
+        workspace: lokud.workspace.name
+      },
+      bases: {}
+    };
+
+    // Get all bases
+    const allBases = await lokud.getBases();
+
+    for (const base of allBases) {
+      // Check if should include this base
+      if (config.includeBases.length > 0 &&
+          !config.includeBases.includes(base.name)) {
+        continue;
+      }
+
+      if (config.excludeBases.includes(base.name)) {
+        continue;
+      }
+
+      // Get all records from base
+      const records = await base.getAllRecords();
+
+      data.bases[base.name] = {
+        config: base.config,
+        records: records
+      };
+
+      console.log(`Backed up ${records.length} records from ${base.name}`);
+    }
+
+    return data;
+  },
+
+  async createJsonBackup(backupPath, backupName, data) {
+    const filePath = path.join(backupPath, `${backupName}.json`);
+
+    await fs.writeFile(
+      filePath,
+      JSON.stringify(data, null, 2),
+      'utf8'
+    );
+
+    return filePath;
+  },
+
+  async createZipBackup(backupPath, backupName, data, includeAttachments) {
+    const zipPath = path.join(backupPath, `${backupName}.zip`);
+
+    return new Promise((resolve, reject) => {
+      const output = createWriteStream(zipPath);
+      const archive = archiver('zip', {
+        zlib: { level: 9 }
+      });
+
+      output.on('close', () => {
+        console.log(`Backup archive created: ${archive.pointer()} bytes`);
+        resolve(zipPath);
+      });
+
+      archive.on('error', (err) => {
+        reject(err);
+      });
+
+      archive.pipe(output);
+
+      // Add workspace data
+      archive.append(
+        JSON.stringify(data, null, 2),
+        { name: 'workspace-data.json' }
+      );
+
+      // Add attachments if enabled
+      if (includeAttachments) {
+        // Implementation depends on attachment storage system
+        // archive.directory('attachments/', 'attachments');
+      }
+
+      archive.finalize();
+    });
+  },
+
+  async cleanOldBackups(backupPath, maxBackups) {
+    const files = await fs.readdir(backupPath);
+
+    // Filter backup files
+    const backupFiles = files
+      .filter(f => f.startsWith('lokud-backup-'))
+      .map(f => ({
+        name: f,
+        path: path.join(backupPath, f),
+        time: fs.stat(path.join(backupPath, f)).then(s => s.mtime)
+      }));
+
+    // Wait for all stat calls
+    for (const file of backupFiles) {
+      file.time = await file.time;
+    }
+
+    // Sort by time (newest first)
+    backupFiles.sort((a, b) => b.time - a.time);
+
+    // Delete old backups
+    if (backupFiles.length > maxBackups) {
+      const toDelete = backupFiles.slice(maxBackups);
+
+      for (const file of toDelete) {
+        await fs.unlink(file.path);
+        console.log(`Deleted old backup: ${file.name}`);
+      }
+    }
+  },
+
+  async uploadToCloud(filePath, cloudConfig) {
+    // Implementation depends on cloud provider
+    console.log(`Uploading to ${cloudConfig.provider}...`);
+
+    // Example for S3:
+    // const s3 = new AWS.S3(cloudConfig.credentials);
+    // await s3.upload({
+    //   Bucket: cloudConfig.bucket,
+    //   Key: path.basename(filePath),
+    //   Body: fs.createReadStream(filePath)
+    // }).promise();
+  },
+
+  commands: {
+    'backup-now': {
+      description: 'Manually trigger backup',
+      async execute(lokud, config) {
+        await this.performBackup(lokud, config);
+      }
+    },
+
+    'list-backups': {
+      description: 'List all available backups',
+      async execute(lokud, config) {
+        const files = await fs.readdir(config.backupPath);
+        const backupFiles = files.filter(f => f.startsWith('lokud-backup-'));
+
+        const backups = await Promise.all(
+          backupFiles.map(async (file) => {
+            const filePath = path.join(config.backupPath, file);
+            const stats = await fs.stat(filePath);
+            return {
+              name: file,
+              size: (stats.size / 1024 / 1024).toFixed(2) + ' MB',
+              created: stats.mtime
+            };
+          })
+        );
+
+        return backups;
+      }
+    }
+  }
+};
+```
+
+## Custom Field Validation Plugin
+
+Add custom validation rules to fields.
+
+```javascript
+// plugins/field-validation.js
+
+/**
+ * Field Validation Plugin
+ * Add custom validation rules to fields
+ */
+
+export default {
+  name: 'field-validation',
+  version: '1.0.0',
+  description: 'Custom field validation rules',
+  author: 'Lokud Team',
+
+  config: {
+    enabled: true,
+    // Validation rules by base and field
+    rules: {
+      // Example:
+      // 'Tasks': {
+      //   'Task Name': {
+      //     minLength: 5,
+      //     maxLength: 100,
+      //     pattern: '^[A-Z].*', // Must start with capital letter
+      //     custom: async (value) => {
+      //       // Custom validation logic
+      //       return value.includes('TODO') ? 'Remove TODO from task name' : null;
+      //     }
+      //   },
+      //   'Due Date': {
+      //     custom: async (value, record) => {
+      //       // Must be in the future
+      //       if (new Date(value) < new Date()) {
+      //         return 'Due date must be in the future';
+      //       }
+      //       return null;
+      //     }
+      //   }
+      // }
+    },
+    // Show validation errors as notifications
+    showNotifications: true,
+    // Prevent saving if validation fails
+    strictMode: true
+  },
+
+  async initialize(lokud, config) {
+    console.log('Initializing Field Validation plugin');
+
+    // Register validation hooks
+    lokud.on('record.beforeCreate', async (event) => {
+      await this.validateRecord(lokud, config, event);
+    });
+
+    lokud.on('record.beforeUpdate', async (event) => {
+      await this.validateRecord(lokud, config, event);
+    });
+
+    console.log('Field Validation plugin initialized');
+  },
+
+  async validateRecord(lokud, config, event) {
+    const { base, record, changes } = event;
+
+    // Get rules for this base
+    const baseRules = config.rules[base];
+    if (!baseRules) return;
+
+    const errors = [];
+
+    // Get fields to validate
+    const fieldsToValidate = changes || record;
+
+    // Validate each field
+    for (const [fieldName, value] of Object.entries(fieldsToValidate)) {
+      const rules = baseRules[fieldName];
+      if (!rules) continue;
+
+      const error = await this.validateField(
+        fieldName,
+        value,
+        rules,
+        record
+      );
+
+      if (error) {
+        errors.push(`${fieldName}: ${error}`);
+      }
+    }
+
+    // Handle errors
+    if (errors.length > 0) {
+      const errorMessage = errors.join('\n');
+
+      if (config.showNotifications) {
+        await lokud.notifications.send({
+          title: 'Validation Error',
+          message: errorMessage,
+          priority: 'high'
+        });
+      }
+
+      if (config.strictMode) {
+        // Cancel the operation
+        event.cancel = true;
+        event.cancelReason = errorMessage;
+      }
+    }
+  },
+
+  async validateField(fieldName, value, rules, record) {
+    // Skip if value is empty and not required
+    if (!value && !rules.required) {
+      return null;
+    }
+
+    // Required check
+    if (rules.required && !value) {
+      return 'This field is required';
+    }
+
+    // Min length
+    if (rules.minLength && value.length < rules.minLength) {
+      return `Minimum length is ${rules.minLength} characters`;
+    }
+
+    // Max length
+    if (rules.maxLength && value.length > rules.maxLength) {
+      return `Maximum length is ${rules.maxLength} characters`;
+    }
+
+    // Pattern matching
+    if (rules.pattern) {
+      const regex = new RegExp(rules.pattern);
+      if (!regex.test(value)) {
+        return rules.patternMessage || 'Invalid format';
+      }
+    }
+
+    // Min/Max for numbers
+    if (typeof value === 'number') {
+      if (rules.min !== undefined && value < rules.min) {
+        return `Minimum value is ${rules.min}`;
+      }
+      if (rules.max !== undefined && value > rules.max) {
+        return `Maximum value is ${rules.max}`;
+      }
+    }
+
+    // Custom validation function
+    if (rules.custom && typeof rules.custom === 'function') {
+      const error = await rules.custom(value, record);
+      if (error) {
+        return error;
+      }
+    }
+
+    return null;
+  }
+};
+```
+
+## Installation Instructions
+
+### Installing a Plugin
+
+1. **Save the plugin file** to your workspace's `plugins/` directory
+
+2. **Add to workspace configuration:**
+
+```yaml
+# workspace.yaml
+plugins:
+  - name: plugin-name
+    enabled: true
+    config:
+      # Plugin-specific configuration
+```
+
+3. **Reload workspace** to activate the plugin
+
+### Development Tips
+
+- **Use lokud.logger** instead of console.log for better logging
+- **Handle errors gracefully** - always catch and log errors
+- **Clean up resources** in the cleanup() method
+- **Test thoroughly** before deploying to production
+- **Document configuration options** clearly
+
+### Plugin Best Practices
+
+1. **Performance**: Avoid blocking operations in event handlers
+2. **Error Handling**: Always use try-catch blocks
+3. **Configuration**: Provide sensible defaults
+4. **Notifications**: Don't spam users with notifications
+5. **Security**: Validate all user inputs
+6. **Testing**: Write unit tests for your plugins
+
+### Available APIs
+
+Plugins have access to the Lokud API:
+
+```javascript
+// Base operations
+lokud.getBases()
+lokud.getBase(name)
+base.getAllRecords()
+base.createRecord(data)
+base.updateRecord(id, data)
+base.deleteRecord(id)
+
+// Events
+lokud.on(event, handler)
+lokud.emit(event, data)
+
+// Scheduling
+lokud.scheduler.schedule(time, callback)
+lokud.scheduler.interval(ms, callback)
+lokud.scheduler.cron(expression, callback)
+
+// Notifications
+lokud.notifications.send(options)
+
+// Storage
+lokud.storage.get(key)
+lokud.storage.set(key, value)
+
+// Utilities
+lokud.utils.formatDate(date, format)
+lokud.utils.getWeekNumber(date)
+```
+
+## Community Plugins
+
+Check the Lokud plugin repository for more community-contributed plugins:
+
+- Advanced analytics
+- Calendar integrations
+- Custom import/export formats
+- Database synchronization
+- And many more!
+
+## Next Steps
+
+- [View Integration Examples](/examples/integrations)
+- [Learn about Workflow Automation](/examples/workflows)
+- [Read the Plugin API Documentation](/docs/plugins/api)

@@ -1,234 +1,20 @@
-# Security Features
-
-Comprehensive guide to Lokus security features, best practices, and threat mitigation strategies.
-
-**Version:** 1.3.1 | **Status:** Production Ready
-
-## What's New in v1.3
-
-**OAuth 2.0 + PKCE**
-Production-ready OAuth 2.0 implementation with PKCE (Proof Key for Code Exchange) for enhanced security. Prevents authorization code interception attacks and eliminates need for client secrets in native apps.
-
-**Platform-Native Token Storage**
-Secure credential storage using macOS Keychain and Windows Credential Manager. Tokens encrypted at rest with OS-level security.
-
-**Hybrid Redirect Flow**
-Smart redirect handling using deep links with localhost fallback. Seamless OAuth experience across platforms.
-
-**Automatic Token Refresh**
-Background token renewal without user intervention. Maintains session continuity with exponential backoff retry logic.
-
-## Security Architecture
-
-Lokus implements defense-in-depth security:
-
-1. **File System Sandboxing** - Restricted file access
-2. **Plugin Permissions** - Granular permission system
-3. **Secure Storage** - Platform-native credential storage
-4. **Input Validation** - XSS and injection prevention
-5. **Network Security** - HTTPS enforcement, CORS protection
-6. **OAuth Security** - Secure authentication flows
-
-## File System Security
-
-### Path Validation
-
-All file operations validate paths to prevent directory traversal attacks:
-
-```typescript
-function isValidPath(path: string): boolean {
-  // Prevent directory traversal
-  if (path.includes('..')) {
-    return false;
-  }
-
-  // Ensure path is within workspace
-  const normalizedPath = normalizePath(path);
-  const workspacePath = getWorkspacePath();
-
-  return normalizedPath.startsWith(workspacePath);
-}
-```
-
-**Protected Against:**
-- `../../../etc/passwd` - Directory traversal
-- `file:///etc/passwd` - Absolute paths outside workspace
-- Symbolic link attacks
-- Race conditions (TOCTOU)
-
+---
+title: OAuth 2.0 Security
+description: Complete guide to OAuth 2.0 with PKCE implementation in Lokus, including secure authentication flows, token management, and platform-native storage.
+keywords: [oauth, oauth 2.0, pkce, authentication, authorization, token storage, token refresh, secure authentication]
 ---
 
-### File Type Validation
+# OAuth 2.0 Security
 
-```typescript
-const ALLOWED_FILE_TYPES = [
-  '.md', '.txt', '.json',
-  '.js', '.ts', '.jsx', '.tsx',
-  '.html', '.css', '.yaml', '.toml'
-];
+Production-ready OAuth 2.0 implementation with PKCE for secure authentication with external services.
 
-function validateFileType(path: string): boolean {
-  const ext = path.toLowerCase().match(/\.[^.]+$/)?.[0];
-  return ALLOWED_FILE_TYPES.includes(ext);
-}
-```
+import { Callout } from 'nextra/components'
 
-**Configure allowed types:**
-```json
-{
-  "security": {
-    "allowedFileTypes": [".md", ".txt", ".json"],
-    "validateFileTypes": true
-  }
-}
-```
-
----
-
-### File Size Limits
-
-```json
-{
-  "security": {
-    "maxFileSize": 10485760,
-    "maxUploadSize": 5242880
-  }
-}
-```
-
-**Default limits:**
-- Max file size: 10MB
-- Max upload size: 5MB
-- Max workspace size: Unlimited (user discretion)
-
----
-
-## Plugin Security
-
-### Permission System
-
-Plugins must declare required permissions:
-
-```json
-{
-  "name": "example-plugin",
-  "permissions": [
-    "read:files",
-    "write:files",
-    "network:https"
-  ]
-}
-```
-
-**Available Permissions:**
-- `read:files` - Read workspace files
-- `write:files` - Write to workspace files
-- `read:workspace` - Read workspace metadata
-- `write:workspace` - Modify workspace
-- `execute:commands` - Execute system commands
-- `network:http` - HTTP requests
-- `network:https` - HTTPS requests
-- `ui:editor` - Modify editor
-- `ui:sidebar` - Add UI panels
-- `storage:local` - Local storage access
-- `clipboard:read` - Read clipboard
-- `clipboard:write` - Write clipboard
-
----
-
-### Permission Enforcement
-
-```typescript
-class PluginAPI {
-  async readFile(path: string): Promise<string> {
-    // Check permission
-    if (!this.hasPermission('read:files')) {
-      throw new Error('Plugin lacks read:files permission');
-    }
-
-    // Validate path
-    if (!isValidPath(path)) {
-      throw new Error('Invalid file path');
-    }
-
-    // Perform operation
-    return await invoke('read_file_content', { path });
-  }
-}
-```
-
----
-
-### Plugin Sandboxing
-
-```json
-{
-  "security": {
-    "sandboxPlugins": true,
-    "pluginTimeout": 30000,
-    "maxPluginMemory": 104857600
-  }
-}
-```
-
-**Sandbox Features:**
-- Isolated execution context
-- Memory limits (100MB default)
-- Timeout protection (30s default)
-- No access to Node.js APIs
-- No eval() or Function() constructor
-
----
-
-### Plugin Validation
-
-```typescript
-async function validatePlugin(manifest: PluginManifest): Promise<ValidationResult> {
-  const errors: ValidationError[] = [];
-
-  // Validate name
-  if (!/^[a-zA-Z0-9-_]+$/.test(manifest.name)) {
-    errors.push({
-      field: 'name',
-      message: 'Invalid plugin name'
-    });
-  }
-
-  // Validate version
-  if (!semver.valid(manifest.version)) {
-    errors.push({
-      field: 'version',
-      message: 'Invalid semantic version'
-    });
-  }
-
-  // Validate permissions
-  for (const permission of manifest.permissions) {
-    if (!VALID_PERMISSIONS.includes(permission)) {
-      errors.push({
-        field: 'permissions',
-        message: `Invalid permission: ${permission}`
-      });
-    }
-  }
-
-  return {
-    valid: errors.length === 0,
-    errors,
-    warnings: []
-  };
-}
-```
-
----
-
-## Authentication Security
-
-### OAuth 2.0 + PKCE Implementation
+## OAuth 2.0 + PKCE Implementation
 
 Lokus v1.3 implements OAuth 2.0 with PKCE (RFC 7636) for secure authentication with external services like Gmail, GitHub, and custom OAuth providers.
 
-#### Why PKCE?
+### Why PKCE?
 
 **Security Benefits:**
 - Prevents authorization code interception attacks
@@ -236,6 +22,10 @@ Lokus v1.3 implements OAuth 2.0 with PKCE (RFC 7636) for secure authentication w
 - Mitigates CSRF attacks
 - Protects against malicious apps on same device
 - Required by OAuth 2.1 spec for all clients
+
+> **Note:** 
+PKCE (Proof Key for Code Exchange) is now the recommended approach for all OAuth 2.0 clients, not just mobile apps. It provides defense-in-depth security without the complexity of managing client secrets.
+
 
 **Traditional OAuth vs PKCE:**
 
@@ -247,7 +37,11 @@ Lokus v1.3 implements OAuth 2.0 with PKCE (RFC 7636) for secure authentication w
 | CSRF Protection | State parameter only | State + Code verifier |
 | Complexity | Lower | Slightly higher |
 
-#### Complete PKCE Flow
+---
+
+## Complete PKCE Flow
+
+### Step 1: Generate PKCE Challenge
 
 ```typescript
 // 1. Generate code verifier and challenge
@@ -282,6 +76,14 @@ function generateState(): string {
   return randomBytes(32).toString('hex') // 64 hex characters
 }
 ```
+
+> **Note:** 
+Always use cryptographically secure random number generation for PKCE code verifiers and state parameters. Never use `Math.random()` for security-critical values.
+
+
+---
+
+### Step 2: OAuth Flow Manager
 
 ```typescript
 // 3. Complete OAuth flow manager
@@ -484,9 +286,11 @@ class OAuthError extends Error {
 }
 ```
 
-#### Hybrid Redirect Flow
+---
 
-Lokus uses a hybrid redirect approach for maximum compatibility:
+## Hybrid Redirect Flow
+
+Lokus uses a hybrid redirect approach for maximum compatibility across platforms:
 
 ```typescript
 class HybridRedirectHandler {
@@ -563,7 +367,13 @@ class HybridRedirectHandler {
 }
 ```
 
-#### Rust Backend Implementation
+> **Note:** 
+The hybrid redirect flow provides the best user experience by preferring deep links when available, while automatically falling back to localhost redirect when deep links aren't registered.
+
+
+---
+
+## Rust Backend Implementation
 
 ```rust
 // src-tauri/src/oauth.rs
@@ -672,11 +482,12 @@ pub enum OAuthError {
 
 ---
 
-### Secure Token Storage
+## Secure Token Storage
 
 **Platform-specific secure storage:**
 
-**macOS - Keychain:**
+### macOS - Keychain
+
 ```rust
 use keyring::Keyring;
 
@@ -693,7 +504,8 @@ fn retrieve_token(service: &str, account: &str) -> Result<String, String> {
 }
 ```
 
-**Windows - Credential Manager:**
+### Windows - Credential Manager
+
 ```rust
 use windows::Security::Credentials::PasswordVault;
 
@@ -708,6 +520,7 @@ fn store_token_windows(resource: &str, username: &str, password: &str) {
 }
 ```
 
+> **Note:** 
 **Never store tokens in:**
 - Plain text files
 - Local storage
@@ -715,9 +528,12 @@ fn store_token_windows(resource: &str, username: &str, password: &str) {
 - Configuration files
 - Version control
 
+Always use platform-native secure storage mechanisms.
+
+
 ---
 
-### Automatic Token Refresh
+## Automatic Token Refresh
 
 Production-ready token manager with automatic refresh, retry logic, and token rotation:
 
@@ -874,67 +690,6 @@ class TokenManager {
   }
 
   /**
-   * Load tokens from secure storage
-   */
-  private async loadTokens(): Promise<void> {
-    try {
-      const accessToken = await invoke<string | null>('get_secure_token', {
-        service: `lokus-${this.config.provider}`,
-        account: 'access_token'
-      })
-
-      const refreshToken = await invoke<string | null>('get_secure_token', {
-        service: `lokus-${this.config.provider}`,
-        account: 'refresh_token'
-      })
-
-      const expiresAt = await invoke<string | null>('get_secure_token', {
-        service: `lokus-${this.config.provider}`,
-        account: 'expires_at'
-      })
-
-      if (accessToken && refreshToken && expiresAt) {
-        this.accessToken = accessToken
-        this.refreshToken = refreshToken
-        this.expiresAt = parseInt(expiresAt, 10)
-      }
-    } catch (error) {
-      console.error('Failed to load tokens:', error)
-    }
-  }
-
-  /**
-   * Store tokens in secure storage
-   */
-  private async storeTokens(tokens: {
-    accessToken: string
-    refreshToken: string | null
-    expiresAt: number
-  }): Promise<void> {
-    const service = `lokus-${this.config.provider}`
-
-    await invoke('store_secure_token', {
-      service,
-      account: 'access_token',
-      token: tokens.accessToken
-    })
-
-    if (tokens.refreshToken) {
-      await invoke('store_secure_token', {
-        service,
-        account: 'refresh_token',
-        token: tokens.refreshToken
-      })
-    }
-
-    await invoke('store_secure_token', {
-      service,
-      account: 'expires_at',
-      token: tokens.expiresAt.toString()
-    })
-  }
-
-  /**
    * Revoke tokens (sign out)
    */
   async revokeTokens(): Promise<void> {
@@ -958,18 +713,6 @@ class TokenManager {
       // Clear local tokens regardless of revocation result
       await this.clearTokens()
     }
-  }
-
-  private async clearTokens(): Promise<void> {
-    const service = `lokus-${this.config.provider}`
-
-    await invoke('delete_secure_token', { service, account: 'access_token' })
-    await invoke('delete_secure_token', { service, account: 'refresh_token' })
-    await invoke('delete_secure_token', { service, account: 'expires_at' })
-
-    this.accessToken = null
-    this.refreshToken = null
-    this.expiresAt = 0
   }
 
   private sleep(ms: number): Promise<void> {
@@ -1030,8 +773,6 @@ function ensureHttps(url: string): string {
 }
 ```
 
----
-
 ### CORS Protection
 
 ```typescript
@@ -1047,339 +788,8 @@ function validateOrigin(origin: string): boolean {
 
 ---
 
-### Request Validation
-
-```typescript
-interface RequestOptions {
-  url: string;
-  method: string;
-  headers?: Record<string, string>;
-  body?: string;
-}
-
-async function makeSecureRequest(options: RequestOptions) {
-  // Validate URL
-  if (!isValidUrl(options.url)) {
-    throw new Error('Invalid URL');
-  }
-
-  // Enforce HTTPS
-  if (!options.url.startsWith('https://')) {
-    throw new Error('HTTPS required');
-  }
-
-  // Validate headers
-  validateHeaders(options.headers);
-
-  // Make request
-  return await fetch(options.url, {
-    method: options.method,
-    headers: options.headers,
-    body: options.body
-  });
-}
-
-function validateHeaders(headers?: Record<string, string>) {
-  if (!headers) return;
-
-  // Block dangerous headers
-  const dangerous = ['Cookie', 'Set-Cookie', 'Authorization'];
-  for (const header of Object.keys(headers)) {
-    if (dangerous.includes(header)) {
-      throw new Error(`Header ${header} not allowed`);
-    }
-  }
-}
-```
-
----
-
-## Content Security
-
-### XSS Prevention
-
-**Input Sanitization:**
-
-```typescript
-import DOMPurify from 'dompurify';
-
-function sanitizeHTML(dirty: string): string {
-  return DOMPurify.sanitize(dirty, {
-    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'a', 'code', 'pre'],
-    ALLOWED_ATTR: ['href', 'class']
-  });
-}
-
-// Usage
-function renderUserContent(content: string) {
-  const clean = sanitizeHTML(content);
-  return <div dangerouslySetInnerHTML={{ __html: clean }} />;
-}
-```
-
-**Output Encoding:**
-
-```typescript
-function escapeHTML(text: string): string {
-  const map: Record<string, string> = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#x27;',
-    '/': '&#x2F;'
-  };
-
-  return text.replace(/[&<>"'\/]/g, (char) => map[char]);
-}
-```
-
----
-
-### Content Security Policy
-
-```html
-<meta http-equiv="Content-Security-Policy"
-  content="default-src 'self';
-           script-src 'self' 'unsafe-inline';
-           style-src 'self' 'unsafe-inline';
-           img-src 'self' data: https:;
-           connect-src 'self' https://api.example.com;">
-```
-
----
-
-### External Content
-
-```json
-{
-  "security": {
-    "allowExternalImages": true,
-    "allowExternalLinks": true,
-    "blockTrackers": true,
-    "validateImageUrls": true
-  }
-}
-```
-
-**Image URL Validation:**
-
-```typescript
-function isValidImageUrl(url: string): boolean {
-  // Only allow HTTPS
-  if (!url.startsWith('https://')) {
-    return false;
-  }
-
-  // Check allowed domains
-  const allowedDomains = ['imgur.com', 'github.com'];
-  const domain = new URL(url).hostname;
-
-  return allowedDomains.some(allowed =>
-    domain.endsWith(allowed)
-  );
-}
-```
-
----
-
-## Data Protection
-
-### Encryption at Rest
-
-**Encrypt sensitive settings:**
-
-```rust
-use aes_gcm::{Aes256Gcm, Key, Nonce};
-use aes_gcm::aead::{Aead, NewAead};
-
-fn encrypt_data(data: &str, key: &[u8]) -> Result<Vec<u8>, String> {
-    let cipher = Aes256Gcm::new(Key::from_slice(key));
-    let nonce = Nonce::from_slice(b"unique nonce");
-
-    cipher.encrypt(nonce, data.as_bytes())
-        .map_err(|e| e.to_string())
-}
-
-fn decrypt_data(encrypted: &[u8], key: &[u8]) -> Result<String, String> {
-    let cipher = Aes256Gcm::new(Key::from_slice(key));
-    let nonce = Nonce::from_slice(b"unique nonce");
-
-    let decrypted = cipher.decrypt(nonce, encrypted)
-        .map_err(|e| e.to_string())?;
-
-    String::from_utf8(decrypted)
-        .map_err(|e| e.to_string())
-}
-```
-
----
-
-### Encryption in Transit
-
-All network communication uses TLS 1.3:
-
-```typescript
-const agent = new https.Agent({
-  minVersion: 'TLSv1.3',
-  maxVersion: 'TLSv1.3',
-  rejectUnauthorized: true
-});
-
-await fetch(url, { agent });
-```
-
----
-
-## Security Best Practices
-
-### For Users
-
-1. **Keep Lokus Updated** - Install security updates promptly
-2. **Use Strong Passwords** - For workspace encryption
-3. **Review Plugin Permissions** - Only install trusted plugins
-4. **Enable 2FA** - For connected services (Gmail, etc.)
-5. **Regular Backups** - Protect against data loss
-6. **Secure Workspace** - Use full disk encryption
-7. **Log Out** - When using shared computers
-
----
-
-### For Plugin Developers
-
-1. **Minimal Permissions** - Request only needed permissions
-2. **Validate Input** - Sanitize all user input
-3. **Secure API Keys** - Use plugin settings storage
-4. **HTTPS Only** - Never use HTTP
-5. **Error Handling** - Don't expose sensitive info
-6. **Regular Updates** - Fix security issues promptly
-7. **Code Review** - Review for vulnerabilities
-
----
-
-### For Self-Hosters
-
-1. **Firewall Rules** - Restrict network access
-2. **Regular Updates** - Update OS and dependencies
-3. **Access Control** - Limit user permissions
-4. **Monitoring** - Log and monitor access
-5. **Backup Strategy** - Automated, encrypted backups
-6. **Incident Response** - Have a plan
-7. **Security Audits** - Regular security reviews
-
----
-
-## Security Auditing
-
-### Logging
-
-```typescript
-class SecurityLogger {
-  logAuthAttempt(user: string, success: boolean) {
-    console.log(`[AUTH] ${user} - ${success ? 'SUCCESS' : 'FAILURE'}`);
-  }
-
-  logFileAccess(plugin: string, path: string, operation: string) {
-    console.log(`[FILE] ${plugin} - ${operation} - ${path}`);
-  }
-
-  logPermissionDenied(plugin: string, permission: string) {
-    console.warn(`[SECURITY] ${plugin} denied ${permission}`);
-  }
-
-  logSuspiciousActivity(activity: string, details: any) {
-    console.error(`[SECURITY ALERT] ${activity}`, details);
-  }
-}
-```
-
----
-
-### Monitoring
-
-```typescript
-class SecurityMonitor {
-  private failedAttempts = new Map<string, number>();
-
-  recordFailedAuth(user: string) {
-    const attempts = this.failedAttempts.get(user) || 0;
-    this.failedAttempts.set(user, attempts + 1);
-
-    // Alert after 5 failed attempts
-    if (attempts >= 5) {
-      this.alertSecurityIncident('Brute force attempt', { user });
-    }
-  }
-
-  alertSecurityIncident(type: string, details: any) {
-    // Send alert notification
-    console.error(`SECURITY INCIDENT: ${type}`, details);
-
-    // Could integrate with external monitoring
-  }
-}
-```
-
----
-
-## Vulnerability Reporting
-
-If you discover a security vulnerability:
-
-1. **Do Not** publicly disclose the vulnerability
-2. **Email** security@lokus.app with details
-3. **Include** steps to reproduce
-4. **Wait** for response before disclosure
-5. **Receive** credit in security advisories
-
-**Bug Bounty Program:** Coming soon
-
----
-
-## Security Updates
-
-Stay informed about security updates:
-
-1. **GitHub Security Advisories** - Watch repository
-2. **Release Notes** - Read security sections
-3. **Newsletter** - Subscribe for alerts
-4. **RSS Feed** - Follow security feed
-
----
-
-## Compliance
-
-### GDPR Compliance
-
-Lokus is designed for GDPR compliance:
-
-- **Data Minimization** - Collect only necessary data
-- **Right to Access** - Export all user data
-- **Right to Erasure** - Delete user data
-- **Data Portability** - Standard file formats
-- **Privacy by Design** - Security by default
-- **Transparency** - Clear privacy policy
-
----
-
-### Data Retention
-
-```json
-{
-  "security": {
-    "dataRetention": {
-      "logs": 90,
-      "cache": 7,
-      "backups": 365
-    }
-  }
-}
-```
-
----
-
 ## Next Steps
 
-- [Troubleshooting](/advanced/troubleshooting) - Security issues
-- [Configuration](/reference/configuration) - Security settings
-- [Plugin API](/reference/plugin-api) - Secure plugin development
+- [Plugin Security](/advanced/security/plugins) - Sandboxing and permissions
+- [Security Best Practices](/advanced/security/best-practices) - Recommendations
+- [Security Overview](/advanced/security/overview) - Architecture and threat model

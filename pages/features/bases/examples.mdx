@@ -1,0 +1,816 @@
+---
+title: "Base Examples - Real-World Use Cases & Best Practices - Lokus Documentation"
+description: "Explore practical examples of Lokus Bases: project management, CRM, content calendars, inventory tracking, and more. Learn best practices."
+keywords: [lokus, bases, examples, use cases, project management, crm, content management, templates, best practices]
+---
+
+# Base Examples & Use Cases
+
+Learn from real-world Base configurations and discover how to apply Bases to your workflows. This guide covers common use cases, configuration examples, and best practices.
+
+> **📚 Prerequisites:** This guide assumes familiarity with [Bases Overview](/features/bases/overview), [Properties](/features/bases/properties), and [Views](/features/bases/views).
+
+## Project Management
+
+Track projects with status, priority, timelines, and team members.
+
+### Configuration
+
+**Properties:**
+```yaml
+# Identity
+title: text (required)
+project_code: text
+description: long_text
+
+# Status & Priority
+status: select
+  options:
+    - Planning (blue)
+    - Active (green)
+    - On Hold (yellow)
+    - Completed (gray)
+    - Cancelled (red)
+
+priority: select
+  options:
+    - Critical (red)
+    - High (orange)
+    - Medium (yellow)
+    - Low (blue)
+
+# Timeline
+start_date: date
+due_date: date
+completed_date: date
+
+# Resources
+budget: number (currency, USD)
+owner: text
+team: tags
+
+# Tracking
+progress: number (percentage)
+health: select
+  options:
+    - On Track (green)
+    - At Risk (yellow)
+    - Blocked (red)
+```
+
+### Views
+
+**Table View: All Projects**
+```yaml
+name: "All Projects"
+type: table
+visible_properties:
+  - title
+  - status
+  - priority
+  - owner
+  - due_date
+  - budget
+  - progress
+sort:
+  - priority: desc
+  - due_date: asc
+```
+
+**Kanban View: By Status**
+```yaml
+name: "Project Board"
+type: kanban
+column_property: status
+card_properties:
+  - priority
+  - owner
+  - due_date
+  - progress
+wip_limits:
+  Active: 5
+```
+
+**Calendar View: Timeline**
+```yaml
+name: "Project Timeline"
+type: calendar
+date_field: due_date
+color_by: status
+show_properties:
+  - owner
+  - priority
+```
+
+### Saved Filters
+
+```yaml
+"Active High Priority":
+  - status equals "Active"
+  - priority in ["Critical", "High"]
+
+"At Risk":
+  - health equals "At Risk"
+  - status equals "Active"
+
+"Due This Month":
+  - due_date relative "this month"
+  - status not_equals "Completed"
+
+"My Projects":
+  - owner equals "{{current_user}}"
+  - status in ["Planning", "Active"]
+```
+
+### Best Practices
+
+✅ **Do:**
+- Set realistic due dates
+- Update progress regularly (weekly)
+- Use health status to flag issues early
+- Assign clear ownership
+- Track budget vs actual spending
+
+❌ **Don't:**
+- Leave projects in "Planning" indefinitely
+- Skip status updates for weeks
+- Assign multiple owners (use team tags instead)
+- Ignore "At Risk" or "Blocked" projects
+
+## Task Management
+
+GTD-style task management with priorities, contexts, and due dates.
+
+### Configuration
+
+**Properties:**
+```yaml
+# Core
+title: text (required)
+description: long_text
+completed: checkbox
+
+# Organization
+status: select
+  - Inbox (gray)
+  - Next (blue)
+  - Waiting (yellow)
+  - Someday (purple)
+  - Done (green)
+
+priority: select
+  - P1 - Urgent (red)
+  - P2 - High (orange)
+  - P3 - Normal (yellow)
+  - P4 - Low (blue)
+
+# Context
+project: text
+area: select
+  - Work
+  - Personal
+  - Home
+  - Learning
+
+tags: tags
+  - urgent
+  - quick-win
+  - deep-work
+  - admin
+
+# Timing
+due_date: date
+scheduled_date: date
+completed_date: date
+
+# Effort
+estimated_hours: number
+actual_hours: number
+
+# Assignment
+assignee: text
+```
+
+### Views
+
+**List View: Next Actions**
+```yaml
+name: "Next Actions"
+type: list
+filters:
+  - status equals "Next"
+  - completed is_false
+group_by: project
+sort: priority desc
+```
+
+**Table View: This Week**
+```yaml
+name: "This Week"
+type: table
+filters:
+  - due_date relative "this week"
+  - completed is_false
+sort:
+  - due_date asc
+  - priority desc
+```
+
+**Kanban View: Workflow**
+```yaml
+name: "Task Board"
+type: kanban
+column_property: status
+filters:
+  - status not_equals "Done"
+  - completed is_false
+swimlane: priority
+```
+
+### Saved Filters
+
+```yaml
+"Inbox":
+  - status equals "Inbox"
+
+"Overdue":
+  - due_date before today
+  - completed is_false
+
+"Quick Wins":
+  - tags contains "quick-win"
+  - estimated_hours less_than 1
+  - completed is_false
+
+"Waiting For":
+  - status equals "Waiting"
+
+"Today":
+  - due_date equals today
+  OR scheduled_date equals today
+```
+
+### GTD Workflow
+
+**Weekly Review Checklist:**
+1. Process Inbox → Assign status
+2. Review "Waiting For" items
+3. Check overdue tasks
+4. Schedule next week's tasks
+5. Update project progress
+6. Archive completed items
+
+## Content Management
+
+Manage blog posts, articles, and content calendars.
+
+### Configuration
+
+**Properties:**
+```yaml
+# Content
+title: text (required)
+subtitle: text
+slug: text
+content_type: select
+  - Blog Post
+  - Article
+  - Tutorial
+  - Case Study
+  - Newsletter
+
+# Status
+status: select
+  - Idea (gray)
+  - Outline (blue)
+  - Draft (yellow)
+  - Review (orange)
+  - Scheduled (purple)
+  - Published (green)
+
+# Meta
+author: text
+publish_date: date
+updated_date: date
+featured: checkbox
+
+# Organization
+categories: select
+  - Product
+  - Engineering
+  - Design
+  - Company
+  - Tutorial
+
+tags: tags
+seo_keywords: tags
+
+# Metrics
+word_count: number
+reading_time: number
+target_audience: select
+
+# Media
+featured_image: text (URL)
+thumbnail: text (URL)
+```
+
+### Views
+
+**Calendar View: Editorial Calendar**
+```yaml
+name: "Editorial Calendar"
+type: calendar
+date_field: publish_date
+color_by: category
+filters:
+  - status in ["Scheduled", "Published"]
+  - publish_date after "{{today-30d}}"
+```
+
+**Table View: Content Pipeline**
+```yaml
+name: "Content Pipeline"
+type: table
+visible_properties:
+  - title
+  - status
+  - author
+  - publish_date
+  - word_count
+  - categories
+filters:
+  - status not_equals "Published"
+sort:
+  - publish_date asc
+  - status asc
+```
+
+**Gallery View: Published Posts**
+```yaml
+name: "Published Posts"
+type: gallery
+image_property: featured_image
+filters:
+  - status equals "Published"
+sort: publish_date desc
+show_captions: true
+```
+
+### Saved Filters
+
+```yaml
+"This Month":
+  - publish_date relative "this month"
+
+"Needs Review":
+  - status equals "Review"
+
+"Ready to Schedule":
+  - status equals "Draft"
+  - word_count greater_than 800
+
+"Top Performing":
+  - featured is_true
+  - status equals "Published"
+```
+
+### Best Practices
+
+✅ **Do:**
+- Set publish dates early
+- Use consistent categories
+- Add SEO keywords to all posts
+- Review drafts before scheduling
+- Track word count targets
+- Schedule featured images early
+
+❌ **Don't:**
+- Skip the outline stage
+- Publish without review
+- Ignore SEO optimization
+- Leave drafts unfinished
+- Forget to update old content
+
+## CRM (Contacts)
+
+Customer and contact relationship management.
+
+### Configuration
+
+**Properties:**
+```yaml
+# Identity
+name: text (required)
+company: text
+title: text
+email: email
+phone: text
+linkedin: text (URL)
+
+# Classification
+contact_type: select
+  - Lead
+  - Prospect
+  - Customer
+  - Partner
+  - Vendor
+
+status: select
+  - New (blue)
+  - Qualified (green)
+  - Nurturing (yellow)
+  - Closed Won (green)
+  - Closed Lost (red)
+
+priority: select
+
+# Engagement
+last_contact: date
+next_followup: date
+meeting_scheduled: date
+
+# Context
+source: select
+  - Referral
+  - Website
+  - Event
+  - Social
+  - Cold Outreach
+
+interests: tags
+stage: select
+
+# Business
+deal_value: number (currency)
+probability: number (percentage)
+
+# Notes
+notes: long_text
+```
+
+### Views
+
+**Card View: Contact Cards**
+```yaml
+name: "Contact Cards"
+type: card
+card_properties:
+  - company
+  - title
+  - email
+  - status
+  - next_followup
+show_thumbnail: true
+columns: 3
+```
+
+**Table View: Pipeline**
+```yaml
+name: "Sales Pipeline"
+type: table
+filters:
+  - contact_type in ["Lead", "Prospect"]
+  - status not_in ["Closed Won", "Closed Lost"]
+sort:
+  - priority desc
+  - deal_value desc
+```
+
+**Calendar View: Follow-ups**
+```yaml
+name: "Follow-up Calendar"
+type: calendar
+date_field: next_followup
+color_by: priority
+show_properties:
+  - company
+  - status
+  - deal_value
+```
+
+### Saved Filters
+
+```yaml
+"Hot Leads":
+  - status equals "Qualified"
+  - priority equals "High"
+  - next_followup is_not_empty
+
+"Needs Follow-up":
+  - next_followup before "{{today+7d}}"
+  - status not_in ["Closed Won", "Closed Lost"]
+
+"Recent Customers":
+  - status equals "Closed Won"
+  - last_contact relative "last 30 days"
+
+"Stale Leads":
+  - status equals "Nurturing"
+  - last_contact before "{{today-30d}}"
+```
+
+### CRM Workflow
+
+**Weekly Tasks:**
+1. Review "Needs Follow-up" filter
+2. Update status for recent calls
+3. Schedule next follow-ups
+4. Qualify new leads
+5. Check "Stale Leads" for re-engagement
+
+## Inventory Management
+
+Track items, stock levels, and suppliers.
+
+### Configuration
+
+**Properties:**
+```yaml
+# Item
+item_name: text (required)
+sku: text
+barcode: text
+description: long_text
+
+# Classification
+category: select
+  - Electronics
+  - Furniture
+  - Supplies
+  - Equipment
+  - Tools
+
+brand: text
+model: text
+
+# Stock
+quantity: number
+min_stock: number
+max_stock: number
+unit: select
+
+# Status
+status: select
+  - In Stock (green)
+  - Low Stock (yellow)
+  - Out of Stock (red)
+  - Discontinued (gray)
+
+# Pricing
+cost: number (currency)
+price: number (currency)
+margin: number (percentage)
+
+# Location
+location: text
+warehouse: select
+
+# Supplier
+supplier: text
+supplier_sku: text
+lead_time: number (days)
+last_ordered: date
+```
+
+### Views
+
+**Table View: Inventory**
+```yaml
+name: "Current Inventory"
+type: table
+visible_properties:
+  - item_name
+  - sku
+  - quantity
+  - min_stock
+  - status
+  - location
+  - cost
+sort:
+  - status asc
+  - quantity asc
+```
+
+**List View: Low Stock**
+```yaml
+name: "Low Stock Alert"
+type: list
+filters:
+  - status in ["Low Stock", "Out of Stock"]
+  - status not_equals "Discontinued"
+sort: quantity asc
+group_by: category
+```
+
+**Gallery View: Products**
+```yaml
+name: "Product Gallery"
+type: gallery
+filters:
+  - status equals "In Stock"
+sort: item_name asc
+```
+
+### Saved Filters
+
+```yaml
+"Needs Reorder":
+  - quantity less_than_or_equal min_stock
+  - status not_equals "Discontinued"
+
+"High Value":
+  - cost greater_than 1000
+  - quantity greater_than 0
+
+"Recent Orders":
+  - last_ordered relative "last 30 days"
+
+"Discontinued":
+  - status equals "Discontinued"
+```
+
+## Best Practices
+
+### Base Design Principles
+
+**1. Start Simple**
+- Begin with 5-8 core properties
+- Add complexity as needed
+- Don't over-engineer upfront
+
+**2. Consistent Naming**
+```yaml
+# Good
+due_date, start_date, end_date
+
+# Avoid
+dueDate, StartDate, end-date
+```
+
+**3. Use Defaults**
+```yaml
+status:
+  default: "Backlog"
+created_date:
+  default: "{{today}}"
+```
+
+**4. Required Fields**
+- Only mark truly essential fields
+- Too many required fields = friction
+- Usually just `title` is required
+
+**5. Color Coding**
+- Green = positive/complete
+- Red = negative/urgent/blocked
+- Yellow = warning/in-progress
+- Blue = neutral/new
+- Gray = inactive/archived
+
+### Property Organization
+
+**Group Related Properties:**
+```yaml
+# 1. Identity (top)
+title
+description
+
+# 2. Status & Classification
+status
+priority
+category
+tags
+
+# 3. People
+owner
+assignee
+team
+
+# 4. Dates
+start_date
+due_date
+completed_date
+
+# 5. Metrics (bottom)
+budget
+hours
+progress
+```
+
+### Performance Optimization
+
+**For Large Bases (1,000+ entries):**
+
+1. **Use specific source folders**
+   ```yaml
+   source: "/projects/active"
+   # Not: "/"
+   ```
+
+2. **Add default filters**
+   ```yaml
+   default_filters:
+     - status not_equals "Archived"
+   ```
+
+3. **Enable Quantum Search**
+   - Preferences → Performance → Quantum Search
+
+4. **Limit visible properties**
+   - Show 6-8 columns max in table view
+
+5. **Use pagination**
+   - 50-100 entries per page
+
+### Data Entry Efficiency
+
+**Use Templates:**
+```markdown
+---
+template: project
+status: planning
+priority: medium
+owner: "{{current_user}}"
+start_date: "{{today}}"
+---
+
+# {{title}}
+
+## Overview
+{{description}}
+
+## Goals
+- Goal 1
+- Goal 2
+
+## Tasks
+- [ ] Initial task
+```
+
+**Keyboard Shortcuts:**
+- `Cmd/Ctrl + N` - New entry
+- `Cmd/Ctrl + E` - Edit selected
+- `Tab` - Next cell
+- `Enter` - Edit cell
+- `Esc` - Cancel edit
+
+### Maintenance Routines
+
+**Daily:**
+- Update task statuses
+- Check overdue items
+- Process inbox/new items
+
+**Weekly:**
+- Review all active items
+- Archive completed items
+- Update priorities
+- Schedule next week's work
+
+**Monthly:**
+- Analyze trends and metrics
+- Clean up old data
+- Review and adjust workflows
+- Update templates
+
+## Troubleshooting
+
+### Base Loading Slowly
+
+**Solutions:**
+1. Reduce visible entries with filters
+2. Enable Quantum Search
+3. Use specific source folder
+4. Hide unused properties
+5. Close unused Base tabs
+
+### Missing Data
+
+**Solutions:**
+1. Check YAML frontmatter format
+2. Verify property names match
+3. Refresh Base index
+4. Check file permissions
+
+### Inline Editing Not Working
+
+**Solutions:**
+1. Ensure file is not read-only
+2. Check property is editable
+3. Validate YAML syntax
+4. Wait for auto-save (300ms)
+
+## What's Next?
+
+- **[Overview](/features/bases/overview)** - Back to Bases fundamentals
+- **[Properties](/features/bases/properties)** - Deep dive into property types
+- **[Filtering](/features/bases/filtering)** - Master advanced filtering
+- **[MCP Integration](/features/bases/mcp-integration)** - Automate with AI
+
+## Additional Resources
+
+- [Templates](/features/templates) - Base entry templates
+- [Tasks](/features/tasks) - Integrate with task management
+- [Search](/features/search) - Search within Bases
+- [Developer Guide](/developers) - Base API reference

@@ -1,0 +1,251 @@
+---
+title: "Bases Overview - Lokus Documentation"
+description: "Transform your markdown notes into powerful databases with Bases. Learn how Lokus brings structured data functionality to your knowledge base."
+keywords: [lokus, bases, database, markdown, knowledge management, structured data, notes]
+---
+
+# Database Views (Bases) - Overview
+
+Bases in Lokus bring structured database functionality to your notes, allowing you to organize, filter, and visualize information in multiple views. Think of Bases as lightweight databases that live alongside your markdown notes, providing spreadsheet-like power without leaving your knowledge base.
+
+**Version:** 1.3.1 | **Status:** Production Ready
+
+## What Are Bases?
+
+Bases transform collections of notes into structured data that can be viewed as tables, cards, galleries, calendars, or lists. Each Base is a special note that aggregates other notes based on criteria you define, displaying them with customizable properties and views. **Your notes remain standard markdown files** - Bases simply provide powerful views on top of them.
+
+### Key Capabilities
+
+<FeatureStatus>
+- **Table View** ✅ Available - Spreadsheet-like display with inline editing
+- **YAML Frontmatter Properties** ✅ Available - Add metadata without leaving markdown
+- **Advanced Filtering** ✅ Available - Complex queries with multiple operators
+- **Multi-column Sorting** ✅ Available - Sort by multiple properties simultaneously
+- **Inline Editing** ✅ Available - Click cells to edit properties directly
+- **8 Property Types** ✅ Available - Text, number, date, select, tags, checkbox, URL, email
+- **Export capabilities** ✅ Available - Export to CSV, JSON, Markdown
+- **MCP Integration** ✅ Available - AI assistants can query and manipulate bases
+- **Grouping** 🚧 Coming v1.4 - Group by any property with aggregations
+- **Gallery & Calendar Views** 🚧 Coming v1.4 - Additional view types
+- **Formula Support** 🚧 Coming v1.4 - Calculated fields and rollups
+</FeatureStatus>
+
+## How Bases Work with Markdown
+
+### YAML Frontmatter Properties
+
+Bases read metadata from YAML frontmatter in your markdown files. Your notes remain standard markdown - no proprietary format!
+
+**Example Note:**
+```markdown
+---
+title: Build Landing Page
+status: In Progress
+priority: High
+tags:
+  - web
+  - design
+due_date: 2025-10-30
+owner: John Doe
+completed: false
+---
+
+# Build Landing Page
+
+Your note content here...
+```
+
+**What Bases Do:**
+1. **Scan** all markdown files in your workspace
+2. **Extract** properties from YAML frontmatter
+3. **Index** values for fast filtering and sorting
+4. **Display** in table view with inline editing
+5. **Auto-update** when files change
+
+> **💡 Tip:** Your markdown files remain fully portable. You can open them in any text editor, and the frontmatter follows standard YAML conventions.
+
+### Automatic Property Detection
+
+Lokus automatically detects property types based on YAML format:
+
+| YAML Format | Detected Type | Example |
+|-------------|---------------|---------|
+| `key: "value"` | Text | `title: "My Note"` |
+| `key: 42` | Number | `score: 85` |
+| `key: 2025-10-30` | Date | `due_date: 2025-10-30` |
+| `key: ["a", "b"]` | Tags | `tags: ["work", "urgent"]` |
+| `key: true` | Checkbox | `completed: true` |
+| `key: "https://..."` | URL | `link: "https://site.com"` |
+| `key: "user@..."` | Email | `contact: "john@email.com"` |
+
+### Inline Editing
+
+Edit properties directly in the table view:
+
+**How it works:**
+1. **Click any cell** in the table
+2. **Edit the value** (dropdown for select, date picker for dates, etc.)
+3. **Press Enter** or click away
+4. **Auto-saves** to the markdown file's frontmatter after 300ms
+
+**Behind the scenes:**
+```markdown
+Before:  status: Todo
+After:   status: In Progress  ← Updated in YAML automatically
+```
+
+The entire note content remains unchanged - only the frontmatter property is updated!
+
+## Creating Your First Base
+
+### Method 1: From Menu
+
+1. **File → New Base**
+2. Name your Base (e.g., "Project Tracker")
+3. Choose initial view type (Table recommended)
+4. Define source (folder, tag, or query)
+
+### Method 2: From Folder
+
+1. **Right-click any folder** in your file tree
+2. Select "Create Base from Folder"
+3. Base is auto-configured for that folder
+4. Start adding properties immediately
+
+### Method 3: Command Palette
+
+1. Press `Cmd/Ctrl + P`
+2. Type "new base"
+3. Follow the prompts
+4. Customize as needed
+
+## Base Sources
+
+Define which notes to include in your Base:
+
+**Source Types:**
+
+- **Folder:** All notes in a specific folder
+  ```
+  Example: /Projects/Active
+  ```
+
+- **Tag:** All notes with a specific tag
+  ```
+  Example: #task or #project
+  ```
+
+- **Query:** Custom filter query
+  ```
+  Example: tag:#project AND status:active
+  ```
+
+- **Manual:** Manually selected notes
+  ```
+  Example: [[Note 1]], [[Note 2]], [[Note 3]]
+  ```
+
+> **⚠️ Warning:** Using the root folder `/` as a source in large workspaces (5,000+ notes) may slow performance. Use specific folders or enable [Quantum Search](#quantum-search-integration) for better performance.
+
+## Base Templates
+
+Start quickly with pre-built Base templates:
+
+**Available Templates:**
+- **Project Tracker** - Manage projects with status, priority, and timelines
+- **Task Manager** - GTD-style task management with due dates
+- **Book Library** - Track books with ratings, authors, and reading status
+- **Contact Database** - CRM-lite for managing contacts
+- **Meeting Notes** - Organize meeting records with attendees and action items
+- **Blog Posts** - Content calendar for blog post management
+- **Recipe Collection** - Organize recipes with ingredients and ratings
+- **Habit Tracker** - Track daily habits and streaks
+
+Each template comes with:
+- Pre-configured properties
+- Appropriate view layouts
+- Sample filters and sorting
+- Entry templates for consistency
+
+## Performance & Optimization
+
+### Quantum Search Integration
+
+Enable Quantum Search for dramatically improved performance on large workspaces:
+
+**How to Enable:**
+1. **Preferences → Performance**
+2. Toggle "Enable Quantum Search"
+3. Restart Lokus
+4. Bases automatically use quantum indexing
+
+**Performance Improvements:**
+- **100x faster** search on 10,000+ files
+- **O(1) lookup** complexity for property queries
+- **90% less memory** usage during queries
+- **Sub-millisecond** filter application
+- **Predictive caching** for frequently-used queries
+
+**Recommended for:**
+- Workspaces with 5,000+ notes
+- Complex multi-filter queries
+- Real-time collaboration scenarios
+- Users experiencing lag in Bases
+
+### Performance Benchmarks (v1.3)
+
+- **10,000+ entries** supported smoothly
+- **Complex queries** execute under 100ms
+- **Real-time updates** reflect under 50ms
+- **Inline editing** saves in &lt;300ms
+- **Initial load** &lt;2 seconds for 1,000 notes
+
+### Large Workspace Tips
+
+**For workspaces with 1,000+ notes:**
+
+1. **Use specific source folders**
+   ```yaml
+   sourceFolder: "/projects"  # ✅ Specific folder
+   # Not:  "/"  # ❌ Entire workspace (slower)
+   ```
+
+2. **Add exclude patterns**
+   ```yaml
+   exclude:
+     - "archive/**"
+     - ".lokus/**"
+     - "node_modules/**"
+     - "large-media/**"
+   ```
+
+3. **Limit default view**
+   ```yaml
+   views:
+     - name: "Recent"
+       filters:
+         - property: "modified_date"
+           operator: "after"
+           value: "{{today-30d}}"
+   ```
+
+4. **Close unused Bases tabs** - Each open Base uses memory for indexing
+
+5. **Enable Quantum Search** (see above)
+
+## What's Next?
+
+Now that you understand the basics, explore specific features:
+
+- **[Views](/features/bases/views)** - Learn about Table, Card, Gallery, Kanban, and Calendar views
+- **[Properties](/features/bases/properties)** - Deep dive into all 8 property types and advanced features
+- **[Filtering](/features/bases/filtering)** - Master advanced filtering and saved queries
+- **[MCP Integration](/features/bases/mcp-integration)** - Connect AI assistants to your Bases
+- **[Examples](/features/bases/examples)** - Real-world use cases and best practices
+
+## Learn More
+
+- Use [Templates](/features/templates) for Base entry templates
+- Integrate with [Tasks](/features/tasks) for task management
+- Explore [Search](/features/search) for Base queries
+- See [Developer Guide](/developers) for Base API

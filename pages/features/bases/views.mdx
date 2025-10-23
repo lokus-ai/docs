@@ -1,0 +1,399 @@
+---
+title: "Base Views - Table, Card, Gallery & More - Lokus Documentation"
+description: "Explore all Base view types in Lokus: Table, Card, Gallery, List, Calendar, and Kanban. Learn how to visualize your data effectively."
+keywords: [lokus, bases, views, table view, card view, gallery, kanban, calendar, database views]
+---
+
+# Base Views
+
+Bases in Lokus support multiple view types to visualize your data in different ways. Each view type is optimized for specific use cases, from spreadsheet-style tables to visual galleries and workflow boards.
+
+> **📚 Prerequisites:** This guide assumes you've read the [Bases Overview](/features/bases/overview). New to Bases? Start there first!
+
+## Table View
+
+The Table View provides a spreadsheet-like interface for viewing and editing your data.
+
+![Database Table View with Properties](/placeholder.svg)
+
+### Features
+
+- **Sortable columns** - Click headers to sort ascending/descending
+- **Resizable columns** - Drag column borders to adjust width
+- **Freeze columns** - Lock columns in place while scrolling
+- **Cell editing** - Click any cell to edit inline
+- **Row selection** - Select single or multiple rows
+- **Column hiding** - Hide columns you don't need
+- **Column reordering** - Drag column headers to reorder
+
+### Table Display Example
+
+```
+| Title          | Status | Due Date   | Priority | Assignee |
+|----------------|--------|------------|----------|----------|
+| Design mockups | Doing  | 2024-03-20 | High     | Sarah    |
+| Write tests    | Todo   | 2024-03-22 | Medium   | John     |
+| Deploy feature | Todo   | 2024-03-25 | High     | Mike     |
+```
+
+### Interactions
+
+- **Click cell to edit** - Opens appropriate editor (text, dropdown, date picker, etc.)
+- **Drag column border** - Resize columns to fit content
+- **Click header** - Sort by that column (click again to reverse)
+- **Right-click header** - Access column options (hide, freeze, properties)
+
+### Best For
+
+- Detailed data entry and editing
+- Comparing multiple properties side-by-side
+- Bulk data operations
+- Spreadsheet-style workflows
+- Financial tracking or budgeting
+
+> **💡 Tip:** Use `Cmd/Ctrl + Click` on multiple column headers to sort by multiple properties simultaneously!
+
+## Card View
+
+Visual card-based layout for a more graphical representation of your data.
+
+### Features
+
+- **Customizable card size** - Small, medium, large, or custom
+- **Image previews** - Display cover images on cards
+- **Property display control** - Choose which properties to show
+- **Multi-column layout** - Adjust number of columns (2-6)
+- **Drag to reorder** - Manually reorder cards
+
+### Card Elements
+
+Each card can display:
+- **Cover image** (optional) - From image property
+- **Title** - Primary identifier
+- **Selected properties** - Up to 6 properties
+- **Tags/labels** - Visual color-coded tags
+- **Preview text** - First few lines of note content
+
+### Configuration
+
+```yaml
+card_view:
+  card_size: medium
+  columns: 3
+  show_cover: true
+  visible_properties:
+    - status
+    - priority
+    - due_date
+  show_preview: true
+  preview_lines: 2
+```
+
+### Use Cases
+
+- **Project boards** - Visual project overview
+- **Product catalogs** - E-commerce style displays
+- **Gallery views** - Image-heavy content
+- **Contact cards** - Visual contact management
+- **Portfolio items** - Design work or creative projects
+
+> **💡 Tip:** Card view works great with the `gallery` property type for displaying images!
+
+## Gallery View
+
+Image-focused view optimized for visual content.
+
+![Database Views - Card, Gallery, and Calendar](/placeholder.svg)
+
+### Features
+
+- **Large image thumbnails** - Prominent image display
+- **Hover for details** - Show metadata on hover
+- **Lightbox on click** - Full-screen image viewer
+- **Adjustable image size** - Control thumbnail dimensions
+- **Grid or masonry layout** - Choose layout style
+
+### Display Options
+
+```yaml
+gallery_view:
+  image_property: cover_image
+  aspect_ratio: square  # square, 16:9, 4:3, original
+  images_per_row: 4
+  show_captions: true
+  show_metadata: true
+  layout: grid  # grid or masonry
+```
+
+**Aspect Ratio Options:**
+- **square** - 1:1 ratio, uniform grid
+- **16:9** - Widescreen format
+- **4:3** - Traditional photo ratio
+- **original** - Preserve original dimensions
+
+### Best For
+
+- **Photo collections** - Photography portfolios
+- **Design portfolios** - Showcase creative work
+- **Product galleries** - E-commerce products
+- **Visual research** - Moodboards and inspiration
+- **Real estate listings** - Property photos
+
+> **⚠️ Warning:** Gallery view performs best with 100-200 images. For larger collections, use filters to show subsets.
+
+## List View
+
+Compact, information-dense list display with hierarchical grouping.
+
+### Features
+
+- **Dense information display** - More entries visible at once
+- **Hierarchical grouping** - Group by any property
+- **Expandable rows** - Click to see full details
+- **Quick actions** - Inline action buttons
+- **Keyboard navigation** - Arrow keys to navigate
+
+### List Configuration
+
+```yaml
+list_view:
+  primary_field: title
+  secondary_field: status
+  tertiary_field: due_date
+  show_icon: true
+  show_thumbnail: true
+  compact_mode: false
+```
+
+**Field Hierarchy:**
+- **Primary field** - Main title (bold, large)
+- **Secondary field** - Subtitle (medium, gray)
+- **Tertiary field** - Metadata (small, light gray)
+- **Icon/thumbnail** - Optional visual identifier
+- **Action buttons** - Quick access buttons
+
+### Grouping
+
+```
+Group by: Status
+
+Backlog (5 items)
+├─ Task A - Due tomorrow
+├─ Task B - Due in 3 days
+└─ Task C - No due date
+
+In Progress (3 items)
+├─ Task D - Due today ⚠️
+└─ Task E - Due next week
+
+Done (12 items) [collapsed]
+```
+
+### Best For
+
+- **Task lists** - GTD-style task management
+- **File browsers** - Document organization
+- **Email-style layouts** - Message lists
+- **Hierarchical data** - Nested structures
+- **Quick scanning** - When you need to see many items
+
+## Calendar View
+
+Time-based visualization for date-centric data.
+
+### Features
+
+- **Month/week/day views** - Multiple time scales
+- **Drag to reschedule** - Drag events to new dates
+- **Multi-day events** - Events spanning multiple days
+- **Color coding** - Color by property values
+- **Event popups** - Click for full details
+
+### Calendar Properties
+
+**Required:**
+- **Date field** - The date to display events on
+
+**Optional:**
+- **End date field** - For multi-day events
+- **All-day toggle** - Mark events as all-day
+- **Color property** - Property to color-code by
+- **Display properties** - Properties shown in event
+
+### Configuration
+
+```yaml
+calendar_view:
+  date_field: due_date
+  end_date_field: completion_date
+  color_by: status
+  show_time: true
+  first_day_of_week: monday
+  visible_properties:
+    - title
+    - assignee
+    - priority
+```
+
+### Use Cases
+
+- **Event planning** - Conferences, weddings, parties
+- **Content calendar** - Blog posts, social media
+- **Project timeline** - Deliverables and milestones
+- **Meeting schedule** - Team calendar
+- **Editorial calendar** - Publishing schedule
+
+> **💡 Tip:** Use color-coding by status or priority to quickly identify important events!
+
+## Kanban View
+
+Workflow visualization with draggable cards across columns.
+
+### Features
+
+- **Customizable columns** - Define your own workflow stages
+- **Drag between columns** - Move cards to update status
+- **WIP limits** - Set work-in-progress limits per column
+- **Swim lanes** - Group cards horizontally
+- **Card customization** - Choose what properties to display
+
+### Kanban Configuration
+
+```yaml
+kanban_view:
+  column_property: status
+  column_order:
+    - Backlog
+    - Todo
+    - Doing
+    - Review
+    - Done
+  wip_limits:
+    Doing: 3
+    Review: 2
+  swimlane_property: priority
+  card_properties:
+    - assignee
+    - due_date
+```
+
+### Example Layout
+
+```
+Backlog     Todo        Doing       Review      Done
+-------     ----        -----       ------      ----
+Task A      Task B      Task C      Task D      Task E
+Task F      Task G      Task H      Task I      Task J
+                        Task K
+
+                        [3/3 WIP]   [1/2 WIP]
+```
+
+### WIP Limits
+
+Work-in-progress limits help prevent bottlenecks:
+
+- **Set per column** - Different limits for each stage
+- **Visual warnings** - Column highlights when at/over limit
+- **Enforce limits** - Optionally block dragging when at limit
+
+```yaml
+wip_limits:
+  Doing: 3      # Max 3 items in Doing
+  Review: 2     # Max 2 items in Review
+```
+
+### Swim Lanes
+
+Group cards horizontally by another property:
+
+```
+High Priority
+─────────────
+Backlog | Todo | Doing | Done
+Task A  | Task B| Task C| Task D
+
+Medium Priority
+───────────────
+Backlog | Todo | Doing | Done
+Task E  | Task F|      | Task G
+```
+
+### Best For
+
+- **Agile workflows** - Sprint boards, scrum
+- **Software development** - Bug tracking, feature development
+- **Sales pipelines** - Lead progression
+- **Hiring workflows** - Candidate tracking
+- **Content production** - Article workflow
+
+## Switching Between Views
+
+### View Switcher
+
+Each Base can have multiple saved views:
+
+1. Click the **View dropdown** in the top toolbar
+2. Select a different view type
+3. Views remember their configuration independently
+
+### Creating New Views
+
+1. Click **"+ New View"** in the view switcher
+2. Choose view type
+3. Name your view (e.g., "Active Projects", "This Week")
+4. Configure [filters](/features/bases/filtering), sorting, and display options
+5. Save
+
+### Managing Views
+
+- **Rename view** - Right-click → Rename
+- **Duplicate view** - Right-click → Duplicate
+- **Delete view** - Right-click → Delete (requires confirmation)
+- **Set default** - Right-click → Set as Default
+
+> **💡 Tip:** Create multiple views for different workflows! For example, a "Planning" table view and an "Execution" kanban view for the same data.
+
+## View-Specific Tips
+
+### Table View Tips
+
+- Use **column freeze** for important columns like "Title"
+- **Hide columns** you rarely use to reduce clutter
+- **Multi-sort** by holding Cmd/Ctrl while clicking headers
+- Use **filters** to focus on specific subsets
+
+### Card View Tips
+
+- Set **cover images** for visual appeal
+- Limit **visible properties** to 4-5 for cleaner cards
+- Use **tags** for quick visual categorization
+- Adjust **card size** based on content density
+
+### Gallery View Tips
+
+- Use **square aspect ratio** for uniform grids
+- Enable **captions** for context
+- Use **masonry layout** for varying image sizes
+- Set **images per row** based on screen size (3-5 typical)
+
+### Calendar View Tips
+
+- Use **week view** for detailed planning
+- **Color-code by status** for quick status overview
+- Enable **drag-to-reschedule** for easy updates
+- Use **filters** to show only relevant events
+
+### Kanban View Tips
+
+- Set **realistic WIP limits** to prevent overload
+- Use **swim lanes** for prioritization
+- **Color-code cards** by priority or type
+- Keep **column names short** for clarity
+
+## What's Next?
+
+- **[Properties](/features/bases/properties)** - Learn about all property types and configuration
+- **[Filtering](/features/bases/filtering)** - Master filtering to focus on relevant data
+- **[Overview](/features/bases/overview)** - Back to Bases overview
+- **[Examples](/features/bases/examples)** - See real-world Base configurations

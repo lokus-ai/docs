@@ -1,8 +1,14 @@
 export default {
-  "index": "Introduction",
+  "index": "Home",
   "getting-started": "Getting Started",
   "features": "Features",
-  "developers": "Developer Guide",
-  "reference": "API Reference",
-  "advanced": "Advanced"
+  "tutorials": "Tutorials",
+  "examples": "Examples",
+  "developers": "Developers",
+  "advanced": "Advanced",
+  "reference": "Reference",
+  "releases": "Releases",
+  "graph-demo": "Graph Demo",
+  "comparison": "Comparison",
+  "faq": "FAQ"
 }

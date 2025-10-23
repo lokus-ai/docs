@@ -1,0 +1,823 @@
+---
+title: "Settings & Configuration - Complete Guide"
+description: "Comprehensive settings guide for Lokus: configure general preferences, editor settings, appearance themes, file management, plugins, privacy, performance optimization, and advanced options. Master per-workspace vs global settings and configuration file formats."
+keywords: "settings, configuration, preferences, editor settings, appearance, themes, performance, privacy, plugins, workspace settings, global settings, config file, customization, options"
+author: "Lokus Documentation Team"
+lastUpdated: "2025-01-23"
+version: "1.3.1"
+category: "features"
+tags: ["settings", "configuration", "preferences", "customization"]
+---
+
+# Settings & Configuration
+
+Configure Lokus to match your workflow perfectly. This comprehensive guide covers all settings categories, from basic preferences to advanced configuration options.
+
+**Version:** 1.3.1 | **Access:** `Cmd/Ctrl + ,` | **Categories:** 10+
+
+## Opening Settings
+
+### Quick Access
+```
+Windows/Linux: Ctrl + ,
+macOS: Cmd + ,
+```
+
+### Alternative Methods
+```
+1. Command Palette (Cmd+K) → "Preferences"
+2. Menu Bar → Lokus → Preferences
+3. File tree → Right-click → Preferences
+```
+
+## Settings Categories
+
+### General Settings
+
+#### Application Behavior
+
+**Language & Region**
+```json
+{
+  "general": {
+    "language": "en-US",
+    "dateFormat": "YYYY-MM-DD",
+    "timeFormat": "24h",
+    "firstDayOfWeek": "monday",
+    "timezone": "auto"
+  }
+}
+```
+
+**Startup Behavior**
+```json
+{
+  "startup": {
+    "openLastWorkspace": true,
+    "restoreSession": true,
+    "checkForUpdates": true,
+    "showWhatsNew": true,
+    "openLastFile": true
+  }
+}
+```
+
+**Window Behavior**
+```json
+{
+  "window": {
+    "nativeTitleBar": true,
+    "closeToTray": false,
+    "minimizeToTray": false,
+    "confirmBeforeQuit": true,
+    "rememberWindowSize": true,
+    "rememberWindowPosition": true
+  }
+}
+```
+
+### Editor Settings
+
+#### Font Configuration
+
+```json
+{
+  "editor": {
+    "font": {
+      "family": "Inter, system-ui, sans-serif",
+      "size": 16,
+      "lineHeight": 1.7,
+      "letterSpacing": 0.003,
+      "weight": 400,
+      "monoFamily": "JetBrains Mono, Fira Code, monospace",
+      "monoSize": 14
+    }
+  }
+}
+```
+
+**Available Font Options:**
+- System fonts: `Inter`, `Roboto`, `San Francisco`, `Segoe UI`
+- Monospace: `JetBrains Mono`, `Fira Code`, `Source Code Pro`
+- Serif: `Georgia`, `Times New Roman`, `Merriweather`
+
+#### Typography
+
+```json
+{
+  "typography": {
+    "h1Size": 2.0,
+    "h2Size": 1.6,
+    "h3Size": 1.3,
+    "h4Size": 1.15,
+    "h5Size": 1.0,
+    "h6Size": 0.9,
+    "paragraphSpacing": 1.5,
+    "headingColor": "inherit",
+    "linkColor": "rgb(var(--accent))",
+    "codeBlockTheme": "github-dark"
+  }
+}
+```
+
+#### Editor Behavior
+
+```json
+{
+  "behavior": {
+    "autoPairBrackets": true,
+    "autoPairQuotes": true,
+    "smartQuotes": false,
+    "autoIndent": true,
+    "wordWrap": true,
+    "showLineNumbers": false,
+    "showInvisibles": false,
+    "highlightActiveLine": true,
+    "cursorStyle": "line",
+    "cursorBlinking": "blink",
+    "scrollBeyondLastLine": true,
+    "smoothScrolling": true
+  }
+}
+```
+
+#### Editor Modes
+
+```json
+{
+  "modes": {
+    "default": "editing",
+    "vimMode": false,
+    "emacsMode": false,
+    "focusMode": false,
+    "typewriterMode": false,
+    "zenMode": false
+  }
+}
+```
+
+### Appearance Settings
+
+#### Theme Configuration
+
+```json
+{
+  "appearance": {
+    "theme": "dark",
+    "accentColor": "#3b82f6",
+    "customTheme": null,
+    "fontSmoothing": "auto",
+    "reducedMotion": false,
+    "highContrast": false
+  }
+}
+```
+
+**Available Themes:**
+- Light: `light`, `sepia`, `solarized-light`
+- Dark: `dark`, `dracula`, `nord`, `monokai`, `github-dark`
+- High Contrast: `high-contrast-light`, `high-contrast-dark`
+
+#### UI Customization
+
+```json
+{
+  "ui": {
+    "sidebarWidth": 280,
+    "rightSidebarWidth": 280,
+    "tabBarVisible": true,
+    "statusBarVisible": true,
+    "breadcrumbsVisible": true,
+    "minimapVisible": false,
+    "compactMode": false,
+    "iconTheme": "vscode",
+    "fileTreeIndent": 20
+  }
+}
+```
+
+#### Color Overrides
+
+```json
+{
+  "colors": {
+    "--bg": "#1e1e1e",
+    "--fg": "#d4d4d4",
+    "--accent": "#3b82f6",
+    "--border": "#333333",
+    "--hover": "#2a2a2a",
+    "--selection": "#264f78"
+  }
+}
+```
+
+### File & Links Settings
+
+#### File Management
+
+```json
+{
+  "files": {
+    "defaultLocation": "notes/",
+    "attachmentsFolder": "attachments/",
+    "templatesFolder": "templates/",
+    "automaticFolderCreation": true,
+    "confirmDelete": true,
+    "moveToTrash": true,
+    "revealNewFiles": true,
+    "defaultFileTemplate": "# {{title}}\n\n{{date}}\n\n"
+  }
+}
+```
+
+#### Auto-Save Configuration
+
+```json
+{
+  "autoSave": {
+    "enabled": true,
+    "interval": 30,
+    "onFocusLoss": true,
+    "onWindowClose": true,
+    "showIndicator": true
+  }
+}
+```
+
+#### Link Behavior
+
+```json
+{
+  "links": {
+    "wikiLinkFormat": "shortest",
+    "updateLinksOnMove": true,
+    "updateLinksOnRename": true,
+    "confirmLinkUpdates": false,
+    "openInNewTab": false,
+    "useRelativePaths": false,
+    "detectBrokenLinks": true
+  }
+}
+```
+
+**WikiLink Formats:**
+- `shortest`: `[[note]]`
+- `absolute`: `[[/folder/note]]`
+- `relative`: `[[../folder/note]]`
+- `title-only`: `[[note|Title]]`
+
+#### Image Handling
+
+```json
+{
+  "images": {
+    "maxWidth": 1920,
+    "maxHeight": 1080,
+    "quality": 85,
+    "format": "webp",
+    "lazyLoading": true,
+    "autoCompress": true,
+    "compressionThreshold": 500
+  }
+}
+```
+
+### Plugin Settings
+
+#### Plugin Management
+
+```json
+{
+  "plugins": {
+    "enabled": true,
+    "autoUpdate": false,
+    "checkCompatibility": true,
+    "marketplace": "https://plugins.lokus.app",
+    "allowThirdParty": true,
+    "sandboxMode": true,
+    "pluginsPath": "~/.lokus/plugins/"
+  }
+}
+```
+
+#### Installed Plugins
+
+Configure individual plugins:
+
+```json
+{
+  "plugins": {
+    "ai-assistant": {
+      "enabled": true,
+      "apiKey": "***",
+      "model": "gpt-4",
+      "temperature": 0.7
+    },
+    "spaced-repetition": {
+      "enabled": true,
+      "dailyLimit": 20,
+      "algorithm": "sm2"
+    },
+    "gmail-integration": {
+      "enabled": true,
+      "autoSync": true,
+      "syncInterval": 300
+    }
+  }
+}
+```
+
+### Privacy Settings
+
+#### Data Collection
+
+```json
+{
+  "privacy": {
+    "telemetry": false,
+    "crashReports": true,
+    "analytics": false,
+    "improvementProgram": false,
+    "shareUsageData": false
+  }
+}
+```
+
+#### Encryption
+
+```json
+{
+  "encryption": {
+    "enabled": false,
+    "algorithm": "AES-256",
+    "encryptAttachments": true,
+    "encryptMetadata": false,
+    "autoLockTimeout": 300,
+    "requirePasswordOnLaunch": false
+  }
+}
+```
+
+#### Cloud Sync Privacy
+
+```json
+{
+  "sync": {
+    "endToEndEncryption": true,
+    "encryptionKey": "auto-generated",
+    "shareAnalytics": false,
+    "minimizeMetadata": true
+  }
+}
+```
+
+### Performance Settings
+
+#### Optimization
+
+```json
+{
+  "performance": {
+    "hardwareAcceleration": true,
+    "gpu": "auto",
+    "maxMemoryUsage": 2048,
+    "lazyLoading": true,
+    "virtualization": true,
+    "indexingThreads": 4,
+    "renderingEngine": "canvas"
+  }
+}
+```
+
+#### Caching
+
+```json
+{
+  "cache": {
+    "enabled": true,
+    "maxSize": 500,
+    "clearOnQuit": false,
+    "imageCacheSize": 200,
+    "preloadImages": true
+  }
+}
+```
+
+#### Index Settings
+
+```json
+{
+  "indexing": {
+    "enabled": true,
+    "realTime": true,
+    "batchSize": 100,
+    "throttle": 200,
+    "excludePatterns": ["*.tmp", ".*", "node_modules/"]
+  }
+}
+```
+
+### Advanced Settings
+
+#### Developer Options
+
+```json
+{
+  "advanced": {
+    "devTools": false,
+    "debugMode": false,
+    "verboseLogging": false,
+    "experimentalFeatures": false,
+    "betaUpdates": false,
+    "customCSS": "",
+    "customJS": ""
+  }
+}
+```
+
+#### Network Settings
+
+```json
+{
+  "network": {
+    "proxy": null,
+    "timeout": 30000,
+    "retries": 3,
+    "offline Mode": false,
+    "syncOnStartup": true,
+    "backgroundSync": true
+  }
+}
+```
+
+#### Security
+
+```json
+{
+  "security": {
+    "sandboxPlugins": true,
+    "blockExternalScripts": true,
+    "validateThemes": true,
+    "allowedDomains": ["*.lokus.app"],
+    "contentSecurityPolicy": "strict"
+  }
+}
+```
+
+## Workspace vs Global Settings
+
+### Global Settings
+
+Apply to all workspaces:
+
+```
+Location: ~/.lokus/settings.json
+
+Includes:
+- Application preferences
+- Appearance theme
+- Keyboard shortcuts
+- Plugin configurations
+- Privacy settings
+```
+
+### Workspace Settings
+
+Specific to current workspace:
+
+```
+Location: <workspace>/.lokus/workspace.json
+
+Includes:
+- File & folder preferences
+- Editor settings
+- Custom templates
+- Local plugins
+- Workspace layout
+```
+
+### Priority Order
+
+```
+1. Workspace settings (highest priority)
+2. User settings
+3. Default settings (fallback)
+```
+
+### Syncing Settings
+
+```json
+{
+  "sync": {
+    "settingsSync": true,
+    "syncGlobalSettings": true,
+    "syncWorkspaceSettings": false,
+    "syncPlugins": true,
+    "syncThemes": true,
+    "syncKeyboardShortcuts": true
+  }
+}
+```
+
+## Configuration Files
+
+### Main Settings File
+
+`~/.lokus/settings.json`
+
+```json
+{
+  "version": "1.3.1",
+  "general": { /* general settings */ },
+  "editor": { /* editor settings */ },
+  "appearance": { /* theme settings */ },
+  "files": { /* file management */ },
+  "plugins": { /* plugin config */ },
+  "privacy": { /* privacy options */ },
+  "performance": { /* performance tuning */ },
+  "advanced": { /* advanced options */ }
+}
+```
+
+### Workspace Config
+
+`<workspace>/.lokus/workspace.json`
+
+```json
+{
+  "name": "My Workspace",
+  "path": "/Users/username/Notes",
+  "created": "2025-01-01T00:00:00Z",
+  "lastOpened": "2025-01-23T12:00:00Z",
+  "settings": {
+    "editor": { /* workspace-specific editor settings */ },
+    "files": { /* local file preferences */ }
+  },
+  "layout": {
+    "sidebar": { "visible": true, "width": 280 },
+    "rightSidebar": { "visible": true, "width": 280 },
+    "splitView": { "enabled": false }
+  }
+}
+```
+
+### Keyboard Shortcuts
+
+`~/.lokus/keybindings.json`
+
+```json
+{
+  "keybindings": [
+    {
+      "command": "new-file",
+      "key": "ctrl+n",
+      "mac": "cmd+n"
+    },
+    {
+      "command": "save-file",
+      "key": "ctrl+s",
+      "mac": "cmd+s",
+      "when": "editorFocus"
+    }
+  ]
+}
+```
+
+### Custom Themes
+
+`~/.lokus/themes/my-theme.json`
+
+```json
+{
+  "name": "My Custom Theme",
+  "type": "dark",
+  "colors": {
+    "--bg": "#1a1a1a",
+    "--fg": "#e0e0e0",
+    "--accent": "#ff6b6b",
+    "--border": "#333333"
+  },
+  "editor": {
+    "background": "#1a1a1a",
+    "foreground": "#e0e0e0",
+    "selection": "#3d3d3d"
+  }
+}
+```
+
+## Import/Export Settings
+
+### Exporting Settings
+
+```
+1. Open Preferences (Cmd+,)
+2. Go to "General" → "Import/Export"
+3. Click "Export Settings"
+4. Choose export format:
+   - JSON (full settings)
+   - Subset (selected categories)
+5. Save to file
+```
+
+### Importing Settings
+
+```
+1. Open Preferences
+2. Go to "Import/Export"
+3. Click "Import Settings"
+4. Select settings file
+5. Choose import mode:
+   - Replace all
+   - Merge (keep conflicts)
+   - Preview changes
+6. Confirm import
+```
+
+### Sharing Settings
+
+```
+Share with team:
+1. Export settings as JSON
+2. Commit to git repo
+3. Team members import
+4. Or: Use settings sync URL
+```
+
+## Settings Presets
+
+### Preset Configurations
+
+**Minimal Writer:**
+```json
+{
+  "preset": "minimal-writer",
+  "ui": { "compactMode": true, "minimapVisible": false },
+  "editor": { "fontSize": 18, "lineHeight": 2.0 },
+  "appearance": { "theme": "sepia", "zenMode": true }
+}
+```
+
+**Power User:**
+```json
+{
+  "preset": "power-user",
+  "ui": { "compactMode": false, "minimapVisible": true },
+  "editor": { "vimMode": true, "showLineNumbers": true },
+  "performance": { "virtualization": true }
+}
+```
+
+**Student:**
+```json
+{
+  "preset": "student",
+  "plugins": ["spaced-repetition", "pomodoro"],
+  "files": { "defaultLocation": "courses/" },
+  "editor": { "fontSize": 16 }
+}
+```
+
+### Applying Presets
+
+```
+1. Preferences → General → Presets
+2. Browse available presets
+3. Preview changes
+4. Click "Apply Preset"
+5. Customize as needed
+```
+
+## Backup & Restore
+
+### Auto-Backup
+
+```json
+{
+  "backup": {
+    "enabled": true,
+    "interval": 86400,
+    "location": "~/.lokus/backups/",
+    "keepVersions": 7,
+    "includePlugins": true,
+    "includeThemes": true
+  }
+}
+```
+
+### Manual Backup
+
+```
+1. Preferences → Advanced → Backup
+2. Click "Create Backup Now"
+3. Choose backup location
+4. Backup includes:
+   - All settings
+   - Keyboard shortcuts
+   - Themes
+   - Plugin configurations
+```
+
+### Restoring from Backup
+
+```
+1. Preferences → Advanced → Restore
+2. Select backup file
+3. Preview changes
+4. Click "Restore"
+5. Application restarts with restored settings
+```
+
+## Troubleshooting
+
+### Settings Not Saving
+
+```
+1. Check file permissions
+2. Verify settings.json is writable
+3. Look for syntax errors
+4. Check disk space
+5. Restart application
+```
+
+### Reset to Defaults
+
+```
+1. Preferences → Advanced
+2. Click "Reset All Settings"
+3. Confirm reset
+4. Application restarts
+5. All settings restored to defaults
+```
+
+### Corrupted Settings
+
+```
+1. Quit Lokus
+2. Rename settings.json to settings.json.backup
+3. Restart Lokus (generates new settings)
+4. Import backup if needed
+```
+
+### Performance Issues
+
+```
+Check these settings:
+- Disable hardware acceleration
+- Reduce cache size
+- Disable unnecessary plugins
+- Lower max memory usage
+- Disable animations
+```
+
+## Related Documentation
+
+- [Keyboard Shortcuts](/features/keyboard-shortcuts) - Customize shortcuts
+- [Themes](/features/themes) - Appearance customization
+- [Plugins](/developers/plugins) - Plugin configuration
+- [Performance](/advanced/performance) - Optimization guide
+
+## Best Practices
+
+### Recommended Settings
+
+**For Best Performance:**
+```
+- Hardware acceleration: ON
+- Lazy loading: ON
+- Virtualization: ON
+- Cache size: 500MB
+- Index in background: ON
+```
+
+**For Privacy:**
+```
+- Telemetry: OFF
+- Analytics: OFF
+- Crash reports: Optional
+- End-to-end encryption: ON
+- Minimize metadata: ON
+```
+
+**For Collaboration:**
+```
+- Settings sync: ON
+- Workspace settings: Separate
+- Plugin sync: ON
+- Theme sync: ON
+```
+
+### Settings Organization
+
+```
+1. Start with preset closest to needs
+2. Customize editor first
+3. Configure appearance
+4. Set up file management
+5. Install/configure plugins
+6. Fine-tune performance
+7. Export backup
+```
+
+---
+
+**Last Updated:** January 23, 2025 | **Version:** 1.3.1 | **Settings:** 200+

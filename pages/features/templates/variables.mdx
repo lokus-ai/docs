@@ -1,0 +1,634 @@
+---
+title: "Template Variables - Lokus Documentation"
+description: "Master template variables in Lokus with dynamic content generation, custom prompts, date formats, conditional logic, and advanced variable types for powerful automation."
+keywords: [lokus, template variables, dynamic content, custom variables, date variables, conditional logic, template syntax]
+---
+
+# Template Variables
+
+Template variables are the power behind dynamic content in Lokus. They enable automatic date insertion, user prompts, conditional logic, and much more.
+
+## Basic Variables
+
+Use these core variables in any template:
+
+### Standard Variables
+
+```markdown
+---
+title: {{title}}
+date: {{date}}
+author: {{author}}
+---
+
+# {{title}}
+
+Created: {{date}}
+By: {{author}}
+```
+
+**Available Variables:**
+- `{{title}}` - Note title with automatic capitalization
+- `{{date}}` - Current date (YYYY-MM-DD)
+- `{{time}}` - Current time (HH:MM)
+- `{{datetime}}` - Combined date and time
+- `{{author}}` - Current user from workspace settings
+- `{{workspace}}` - Workspace name
+- `{{folder}}` - Current folder path
+- `{{uuid}}` - Unique identifier for tracking
+
+### Variable Syntax
+
+Variables follow a simple `{{variable_name}}` syntax:
+
+```markdown
+# Meeting with {{client_name}}
+
+**Date:** {{date}}
+**Time:** {{time}}
+**Location:** {{location}}
+
+Notes from today's meeting...
+```
+
+When you create a note from this template, Lokus will prompt you for `client_name` and `location`, while automatically filling in `date` and `time`.
+
+## Date Variables
+
+### Current Date
+
+The `{{date}}` variable inserts the current date:
+
+```markdown
+{{date}}           → 2025-10-23
+{{date:YYYY-MM-DD}} → 2025-10-23
+{{date:MMM D, YYYY}} → Oct 23, 2025
+{{date:DD/MM/YYYY}} → 23/10/2025
+```
+
+### Date Formats
+
+Customize date format using format specifiers:
+
+```markdown
+{{date:YYYY}}        → 2025
+{{date:MMMM}}        → October
+{{date:dddd}}        → Thursday
+{{date:MMM D, YYYY}} → Oct 23, 2025
+{{date:DD-MM-YY}}    → 23-10-25
+```
+
+**Format Tokens:**
+- `YYYY` - 4-digit year (2025)
+- `YY` - 2-digit year (25)
+- `MMMM` - Full month (October)
+- `MMM` - Short month (Oct)
+- `MM` - Month number (10)
+- `DD` - Day with zero (23)
+- `D` - Day without zero (23)
+- `dddd` - Full day (Thursday)
+- `ddd` - Short day (Thu)
+
+### Relative Dates
+
+Add or subtract days from the current date:
+
+```markdown
+{{date+1}}    → Tomorrow
+{{date+7}}    → One week from now
+{{date+30}}   → One month from now
+{{date-1}}    → Yesterday
+{{date-7}}    → One week ago
+```
+
+**Practical Examples:**
+```markdown
+**Due Date:** {{date+7}}
+**Week Starting:** {{date}}
+**Week Ending:** {{date+6}}
+**Last Review:** {{date-30}}
+**Next Review:** {{date+30}}
+```
+
+### Named Date Variables
+
+Shortcuts for common dates:
+
+```markdown
+{{today}}       → Current date
+{{tomorrow}}    → Tomorrow's date
+{{yesterday}}   → Yesterday's date
+{{week-start}}  → Start of current week (Monday)
+{{week-end}}    → End of current week (Sunday)
+{{month-start}} → First day of current month
+{{month-end}}   → Last day of current month
+```
+
+## Time Variables
+
+### Current Time
+
+```markdown
+{{time}}         → 14:30
+{{time:HH:mm}}   → 14:30
+{{time:hh:mm A}} → 02:30 PM
+{{time:h:mm A}}  → 2:30 PM
+```
+
+**Format Tokens:**
+- `HH` - Hour 24-format (14)
+- `hh` - Hour 12-format (02)
+- `h` - Hour 12 without zero (2)
+- `mm` - Minutes (30)
+- `ss` - Seconds (45)
+- `A` - AM/PM
+
+### DateTime Combined
+
+```markdown
+{{datetime}}                    → 2025-10-23 14:30
+{{datetime:YYYY-MM-DD HH:mm}}   → 2025-10-23 14:30
+{{datetime:MMM D, YYYY h:mm A}} → Oct 23, 2025 2:30 PM
+```
+
+## Custom Variables
+
+### Prompt Variables
+
+Ask users for input when creating from template:
+
+```markdown
+{{prompt:variable_name}}
+{{prompt:project_name:Enter project name}}
+{{prompt:client:Who is the client?}}
+```
+
+**Example:**
+```markdown
+# {{prompt:project_name:Enter the project name}}
+
+**Client:** {{prompt:client_name}}
+**Budget:** ${{prompt:budget:Enter budget amount}}
+**Start Date:** {{date}}
+```
+
+When creating a note from this template, you'll see a dialog prompting for:
+1. Project name
+2. Client name
+3. Budget amount
+
+### Select Variables
+
+Dropdown menus for predefined options:
+
+```markdown
+{{select:status:active,planning,completed}}
+{{select:priority:low,medium,high,critical}}
+{{select:type:bug,feature,enhancement}}
+```
+
+**Example:**
+```markdown
+---
+status: {{select:status:draft,review,published}}
+priority: {{select:priority:low,medium,high}}
+---
+
+# {{title}}
+
+**Status:** {{status}}
+**Priority:** {{priority}}
+```
+
+### Multiline Variables
+
+Text areas for longer content:
+
+```markdown
+{{multiline:description}}
+{{multiline:notes:Enter detailed notes}}
+{{multiline:summary:Brief summary}}
+```
+
+**Example:**
+```markdown
+## Project Description
+
+{{multiline:description:Enter project description}}
+
+## Key Objectives
+
+{{multiline:objectives:List main objectives}}
+```
+
+### Checkbox Variables
+
+Boolean yes/no options:
+
+```markdown
+{{checkbox:urgent}}
+{{checkbox:requires_approval:Needs approval?}}
+{{checkbox:billable:Is this billable?}}
+```
+
+**Example:**
+```markdown
+**Urgent:** {{checkbox:urgent}}
+**Requires Approval:** {{checkbox:requires_approval}}
+
+{{#if urgent}}
+⚠️ **This is marked as urgent!**
+{{/if}}
+```
+
+### Number Variables
+
+Numeric input fields:
+
+```markdown
+{{number:budget}}
+{{number:hours:Estimated hours}}
+{{number:participants:Number of attendees}}
+```
+
+**Example:**
+```markdown
+**Budget:** ${{number:budget:Enter budget}}
+**Estimated Hours:** {{hours}}h
+**Team Size:** {{number:team_size}} people
+```
+
+## Conditional Logic
+
+### If Statements
+
+Show content based on variable values:
+
+```markdown
+{{#if variable_name}}
+This content shows if variable_name is set
+{{/if}}
+```
+
+**Example:**
+```markdown
+{{#if urgent}}
+## ⚠️ URGENT TASK
+
+This requires immediate attention!
+{{/if}}
+
+{{#if status == "completed"}}
+✅ This project is complete!
+{{/if}}
+```
+
+### If-Else Statements
+
+Alternative content based on conditions:
+
+```markdown
+{{#if status == "active"}}
+🟢 Project is active
+{{else}}
+🔴 Project is not active
+{{/if}}
+```
+
+**Example:**
+```markdown
+{{#if priority == "high"}}
+⚠️ High Priority Task
+{{else if priority == "medium"}}
+📋 Medium Priority Task
+{{else}}
+📝 Low Priority Task
+{{/if}}
+```
+
+### Unless Statements
+
+Show content when condition is false:
+
+```markdown
+{{#unless completed}}
+This task is still pending.
+{{/unless}}
+```
+
+**Example:**
+```markdown
+{{#unless approved}}
+⏳ **Waiting for approval**
+
+Please review and approve this document.
+{{/unless}}
+```
+
+## Advanced Variables
+
+### Loops and Repeating
+
+Repeat sections multiple times:
+
+```markdown
+{{#repeat:3}}
+- [ ] Task {{index}}
+{{/repeat}}
+```
+
+**Output:**
+```markdown
+- [ ] Task 1
+- [ ] Task 2
+- [ ] Task 3
+```
+
+**For Loops:**
+```markdown
+{{#for item in items}}
+- {{item}}
+{{/for}}
+```
+
+### Variable Defaults
+
+Set fallback values:
+
+```markdown
+{{author || "Unknown"}}
+{{project_name || "Untitled Project"}}
+{{budget || "Not specified"}}
+```
+
+### Variable Transformations
+
+Modify variable output:
+
+```markdown
+{{title | uppercase}}
+{{title | lowercase}}
+{{title | capitalize}}
+{{title | kebab-case}}
+{{title | snake_case}}
+```
+
+**Example:**
+```markdown
+# {{title | uppercase}}
+
+Filename: {{title | kebab-case}}.md
+Variable: {{title | snake_case}}
+```
+
+## Template Frontmatter Variables
+
+### Setting Default Properties
+
+Define template metadata and defaults:
+
+```yaml
+---
+template: meeting-notes
+tags: [meeting, {{team}}]
+status: {{select:status:draft,active,completed}}
+attendees: {{prompt:attendees:Enter attendees}}
+date: {{date}}
+priority: {{select:priority:low,medium,high}}
+---
+```
+
+### Variable Documentation
+
+Document variables in frontmatter:
+
+```yaml
+---
+template: project-plan
+template_version: 1.0
+template_description: Comprehensive project planning template
+
+# Define expected variables
+variables:
+  - name: project_name
+    description: Name of the project
+    type: text
+    required: true
+  - name: project_lead
+    description: Project lead name
+    type: text
+    default: "{{author}}"
+  - name: status
+    description: Project status
+    type: select
+    options: [planning, active, on-hold, completed]
+    required: true
+  - name: budget
+    description: Project budget
+    type: number
+    required: false
+---
+```
+
+## Practical Examples
+
+### Meeting Notes with Dynamic Variables
+
+```markdown
+---
+template: meeting-notes
+date: {{date}}
+time: {{time}}
+attendees: {{prompt:attendees:Enter attendee names}}
+---
+
+# {{prompt:meeting_title:Meeting Title}}
+
+**Date:** {{date:MMMM D, YYYY}}
+**Time:** {{time:h:mm A}}
+**Attendees:** {{attendees}}
+**Location:** {{select:location:Office,Remote,Client Site}}
+
+## Agenda
+
+1. {{prompt:agenda_1:First agenda item}}
+2. {{prompt:agenda_2:Second agenda item}}
+3. AOB
+
+## Discussion
+
+{{multiline:discussion:Enter discussion notes}}
+
+## Action Items
+
+{{#repeat:3}}
+- [ ] {{prompt:action_{{index}}}} @{{prompt:assignee_{{index}}}} 📅 {{date+7}}
+{{/repeat}}
+
+## Next Meeting
+
+**Date:** {{prompt:next_meeting:Next meeting date}}
+```
+
+### Project Plan with Conditional Sections
+
+```markdown
+---
+template: project-plan
+project_name: {{prompt:project_name}}
+status: {{select:status:planning,active,on-hold,completed}}
+priority: {{select:priority:low,medium,high}}
+---
+
+# {{project_name}}
+
+{{#if priority == "high"}}
+⚠️ **HIGH PRIORITY PROJECT**
+{{/if}}
+
+**Project Lead:** {{prompt:lead}}
+**Start Date:** {{date}}
+**Target Completion:** {{prompt:target_date}}
+**Status:** {{status}}
+
+{{#if status == "planning"}}
+## Planning Phase
+
+- [ ] Define requirements
+- [ ] Create specifications
+- [ ] Get stakeholder approval
+{{/if}}
+
+{{#if status == "active"}}
+## Active Development
+
+**Current Sprint:** {{prompt:sprint}}
+**Progress:** {{number:progress:Progress percentage}}%
+{{/if}}
+
+## Timeline
+
+### Phase 1: Planning ({{date}} - {{date+14}})
+- [ ] Requirements gathering
+- [ ] Technical design
+
+### Phase 2: Execution ({{date+15}} - {{date+45}})
+- [ ] Development
+- [ ] Testing
+
+### Phase 3: Launch ({{date+46}} - {{date+60}})
+- [ ] Deployment
+- [ ] Documentation
+
+{{#unless budget}}
+⚠️ **Budget not specified**
+{{/unless}}
+```
+
+### Daily Note with Time-based Greetings
+
+```markdown
+---
+template: daily-note
+date: {{date}}
+---
+
+# {{date:dddd, MMMM D, YYYY}}
+
+{{#if time < 12}}
+☀️ Good morning! Let's make today productive.
+{{else if time < 18}}
+🌤️ Good afternoon! Keep up the great work.
+{{else}}
+🌙 Good evening! Time to reflect on the day.
+{{/if}}
+
+## Today's Focus
+
+**Top Priority:** {{prompt:top_priority}}
+
+## Schedule
+
+{{#repeat:8}}
+- {{time+index}}:00 - {{prompt:schedule_{{index}}}}
+{{/repeat}}
+
+## Tasks
+
+### Must Do
+- [ ] {{prompt:must_1}}
+- [ ] {{prompt:must_2}}
+
+### Should Do
+- [ ] {{prompt:should_1}}
+
+## Notes
+
+{{multiline:notes:Enter today's notes}}
+
+---
+
+**Links:** [[{{yesterday}}]] ← → [[{{tomorrow}}]]
+```
+
+## Best Practices
+
+### Variable Naming
+
+**Good practices:**
+- Use descriptive names: `{{project_name}}` not `{{pn}}`
+- Use underscores for multi-word: `{{client_name}}`
+- Be consistent across templates
+- Document complex variables
+
+**Examples:**
+```markdown
+✅ Good: {{project_name}}, {{start_date}}, {{team_lead}}
+❌ Bad: {{p}}, {{d1}}, {{tl}}
+```
+
+### Required vs Optional
+
+Mark required variables clearly:
+
+```yaml
+variables:
+  - name: project_name
+    required: true
+  - name: description
+    required: false
+    default: "No description provided"
+```
+
+### Variable Descriptions
+
+Provide helpful descriptions:
+
+```markdown
+{{prompt:project_name:Enter the official project name}}
+{{prompt:budget:Enter total budget in USD}}
+{{number:team_size:How many team members?}}
+```
+
+## Troubleshooting
+
+### Common Issues
+
+**Issue:** Variables not replacing
+**Solution:** Check syntax, ensure proper `{{}}` format, verify variable name spelling
+
+**Issue:** Prompt not appearing
+**Solution:** Verify `{{prompt:name}}` syntax, check for typos
+
+**Issue:** Date format not working
+**Solution:** Verify format string, use correct tokens (YYYY, MM, DD, etc.)
+
+**Issue:** Conditional not working
+**Solution:** Check operator syntax (`==`, `!=`), verify variable exists
+
+## Next Steps
+
+- **[Template Overview](/features/templates/overview)** - Learn the basics of templates
+- **[Template Types](/features/templates/types)** - Explore built-in template types
+- **[Creating Templates](/features/templates/creating)** - Build custom templates with variables
+- **[Editor Features](/features/editor)** - Master content editing

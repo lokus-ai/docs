@@ -1,0 +1,1329 @@
+---
+title: Your First Lokus Plugin - Plugin Development Tutorial
+description: Learn to build your first Lokus plugin from scratch. Complete step-by-step guide covering development environment setup, API usage, and plugin publishing.
+keywords: [lokus plugin development, plugin api, extend lokus, custom features, plugin tutorial, lokus extensions]
+---
+
+# Your First Lokus Plugin
+
+Learn how to extend Lokus by building your first plugin from scratch. This hands-on tutorial will take you from setup to publishing a working plugin.
+
+## What You'll Learn
+
+By the end of this tutorial, you'll be able to:
+- Set up a complete plugin development environment
+- Understand the Lokus plugin architecture
+- Use the Lokus API to interact with notes and workspaces
+- Create UI components for your plugin
+- Handle plugin settings and user preferences
+- Debug and test your plugin
+- Package and publish your plugin to the community
+- Follow best practices for plugin development
+
+## Prerequisites
+
+- Completed [Building Your First Workspace](/tutorials/first-workspace) or familiar with Lokus
+- JavaScript/TypeScript knowledge (intermediate level)
+- Node.js installed (v18 or higher)
+- Code editor (VS Code recommended)
+- Git installed
+- Terminal/command line familiarity
+- 60 minutes of focused time
+
+## Time Estimate
+
+**60 minutes** - Build and publish your first plugin
+
+---
+
+## Understanding Lokus Plugins
+
+Before diving into code, let's understand the plugin system.
+
+### What are Plugins?
+
+Lokus plugins are JavaScript/TypeScript modules that extend Lokus functionality. They can:
+
+- Add new commands and actions
+- Create custom views and panels
+- Modify the editor behavior
+- Add UI elements and buttons
+- Integrate external services
+- Process and transform notes
+- Add new search capabilities
+- Create custom workflows
+
+### Plugin Architecture
+
+Lokus uses a modular architecture:
+
+```
+Lokus Core
+    ↓
+Plugin API (Stable interface)
+    ↓
+Your Plugin
+    ↓
+User's Workspace
+```
+
+> **Note:** 
+**Info:** The Plugin API provides a stable interface that won't break between Lokus versions. Always use the API rather than accessing internals directly.
+
+
+### Types of Plugins
+
+**UI Plugins:**
+- Add buttons, panels, views
+- Example: Calendar view, Kanban board
+
+**Command Plugins:**
+- Add new commands to command palette
+- Example: Export to PDF, Bulk rename
+
+**Editor Plugins:**
+- Extend markdown editor
+- Example: Custom syntax highlighting, Auto-complete
+
+**Integration Plugins:**
+- Connect to external services
+- Example: Sync to cloud, Import from Notion
+
+**Processor Plugins:**
+- Transform notes and content
+- Example: Template engine, Link checker
+
+---
+
+## Step 1: Setting Up Your Development Environment
+
+Let's get your development environment ready.
+
+### 1.1 Install Required Tools
+
+Check your installations:
+
+```bash
+# Check Node.js version (need 18+)
+node --version
+
+# Check npm version
+npm --version
+
+# Check Git
+git --version
+```
+
+If missing, install from:
+- Node.js: [nodejs.org](https://nodejs.org)
+- Git: [git-scm.com](https://git-scm.com)
+
+### 1.2 Install Lokus Plugin CLI
+
+The Lokus CLI helps scaffold and manage plugins:
+
+```bash
+npm install -g lokus-plugin-cli
+```
+
+Verify installation:
+
+```bash
+lokus-plugin --version
+```
+
+### 1.3 Set Up VS Code (Recommended)
+
+Install VS Code extensions for better development experience:
+
+1. **TypeScript:** Built-in, enable if disabled
+2. **ESLint:** Code linting
+3. **Prettier:** Code formatting
+4. **Lokus Plugin Helper:** Syntax highlighting and autocomplete
+
+```bash
+# Install extensions via CLI
+code --install-extension dbaeumer.vscode-eslint
+code --install-extension esbenp.prettier-vscode
+code --install-extension lokus.plugin-helper
+```
+
+### 1.4 Enable Developer Mode in Lokus
+
+1. Open Lokus
+2. Go to Settings → Advanced
+3. Enable **"Developer Mode"**
+4. Enable **"Hot Reload"** (plugins reload on file changes)
+5. Note the **Plugin Development Folder** path
+
+
+> **Note:** 
+**Success:** Your development environment is ready! You can now create and test plugins with live reload.
+
+
+---
+
+## Step 2: Creating Your First Plugin
+
+We'll build a "Word Count Stats" plugin that shows detailed statistics about the current note.
+
+### 2.1 Scaffold the Plugin
+
+Create a new plugin:
+
+```bash
+# Navigate to your plugin development folder
+cd ~/LokusPlugins  # or your custom path
+
+# Create plugin
+lokus-plugin create word-count-stats
+
+# Follow the prompts:
+# Plugin name: Word Count Stats
+# Description: Display detailed word count and reading time statistics
+# Author: Your Name
+# License: MIT
+# Template: Basic UI Plugin
+```
+
+This creates the following structure:
+
+```
+word-count-stats/
+├── src/
+│   ├── main.ts           # Plugin entry point
+│   ├── settings.ts       # Plugin settings
+│   └── view.ts           # UI components
+├── styles/
+│   └── styles.css        # Plugin styles
+├── manifest.json         # Plugin metadata
+├── package.json          # Dependencies
+├── tsconfig.json         # TypeScript config
+├── .eslintrc.js          # Linting rules
+└── README.md             # Documentation
+```
+
+### 2.2 Understanding manifest.json
+
+Open `manifest.json`:
+
+```json
+{
+  "id": "word-count-stats",
+  "name": "Word Count Stats",
+  "version": "1.0.0",
+  "minLokusVersion": "2.0.0",
+  "description": "Display detailed word count and reading time statistics",
+  "author": "Your Name",
+  "authorUrl": "https://yourwebsite.com",
+  "isDesktopOnly": false,
+  "main": "main.js"
+}
+```
+
+Key fields:
+- **id:** Unique identifier (no spaces)
+- **minLokusVersion:** Minimum Lokus version required
+- **isDesktopOnly:** Set to true if plugin uses Node.js features
+- **main:** Entry point file
+
+### 2.3 Install Dependencies
+
+```bash
+cd word-count-stats
+npm install
+```
+
+This installs:
+- `@lokus/api` - Lokus API types and interfaces
+- Development dependencies (TypeScript, ESLint, etc.)
+
+> **Note:** 
+**Pro Tip:** Always use the `@lokus/api` package for type safety. It provides TypeScript definitions for the entire Lokus API.
+
+
+---
+
+## Step 3: Writing the Plugin Code
+
+Let's implement the word count functionality.
+
+### 3.1 Create the Main Plugin Class
+
+Edit `src/main.ts`:
+
+```typescript
+import { Plugin, MarkdownView } from '@lokus/api';
+import { WordCountStatsView, VIEW_TYPE_WORD_COUNT } from './view';
+import { WordCountSettingsTab } from './settings';
+
+export default class WordCountStatsPlugin extends Plugin {
+  async onload() {
+    console.log('Loading Word Count Stats plugin');
+
+    // Register the stats view
+    this.registerView(
+      VIEW_TYPE_WORD_COUNT,
+      (leaf) => new WordCountStatsView(leaf, this)
+    );
+
+    // Add command to open stats panel
+    this.addCommand({
+      id: 'open-word-count-stats',
+      name: 'Open Word Count Statistics',
+      callback: () => {
+        this.activateView();
+      }
+    });
+
+    // Add ribbon icon (left sidebar)
+    this.addRibbonIcon('bar-chart', 'Word Count Stats', () => {
+      this.activateView();
+    });
+
+    // Add status bar item
+    this.addStatusBarItem().setText('Ready');
+
+    // Register event: update on editor change
+    this.registerEvent(
+      this.app.workspace.on('editor-change', () => {
+        this.updateStatusBar();
+      })
+    );
+
+    // Register event: update on active leaf change
+    this.registerEvent(
+      this.app.workspace.on('active-leaf-change', () => {
+        this.updateStatusBar();
+      })
+    );
+
+    // Add settings tab
+    this.addSettingTab(new WordCountSettingsTab(this.app, this));
+
+    // Initial update
+    this.updateStatusBar();
+  }
+
+  async activateView() {
+    // Check if view is already open
+    const existing = this.app.workspace.getLeavesOfType(VIEW_TYPE_WORD_COUNT);
+
+    if (existing.length > 0) {
+      // If exists, reveal it
+      this.app.workspace.revealLeaf(existing[0]);
+      return;
+    }
+
+    // Create new view in right sidebar
+    const leaf = this.app.workspace.getRightLeaf(false);
+    await leaf.setViewState({
+      type: VIEW_TYPE_WORD_COUNT,
+      active: true
+    });
+
+    this.app.workspace.revealLeaf(leaf);
+  }
+
+  updateStatusBar() {
+    const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+
+    if (!view) {
+      this.statusBarItem?.setText('No note open');
+      return;
+    }
+
+    const editor = view.editor;
+    const content = editor.getValue();
+    const stats = this.calculateStats(content);
+
+    this.statusBarItem?.setText(
+      `${stats.words} words, ${stats.chars} chars`
+    );
+  }
+
+  calculateStats(text: string) {
+    // Remove markdown syntax for accurate counts
+    const plainText = this.stripMarkdown(text);
+
+    const words = plainText.trim().split(/\s+/).filter(w => w.length > 0).length;
+    const chars = plainText.length;
+    const charsNoSpaces = plainText.replace(/\s/g, '').length;
+    const sentences = (plainText.match(/[.!?]+/g) || []).length;
+    const paragraphs = text.split(/\n\n+/).filter(p => p.trim().length > 0).length;
+    const readingTime = Math.ceil(words / 200); // 200 words per minute
+
+    return {
+      words,
+      chars,
+      charsNoSpaces,
+      sentences,
+      paragraphs,
+      readingTime
+    };
+  }
+
+  stripMarkdown(text: string): string {
+    return text
+      // Remove code blocks
+      .replace(/```[\s\S]*?```/g, '')
+      // Remove inline code
+      .replace(/`[^`]+`/g, '')
+      // Remove links but keep text
+      .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1')
+      // Remove images
+      .replace(/!\[([^\]]*)\]\([^\)]+\)/g, '')
+      // Remove headers
+      .replace(/^#+\s+/gm, '')
+      // Remove bold/italic
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/\*([^*]+)\*/g, '$1')
+      .replace(/__([^_]+)__/g, '$1')
+      .replace(/_([^_]+)_/g, '$1')
+      // Remove other markdown syntax
+      .replace(/^[*\-+]\s+/gm, '')
+      .replace(/^\d+\.\s+/gm, '');
+  }
+
+  onunload() {
+    console.log('Unloading Word Count Stats plugin');
+  }
+}
+```
+
+### 3.2 Create the View Component
+
+Create `src/view.ts`:
+
+```typescript
+import { ItemView, WorkspaceLeaf, MarkdownView } from '@lokus/api';
+import type WordCountStatsPlugin from './main';
+
+export const VIEW_TYPE_WORD_COUNT = 'word-count-stats-view';
+
+export class WordCountStatsView extends ItemView {
+  plugin: WordCountStatsPlugin;
+  private updateInterval: number;
+
+  constructor(leaf: WorkspaceLeaf, plugin: WordCountStatsPlugin) {
+    super(leaf);
+    this.plugin = plugin;
+  }
+
+  getViewType(): string {
+    return VIEW_TYPE_WORD_COUNT;
+  }
+
+  getDisplayText(): string {
+    return 'Word Count Stats';
+  }
+
+  getIcon(): string {
+    return 'bar-chart';
+  }
+
+  async onOpen() {
+    // Set up auto-update
+    this.updateInterval = window.setInterval(() => {
+      this.updateStats();
+    }, 1000);
+
+    // Initial render
+    this.updateStats();
+  }
+
+  async onClose() {
+    // Clear interval
+    window.clearInterval(this.updateInterval);
+  }
+
+  updateStats() {
+    const container = this.containerEl.children[1];
+    container.empty();
+
+    const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+
+    if (!view) {
+      container.createEl('div', {
+        text: 'No note open',
+        cls: 'word-count-empty'
+      });
+      return;
+    }
+
+    const editor = view.editor;
+    const content = editor.getValue();
+    const stats = this.plugin.calculateStats(content);
+
+    // Create stats display
+    const statsContainer = container.createDiv({ cls: 'word-count-stats' });
+
+    // Title
+    statsContainer.createEl('h3', { text: 'Document Statistics' });
+
+    // Stats grid
+    const grid = statsContainer.createDiv({ cls: 'stats-grid' });
+
+    this.addStatItem(grid, 'Words', stats.words.toLocaleString());
+    this.addStatItem(grid, 'Characters', stats.chars.toLocaleString());
+    this.addStatItem(grid, 'Characters (no spaces)', stats.charsNoSpaces.toLocaleString());
+    this.addStatItem(grid, 'Sentences', stats.sentences.toLocaleString());
+    this.addStatItem(grid, 'Paragraphs', stats.paragraphs.toLocaleString());
+    this.addStatItem(
+      grid,
+      'Reading Time',
+      `${stats.readingTime} min`,
+      'Based on 200 words/min'
+    );
+
+    // Selection stats (if text is selected)
+    const selection = editor.getSelection();
+    if (selection) {
+      const selectionStats = this.plugin.calculateStats(selection);
+
+      statsContainer.createEl('h4', { text: 'Selection', cls: 'stats-section-title' });
+      const selGrid = statsContainer.createDiv({ cls: 'stats-grid' });
+
+      this.addStatItem(selGrid, 'Words', selectionStats.words.toLocaleString());
+      this.addStatItem(selGrid, 'Characters', selectionStats.chars.toLocaleString());
+    }
+
+    // Additional insights
+    if (stats.words > 0) {
+      statsContainer.createEl('h4', { text: 'Insights', cls: 'stats-section-title' });
+      const insights = statsContainer.createDiv({ cls: 'insights' });
+
+      const avgWordLength = (stats.charsNoSpaces / stats.words).toFixed(1);
+      const avgSentenceLength = stats.sentences > 0
+        ? (stats.words / stats.sentences).toFixed(1)
+        : '0';
+
+      insights.createEl('p', {
+        text: `Average word length: ${avgWordLength} characters`
+      });
+      insights.createEl('p', {
+        text: `Average sentence length: ${avgSentenceLength} words`
+      });
+
+      // Readability estimate (simplified)
+      const readability = this.estimateReadability(
+        parseFloat(avgSentenceLength),
+        parseFloat(avgWordLength)
+      );
+      insights.createEl('p', { text: `Readability: ${readability}` });
+    }
+  }
+
+  private addStatItem(
+    container: HTMLElement,
+    label: string,
+    value: string,
+    subtitle?: string
+  ) {
+    const item = container.createDiv({ cls: 'stat-item' });
+    item.createEl('div', { text: label, cls: 'stat-label' });
+    item.createEl('div', { text: value, cls: 'stat-value' });
+    if (subtitle) {
+      item.createEl('div', { text: subtitle, cls: 'stat-subtitle' });
+    }
+  }
+
+  private estimateReadability(avgSentenceLength: number, avgWordLength: number): string {
+    // Simplified readability estimate
+    const score = avgSentenceLength + avgWordLength;
+
+    if (score < 15) return 'Very Easy';
+    if (score < 20) return 'Easy';
+    if (score < 25) return 'Moderate';
+    if (score < 30) return 'Difficult';
+    return 'Very Difficult';
+  }
+}
+```
+
+### 3.3 Add Styles
+
+Create `styles/styles.css`:
+
+```css
+/* Word Count Stats Styles */
+
+.word-count-stats {
+  padding: 16px;
+}
+
+.word-count-stats h3 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.word-count-stats h4 {
+  margin: 20px 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.stat-item {
+  background: var(--background-secondary);
+  padding: 12px;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 12px;
+  opacity: 0.7;
+  margin-bottom: 4px;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-accent);
+}
+
+.stat-subtitle {
+  font-size: 10px;
+  opacity: 0.6;
+  margin-top: 4px;
+}
+
+.insights p {
+  margin: 8px 0;
+  font-size: 13px;
+}
+
+.word-count-empty {
+  padding: 16px;
+  text-align: center;
+  opacity: 0.6;
+}
+```
+
+> **Note:** 
+**Pro Tip:** Use CSS variables like `var(--background-secondary)` to ensure your plugin respects the user's theme (light/dark mode).
+
+
+---
+
+## Step 4: Adding Settings
+
+Let's add user-configurable settings.
+
+### 4.1 Create Settings Interface
+
+Edit `src/settings.ts`:
+
+```typescript
+import { App, PluginSettingTab, Setting } from '@lokus/api';
+import type WordCountStatsPlugin from './main';
+
+export interface WordCountSettings {
+  wordsPerMinute: number;
+  showInStatusBar: boolean;
+  countCodeBlocks: boolean;
+  updateInterval: number;
+}
+
+export const DEFAULT_SETTINGS: WordCountSettings = {
+  wordsPerMinute: 200,
+  showInStatusBar: true,
+  countCodeBlocks: false,
+  updateInterval: 1000
+};
+
+export class WordCountSettingsTab extends PluginSettingTab {
+  plugin: WordCountStatsPlugin;
+
+  constructor(app: App, plugin: WordCountStatsPlugin) {
+    super(app, plugin);
+    this.plugin = plugin;
+  }
+
+  display(): void {
+    const { containerEl } = this;
+    containerEl.empty();
+
+    containerEl.createEl('h2', { text: 'Word Count Stats Settings' });
+
+    // Words per minute setting
+    new Setting(containerEl)
+      .setName('Reading speed')
+      .setDesc('Average words per minute for reading time calculation')
+      .addText(text => text
+        .setPlaceholder('200')
+        .setValue(String(this.plugin.settings.wordsPerMinute))
+        .onChange(async (value) => {
+          const num = parseInt(value);
+          if (!isNaN(num) && num > 0) {
+            this.plugin.settings.wordsPerMinute = num;
+            await this.plugin.saveSettings();
+          }
+        }));
+
+    // Status bar setting
+    new Setting(containerEl)
+      .setName('Show in status bar')
+      .setDesc('Display word count in the status bar')
+      .addToggle(toggle => toggle
+        .setValue(this.plugin.settings.showInStatusBar)
+        .onChange(async (value) => {
+          this.plugin.settings.showInStatusBar = value;
+          await this.plugin.saveSettings();
+          this.plugin.updateStatusBar();
+        }));
+
+    // Count code blocks setting
+    new Setting(containerEl)
+      .setName('Count code blocks')
+      .setDesc('Include code blocks in word count')
+      .addToggle(toggle => toggle
+        .setValue(this.plugin.settings.countCodeBlocks)
+        .onChange(async (value) => {
+          this.plugin.settings.countCodeBlocks = value;
+          await this.plugin.saveSettings();
+        }));
+
+    // Update interval setting
+    new Setting(containerEl)
+      .setName('Update interval')
+      .setDesc('How often to update stats (in milliseconds)')
+      .addText(text => text
+        .setPlaceholder('1000')
+        .setValue(String(this.plugin.settings.updateInterval))
+        .onChange(async (value) => {
+          const num = parseInt(value);
+          if (!isNaN(num) && num >= 100) {
+            this.plugin.settings.updateInterval = num;
+            await this.plugin.saveSettings();
+          }
+        }));
+  }
+}
+```
+
+### 4.2 Load and Save Settings
+
+Update `src/main.ts` to handle settings:
+
+```typescript
+// Add to imports
+import { DEFAULT_SETTINGS, WordCountSettings } from './settings';
+
+// Add to plugin class
+export default class WordCountStatsPlugin extends Plugin {
+  settings: WordCountSettings;
+
+  async onload() {
+    // Load settings
+    await this.loadSettings();
+
+    // ... rest of onload code
+  }
+
+  async loadSettings() {
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+  }
+
+  async saveSettings() {
+    await this.saveData(this.settings);
+  }
+
+  // Use settings in calculations
+  calculateStats(text: string) {
+    // ... existing code
+    const readingTime = Math.ceil(words / this.settings.wordsPerMinute);
+    // ... rest of code
+  }
+}
+```
+
+---
+
+## Step 5: Testing Your Plugin
+
+Time to test your plugin in action!
+
+### 5.1 Build the Plugin
+
+```bash
+npm run build
+```
+
+This compiles TypeScript to JavaScript and outputs to the `dist/` folder.
+
+For development with auto-rebuild:
+
+```bash
+npm run dev
+```
+
+### 5.2 Load Plugin in Lokus
+
+1. Open Lokus
+2. Go to Settings → Community Plugins
+3. Click **"Reload plugins"**
+4. Find "Word Count Stats" in the list
+5. Click **"Enable"**
+
+
+### 5.3 Test Plugin Features
+
+Test each feature:
+
+**✅ Ribbon Icon:**
+- Look for bar chart icon in left sidebar
+- Click it to open stats panel
+
+**✅ Command Palette:**
+- Open command palette (Cmd/Ctrl + P)
+- Type "Word Count"
+- Run the command
+
+**✅ Status Bar:**
+- Look at bottom of window
+- Should show word/character count
+- Updates as you type
+
+**✅ Stats Panel:**
+- Opens in right sidebar
+- Shows all statistics
+- Updates in real-time
+
+**✅ Settings:**
+- Go to Settings → Word Count Stats
+- Modify settings
+- Verify changes take effect
+
+### 5.4 Debug Common Issues
+
+**Plugin not appearing:**
+```bash
+# Check for build errors
+npm run build
+
+# Check console for errors (Cmd/Ctrl + Shift + I)
+```
+
+**Stats not updating:**
+- Check update interval setting
+- Verify developer mode is enabled
+- Check browser console for JavaScript errors
+
+**Styles not applying:**
+- Ensure styles.css is in the manifest
+- Clear Lokus cache
+- Rebuild plugin
+
+> **Note:** 
+**Pro Tip:** Open the Developer Console (Cmd/Ctrl + Shift + I) to see console.log output and catch errors while developing.
+
+
+---
+
+## Step 6: Advanced Features
+
+Let's add more advanced functionality.
+
+### 6.1 Add Export Feature
+
+Add export to CSV command:
+
+```typescript
+// In main.ts
+this.addCommand({
+  id: 'export-stats-csv',
+  name: 'Export Stats to CSV',
+  callback: async () => {
+    const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+    if (!view) return;
+
+    const content = view.editor.getValue();
+    const stats = this.calculateStats(content);
+    const noteName = view.file?.basename || 'Unknown';
+
+    const csv = [
+      'Note,Words,Characters,Sentences,Paragraphs,Reading Time',
+      `"${noteName}",${stats.words},${stats.chars},${stats.sentences},${stats.paragraphs},${stats.readingTime}`
+    ].join('\n');
+
+    // Save to file
+    const folder = this.app.vault.getAbstractFileByPath('Stats');
+    if (!folder) {
+      await this.app.vault.createFolder('Stats');
+    }
+
+    const filename = `Stats/stats-${Date.now()}.csv`;
+    await this.app.vault.create(filename, csv);
+
+    new Notice(`Stats exported to ${filename}`);
+  }
+});
+```
+
+### 6.2 Add Batch Processing
+
+Process multiple notes:
+
+```typescript
+this.addCommand({
+  id: 'batch-word-count',
+  name: 'Generate Word Count Report',
+  callback: async () => {
+    const files = this.app.vault.getMarkdownFiles();
+    const results = [];
+
+    for (const file of files) {
+      const content = await this.app.vault.read(file);
+      const stats = this.calculateStats(content);
+
+      results.push({
+        path: file.path,
+        ...stats
+      });
+    }
+
+    // Generate report
+    const report = this.generateReport(results);
+
+    // Create report note
+    await this.app.vault.create(
+      `Reports/word-count-report-${Date.now()}.md`,
+      report
+    );
+  }
+});
+
+private generateReport(results: any[]): string {
+  const totalWords = results.reduce((sum, r) => sum + r.words, 0);
+  const totalChars = results.reduce((sum, r) => sum + r.chars, 0);
+
+  let report = `# Word Count Report\n\n`;
+  report += `**Generated:** ${new Date().toLocaleString()}\n`;
+  report += `**Total Notes:** ${results.length}\n`;
+  report += `**Total Words:** ${totalWords.toLocaleString()}\n`;
+  report += `**Total Characters:** ${totalChars.toLocaleString()}\n\n`;
+  report += `## By Note\n\n`;
+  report += `| Note | Words | Characters |\n`;
+  report += `|------|-------|------------|\n`;
+
+  results
+    .sort((a, b) => b.words - a.words)
+    .forEach(r => {
+      report += `| ${r.path} | ${r.words.toLocaleString()} | ${r.chars.toLocaleString()} |\n`;
+    });
+
+  return report;
+}
+```
+
+### 6.3 Add Ribbon Menu
+
+Add context menu to ribbon icon:
+
+```typescript
+const ribbonIcon = this.addRibbonIcon('bar-chart', 'Word Count Stats', (evt) => {
+  const menu = new Menu();
+
+  menu.addItem((item) => {
+    item
+      .setTitle('Open Stats Panel')
+      .setIcon('bar-chart')
+      .onClick(() => {
+        this.activateView();
+      });
+  });
+
+  menu.addItem((item) => {
+    item
+      .setTitle('Export Stats')
+      .setIcon('download')
+      .onClick(() => {
+        this.app.commands.executeCommandById('word-count-stats:export-stats-csv');
+      });
+  });
+
+  menu.addItem((item) => {
+    item
+      .setTitle('Generate Report')
+      .setIcon('file-text')
+      .onClick(() => {
+        this.app.commands.executeCommandById('word-count-stats:batch-word-count');
+      });
+  });
+
+  menu.showAtMouseEvent(evt);
+});
+```
+
+---
+
+## Step 7: Publishing Your Plugin
+
+Ready to share your plugin with the community!
+
+### 7.1 Prepare for Release
+
+**Update README.md:**
+
+```markdown
+# Word Count Stats
+
+Display detailed word and character statistics for your notes in Lokus.
+
+## Features
+
+- Real-time word, character, and sentence counts
+- Reading time estimation
+- Selection statistics
+- Readability estimates
+- Export stats to CSV
+- Batch processing reports
+
+## Installation
+
+### From Lokus Community Plugins
+
+1. Open Settings → Community Plugins
+2. Search for "Word Count Stats"
+3. Click Install
+4. Enable the plugin
+
+### Manual Installation
+
+1. Download latest release from GitHub
+2. Extract to `.lokus/plugins/word-count-stats/`
+3. Reload Lokus
+4. Enable in Community Plugins
+
+## Usage
+
+- Click the bar chart icon in the left ribbon
+- Or use Command Palette: "Open Word Count Statistics"
+- Stats update automatically as you type
+
+## Settings
+
+Configure in Settings → Word Count Stats:
+- Reading speed (words per minute)
+- Status bar display
+- Update interval
+
+## Support
+
+Issues and feature requests: [GitHub Issues](https://github.com/yourusername/lokus-word-count-stats/issues)
+
+## License
+
+MIT
+```
+
+**Add LICENSE file:**
+
+```
+MIT License
+
+Copyright (c) 2024 Your Name
+
+Permission is hereby granted, free of charge...
+[Full MIT license text]
+```
+
+**Add CHANGELOG.md:**
+
+```markdown
+# Changelog
+
+## [1.0.0] - 2024-01-15
+
+### Added
+- Initial release
+- Word, character, sentence counts
+- Reading time estimation
+- Real-time updates
+- Settings panel
+```
+
+### 7.2 Create GitHub Repository
+
+```bash
+# Initialize git (if not already)
+git init
+
+# Add files
+git add .
+
+# Commit
+git commit -m "Initial commit: Word Count Stats plugin v1.0.0"
+
+# Create repository on GitHub, then:
+git remote add origin https://github.com/yourusername/lokus-word-count-stats.git
+git branch -M main
+git push -u origin main
+```
+
+### 7.3 Create Release
+
+1. Go to GitHub repository
+2. Click "Releases" → "Create a new release"
+3. Tag version: `1.0.0`
+4. Release title: `Word Count Stats v1.0.0`
+5. Description: Copy from CHANGELOG
+6. Attach files:
+   - `main.js` (built plugin)
+   - `manifest.json`
+   - `styles.css`
+7. Publish release
+
+### 7.4 Submit to Lokus Community Plugins
+
+1. Fork [lokus-plugins repository](https://github.com/lokus/lokus-plugins)
+2. Add your plugin to `community-plugins.json`:
+
+```json
+{
+  "word-count-stats": {
+    "id": "word-count-stats",
+    "name": "Word Count Stats",
+    "author": "Your Name",
+    "description": "Display detailed word count and reading time statistics",
+    "repo": "yourusername/lokus-word-count-stats",
+    "branch": "main"
+  }
+}
+```
+
+3. Create Pull Request
+4. Wait for review and approval
+
+> **Note:** 
+**Success:** Your plugin is now available to the entire Lokus community! Users can install it with one click.
+
+
+---
+
+## Best Practices
+
+### Code Quality
+
+**✅ Use TypeScript:**
+- Catch errors at compile time
+- Better autocomplete
+- Self-documenting code
+
+**✅ Handle Errors:**
+```typescript
+try {
+  const content = await this.app.vault.read(file);
+  // process content
+} catch (error) {
+  console.error('Failed to read file:', error);
+  new Notice('Error reading file');
+}
+```
+
+**✅ Clean Up Resources:**
+```typescript
+onunload() {
+  // Clear intervals
+  window.clearInterval(this.updateInterval);
+
+  // Remove event listeners
+  this.eventRefs.forEach(ref => ref.detach());
+
+  // Clean up views
+  this.app.workspace.detachLeavesOfType(VIEW_TYPE);
+}
+```
+
+### Performance
+
+**✅ Debounce Updates:**
+```typescript
+private debounce(func: Function, wait: number) {
+  let timeout: number;
+  return (...args: any[]) => {
+    clearTimeout(timeout);
+    timeout = window.setTimeout(() => func.apply(this, args), wait);
+  };
+}
+```
+
+**✅ Lazy Load:**
+- Don't process all notes on startup
+- Load data on-demand
+- Cache expensive calculations
+
+**✅ Use Workers:**
+```typescript
+// For heavy processing
+const worker = new Worker('processor.js');
+worker.postMessage({ content });
+worker.onmessage = (e) => {
+  const stats = e.data;
+  this.updateDisplay(stats);
+};
+```
+
+### User Experience
+
+**✅ Provide Feedback:**
+```typescript
+new Notice('Stats exported successfully!');
+```
+
+**✅ Handle Edge Cases:**
+```typescript
+if (!view) {
+  new Notice('No active note');
+  return;
+}
+
+if (content.length === 0) {
+  new Notice('Note is empty');
+  return;
+}
+```
+
+**✅ Respect User Settings:**
+- Use theme colors
+- Follow keyboard shortcuts
+- Respect privacy (no tracking)
+
+---
+
+## Troubleshooting
+
+### Build Fails
+
+**Error: Cannot find module '@lokus/api'**
+```bash
+npm install @lokus/api --save-dev
+```
+
+**Error: TypeScript compilation errors**
+```bash
+# Fix TypeScript config
+npx tsc --init
+
+# Check tsconfig.json
+{
+  "compilerOptions": {
+    "target": "ES2018",
+    "module": "ESNext",
+    "lib": ["ES2018", "DOM"],
+    "moduleResolution": "node"
+  }
+}
+```
+
+### Plugin Not Loading
+
+**Check manifest.json:**
+- Ensure `id` matches folder name
+- Verify `main` points to correct file
+- Check `minLokusVersion` compatibility
+
+**Check console:**
+```javascript
+// Add debugging
+console.log('Plugin loading...');
+console.log('Settings:', this.settings);
+console.log('API version:', this.app.version);
+```
+
+### Memory Leaks
+
+**Symptom:** Lokus slows down over time
+
+**Solution:**
+```typescript
+onunload() {
+  // Clear ALL intervals
+  this.intervals.forEach(id => window.clearInterval(id));
+
+  // Remove ALL event listeners
+  this.events.forEach(ref => this.app.workspace.offref(ref));
+
+  // Clear caches
+  this.cache.clear();
+}
+```
+
+---
+
+## Next Steps
+
+Congratulations! You've built and published your first Lokus plugin!
+
+### Continue Learning
+
+- **API Documentation:** [Lokus Plugin API Reference](/docs/plugin-api)
+- **Examples:** Study popular plugins' source code
+- **Community:** Join the Plugin Developers Discord channel
+
+### Plugin Ideas
+
+Start your next plugin:
+
+**Beginner:**
+- Note templates inserter
+- Custom status bar indicators
+- Simple text transformers
+
+**Intermediate:**
+- Calendar integration
+- Custom view types
+- External API integrations
+
+**Advanced:**
+- Graph analysis tools
+- AI-powered features
+- Sync providers
+
+### Resources
+
+- [Lokus Plugin API Docs](/docs/plugin-api)
+- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
+- [Plugin Development Best Practices](/docs/plugin-best-practices)
+- [Community Plugin Examples](https://github.com/lokus/plugin-examples)
+
+---
+
+## Summary
+
+In this tutorial, you learned:
+
+✅ How to set up a plugin development environment
+✅ Understanding Lokus plugin architecture
+✅ Creating a functional plugin from scratch
+✅ Using the Lokus API (views, commands, events)
+✅ Adding UI components and styling
+✅ Implementing user settings
+✅ Testing and debugging plugins
+✅ Publishing to the community
+✅ Best practices for performance and UX
+✅ Troubleshooting common issues
+
+You now have the skills to extend Lokus with custom functionality and contribute to the plugin ecosystem. The possibilities are endless!
+
+---
+
+**Resources:**
+- [Lokus Plugin API Reference](/docs/plugin-api)
+- [Plugin Examples Repository](https://github.com/lokus/plugin-examples)
+- [Community Plugins](https://lokus.dev/plugins)
+- [Developer Discord](https://discord.gg/lokus-dev)
+
+**Estimated Completion Time:** 60 minutes
+**Difficulty:** Advanced
+**Last Updated:** January 2024

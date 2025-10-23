@@ -1,0 +1,709 @@
+---
+title: "Base Properties - Types, Configuration & Advanced Features - Lokus Documentation"
+description: "Master all 8 property types in Lokus Bases: Text, Number, Date, Select, Tags, Checkbox, URL, and Email. Learn formulas, rollups, and relations."
+keywords: [lokus, bases, properties, data types, formulas, rollups, relations, metadata, yaml frontmatter]
+---
+
+# Base Properties
+
+Properties are the foundation of Bases - they define the structure of your data. Lokus supports 8 property types out of the box, with advanced features like formulas, rollups, and relations coming soon.
+
+> **📚 Prerequisites:** Familiar with [Bases Overview](/features/bases/overview)? If not, start there to understand how properties integrate with YAML frontmatter.
+
+## Property Types
+
+### Text
+
+Single-line text for titles, names, and short descriptions.
+
+**YAML Format:**
+```yaml
+title: "Build Landing Page"
+name: "John Doe"
+project_code: "PRJ-2024-001"
+```
+
+**Configuration:**
+- Max length (optional)
+- Default value
+- Validation regex
+- Required field toggle
+
+**Use Cases:**
+- Titles and names
+- Short descriptions
+- Codes and identifiers
+- URLs or links
+
+> **💡 Tip:** For longer content, use Long Text instead. Text properties are optimized for single-line display in table cells.
+
+### Long Text
+
+Multi-line text with markdown support for descriptions and notes.
+
+**YAML Format:**
+```yaml
+description: |
+  This is a multi-line description.
+  It supports **markdown** formatting.
+  - Bullet points
+  - Links
+  - Code blocks
+```
+
+**Configuration:**
+- Enable markdown rendering
+- Max length
+- Default value
+- Show preview in table
+
+**Use Cases:**
+- Project descriptions
+- Meeting notes
+- Instructions
+- Comments and feedback
+
+**Display Options:**
+- **Table view**: Shows truncated preview (hover for full text)
+- **Card view**: Shows full text or configurable preview
+- **Detail view**: Full markdown rendering
+
+### Number
+
+Numeric values with formatting options.
+
+**YAML Format:**
+```yaml
+score: 85
+price: 149.99
+quantity: 42
+percentage: 0.75
+```
+
+**Format Options:**
+- **Integer** - Whole numbers only
+- **Decimal** - Floating point (specify precision)
+- **Percentage** - Displays as % (stored as decimal)
+- **Currency** - Adds currency symbol and formatting
+
+**Configuration:**
+```yaml
+property: budget
+type: number
+format: currency
+currency: USD
+precision: 2
+min_value: 0
+max_value: 1000000
+prefix: "$"
+suffix: ""
+```
+
+**Advanced Options:**
+- Min/max values
+- Precision (decimal places)
+- Prefix/suffix (e.g., "$", "kg")
+- Thousand separator
+- Negative number format
+
+**Use Cases:**
+- Budgets and costs
+- Scores and ratings
+- Quantities and counts
+- Percentages and ratios
+
+> **⚠️ Warning:** Store percentages as decimals (0.75) not integers (75). The display format handles conversion automatically.
+
+### Checkbox
+
+Boolean true/false values for toggles and completion status.
+
+**YAML Format:**
+```yaml
+completed: true
+is_public: false
+featured: true
+```
+
+**Configuration:**
+- Default value (true/false/unset)
+- Custom labels ("Yes/No", "On/Off", "Active/Inactive")
+- Color when checked
+
+**Display:**
+- ✓ Checked (green)
+- ○ Unchecked (gray)
+- − Unset (light gray)
+
+**Use Cases:**
+- Task completion
+- Feature flags
+- Published/draft status
+- Active/inactive toggles
+
+**Inline Editing:**
+Click the checkbox in table view to toggle instantly. Changes save automatically after 300ms.
+
+### Date
+
+Date and optional time values with calendar picker.
+
+**YAML Format:**
+```yaml
+due_date: 2025-10-30
+start_date: 2025-01-15
+created_at: 2025-01-01T09:00:00Z
+```
+
+**Date Formats:**
+- `YYYY-MM-DD` - Date only
+- `YYYY-MM-DDTHH:MM:SS` - Date with time
+- `YYYY-MM-DDTHH:MM:SSZ` - Date with time and timezone
+
+**Configuration:**
+```yaml
+property: due_date
+type: date
+include_time: false
+date_format: "MMM DD, YYYY"  # Jan 30, 2025
+time_format: "12h"  # or 24h
+relative_display: true  # "3 days from now"
+```
+
+**Display Options:**
+- **Absolute**: Jan 30, 2025
+- **Relative**: 3 days from now, Yesterday, In 2 weeks
+- **Custom format**: DD/MM/YYYY, MM-DD-YYYY, etc.
+
+**Relative Display Examples:**
+- Today
+- Yesterday / Tomorrow
+- In 3 days / 3 days ago
+- Next week / Last week
+- In 2 months
+
+**Use Cases:**
+- Due dates and deadlines
+- Start/end dates
+- Timestamps
+- Scheduling
+
+> **💡 Tip:** Use relative display for better time awareness. "Due in 2 days" is more useful than "2025-10-25"!
+
+### Select
+
+Single-choice dropdown with predefined options.
+
+**YAML Format:**
+```yaml
+status: In Progress
+priority: High
+category: Web Development
+```
+
+**Configuration:**
+```yaml
+property: status
+type: select
+options:
+  - value: Backlog
+    color: gray
+  - value: Todo
+    color: blue
+  - value: In Progress
+    color: yellow
+  - value: Review
+    color: purple
+  - value: Done
+    color: green
+  - value: Cancelled
+    color: red
+default: Backlog
+allow_custom: false
+```
+
+**Color Options:**
+- gray, blue, green, yellow, orange, red, purple, pink, brown
+
+**Best Practices:**
+- **Keep options focused** - 5-8 options ideal
+- **Use consistent colors** - green for positive, red for negative
+- **Order logically** - workflow order or alphabetical
+- **Clear labels** - self-explanatory, no abbreviations
+
+**Use Cases:**
+- Status workflows
+- Priority levels
+- Categories
+- Stages in a process
+
+> **💡 Tip:** Enable `allow_custom` to let users add new options on-the-fly, useful for evolving categorizations!
+
+### Multi-Select (Tags)
+
+Multiple-choice tags with color coding.
+
+**YAML Format:**
+```yaml
+tags:
+  - web
+  - design
+  - urgent
+categories:
+  - Frontend
+  - Backend
+  - DevOps
+```
+
+**Configuration:**
+```yaml
+property: tags
+type: tags
+options:
+  - value: urgent
+    color: red
+  - value: web
+    color: blue
+  - value: design
+    color: purple
+allow_custom: true
+max_selections: 5
+```
+
+**Display:**
+Tags appear as colored pills:
+```
+[urgent] [web] [design]
+```
+
+**Filtering:**
+- **contains_any**: Has at least one specified tag
+- **contains_all**: Has all specified tags
+- **is_empty**: No tags
+- **is_not_empty**: Has at least one tag
+
+**Use Cases:**
+- Content categorization
+- Skill tagging
+- Topic organization
+- Feature flags
+
+> **💡 Tip:** Tags are perfect for many-to-many relationships. A project can have multiple tags, and a tag can apply to multiple projects.
+
+### URL
+
+Validated URL fields with link rendering.
+
+**YAML Format:**
+```yaml
+website: "https://example.com"
+repository: "https://github.com/user/repo"
+documentation: "https://docs.example.com"
+```
+
+**Configuration:**
+- Validation (must start with http:// or https://)
+- Display as clickable link
+- Show favicon (optional)
+- Open in new tab
+
+**Display:**
+```
+[example.com ↗]
+```
+
+**Use Cases:**
+- Website links
+- Documentation URLs
+- Repository links
+- External resources
+
+**Validation:**
+- Must be valid URL format
+- Auto-adds https:// if missing
+- Validates domain format
+
+### Email
+
+Email address fields with validation and mailto links.
+
+**YAML Format:**
+```yaml
+contact: "john@example.com"
+owner_email: "sarah@company.com"
+```
+
+**Configuration:**
+- Email validation (RFC 5322)
+- Display as mailto link
+- Show gravatar (optional)
+
+**Display:**
+```
+[john@example.com ✉]
+```
+
+**Use Cases:**
+- Contact information
+- Owner/assignee emails
+- Support contacts
+
+**Validation:**
+- Must be valid email format
+- Checks for @ symbol and domain
+- Validates format but not existence
+
+## Creating Properties
+
+### Adding a New Property
+
+**Method 1: From Table Header**
+1. Click the **"+"** button in the table header row
+2. Enter property name
+3. Select property type
+4. Configure options
+5. Click **Save**
+
+**Method 2: From Base Settings**
+1. Open Base settings (gear icon)
+2. Go to **Properties** tab
+3. Click **"+ Add Property"**
+4. Configure all options
+5. Save
+
+### Property Configuration
+
+Each property can be configured with:
+
+**Basic Settings:**
+- **Name** - Property identifier (used in YAML)
+- **Display name** - Human-readable label
+- **Description** - Help text for users
+- **Type** - Property type (text, number, etc.)
+
+**Validation:**
+- **Required** - Must have a value
+- **Unique** - No duplicates allowed
+- **Default value** - Pre-filled for new entries
+- **Validation rules** - Custom validation
+
+**Display:**
+- **Show in views** - Which views display this property
+- **Column width** - Default width in table
+- **Sort order** - Position in property list
+
+## Advanced Features (Coming v1.4)
+
+### Formula Properties
+
+Calculate values from other properties.
+
+**Formula Syntax:**
+```javascript
+// Simple calculation
+{Price} * {Quantity}
+
+// Conditional logic
+if({Status} = "Done", "✓", "○")
+
+// Date calculations
+dateDiff({Due Date}, now(), "days")
+
+// Text manipulation
+upper(substring({Title}, 0, 10))
+
+// Aggregations
+sum({Related Tasks.Hours})
+```
+
+**Available Functions:**
+
+**Math:**
+- `add`, `subtract`, `multiply`, `divide`
+- `round`, `floor`, `ceil`, `abs`
+- `min`, `max`, `pow`, `sqrt`
+
+**Logic:**
+- `if(condition, true_value, false_value)`
+- `and`, `or`, `not`
+- `equals`, `greater`, `less`
+
+**Text:**
+- `concat`, `upper`, `lower`, `trim`
+- `substring`, `replace`, `length`
+- `startsWith`, `endsWith`, `contains`
+
+**Date:**
+- `now()`, `today()`
+- `dateDiff(date1, date2, unit)`
+- `dateAdd(date, value, unit)`
+- `formatDate(date, format)`
+- `year`, `month`, `day`, `hour`
+
+**Aggregation:**
+- `sum`, `average`, `min`, `max`
+- `count`, `median`, `mode`
+
+**Examples:**
+
+```javascript
+// Calculate total cost
+{Unit Price} * {Quantity}
+
+// Days until due
+dateDiff({Due Date}, today(), "days")
+
+// Status emoji
+if({Completed}, "✅", if({Status} = "Doing", "⏳", "○"))
+
+// Full name
+concat({First Name}, " ", {Last Name})
+
+// Overdue indicator
+if(dateDiff({Due Date}, today(), "days") < 0, "⚠️ OVERDUE", "On track")
+```
+
+### Rollup Properties
+
+Aggregate data from related records.
+
+**Rollup Configuration:**
+1. Create a [Relation property](#relation-properties) first
+2. Add rollup property
+3. Select relation to follow
+4. Choose property to aggregate
+5. Select aggregation function
+
+**Example:**
+```
+Projects Base → Tasks Base (via relation)
+
+In Projects Base:
+- Rollup: Total Hours
+- Relation: Tasks
+- Property: Estimated Hours
+- Function: Sum
+
+Result: Sum of all related task hours
+```
+
+**Aggregation Functions:**
+- **Count** - Number of related records
+- **Sum** - Total of numeric values
+- **Average** - Mean value
+- **Min** - Minimum value
+- **Max** - Maximum value
+- **Percent checked** - % of checked checkboxes
+- **Percent unchecked** - % of unchecked checkboxes
+
+### Relation Properties
+
+Link records between different Bases.
+
+**Relation Types:**
+
+**One-to-One:**
+```yaml
+# Task → Single Assignee
+assignee: [[John Doe]]
+```
+
+**One-to-Many:**
+```yaml
+# Project → Multiple Tasks
+tasks:
+  - [[Task 1]]
+  - [[Task 2]]
+  - [[Task 3]]
+```
+
+**Many-to-Many:**
+```yaml
+# Task → Multiple Tags
+# Tag → Multiple Tasks
+tags:
+  - [[Frontend]]
+  - [[Urgent]]
+```
+
+**Creating Relations:**
+
+1. Add Relation property to source Base
+2. Select target Base
+3. Choose relation type
+4. Optional: Create reverse relation
+5. Configure display
+
+**Configuration:**
+```yaml
+property: project
+type: relation
+target_base: Projects
+relation_type: many_to_one
+reverse_property: tasks
+display_property: title
+```
+
+**Display in Table:**
+```
+| Task          | Project             |
+|---------------|---------------------|
+| Design mockup | [[Website Redesign]]|
+| Write tests   | [[Website Redesign]]|
+| Deploy        | [[Mobile App]]      |
+```
+
+**Linked Records:**
+
+Click a relation to:
+- View related record
+- Add new related records
+- Remove relations
+- Filter related records
+- Open in new tab
+
+### Reverse Relations
+
+Automatic back-references between related Bases.
+
+**Example Setup:**
+
+**Projects Base:**
+```yaml
+properties:
+  - name: tasks
+    type: relation
+    target: Tasks Base
+    reverse: true
+    reverse_name: project
+```
+
+**Tasks Base:**
+```yaml
+properties:
+  - name: project
+    type: relation
+    target: Projects Base
+    # Auto-created as reverse relation
+```
+
+**Result:**
+- When you add a task to a project's `tasks` list
+- The task's `project` field automatically updates
+- Bi-directional sync maintained automatically
+
+## Property Best Practices
+
+### Naming Conventions
+
+**Good Names:**
+- `due_date` - Clear, snake_case
+- `status` - Single word
+- `owner_email` - Descriptive
+- `is_public` - Boolean prefix
+
+**Avoid:**
+- `dd` - Too cryptic
+- `Due Date (MM/DD/YYYY)` - Format in name
+- `Status/Stage` - Ambiguous
+- `Email Address of Primary Owner` - Too long
+
+### Property Organization
+
+**Group Related Properties:**
+```yaml
+# Identity
+title: "..."
+description: "..."
+
+# Metadata
+status: "..."
+priority: "..."
+category: "..."
+
+# People
+owner: "..."
+assignee: "..."
+
+# Dates
+created_date: "..."
+due_date: "..."
+completed_date: "..."
+```
+
+### Default Values
+
+Set sensible defaults to speed up data entry:
+
+```yaml
+properties:
+  status:
+    default: "Backlog"
+  priority:
+    default: "Medium"
+  completed:
+    default: false
+  created_date:
+    default: "{{today}}"
+```
+
+### Required Fields
+
+Mark essential fields as required:
+
+```yaml
+properties:
+  title:
+    required: true
+  status:
+    required: true
+  due_date:
+    required: false  # Optional
+```
+
+## Troubleshooting
+
+### Property Not Showing in Base
+
+**Possible causes:**
+1. Property hidden in current view
+2. Property not in YAML frontmatter
+3. YAML syntax error
+4. Property type mismatch
+
+**Solution:**
+1. Check view settings → Visible Properties
+2. Verify YAML frontmatter format
+3. Validate YAML syntax (no tabs, proper indentation)
+4. Ensure value matches property type
+
+### Inline Editing Not Working
+
+**Possible causes:**
+1. File is read-only
+2. Property configured as non-editable
+3. YAML syntax conflict
+
+**Solution:**
+1. Check file permissions
+2. Review property settings → Allow editing
+3. Validate YAML frontmatter
+
+### Property Values Not Updating
+
+**Possible causes:**
+1. Auto-save delay (300ms)
+2. File locked by another process
+3. Index not refreshed
+
+**Solution:**
+1. Wait for auto-save indicator
+2. Close file in other editors
+3. Refresh Base (Cmd/Ctrl + R)
+
+## What's Next?
+
+- **[Filtering](/features/bases/filtering)** - Learn how to filter by properties
+- **[Views](/features/bases/views)** - See how properties display in different views
+- **[Examples](/features/bases/examples)** - Real-world property configurations
+- **[Overview](/features/bases/overview)** - Back to Bases fundamentals

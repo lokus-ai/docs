@@ -1,0 +1,510 @@
+---
+title: "Performance Optimization"
+description: "Performance optimization techniques for Lokus plugins - memory management, WebAssembly, worker threads, and best practices"
+keywords: ["plugin performance", "optimization", "webassembly", "worker threads", "memory management"]
+author: "Lokus Team"
+lastUpdated: "2025-10-23"
+version: "1.3.1"
+---
+
+# Performance Optimization
+
+Building performant plugins is crucial for maintaining a responsive user experience. This guide covers resource management, optimization techniques, and performance best practices.
+
+## Resource Management
+
+The plugin system enforces resource limits to maintain application responsiveness:
+
+### Memory Limits
+
+Each plugin has configurable memory limits:
+
+- **Default:** 128MB per plugin
+- **Configurable:** 16MB - 512MB
+- **Automatic cleanup** of inactive plugins
+- **Memory profiling** in development mode
+- **Warning** at 80% usage
+- **Throttling** at 90% usage
+
+**Monitor Memory Usage:**
+
+```typescript
+export default class MyPlugin implements Plugin {
+  private memoryMonitor?: NodeJS.Timeout
+
+  async activate(context: PluginContext) {
+    // Enable memory monitoring in development
+    if (context.isDevelopment) {
+      this.memoryMonitor = setInterval(() => {
+        const usage = context.getMemoryUsage()
+        if (usage.heapUsed > usage.heapLimit * 0.8) {
+          context.api.log('warn', `High memory usage: ${usage.heapUsed}MB`)
+        }
+      }, 10000)
+    }
+  }
+
+  async deactivate() {
+    if (this.memoryMonitor) {
+      clearInterval(this.memoryMonitor)
+    }
+  }
+}
+```
+
+### CPU Throttling
+
+Prevent UI freezing with intelligent CPU management:
+
+- Expensive operations throttled after **100ms** continuous execution
+- Background tasks use `requestIdleCallback`
+- Maintains **60 FPS** target
+- Automatic task suspension if frame rate drops below **30 FPS**
+
+**Use Idle Callbacks:**
+
+```typescript
+// Use idle callback for background work
+async function processInBackground(items: any[]) {
+  for (const item of items) {
+    await new Promise<void>((resolve) => {
+      requestIdleCallback(() => {
+        processItem(item)
+        resolve()
+      }, { timeout: 1000 })
+    })
+  }
+}
+```
+
+### API Rate Limits
+
+Respect API rate limits for better performance:
+
+- **1000 API calls per second** per plugin
+- Batch operations encouraged
+- Automatic backpressure and queuing
+- Rate limit headers in API responses
+
+**Batch Operations:**
+
+```typescript
+// Bad - 1000 individual calls
+for (const file of files) {
+  await api.fs.readFile(file)
+}
+
+// Good - Single batch call
+const contents = await api.fs.readFiles(files)
+```
+
+## WebAssembly Support
+
+Lokus v1.3 supports WebAssembly modules for compute-intensive operations, providing near-native performance.
+
+### Loading WASM Modules
+
+```typescript
+import { Plugin, PluginContext } from '@lokus/plugin-sdk'
+
+export default class WasmPlugin implements Plugin {
+  private wasmModule?: any
+
+  async activate(context: PluginContext) {
+    // Load WASM module
+    const wasmPath = context.extensionPath + '/lib/compute.wasm'
+    const wasmBuffer = await context.api.fs.readBinary(wasmPath)
+
+    const wasmModule = await WebAssembly.instantiate(wasmBuffer, {
+      env: {
+        // Import functions from JavaScript
+        log: (ptr: number, len: number) => {
+          const memory = new Uint8Array(wasmModule.instance.exports.memory.buffer)
+          const message = new TextDecoder().decode(memory.slice(ptr, ptr + len))
+          console.log('WASM:', message)
+        }
+      }
+    })
+
+    this.wasmModule = wasmModule.instance.exports
+
+    // Register command that uses WASM
+    context.api.commands.register({
+      id: 'wasmPlugin.compute',
+      title: 'Run WASM Computation',
+      handler: () => this.runComputation()
+    })
+  }
+
+  private async runComputation() {
+    if (!this.wasmModule) return
+
+    // Call WASM function
+    const input = new Float32Array([1, 2, 3, 4, 5])
+    const inputPtr = this.allocateMemory(input.byteLength)
+
+    const memory = new Uint8Array(this.wasmModule.memory.buffer)
+    memory.set(new Uint8Array(input.buffer), inputPtr)
+
+    // Execute WASM function
+    const resultPtr = this.wasmModule.processArray(inputPtr, input.length)
+
+    // Read result
+    const result = new Float32Array(
+      this.wasmModule.memory.buffer,
+      resultPtr,
+      input.length
+    )
+
+    console.log('WASM result:', Array.from(result))
+  }
+
+  private allocateMemory(size: number): number {
+    return this.wasmModule.malloc(size)
+  }
+}
+```
+
+### Rust WASM Example
+
+Compile Rust to WebAssembly for maximum performance:
+
+```rust
+// src/lib.rs - Compile to WASM with wasm-pack
+use wasm_bindgen::prelude::*;
+
+#[wasm_bindgen]
+pub struct TextAnalyzer {
+    word_count: usize,
+    char_count: usize,
+}
+
+#[wasm_bindgen]
+impl TextAnalyzer {
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> TextAnalyzer {
+        TextAnalyzer {
+            word_count: 0,
+            char_count: 0,
+        }
+    }
+
+    /// Analyze text and return statistics
+    #[wasm_bindgen]
+    pub fn analyze(&mut self, text: &str) -> JsValue {
+        self.word_count = text.split_whitespace().count();
+        self.char_count = text.chars().count();
+
+        // Calculate additional metrics
+        let line_count = text.lines().count();
+        let avg_word_length = if self.word_count > 0 {
+            self.char_count as f64 / self.word_count as f64
+        } else {
+            0.0
+        };
+
+        // Return as JSON
+        serde_wasm_bindgen::to_value(&serde_json::json!({
+            "words": self.word_count,
+            "characters": self.char_count,
+            "lines": line_count,
+            "avgWordLength": avg_word_length,
+        })).unwrap()
+    }
+
+    /// Find all occurrences of a pattern (fast regex matching)
+    #[wasm_bindgen]
+    pub fn find_pattern(&self, text: &str, pattern: &str) -> Vec<usize> {
+        text.match_indices(pattern)
+            .map(|(idx, _)| idx)
+            .collect()
+    }
+}
+
+// Build with: wasm-pack build --target web
+```
+
+### Using Rust WASM in Plugin
+
+```typescript
+import { Plugin, PluginContext } from '@lokus/plugin-sdk'
+import init, { TextAnalyzer } from './wasm/text_analyzer'
+
+export default class TextAnalyzerPlugin implements Plugin {
+  private analyzer?: TextAnalyzer
+
+  async activate(context: PluginContext) {
+    // Initialize WASM module
+    await init(context.extensionPath + '/wasm/text_analyzer_bg.wasm')
+    this.analyzer = new TextAnalyzer()
+
+    context.api.commands.register({
+      id: 'textAnalyzer.analyze',
+      title: 'Analyze Text',
+      handler: async () => {
+        const content = await context.api.editor.getContent()
+        const stats = this.analyzer!.analyze(content)
+
+        context.api.ui.showNotification(
+          `Words: ${stats.words}, Characters: ${stats.characters}`,
+          'info'
+        )
+      }
+    })
+  }
+}
+```
+
+### Performance Comparison
+
+WebAssembly provides significant performance improvements:
+
+| Operation | JavaScript | WebAssembly | Speedup |
+|-----------|-----------|-------------|---------|
+| Text parsing (10MB) | 450ms | 45ms | 10x |
+| Regex matching | 120ms | 15ms | 8x |
+| JSON parsing | 80ms | 12ms | 6.7x |
+| Array processing | 200ms | 22ms | 9x |
+| Image processing | 2500ms | 180ms | 13.9x |
+
+## Worker Thread Support
+
+Offload heavy computations to worker threads to keep UI responsive.
+
+### Worker Thread Code
+
+```typescript
+// worker.ts - Worker thread code
+import { expose } from '@lokus/plugin-sdk/worker'
+
+const workerAPI = {
+  async processLargeFile(content: string) {
+    // Heavy processing here
+    const lines = content.split('\n')
+    const processed = lines.map(line => {
+      // Complex transformation
+      return line.toUpperCase().split('').reverse().join('')
+    })
+    return processed.join('\n')
+  },
+
+  async analyzeContent(content: string) {
+    // Complex analysis
+    const words = content.split(/\s+/)
+    const frequencies = new Map<string, number>()
+
+    words.forEach(word => {
+      frequencies.set(word, (frequencies.get(word) || 0) + 1)
+    })
+
+    return Array.from(frequencies.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 100)
+  }
+}
+
+expose(workerAPI)
+```
+
+### Main Plugin Code
+
+```typescript
+import { Plugin, PluginContext } from '@lokus/plugin-sdk'
+import { wrap } from '@lokus/plugin-sdk/worker'
+import type { Remote } from 'comlink'
+
+export default class WorkerPlugin implements Plugin {
+  private worker?: Remote<typeof workerAPI>
+
+  async activate(context: PluginContext) {
+    // Create worker thread
+    const workerPath = context.extensionPath + '/dist/worker.js'
+    this.worker = await context.createWorker(workerPath)
+
+    context.api.commands.register({
+      id: 'workerPlugin.process',
+      title: 'Process in Worker',
+      handler: async () => {
+        const content = await context.api.editor.getContent()
+
+        // Show progress
+        await context.api.ui.withProgress({
+          title: 'Processing...',
+          location: 'notification'
+        }, async (progress) => {
+          // Call worker method
+          const result = await this.worker!.processLargeFile(content)
+
+          progress.report({ message: 'Done!', increment: 100 })
+
+          await context.api.editor.setContent(result)
+        })
+      }
+    })
+  }
+
+  async deactivate() {
+    // Terminate worker
+    this.worker?.[Symbol.dispose]()
+  }
+}
+```
+
+## Optimization Best Practices
+
+### Lazy Loading
+
+Load heavy dependencies only when needed:
+
+```typescript
+// Load heavy dependencies only when needed
+async function processData() {
+  const { heavyLibrary } = await import('./heavy-lib')
+  return heavyLibrary.process()
+}
+```
+
+### Debouncing
+
+Reduce unnecessary computations:
+
+```typescript
+// Use built-in debounce utilities
+import { debounce } from '@lokus/plugin-sdk/utils'
+
+const debouncedHandler = debounce((text) => {
+  // Process text
+}, 300)
+
+// Use in event handlers
+api.editor.onDidChangeTextDocument((event) => {
+  debouncedHandler(event.document.getText())
+})
+```
+
+### Caching
+
+Cache expensive computations:
+
+```typescript
+// Cache expensive computations
+const cache = new Map()
+
+function expensiveOperation(key: string) {
+  if (cache.has(key)) {
+    return cache.get(key)
+  }
+
+  const result = computeExpensive(key)
+  cache.set(key, result)
+  return result
+}
+
+// LRU cache with size limit
+import { LRUCache } from '@lokus/plugin-sdk/cache'
+
+const lruCache = new LRUCache({ max: 100 })
+
+function cachedComputation(key: string) {
+  return lruCache.get(key, () => computeExpensive(key))
+}
+```
+
+### Virtual Scrolling
+
+For large lists, use virtual scrolling:
+
+```typescript
+import { VirtualList } from '@lokus/plugin-sdk/ui'
+
+const list = new VirtualList({
+  container: containerElement,
+  itemHeight: 30,
+  items: largeDataArray,
+  renderItem: (item, index) => {
+    return `<div class="item">${item.name}</div>`
+  }
+})
+
+// Only renders visible items
+```
+
+### Throttling
+
+Limit execution frequency:
+
+```typescript
+import { throttle } from '@lokus/plugin-sdk/utils'
+
+const throttledHandler = throttle((event) => {
+  // Handle scroll event
+  updateUI(event)
+}, 100) // Max once per 100ms
+
+window.addEventListener('scroll', throttledHandler)
+```
+
+### Batch Updates
+
+Batch DOM updates for better performance:
+
+```typescript
+// Bad - Multiple reflows
+for (const item of items) {
+  element.appendChild(createItemElement(item))
+}
+
+// Good - Single reflow
+const fragment = document.createDocumentFragment()
+for (const item of items) {
+  fragment.appendChild(createItemElement(item))
+}
+element.appendChild(fragment)
+```
+
+## Performance Monitoring
+
+Track plugin performance:
+
+```typescript
+export default class MyPlugin implements Plugin {
+  async activate(context: PluginContext) {
+    // Performance mark
+    performance.mark('plugin-activation-start')
+
+    // Your activation code here
+    await this.initialize()
+
+    // Performance measure
+    performance.mark('plugin-activation-end')
+    performance.measure(
+      'plugin-activation',
+      'plugin-activation-start',
+      'plugin-activation-end'
+    )
+
+    // Log performance metrics
+    const measure = performance.getEntriesByName('plugin-activation')[0]
+    context.api.log('info', `Plugin activated in ${measure.duration}ms`)
+  }
+}
+```
+
+## Profiling
+
+Use Chrome DevTools for profiling:
+
+1. Enable development mode in plugin manifest
+2. Open DevTools (Cmd/Ctrl + Shift + I)
+3. Go to Performance tab
+4. Record plugin execution
+5. Analyze flame graph and bottlenecks
+
+## Next Steps
+
+Continue learning about plugin development:
+
+- **[Overview](/developers/plugins/overview)** - Plugin system introduction
+- **[Architecture](/developers/plugins/architecture)** - Plugin architecture deep dive
+- **[MCP Integration](/developers/plugins/mcp-integration)** - Build AI-powered plugins
+- **[Advanced Topics](/developers/plugins/advanced)** - Testing and distribution

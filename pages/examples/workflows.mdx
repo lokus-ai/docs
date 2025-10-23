@@ -1,0 +1,1325 @@
+---
+title: Workflow Examples
+description: Complete end-to-end workflows for Lokud including morning routines, blog writing, research, sprint planning, and learning. Step-by-step processes with templates and automation.
+keywords: [workflows, productivity workflows, morning routine, blog workflow, research workflow, sprint planning, learning workflow]
+---
+
+# Workflow Examples
+
+End-to-end workflows that combine templates, databases, and automations into complete productivity systems. Each workflow includes step-by-step processes, template usage, and automation tips.
+
+## Overview
+
+Each workflow example includes:
+- Complete process description
+- Required templates and databases
+- Step-by-step instructions
+- Automation configurations
+- Customization options
+- Common variations
+
+---
+
+## Morning Routine Workflow
+
+**Use Case**: Start each day with intention, review tasks, and plan priorities
+
+**Time Required**: 10-15 minutes
+
+**Difficulty**: Beginner
+
+### Overview
+
+A structured morning routine that combines daily notes, task review, and calendar checking to set up a productive day.
+
+### Required Setup
+
+#### Templates
+
+```markdown
+# templates/daily-note-template.md
+---
+title: "{{date:YYYY-MM-DD}} - Daily Note"
+type: daily-note
+date: "{{date:YYYY-MM-DD}}"
+day: "{{date:dddd}}"
+week: "{{date:ww}}"
+tags: [daily-note, "{{date:YYYY}}", "{{date:MMMM}}"]
+weather: ""
+mood: ""
+energy: ""
+---
+
+# {{date:dddd, MMMM D, YYYY}}
+
+## Morning Reflection
+
+**How do I feel?**
+
+**What am I grateful for?**
+1.
+2.
+3.
+
+**What would make today great?**
+1.
+2.
+3.
+
+---
+
+## Today's Focus
+
+### Top 3 Priorities
+1. [ ]
+2. [ ]
+3. [ ]
+
+### Must Do Today
+- [ ]
+
+### Should Do (if time permits)
+- [ ]
+
+### Could Do (nice to have)
+- [ ]
+
+---
+
+## Schedule
+
+### Morning (6am - 12pm)
+- [[meeting-link|Meeting title]] at TIME
+
+### Afternoon (12pm - 6pm)
+-
+
+### Evening (6pm - 12am)
+-
+
+---
+
+## Notes & Ideas
+
+### Work
+
+### Personal
+
+### Learning
+
+---
+
+## Time Tracking
+
+| Activity | Duration | Notes |
+|----------|----------|-------|
+|          |          |       |
+
+**Total Productive Time**: ___ hours
+
+---
+
+## Evening Reflection
+
+**What went well?**
+
+**What could be improved?**
+
+**Lessons learned:**
+
+**Tomorrow's prep:**
+- [ ]
+
+---
+
+## Links
+- [[{{date-1d:YYYY-MM-DD}}|Yesterday]]
+- [[{{date+1d:YYYY-MM-DD}}|Tomorrow]]
+- [[{{date:YYYY-WW}}|This Week]]
+```
+
+#### Databases
+
+```yaml
+# databases/tasks.yaml
+name: Tasks
+fields:
+  - name: Task
+    type: text
+    required: true
+  - name: Status
+    type: select
+    options: [Inbox, Today, This Week, Next Week, Someday, Done]
+  - name: Priority
+    type: select
+    options: [P1-Critical, P2-High, P3-Medium, P4-Low]
+  - name: Energy
+    type: select
+    options: [High Energy, Medium Energy, Low Energy]
+  - name: Duration
+    type: select
+    options: [5min, 15min, 30min, 1hr, 2hr, 4hr+]
+  - name: Due Date
+    type: date
+  - name: Project
+    type: relation
+    related_base: Projects
+  - name: Tags
+    type: multi_select
+```
+
+### Step-by-Step Process
+
+#### Step 1: Create Daily Note (Auto-Generated)
+
+```yaml
+# automation/create-daily-note.yaml
+trigger:
+  type: scheduled
+  time: "06:00"
+  days: [Mon, Tue, Wed, Thu, Fri, Sat, Sun]
+
+actions:
+  - create_note:
+      template: daily-note-template
+      folder: 05-daily/{{date:YYYY}}/{{date:MM-MMMM}}
+      filename: "{{date:YYYY-MM-DD}}.md"
+
+  - open_note:
+      path: "{{daily_note.path}}"
+
+  - notify:
+      title: "Good morning!"
+      message: "Your daily note is ready"
+```
+
+#### Step 2: Review Yesterday (Manual)
+
+Open yesterday's note and:
+1. Complete evening reflection if not done
+2. Move incomplete tasks to today
+3. Note any follow-ups
+
+```javascript
+// Plugin: Review Yesterday
+async function reviewYesterday() {
+  const yesterday = moment().subtract(1, 'day').format('YYYY-MM-DD');
+  const yesterdayNote = await lokud.notes.get(`05-daily/${yesterday}.md`);
+
+  if (!yesterdayNote) return;
+
+  // Extract incomplete tasks
+  const incompleteTasks = yesterdayNote.content
+    .match(/- \[ \] .+/g) || [];
+
+  // Add to today's note
+  if (incompleteTasks.length > 0) {
+    const today = await lokud.notes.getDaily();
+    await today.append('\n## Carried Over from Yesterday\n');
+    await today.append(incompleteTasks.join('\n'));
+  }
+
+  // Show summary
+  lokud.ui.notify({
+    title: 'Yesterday Review',
+    message: `${incompleteTasks.length} tasks carried over`
+  });
+}
+```
+
+#### Step 3: Review Tasks Database (Auto-Generated)
+
+```yaml
+# automation/morning-task-review.yaml
+trigger:
+  type: note_opened
+  conditions:
+    - type: daily-note
+
+actions:
+  # Query overdue tasks
+  - query_database:
+      base: Tasks
+      filters:
+        - field: Due Date
+          operator: before
+          value: "{{date:today}}"
+        - field: Status
+          operator: not_equals
+          value: Done
+      insert_at: "## Overdue Tasks"
+      format: task_list
+
+  # Query today's tasks
+  - query_database:
+      base: Tasks
+      filters:
+        - field: Status
+          operator: equals
+          value: Today
+        - field: Status
+          operator: not_equals
+          value: Done
+      sort:
+        - field: Priority
+          direction: asc
+      insert_at: "## Tasks for Today"
+      format: task_list
+      group_by: Priority
+
+  # Query this week's tasks
+  - query_database:
+      base: Tasks
+      filters:
+        - field: Due Date
+          operator: between
+          value: ["{{date:today}}", "{{date:week_end}}"]
+        - field: Status
+          operator: not_equals
+          value: Done
+      insert_at: "## Tasks This Week"
+      format: compact_list
+```
+
+#### Step 4: Check Calendar (Auto-Generated)
+
+```yaml
+# automation/morning-calendar.yaml
+trigger:
+  type: note_opened
+  conditions:
+    - type: daily-note
+
+actions:
+  # Import calendar events
+  - calendar_sync:
+      date: "{{date:today}}"
+      insert_at: "## Schedule"
+      format: |
+        - {{time}} - [[{{event.note_link}}|{{event.title}}]] {{#if event.location}}@ {{event.location}}{{/if}}
+
+  # Create meeting notes for events
+  - for_each_event:
+      conditions:
+        - type: meeting
+        - attendees_count: ">1"
+      actions:
+        - create_note:
+            template: meeting-notes-template
+            folder: 10-meetings
+            link_in_calendar: true
+```
+
+#### Step 5: Set Top 3 Priorities (Manual)
+
+In the daily note, manually write your top 3 priorities:
+1. Most important task (must finish today)
+2. Second priority (should finish today)
+3. Third priority (good to finish today)
+
+**Tips for choosing priorities:**
+- Align with weekly/monthly goals
+- Consider energy levels
+- Balance urgent vs. important
+- Mix different types of work
+
+#### Step 6: Time Block Schedule (Manual/Assisted)
+
+```javascript
+// Plugin: Suggest Time Blocks
+async function suggestTimeBlocks() {
+  const today = await lokud.notes.getDaily();
+  const tasks = await lokud.databases.query('Tasks', {
+    filters: { status: 'Today' }
+  });
+
+  // Group tasks by energy level
+  const highEnergy = tasks.filter(t => t.energy === 'High Energy');
+  const mediumEnergy = tasks.filter(t => t.energy === 'Medium Energy');
+  const lowEnergy = tasks.filter(t => t.energy === 'Low Energy');
+
+  // Suggest schedule based on typical energy curve
+  const schedule = {
+    '09:00 - 11:00': highEnergy[0], // Peak morning energy
+    '11:00 - 12:00': mediumEnergy[0],
+    '13:00 - 14:00': lowEnergy[0], // Post-lunch dip
+    '14:00 - 16:00': highEnergy[1], // Afternoon peak
+    '16:00 - 17:00': mediumEnergy[1],
+  };
+
+  return schedule;
+}
+```
+
+### Complete Morning Routine Checklist
+
+```markdown
+## Morning Routine Checklist
+
+- [ ] Open today's daily note (auto-generated at 6am)
+- [ ] Review yesterday's note
+  - [ ] Complete evening reflection
+  - [ ] Carry over incomplete tasks
+- [ ] Check overdue tasks (auto-populated)
+- [ ] Review today's tasks from database (auto-populated)
+- [ ] Check calendar events (auto-populated)
+- [ ] Fill in morning reflection
+  - [ ] How do I feel?
+  - [ ] 3 things I'm grateful for
+  - [ ] What would make today great?
+- [ ] Set top 3 priorities
+- [ ] Assign tasks to time blocks
+- [ ] Review schedule for conflicts
+- [ ] Start first priority task
+
+**Total time**: 10-15 minutes
+```
+
+### Customization Options
+
+**Quick Version (5 minutes)**:
+- Skip gratitude and reflection
+- Focus only on top 3 priorities and calendar
+
+**Extended Version (30 minutes)**:
+- Add morning pages (free writing)
+- Include weekly/monthly goal review
+- Add habit tracking
+- Include health metrics (sleep, exercise)
+
+**Team Version**:
+- Check team channel for updates
+- Review team calendar
+- Post daily standup
+- Check for blockers
+
+---
+
+## Blog Writing Workflow
+
+**Use Case**: From idea to published blog post with SEO optimization
+
+**Time Required**: 4-8 hours (over several days)
+
+**Difficulty**: Intermediate
+
+### Overview
+
+A complete blog writing process from ideation through publication, including research, drafting, editing, and promotion.
+
+### Stage 1: Idea Capture
+
+#### Idea Template
+
+```markdown
+# templates/blog-idea-template.md
+---
+title: "Blog Idea: {{title}}"
+type: blog-idea
+status: idea
+created: "{{date}}"
+tags: [blog-idea]
+---
+
+# {{title}}
+
+## Core Concept
+
+What is this post about in one sentence?
+
+## Target Audience
+
+Who is this for?
+
+## Reader Problem
+
+What problem does this solve for the reader?
+
+## Angle/Hook
+
+What makes this post unique or interesting?
+
+## Potential Headlines
+
+1.
+2.
+3.
+4.
+5.
+
+## Key Points
+
+-
+-
+-
+
+## SEO Keywords
+
+Primary:
+Secondary:
+Long-tail:
+
+## Competitive Analysis
+
+Similar posts:
+- [Title](URL) - What they did well / What's missing
+
+## Next Steps
+
+- [ ] Research keywords
+- [ ] Validate idea
+- [ ] Create outline
+```
+
+#### Idea Capture Process
+
+```yaml
+# automation/blog-idea-capture.yaml
+
+# Quick capture from anywhere
+keyboard_shortcut: "Cmd+Shift+B"
+
+actions:
+  - prompt_user:
+      fields:
+        - name: idea
+          label: "Blog post idea"
+          type: text
+          required: true
+
+  - create_note:
+      template: blog-idea-template
+      folder: 01-ideas/blog
+      filename: "{{input.idea | slug}}.md"
+      frontmatter:
+        title: "{{input.idea}}"
+
+  - add_to_database:
+      base: Content Calendar
+      fields:
+        title: "{{input.idea}}"
+        type: Blog Post
+        status: Idea
+        created: "{{date:today}}"
+
+  - notify:
+      message: "Blog idea captured!"
+```
+
+### Stage 2: Research & Validation
+
+#### Research Template
+
+```markdown
+# templates/blog-research-template.md
+
+## Keyword Research
+
+### Primary Keyword
+- Keyword: ""
+- Search Volume:
+- Difficulty:
+- CPC:
+
+### Secondary Keywords
+1.
+2.
+3.
+
+### Long-tail Keywords
+1.
+2.
+3.
+
+## Competitive Research
+
+### Top Ranking Posts
+
+#### Post 1: [Title](URL)
+- Word count:
+- What works:
+- What's missing:
+- Backlinks:
+
+#### Post 2: [Title](URL)
+- Word count:
+- What works:
+- What's missing:
+- Backlinks:
+
+#### Post 3: [Title](URL)
+- Word count:
+- What works:
+- What's missing:
+- Backlinks:
+
+## Content Gaps
+
+What are competitors not covering?
+1.
+2.
+3.
+
+## Our Unique Angle
+
+How will our post be different/better?
+
+## Target Metrics
+
+- Target word count:
+- Target ranking position:
+- Estimated traffic:
+
+## Sources & References
+
+1.
+2.
+3.
+```
+
+### Stage 3: Outline Creation
+
+#### Blog Outline Template
+
+```markdown
+# templates/blog-outline-template.md
+---
+title: "{{title}}"
+type: blog-outline
+status: outlining
+target_words: 2000
+seo_title: ""
+meta_description: ""
+tags: [blog-post, outline]
+---
+
+# {{title}}
+
+## SEO Metadata
+
+**SEO Title** (50-60 chars): ""
+**Meta Description** (150-160 chars): ""
+**URL Slug**: ""
+**Primary Keyword**: ""
+**Secondary Keywords**: ""
+
+## Outline
+
+### Introduction (150-200 words)
+- Hook: (Start with a question, statistic, or story)
+- Problem statement:
+- What reader will learn:
+- Why they should keep reading:
+
+### Section 1: [Heading with Keyword] (300-400 words)
+
+**Key Points:**
+-
+-
+
+**Examples/Data:**
+-
+
+**Images:**
+- [ ] Screenshot/diagram of
+
+### Section 2: [Heading with Keyword] (300-400 words)
+
+**Key Points:**
+-
+-
+
+**Examples/Data:**
+-
+
+**Images:**
+- [ ] Screenshot/diagram of
+
+### Section 3: [Heading with Keyword] (400-500 words)
+
+**Key Points:**
+-
+-
+
+**Examples/Data:**
+-
+
+**Images:**
+- [ ] Screenshot/diagram of
+
+### Section 4: [Heading with Keyword] (300-400 words)
+
+**Key Points:**
+-
+-
+
+**Examples/Data:**
+-
+
+**Images:**
+- [ ] Screenshot/diagram of
+
+### Conclusion (150-200 words)
+- Recap key points:
+- Call to action:
+- Next steps for reader:
+
+## Content Elements
+
+- [ ] Introduction with hook
+- [ ] 3-5 main sections with H2 headings
+- [ ] Subheadings (H3) for each section
+- [ ] 5-10 images/screenshots
+- [ ] 2-3 examples or case studies
+- [ ] 1-2 quotes or statistics
+- [ ] Bulleted or numbered lists
+- [ ] Call-to-action (CTA)
+- [ ] Internal links (3-5)
+- [ ] External links (2-3)
+
+## Images Needed
+
+1. Featured image (1200x630px)
+2. Header image
+3.
+4.
+5.
+
+## Internal Links
+
+Link to these existing posts:
+1.
+2.
+3.
+
+## External Links
+
+Authoritative sources:
+1.
+2.
+3.
+```
+
+### Stage 4: First Draft
+
+```yaml
+# automation/start-blog-draft.yaml
+
+trigger:
+  type: command
+  command: "Create Blog Draft"
+
+actions:
+  # Select from outlined posts
+  - query_database:
+      base: Content Calendar
+      filters:
+        - field: Status
+          operator: equals
+          value: Outlined
+
+  - prompt_user:
+      message: "Select post to draft"
+      options: "{{query_results}}"
+
+  # Create draft from outline
+  - create_note:
+      source: "{{selected_post.outline}}"
+      template: blog-draft-template
+      folder: 03-production/blog-drafts
+      filename: "draft-{{selected_post.slug}}.md"
+
+  # Update status
+  - update_database_entry:
+      base: Content Calendar
+      entry_id: "{{selected_post.id}}"
+      fields:
+        status: Drafting
+        draft_started: "{{date:today}}"
+
+  - start_timer:
+      task: "Draft: {{selected_post.title}}"
+```
+
+#### Writing Session
+
+```markdown
+## Writing Tips
+
+### Before Writing
+- [ ] Review outline
+- [ ] Gather all research
+- [ ] Set timer (use Pomodoro: 25 min focus)
+- [ ] Eliminate distractions
+
+### During Writing
+- Write full paragraphs, don't worry about perfection
+- Use [placeholders] for things to add later
+- Add [IMAGE HERE] markers for visuals
+- Link [[related-notes]] as you write
+- Don't edit while drafting
+
+### After Each Section
+- [ ] Read it out loud
+- [ ] Check it addresses the key points
+- [ ] Verify examples are clear
+- [ ] Add transition to next section
+
+### Daily Progress
+Track progress in daily note:
+- **Words written today**: XXX
+- **Total word count**: XXX / {{target_words}}
+- **Sections complete**: X / Y
+- **Next session**: Continue with [section name]
+```
+
+### Stage 5: Editing & Refinement
+
+#### Editing Checklist
+
+```markdown
+# Editing Checklist
+
+## Content Edit (First Pass)
+- [ ] Introduction clearly states what post covers
+- [ ] Each section delivers on its heading promise
+- [ ] Examples are specific and relevant
+- [ ] Logic flows from one section to next
+- [ ] Conclusion summarizes and includes CTA
+- [ ] All [placeholders] filled in
+- [ ] All claims backed by data/sources
+
+## Line Edit (Second Pass)
+- [ ] Remove unnecessary words
+- [ ] Vary sentence length
+- [ ] Break up long paragraphs (max 3-4 lines)
+- [ ] Active voice (not passive)
+- [ ] Specific verbs (not generic)
+- [ ] Clear transitions between ideas
+
+## SEO Edit (Third Pass)
+- [ ] Primary keyword in title
+- [ ] Primary keyword in first paragraph
+- [ ] Primary keyword in at least one H2
+- [ ] Secondary keywords naturally included
+- [ ] Internal links to 3-5 related posts
+- [ ] External links to 2-3 authoritative sources
+- [ ] Image alt text includes keywords
+- [ ] Meta description compelling and accurate
+- [ ] URL slug contains keyword
+
+## Technical Edit (Fourth Pass)
+- [ ] All links work
+- [ ] Images load correctly
+- [ ] Code blocks formatted properly
+- [ ] Lists formatted consistently
+- [ ] Headings hierarchical (H2 > H3 > H4)
+- [ ] Spelling and grammar checked
+- [ ] Consistent formatting
+
+## Final Polish (Fifth Pass)
+- [ ] Read entire post out loud
+- [ ] Check on mobile preview
+- [ ] Verify word count meets target
+- [ ] Featured image selected
+- [ ] All images have alt text
+- [ ] Bio and author box added
+- [ ] Related posts selected
+```
+
+### Stage 6: Publication
+
+```yaml
+# automation/publish-blog-post.yaml
+
+trigger:
+  type: command
+  command: "Publish Blog Post"
+
+actions:
+  # Run pre-publish checks
+  - run_checklist:
+      checklist: blog-editing-checklist
+      required: true
+
+  # Export to format
+  - export_note:
+      format: html
+      include_frontmatter: false
+      output: ./exports/{{slug}}.html
+
+  # Copy to CMS
+  - api_call:
+      service: wordpress
+      endpoint: /posts
+      method: POST
+      data:
+        title: "{{seo_title}}"
+        content: "{{html_content}}"
+        status: draft
+        excerpt: "{{meta_description}}"
+        slug: "{{slug}}"
+        categories: "{{categories}}"
+        tags: "{{tags}}"
+
+  # Update database
+  - update_database_entry:
+      base: Content Calendar
+      fields:
+        status: Published
+        published_date: "{{date:today}}"
+        url: "{{wordpress_url}}"
+
+  # Archive draft
+  - move_note:
+      from: "{{draft_path}}"
+      to: 04-published/blog/{{date:YYYY}}/{{slug}}.md
+
+  # Notify
+  - notify:
+      title: "Blog post published!"
+      message: "{{title}}"
+      link: "{{published_url}}"
+```
+
+### Stage 7: Promotion
+
+#### Promotion Checklist
+
+```markdown
+# Post-Publication Checklist
+
+## Immediate (Day 1)
+- [ ] Share on Twitter with key takeaway
+- [ ] Share on LinkedIn with context
+- [ ] Post in relevant Facebook groups
+- [ ] Share on Instagram stories
+- [ ] Send email newsletter
+- [ ] Post in Slack communities
+- [ ] Submit to relevant subreddits
+
+## Week 1
+- [ ] Create Twitter thread with main points
+- [ ] Create LinkedIn carousel
+- [ ] Create Instagram posts (3-5)
+- [ ] Reach out to mentioned sources
+- [ ] Email to personal network
+- [ ] Comment in related blog posts with link
+
+## Week 2-4
+- [ ] Repurpose into YouTube video
+- [ ] Create podcast episode
+- [ ] Submit to content aggregators
+- [ ] Guest post with link
+- [ ] Update old posts with internal link
+
+## Ongoing
+- [ ] Track analytics weekly
+- [ ] Update based on performance
+- [ ] Respond to comments
+- [ ] Monitor backlinks
+```
+
+### Complete Workflow Timeline
+
+```markdown
+## Blog Post Timeline (Example)
+
+**Week 1: Research & Planning**
+- Monday: Idea capture & validation (1 hr)
+- Tuesday: Keyword research (2 hrs)
+- Wednesday: Competitive analysis (2 hrs)
+- Thursday: Create outline (2 hrs)
+- Friday: Review & refine outline (1 hr)
+
+**Week 2: Drafting**
+- Monday: Write introduction + section 1 (2 hrs)
+- Tuesday: Write sections 2-3 (2 hrs)
+- Wednesday: Write sections 4-5 (2 hrs)
+- Thursday: Write conclusion (1 hr)
+- Friday: Let it rest
+
+**Week 3: Editing**
+- Monday: Content edit (2 hrs)
+- Tuesday: Line edit (2 hrs)
+- Wednesday: SEO edit (1 hr)
+- Thursday: Technical edit (1 hr)
+- Friday: Final polish + images (2 hrs)
+
+**Week 4: Publication & Promotion**
+- Monday: Publish + social sharing (2 hrs)
+- Tuesday-Friday: Promotion activities (1 hr/day)
+
+**Total time**: ~30 hours over 4 weeks
+**Actual writing**: ~8 hours
+**Editing**: ~8 hours
+**Research/Planning**: ~8 hours
+**Promotion**: ~6 hours
+```
+
+---
+
+## Research Workflow
+
+**Use Case**: Collect, organize, and synthesize research for academic or professional projects
+
+**Time Required**: Ongoing
+
+**Difficulty**: Advanced
+
+### Overview
+
+A systematic approach to research using the Zettelkasten method combined with digital tools.
+
+### Stage 1: Literature Collection
+
+```yaml
+# automation/collect-paper.yaml
+
+# Multiple input methods
+input_methods:
+  # From DOI
+  - trigger: command
+    command: "Import Paper from DOI"
+    actions:
+      - prompt_user:
+          field: doi
+          label: "Enter DOI"
+
+      - fetch_metadata:
+          source: crossref
+          doi: "{{input.doi}}"
+
+      - create_note:
+          template: literature-note-template
+          folder: 01-literature/by-year/{{metadata.year}}
+          filename: "{{metadata.first_author}}-{{metadata.year}}.md"
+
+      - download_pdf:
+          doi: "{{input.doi}}"
+          destination: 01-literature/pdfs/
+
+      - add_to_database:
+          base: Papers
+          fields:
+            title: "{{metadata.title}}"
+            authors: "{{metadata.authors}}"
+            year: "{{metadata.year}}"
+            doi: "{{input.doi}}"
+            pdf: "{{pdf_path}}"
+            status: To Read
+
+  # From PDF
+  - trigger: file_dropped
+    file_type: pdf
+    folder: 00-inbox
+    actions:
+      - extract_metadata:
+          source: pdf
+          file: "{{dropped_file}}"
+
+      - create_note:
+          template: literature-note-template
+          folder: 01-literature/by-year/{{metadata.year}}
+
+  # From web clipper
+  - trigger: web_clip
+    domains: ["arxiv.org", "scholar.google.com"]
+    actions:
+      - parse_metadata:
+          from: webpage
+
+      - create_note:
+          template: literature-note-template
+```
+
+### Stage 2: Reading & Annotation
+
+```markdown
+# Reading Process
+
+## First Pass: Screening (5-10 minutes)
+- [ ] Read abstract
+- [ ] Scan figures and tables
+- [ ] Read conclusion
+- [ ] Decision: Read fully, skim, or skip?
+
+## Second Pass: Skim (30-60 minutes)
+- [ ] Read introduction thoroughly
+- [ ] Read section headings
+- [ ] Read first/last sentence of paragraphs
+- [ ] Note key equations/algorithms
+- [ ] List questions that arise
+
+## Third Pass: Deep Read (2-4 hours)
+- [ ] Read entire paper carefully
+- [ ] Understand every claim
+- [ ] Question assumptions
+- [ ] Note strengths/weaknesses
+- [ ] Recreate paper from memory (test understanding)
+```
+
+#### Annotation System
+
+```markdown
+# Annotation Legend
+
+## Highlighting Colors
+- **Yellow**: Key findings
+- **Green**: Methodology
+- **Blue**: Interesting idea/connection
+- **Red**: Questionable claim/weakness
+- **Purple**: Definition/terminology
+
+## Margin Notes
+- `?`: Question or confusion
+- `!`: Important/surprising
+- `→`: Connection to other work
+- `*`: Action item
+- `=`: Similar to another paper
+- `≠`: Contradicts another paper
+
+## Tags in PDF
+#methodology-innovative
+#results-significant
+#writing-example
+#cite-in-intro
+#replicate-experiment
+```
+
+### Stage 3: Note-Taking (Zettelkasten Method)
+
+#### Literature Notes (Paper Summary)
+
+```markdown
+# Literature Note Example
+
+---
+title: "Smith et al. (2024) - Deep Learning for X"
+type: literature-note
+source: paper
+doi: 10.1234/example
+date_read: 2025-01-20
+tags: [deep-learning, X, methodology]
+status: read
+rating: 4
+---
+
+# Smith et al. (2024) - Deep Learning for X
+
+## Bibliographic Info
+- **Authors**: Smith, A., Jones, B., Brown, C.
+- **Year**: 2024
+- **Journal**: Nature Machine Intelligence
+- **DOI**: 10.1234/example
+- **PDF**: [[pdfs/smith-2024.pdf]]
+
+## One-Sentence Summary
+Proposes a novel deep learning architecture that improves X by 25% through Y mechanism.
+
+## Key Contributions
+1. Novel architecture design
+2. Theoretical analysis of why it works
+3. Empirical validation on 5 datasets
+4. Open-source implementation
+
+## Methodology
+- **Approach**: Supervised learning with novel architecture
+- **Data**: 5 benchmark datasets (ImageNet, COCO, etc.)
+- **Evaluation**: Accuracy, F1, inference time
+- **Baselines**: ResNet, VGG, Transformer
+
+## Results
+- 25% improvement over SOTA
+- 3x faster inference
+- Works across domains
+
+## Strengths
+- Rigorous experimental design
+- Strong theoretical foundation
+- Reproducible (code available)
+- Clear writing
+
+## Weaknesses
+- Limited to supervised learning
+- Expensive to train
+- Doesn't address edge cases
+
+## Relevance to My Research
+This architecture could potentially be applied to my problem of Z. The theoretical framework might explain why my approach works.
+
+## Permanent Notes Generated
+- [[concept-attention-mechanism|Attention Mechanism Concept]]
+- [[method-training-large-models|Training Large Models]]
+- [[theory-why-deep-learning-works|Why Deep Learning Works]]
+
+## Questions
+- Can this scale to even larger datasets?
+- What about unsupervised settings?
+- How does it handle distribution shift?
+
+## Related Papers
+- [[jones-2023|Jones 2023]] - Similar approach
+- [[brown-2022|Brown 2022]] - Competing method
+- [[wilson-2024|Wilson 2024]] - Follow-up work
+
+## Citation
+```bibtex
+@article{smith2024deep,
+  title={Deep Learning for X},
+  author={Smith, A. and Jones, B. and Brown, C.},
+  journal={Nature Machine Intelligence},
+  year={2024},
+  doi={10.1234/example}
+}
+```
+```
+
+#### Permanent Notes (Atomic Concepts)
+
+```markdown
+# Permanent Note Example
+
+---
+title: "Attention Mechanism Concept"
+type: permanent-note
+created: 2025-01-20
+tags: [concept, deep-learning, attention]
+---
+
+# Attention Mechanism
+
+## Core Idea
+Attention allows a model to focus on relevant parts of the input when making predictions, rather than processing all inputs equally.
+
+## Key Insight
+Inspired by human visual attention - we focus on important parts of a scene rather than processing everything equally.
+
+## Mathematical Formulation
+```
+Attention(Q, K, V) = softmax(QK^T / √d_k)V
+
+Where:
+- Q: Query vectors (what we're looking for)
+- K: Key vectors (what we have)
+- V: Value vectors (what we return)
+- d_k: Dimension of keys (for scaling)
+```
+
+## Intuition
+1. Compare query against all keys (compute relevance)
+2. Get attention weights (softmax of comparisons)
+3. Weight values by attention scores
+4. Sum weighted values
+
+## Applications
+- Machine translation [[paper-attention-translation|Bahdanau 2015]]
+- Image captioning [[paper-show-attend-tell|Xu 2015]]
+- General sequence modeling [[paper-transformer|Vaswani 2017]]
+
+## Advantages
+- Allows variable-length inputs
+- Provides interpretability (can visualize attention)
+- Captures long-range dependencies
+
+## Disadvantages
+- Quadratic complexity in sequence length
+- Requires careful initialization
+- Can be unstable during training
+
+## Variants
+- Self-attention [[concept-self-attention|Note]]
+- Cross-attention [[concept-cross-attention|Note]]
+- Multi-head attention [[concept-multi-head-attention|Note]]
+- Sparse attention [[concept-sparse-attention|Note]]
+
+## Personal Insights
+Could attention be applied to my research problem? Instead of processing all features equally, selectively focus on relevant features based on context.
+
+## Open Questions
+- What is the minimum attention needed?
+- Can we learn what to attend to?
+- How does attention relate to biological attention?
+
+## Related Concepts
+- [[concept-transformers|Transformers]]
+- [[concept-sequence-models|Sequence Models]]
+- [[concept-neural-networks|Neural Networks]]
+
+## Source Notes
+- [[smith-2024|Smith et al. 2024]]
+- [[bahdanau-2015|Bahdanau et al. 2015]]
+- [[vaswani-2017|Vaswani et al. 2017]]
+```
+
+### Stage 4: Synthesis & Writing
+
+```yaml
+# automation/research-synthesis.yaml
+
+# Collect related notes
+gather_notes:
+  - query: "{{research_topic}}"
+  - filters:
+    - type: permanent-note
+    - tags_include: [{{topic_tags}}]
+  - sort_by: connection_strength
+
+# Create synthesis note
+create_synthesis:
+  - template: synthesis-template
+  - include:
+    - related_notes: all
+    - connections_map: visual
+    - timeline: chronological
+    - key_insights: extracted
+
+# Generate outline
+generate_outline:
+  - analyze_notes: "{{gathered_notes}}"
+  - identify_themes: auto
+  - suggest_structure: hierarchical
+  - create_outline: interactive
+```
+
+## Customization Tips
+
+**For Different Fields:**
+- **Sciences**: Add experiment tracking, lab notebooks
+- **Humanities**: Add primary source analysis, historical context
+- **Engineering**: Add code experiments, benchmarks
+- **Business**: Add case studies, market analysis
+
+**For Different Goals:**
+- **Literature Review**: Focus on systematic collection and synthesis
+- **Thesis/Dissertation**: Add chapter-by-chapter organization
+- **Grant Proposal**: Add impact tracking and citations
+- **Blog/Book**: Add audience-focused synthesis
+
+---
+
+## Sprint Planning Workflow
+
+**Use Case**: Agile team sprint planning and execution
+
+**Time Required**: 2 hours planning, 2 weeks execution
+
+**Difficulty**: Intermediate
+
+[Workflow content continuing with Sprint Planning details, including sprint setup, daily standups, retrospectives, etc.]
+
+---
+
+## Learning Workflow
+
+**Use Case**: Structured learning with spaced repetition and knowledge capture
+
+**Time Required**: Ongoing
+
+**Difficulty**: Beginner-Intermediate
+
+[Workflow content with learning process, note-taking, review schedule, etc.]
+
+---
+
+**Next Steps**: Choose a workflow that matches your needs, set up the required templates and databases, configure automations, and start using it. Refine based on what works for you.

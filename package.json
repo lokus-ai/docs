@@ -6,14 +6,26 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "postbuild": "next-sitemap",
     "start": "next start"
   },
   "dependencies": {
+    "@react-sigma/core": "^5.0.4",
+    "d3-force": "^3.0.0",
+    "graphology": "^0.26.0",
+    "graphology-layout-force": "^0.2.4",
+    "graphology-layout-forceatlas2": "^0.10.1",
+    "lucide-react": "^0.294.0",
     "next": "^14.0.0",
+    "next-seo": "^7.0.1",
+    "next-sitemap": "^4.2.3",
     "nextra": "^3.0.0",
     "nextra-theme-docs": "^3.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "lucide-react": "^0.294.0"
+    "react-force-graph-2d": "^1.29.0",
+    "react-force-graph-3d": "^1.29.0",
+    "sigma": "^3.0.2",
+    "three": "^0.180.0"
   }
 }

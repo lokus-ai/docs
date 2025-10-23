@@ -1,0 +1,969 @@
+---
+title: Mastering Advanced Search - Lokus Tutorial
+description: Master Lokus search features to find anything instantly. Learn search operators, filters, regex patterns, and quantum search capabilities.
+keywords: [lokus search, advanced search, search operators, regex search, quantum search, find notes, search filters]
+---
+
+# Mastering Advanced Search
+
+Learn to find anything in your knowledge base instantly using Lokus's powerful search features, from basic queries to advanced quantum search.
+
+## What You'll Learn
+
+By the end of this tutorial, you'll be able to:
+- Use search operators for precise queries
+- Apply filters to narrow results
+- Write regex patterns for complex searches
+- Use quantum search for fuzzy matching
+- Create and save custom searches
+- Search across metadata and properties
+- Use search modifiers and flags
+- Build complex search queries
+- Optimize search performance
+
+## Prerequisites
+
+- Completed [Building Your First Workspace](/tutorials/first-workspace) or have an existing workspace
+- Some notes to search through (at least 10-20)
+- Basic familiarity with regular expressions (helpful but not required)
+- 25 minutes of focused time
+
+## Time Estimate
+
+**25 minutes** - Master search and find anything instantly
+
+---
+
+## Understanding Lokus Search
+
+Before diving into advanced features, let's understand how search works.
+
+### Search Architecture
+
+Lokus uses a multi-layered search system:
+
+1. **Quick Search:** Fast text matching (Cmd/Ctrl + F)
+2. **Full-Text Search:** Comprehensive content search
+3. **Quantum Search:** Fuzzy matching with AI-powered relevance
+4. **Metadata Search:** Search properties and frontmatter
+5. **Structured Search:** Query bases and structured data
+
+### Search Index
+
+Lokus maintains a search index that updates in real-time:
+
+- **Content:** All note text content
+- **Metadata:** Frontmatter, tags, properties
+- **Links:** Wikilinks and backlinks
+- **Structure:** Headings, lists, tables
+- **Files:** File names and paths
+
+> **Note:** 
+**Info:** The search index rebuilds automatically when you add, edit, or delete notes. Large workspaces may take a few seconds to reindex.
+
+
+---
+
+## Step 1: Basic Search Operators
+
+Let's start with fundamental search operators.
+
+### 1.1 Text Search
+
+**Simple word search:**
+```
+habit
+```
+Finds notes containing "habit"
+
+**Phrase search (exact match):**
+```
+"atomic habits"
+```
+Finds exact phrase "atomic habits"
+
+**Multiple words (AND):**
+```
+habit building
+```
+Finds notes containing both "habit" AND "building"
+
+### 1.2 Boolean Operators
+
+**OR operator:**
+```
+habit OR routine
+```
+Finds notes containing either word
+
+**NOT operator:**
+```
+habit -routine
+```
+Finds "habit" but excludes notes with "routine"
+
+**Complex combinations:**
+```
+(habit OR routine) AND building -productivity
+```
+Finds notes about habit/routine building, excluding productivity
+
+> **Note:** 
+**Pro Tip:** Use parentheses to control operator precedence, just like math: `(A OR B) AND C` is different from `A OR (B AND C)`.
+
+
+### 1.3 Wildcard Search
+
+**Asterisk wildcard (*):**
+```
+habit*
+```
+Matches: habit, habits, habitual, habitually
+
+**Question mark wildcard (?):**
+```
+wom?n
+```
+Matches: woman, women
+
+**Multiple wildcards:**
+```
+habit* AND build*
+```
+Matches: habits building, habitual builder, etc.
+
+
+---
+
+## Step 2: Field-Specific Search
+
+Search within specific note properties.
+
+### 2.1 Common Fields
+
+**Title search:**
+```
+title:"project management"
+```
+Searches only in note titles
+
+**Content search:**
+```
+content:zettelkasten
+```
+Searches only in note content (excludes titles, metadata)
+
+**Tag search:**
+```
+tag:habits
+tag:#productivity
+```
+Finds notes with specific tags
+
+**Path search:**
+```
+path:Projects/
+```
+Finds notes in specific folder
+
+### 2.2 Metadata Search
+
+**Date created:**
+```
+created:2024-01-15
+created:>2024-01-01
+created:&lt;2024-02-01
+```
+
+**Date modified:**
+```
+modified:today
+modified:yesterday
+modified:this-week
+modified:>7days
+```
+
+**Author search:**
+```
+author:"John Doe"
+```
+
+**Custom fields:**
+```
+status:active
+priority:high
+project:"Website Redesign"
+```
+
+### 2.3 Combining Field Searches
+
+```
+tag:habits AND created:>2024-01-01 AND title:atomic
+```
+Finds habit-tagged notes created this year with "atomic" in title
+
+> **Note:** 
+**Pro Tip:** Use field searches to quickly filter large result sets. Start broad, then add field constraints to narrow down.
+
+
+---
+
+## Step 3: Advanced Operators
+
+Powerful operators for precise queries.
+
+### 3.1 Proximity Search
+
+**NEAR operator:**
+```
+habit NEAR building
+habit NEAR/5 building
+```
+Finds "habit" and "building" near each other (within 5 words)
+
+**BEFORE/AFTER:**
+```
+system BEFORE thinking
+cause AFTER effect
+```
+Finds words in specific order
+
+### 3.2 Numeric Operators
+
+**Greater than/less than:**
+```
+wordcount:>1000
+wordcount:&lt;500
+wordcount:500..2000
+```
+
+**Exact match:**
+```
+wordcount:1500
+```
+
+**Range:**
+```
+created:[2024-01-01 TO 2024-01-31]
+priority:[1 TO 5]
+```
+
+### 3.3 Special Operators
+
+**Has operator:**
+```
+has:tag
+has:backlinks
+has:frontmatter
+has:image
+has:code
+has:table
+```
+
+**Is operator:**
+```
+is:favorite
+is:pinned
+is:archived
+is:unlinked
+is:orphan
+```
+
+**Count operator:**
+```
+backlinks:>10
+links:5
+tags:>3
+```
+
+### 3.4 Fuzzy Search
+
+**Tilde (~) for fuzzy matching:**
+```
+habbit~
+```
+Matches: habit (allows 1 edit distance)
+
+**Custom edit distance:**
+```
+habbit~2
+```
+Allows up to 2 character differences
+
+
+---
+
+## Step 4: Regular Expressions
+
+Use regex for pattern-based searching.
+
+### 4.1 Basic Regex
+
+**Enable regex mode:**
+```
+/pattern/
+```
+
+**Common patterns:**
+```
+/\d{4}-\d{2}-\d{2}/        # Dates: 2024-01-15
+/[A-Z]{2,}/                 # Acronyms: API, REST, CRUD
+/https?:\/\/[^\s]+/         # URLs
+/\b[A-Z][a-z]+\b/          # Capitalized words
+```
+
+### 4.2 Practical Regex Searches
+
+**Find TODO items:**
+```
+/- \[ \] .+/
+```
+
+**Find headers:**
+```
+/^#{1,6}\s.+$/
+```
+
+**Find email addresses:**
+```
+/[\w.-]+@[\w.-]+\.\w+/
+```
+
+**Find wikilinks:**
+```
+/\[\[[^\]]+\]\]/
+```
+
+**Find phone numbers:**
+```
+/\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/
+```
+
+### 4.3 Regex with Field Search
+
+Combine regex with field operators:
+
+```
+title:/Project \d+/
+content:/TODO|FIXME|HACK/
+tag:/^dev-.*/
+```
+
+> **Note:** 
+**Warning:** Complex regex patterns can slow down search. Test on small result sets first, then expand.
+
+
+---
+
+## Step 5: Quantum Search
+
+Lokus's AI-powered semantic search.
+
+### 5.1 What is Quantum Search?
+
+Quantum Search uses machine learning to find semantically related content, not just keyword matches.
+
+**Traditional search:**
+```
+habit building
+```
+Finds notes containing those exact words
+
+**Quantum search:**
+```
+~habit building
+```
+Finds notes about: habits, routines, behavior change, consistency, discipline, etc.
+
+### 5.2 Semantic Queries
+
+**Concept search:**
+```
+~learning effectively
+```
+Finds: study techniques, memory, spaced repetition, note-taking methods
+
+**Question search:**
+```
+~how to stay motivated?
+```
+Finds relevant answers even if question isn't explicitly stated
+
+**Context search:**
+```
+~productivity in remote work
+```
+Understands context and finds related concepts
+
+### 5.3 Similarity Search
+
+**Find similar notes:**
+```
+similar:[[Note Title]]
+```
+Finds notes similar to the specified note
+
+**Find related:**
+```
+related:current
+```
+Finds notes related to currently open note
+
+### 5.4 Quantum Search Settings
+
+Configure in Settings → Search → Quantum:
+
+- **Sensitivity:** How loosely to match (0-100)
+- **Context window:** How much text to consider
+- **Relevance threshold:** Minimum match score
+- **Max results:** Limit quantum results
+
+> **Note:** 
+**Info:** Quantum search requires an active internet connection and processes queries server-side for privacy-respecting AI analysis.
+
+
+
+---
+
+## Step 6: Search Filters
+
+Narrow results with powerful filters.
+
+### 6.1 Quick Filters
+
+**Filter panel** (click funnel icon in search):
+
+- **File type:** Notes, Images, PDFs, All
+- **Date range:** Today, This week, This month, Custom
+- **Tags:** Select from tag list
+- **Folder:** Select from folder tree
+- **Has property:** Frontmatter, Tags, Links, etc.
+
+### 6.2 Saved Filters
+
+Create reusable filter combinations:
+
+1. Build your search query
+2. Apply desired filters
+3. Click **"Save Filter"**
+4. Name it: "Recent Project Notes"
+
+**Example saved filters:**
+
+```
+Name: Active Projects
+Query: tag:project AND status:active AND modified:>30days
+
+Name: Unlinked Notes
+Query: is:orphan AND created:>7days
+
+Name: High Priority Tasks
+Query: tag:todo AND priority:high AND due:&lt;7days
+
+Name: Long Form Content
+Query: wordcount:>2000 AND tag:writing
+```
+
+### 6.3 Filter Combinations
+
+Stack filters for precise results:
+
+```
+Base query: productivity
++ Filter: tag:habits
++ Filter: created:this-month
++ Filter: has:backlinks
++ Sort: modified (newest first)
+```
+
+---
+
+## Step 7: Search Views and Sorting
+
+Control how results are displayed.
+
+### 7.1 View Modes
+
+**List view:**
+- Compact list of matching notes
+- Shows title and snippet
+- Fast scanning
+
+**Card view:**
+- Rich cards with metadata
+- Shows tags, dates, properties
+- Visual browsing
+
+**Table view:**
+- Spreadsheet-like display
+- Sortable columns
+- Bulk actions
+
+**Graph view:**
+- Visual network of results
+- Shows connections
+- Cluster analysis
+
+### 7.2 Sort Options
+
+Sort results by:
+
+- **Relevance:** Best matches first (default)
+- **Title:** Alphabetical
+- **Created:** Newest/oldest first
+- **Modified:** Recently updated
+- **Word count:** Longest/shortest
+- **Backlinks:** Most connected
+- **Custom field:** Any metadata property
+
+### 7.3 Grouping
+
+Group results by:
+
+- **Folder:** Organize by location
+- **Tag:** Group by tags
+- **Date:** Group by creation/modification date
+- **Property:** Any custom field
+
+Example:
+```
+Search: tag:project
+Group by: status
+Sort by: priority (descending)
+
+Results:
+- Active (5)
+  - Project Alpha (high)
+  - Project Beta (medium)
+- On Hold (2)
+- Completed (12)
+```
+
+
+---
+
+## Step 8: Search in Context
+
+Search within specific contexts.
+
+### 8.1 Scope Search
+
+**Search in current folder:**
+```
+path:"Projects/" productivity
+```
+
+**Search in subtree:**
+```
+path:"Projects/**" productivity
+```
+
+**Exclude folders:**
+```
+productivity -path:"Archive/"
+```
+
+### 8.2 Link Context Search
+
+**Search backlinks:**
+```
+backlinks:[[Atomic Habits]]
+```
+
+**Search forward links:**
+```
+links-to:[[Project Management]]
+```
+
+**Search link network:**
+```
+connected:[[Zettelkasten]]
+```
+Finds all notes in the same link network
+
+### 8.3 Temporal Context
+
+**Recent activity:**
+```
+modified:today
+modified:this-week
+created:this-month
+```
+
+**Historical search:**
+```
+created:[2023-01-01 TO 2023-12-31]
+```
+
+**Relative dates:**
+```
+modified:>30days      # Modified in last 30 days
+created:&lt;90days       # Created more than 90 days ago
+```
+
+---
+
+## Step 9: Advanced Search Techniques
+
+Power user techniques.
+
+### 9.1 Multi-Step Search
+
+**Progressive refinement:**
+
+```
+Step 1: habit
+Results: 234 notes
+
+Step 2: habit AND (building OR formation)
+Results: 87 notes
+
+Step 3: habit AND (building OR formation) AND tag:personal-development
+Results: 23 notes
+
+Step 4: Add filter: created:>2024-01-01
+Results: 8 notes
+```
+
+### 9.2 Search Macros
+
+Create search shortcuts:
+
+**Settings → Search → Macros:**
+
+```
+Macro: recent
+Expands to: modified:>7days
+
+Macro: todo
+Expands to: content:/- \[ \]/ AND -tag:archive
+
+Macro: long
+Expands to: wordcount:>2000
+
+Usage:
+recent todo         # Recently modified todos
+long tag:essay      # Long essay notes
+```
+
+### 9.3 Search Templates
+
+Save complex search patterns:
+
+```
+Template: Project Status
+Query: tag:project AND status:{{status}} AND owner:{{owner}}
+Variables: status, owner
+
+Template: Reading Queue
+Query: tag:reading AND status:unread AND priority:{{priority}}
+Variables: priority
+```
+
+### 9.4 Embedded Search
+
+Use search in notes:
+
+````markdown
+# My Dashboard
+
+## Recent Activity
+```query
+modified:>7days
+```
+
+## Unfinished Tasks
+```query
+content:/- \[ \]/ AND -tag:done
+sort: due
+```
+
+## Most Connected Notes
+```query
+backlinks:>10
+sort: backlinks desc
+limit: 10
+```
+````
+
+> **Note:** 
+**Pro Tip:** Embedded search queries update dynamically. Use them to create living dashboards that always show current data.
+
+
+---
+
+## Step 10: Search Performance Optimization
+
+Make searches faster and more efficient.
+
+### 10.1 Query Optimization
+
+**Do:**
+- ✅ Use field searches to narrow scope
+- ✅ Put most restrictive terms first
+- ✅ Use exact phrases when possible
+- ✅ Limit wildcard usage
+
+**Don't:**
+- ❌ Start queries with wildcards (`*term`)
+- ❌ Use too many OR operators
+- ❌ Over-use regex for simple searches
+- ❌ Search without any constraints
+
+### 10.2 Index Management
+
+**Reindex workspace:**
+```
+Settings → Search → Rebuild Index
+```
+
+When to reindex:
+- After importing many notes
+- If search results seem incorrect
+- After major Lokus updates
+- Monthly maintenance
+
+### 10.3 Search Settings
+
+**Optimize in Settings → Search:**
+
+- **Index depth:** Balance speed vs. completeness
+- **Cache size:** More cache = faster repeated searches
+- **Async indexing:** Index in background
+- **Excluded folders:** Don't index archives
+
+### 10.4 Performance Tips
+
+**Large workspaces (>10,000 notes):**
+
+1. Use specific field searches
+2. Search within folders
+3. Exclude archived content
+4. Use saved searches
+5. Enable async indexing
+6. Increase cache size
+
+**Example optimized search:**
+```
+# Slow (searches everything)
+productivity
+
+# Fast (narrow scope)
+path:"Active Projects/" AND tag:productivity AND modified:>30days
+```
+
+---
+
+## Real-World Search Scenarios
+
+Practical examples for common tasks.
+
+### Scenario 1: Finding Old Ideas
+
+**Goal:** Find notes about habits from last year
+
+```
+tag:ideas AND content:habit* AND created:[2023-01-01 TO 2023-12-31]
+```
+
+### Scenario 2: Research Review
+
+**Goal:** Find all literature notes not yet processed
+
+```
+tag:literature AND -tag:processed AND created:>30days
+sort: created asc
+```
+
+### Scenario 3: Content Audit
+
+**Goal:** Find long, unlinked notes that might need backlinks
+
+```
+wordcount:>1500 AND is:orphan AND -path:"Archive/"
+sort: wordcount desc
+```
+
+### Scenario 4: Project Cleanup
+
+**Goal:** Find stale project notes to archive
+
+```
+tag:project AND status:active AND modified:&lt;90days
+sort: modified asc
+```
+
+### Scenario 5: Knowledge Gaps
+
+**Goal:** Find topics mentioned but not expanded
+
+```
+# Find brackets without corresponding notes
+content:/\[\[[^\]]+\]\]/ AND is:orphan
+```
+
+---
+
+## Keyboard Shortcuts
+
+Master search with keyboard shortcuts.
+
+### Essential Shortcuts
+
+| Action | Shortcut | Description |
+|--------|----------|-------------|
+| Quick search | `Cmd/Ctrl + F` | Search in current note |
+| Global search | `Cmd/Ctrl + Shift + F` | Search all notes |
+| Search panel | `Cmd/Ctrl + P` | Open search panel |
+| Next result | `Enter` | Jump to next match |
+| Previous result | `Shift + Enter` | Jump to previous |
+| Filter panel | `Cmd/Ctrl + L` | Toggle filters |
+| Save search | `Cmd/Ctrl + S` | Save current search |
+| Clear search | `Esc` | Clear and close |
+
+### Advanced Shortcuts
+
+| Action | Shortcut | Description |
+|--------|----------|-------------|
+| Regex mode | `Cmd/Ctrl + R` | Toggle regex |
+| Quantum search | `Cmd/Ctrl + Q` | Toggle quantum |
+| Case sensitive | `Alt + C` | Toggle case matching |
+| Whole word | `Alt + W` | Match whole words |
+| Multi-select | `Cmd/Ctrl + Click` | Select multiple results |
+| Bulk action | `Cmd/Ctrl + A` | Select all results |
+
+---
+
+## Tips and Best Practices
+
+### Do's
+
+✅ **Start broad, then narrow:** Begin with simple query, refine with filters
+
+✅ **Use field searches:** Much faster than full-text search
+
+✅ **Save frequent searches:** Don't retype complex queries
+
+✅ **Learn regex basics:** Powerful for pattern matching
+
+✅ **Use quantum for concepts:** Great for exploring related ideas
+
+✅ **Test on small sets:** Verify query works before expanding scope
+
+### Don'ts
+
+❌ **Don't over-complicate:** Simple searches work for most cases
+
+❌ **Don't start with wildcard:** `*term` is very slow
+
+❌ **Don't ignore errors:** Red underlines indicate syntax problems
+
+❌ **Don't search without thinking:** Formulate query before typing
+
+❌ **Don't forget operators:** Use AND/OR/NOT explicitly
+
+---
+
+## Troubleshooting
+
+### No Results Found
+
+**Check:**
+1. Spelling and typos
+2. Case sensitivity settings
+3. Field search syntax
+4. Excluded folders
+5. Active filters
+
+**Try:**
+- Simplify query
+- Use wildcards
+- Check if notes actually exist
+- Rebuild search index
+
+### Too Many Results
+
+**Solutions:**
+- Add field constraints
+- Use AND operators
+- Apply filters
+- Increase specificity
+- Use exact phrases
+
+### Slow Search
+
+**Fixes:**
+1. Narrow scope with path:
+2. Avoid leading wildcards
+3. Use field searches
+4. Rebuild index
+5. Increase cache size
+6. Exclude archives
+
+### Unexpected Results
+
+**Verify:**
+- Operator precedence (use parentheses)
+- Field syntax is correct
+- Regex is escaped properly
+- Filters are applied
+- Sort order is as expected
+
+---
+
+## Next Steps
+
+You're now a search master! Here's what to do next:
+
+### This Week
+
+- Practice search operators daily
+- Create 3-5 saved searches for common queries
+- Try quantum search for exploration
+- Set up search macros for your workflow
+
+### This Month
+
+- Learn basic regex patterns
+- Create embedded search dashboards
+- Optimize your search settings
+- Share search tips with others
+
+### Continue Learning
+
+- **Next Tutorial:** [Content Creation Pipeline](/tutorials/content-creation) - Use search to power your writing
+- **Related:** [Zettelkasten System](/tutorials/zettelkasten) - Search is crucial for networked notes
+- **Advanced:** [Plugin Development](/tutorials/plugin-development) - Build custom search features
+
+---
+
+## Summary
+
+In this tutorial, you learned:
+
+✅ Basic and advanced search operators (AND, OR, NOT, wildcards)
+✅ Field-specific searching (title, content, tags, metadata)
+✅ Advanced operators (proximity, numeric, special)
+✅ Regular expressions for pattern matching
+✅ Quantum search for semantic queries
+✅ Search filters and saved searches
+✅ View modes and result sorting
+✅ Context-aware searching
+✅ Performance optimization
+✅ Real-world search scenarios
+
+You can now find anything in your knowledge base within seconds, no matter how large it grows. Effective search is the foundation of a powerful knowledge management system.
+
+Happy searching!
+
+---
+
+**Resources:**
+- [Search Syntax Reference](/docs/search-syntax)
+- [Regular Expressions Guide](/docs/regex-guide)
+- [Quantum Search Documentation](/docs/quantum-search)
+- [Search API for Plugins](/docs/plugin-api/search)
+
+**Estimated Completion Time:** 25 minutes
+**Difficulty:** Beginner to Intermediate
+**Last Updated:** January 2024

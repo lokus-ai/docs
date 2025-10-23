@@ -1,0 +1,1034 @@
+---
+title: Project Management with Kanban + Bases - Lokus Tutorial
+description: Transform Lokus into a powerful project management system. Learn to set up Kanban boards, manage tasks, track progress, and collaborate with teams.
+keywords: [project management lokus, kanban boards, task management, team collaboration, project tracking, agile workflow]
+---
+
+# Project Management with Kanban + Bases
+
+Learn how to transform Lokus into a complete project management system using Kanban boards, custom bases, and powerful tracking features.
+
+## What You'll Learn
+
+By the end of this tutorial, you'll be able to:
+- Set up project bases with custom fields
+- Create and manage Kanban boards
+- Track tasks, milestones, and dependencies
+- Use views to visualize project progress
+- Implement team collaboration workflows
+- Create project templates for consistency
+- Generate reports and track metrics
+
+## Prerequisites
+
+- Completed [Building Your First Workspace](/tutorials/first-workspace) or familiar with Lokus basics
+- Understanding of project management concepts (helpful but not required)
+- 40 minutes of focused time
+
+## Time Estimate
+
+**40 minutes** - Build a complete project management system
+
+---
+
+## Understanding Bases in Lokus
+
+Before we dive in, let's understand what makes Lokus bases powerful for project management.
+
+### What are Bases?
+
+Bases are structured databases that combine the flexibility of notes with the power of databases. Each base contains:
+
+- **Records:** Individual items (tasks, projects, clients)
+- **Fields:** Properties of records (status, priority, due date)
+- **Views:** Different ways to visualize data (Kanban, table, calendar)
+- **Relations:** Connections between bases
+
+> **Note:** 
+**Info:** Think of bases as supercharged spreadsheets that integrate seamlessly with your notes and knowledge base.
+
+
+### Why Bases for Project Management?
+
+- **Structured Data:** Track projects systematically
+- **Multiple Views:** See data from different perspectives
+- **Custom Fields:** Capture exactly what you need
+- **Relational:** Link tasks, projects, and resources
+- **Flexible:** Adapt to any project methodology
+
+---
+
+## Step 1: Creating Your First Project Base
+
+Let's create a base to manage tasks.
+
+### 1.1 Create the Tasks Base
+
+1. Open Lokus and create a new workspace or use an existing one
+2. Click **"New Base"** (or press `Cmd/Ctrl + Shift + N`)
+3. Name it: `Tasks`
+4. Choose template: `Project Management - Tasks`
+5. Click **"Create"**
+
+
+### 1.2 Understanding the Default Structure
+
+Your Tasks base comes with these default fields:
+
+| Field | Type | Purpose |
+|-------|------|---------|
+| **Name** | Text | Task title |
+| **Status** | Select | Current state |
+| **Priority** | Select | Importance level |
+| **Due Date** | Date | Deadline |
+| **Assignee** | Person | Who's responsible |
+| **Notes** | Long Text | Detailed description |
+
+> **Note:** 
+**Pro Tip:** Start with the default template and customize as you discover your needs. Don't over-engineer from the start.
+
+
+### 1.3 Add Custom Fields
+
+Let's add fields specific to your workflow:
+
+1. Click the **"+"** button in the header row
+2. Add these fields:
+   - **Effort** (Number): Estimated hours
+   - **Tags** (Multi-select): Categories like #bug, #feature, #docs
+   - **Progress** (Progress bar): % complete
+   - **Project** (Relation): Links to Projects base (we'll create this next)
+
+```
+Field Configuration Examples:
+
+Effort:
+- Type: Number
+- Format: Decimal
+- Suffix: "hours"
+
+Progress:
+- Type: Progress
+- Min: 0
+- Max: 100
+- Show as percentage
+
+Tags:
+- Type: Multi-select
+- Options: bug, feature, enhancement, docs, testing, design
+- Color-coded
+```
+
+
+---
+
+## Step 2: Creating a Kanban View
+
+Now let's visualize our tasks as a Kanban board.
+
+### 2.1 Create the Kanban View
+
+1. In your Tasks base, click **"Add View"**
+2. Select **"Kanban"**
+3. Name it: `Task Board`
+4. Group by: `Status`
+5. Click **"Create"**
+
+You should now see columns for each status:
+- **Backlog**
+- **To Do**
+- **In Progress**
+- **Review**
+- **Done**
+
+### 2.2 Customize Kanban Columns
+
+Let's configure the columns:
+
+1. Click the column header menu (⋮)
+2. Customize each column:
+
+```
+Backlog:
+- Color: Gray
+- Limit: None
+- Description: "Ideas and future tasks"
+
+To Do:
+- Color: Blue
+- Limit: 10
+- Description: "Ready to start"
+
+In Progress:
+- Color: Yellow
+- Limit: 3 (WIP limit)
+- Description: "Currently working on"
+
+Review:
+- Color: Orange
+- Limit: 5
+- Description: "Needs review/testing"
+
+Done:
+- Color: Green
+- Limit: None
+- Description: "Completed tasks"
+```
+
+> **Note:** 
+**Pro Tip:** WIP (Work In Progress) limits prevent team overload. Limit "In Progress" to 2-3 tasks per team member.
+
+
+### 2.3 Add Your First Tasks
+
+Create some example tasks:
+
+**Task 1:**
+```
+Name: Design new homepage
+Status: To Do
+Priority: High
+Due Date: 2024-01-25
+Assignee: Alex
+Effort: 8 hours
+Tags: design, frontend
+Progress: 0%
+Notes:
+- Mockups needed
+- Should match brand guidelines
+- Mobile-first approach
+```
+
+**Task 2:**
+```
+Name: Implement user authentication
+Status: In Progress
+Priority: High
+Due Date: 2024-01-20
+Assignee: Jordan
+Effort: 16 hours
+Tags: feature, backend, security
+Progress: 60%
+Notes:
+- OAuth integration
+- JWT tokens
+- Password reset flow
+```
+
+**Task 3:**
+```
+Name: Write API documentation
+Status: Backlog
+Priority: Medium
+Due Date: 2024-02-01
+Assignee: Sam
+Effort: 12 hours
+Tags: docs
+Progress: 0%
+```
+
+Drag tasks between columns to change their status!
+
+
+---
+
+## Step 3: Creating a Projects Base
+
+Let's create a higher-level Projects base to organize tasks.
+
+### 3.1 Create the Projects Base
+
+1. Create a new base: `Projects`
+2. Use template: `Project Management - Projects`
+3. Add these fields:
+
+```
+Field Structure:
+
+Name: Text (Project title)
+Status: Select (Planning, Active, On Hold, Completed, Archived)
+Owner: Person (Project lead)
+Start Date: Date
+End Date: Date
+Budget: Number (Currency format)
+Progress: Formula (Calculated from linked tasks)
+Description: Long Text
+Health: Select (On Track, At Risk, Blocked)
+Tasks: Relation (Links to Tasks base)
+```
+
+### 3.2 Link Projects and Tasks
+
+Now connect the bases:
+
+1. In the **Projects** base, create a relation field:
+   - Name: `Tasks`
+   - Relation type: One project → Many tasks
+   - Linked base: `Tasks`
+
+2. In the **Tasks** base, you'll now see:
+   - Field: `Project` (automatically created)
+   - Links tasks to their parent project
+
+### 3.3 Create Example Projects
+
+**Project 1: Website Redesign**
+```
+Name: Website Redesign
+Status: Active
+Owner: Alex
+Start Date: 2024-01-15
+End Date: 2024-03-31
+Budget: $25,000
+Health: On Track
+Description:
+Complete redesign of company website including:
+- New visual design
+- Improved UX
+- Mobile optimization
+- Performance improvements
+
+Linked Tasks:
+- Design new homepage
+- Implement responsive layout
+- Optimize images
+- Write new copy
+```
+
+**Project 2: API v2.0 Development**
+```
+Name: API v2.0 Development
+Status: Active
+Owner: Jordan
+Start Date: 2024-01-01
+End Date: 2024-04-30
+Budget: $50,000
+Health: At Risk
+Description:
+Next generation API with:
+- RESTful design
+- GraphQL endpoint
+- Comprehensive documentation
+- Rate limiting
+
+Linked Tasks:
+- Implement user authentication
+- Write API documentation
+- Set up rate limiting
+- Create integration tests
+```
+
+> **Note:** 
+**Success:** You now have a two-level project hierarchy! Projects contain tasks, and both are tracked in dedicated bases.
+
+
+---
+
+## Step 4: Creating Multiple Views
+
+Different views help you see your projects from different angles.
+
+### 4.1 Table View for Detailed Management
+
+In the Tasks base:
+
+1. Create a new view: **"All Tasks"**
+2. Type: `Table`
+3. Configure columns:
+   - Show: All fields
+   - Sort: Due Date (ascending)
+   - Group: None
+4. Add filters:
+   - Status is not "Done"
+
+This view is great for detailed task management and bulk editing.
+
+### 4.2 Calendar View for Timeline
+
+1. Create a new view: **"Task Calendar"**
+2. Type: `Calendar`
+3. Date field: `Due Date`
+4. Color by: `Priority`
+
+Now you can see all tasks on a timeline and identify scheduling conflicts.
+
+
+### 4.3 Timeline View for Gantt Chart
+
+1. Create a new view: **"Project Timeline"**
+2. Type: `Timeline` (Gantt)
+3. Start date: `Start Date`
+4. End date: `Due Date`
+5. Group by: `Project`
+
+Perfect for seeing project phases and dependencies.
+
+### 4.4 Board View by Priority
+
+1. Create a new view: **"By Priority"**
+2. Type: `Kanban`
+3. Group by: `Priority`
+4. Columns: High, Medium, Low
+
+Use this to focus on what matters most.
+
+> **Note:** 
+**Pro Tip:** Create views for different contexts: "My Tasks" (filtered by assignee), "This Week" (due date filter), "Blocked" (health status), etc.
+
+
+---
+
+## Step 5: Task Dependencies and Relationships
+
+Let's set up task dependencies to track what blocks what.
+
+### 5.1 Add Dependency Fields
+
+In the Tasks base, add:
+
+1. **Blocks** (Relation to Tasks):
+   - This task blocks other tasks
+2. **Blocked By** (Relation to Tasks):
+   - This task is blocked by other tasks
+
+### 5.2 Create Dependent Tasks
+
+Example workflow:
+
+```
+Task: Design homepage mockups
+↓ Blocks
+Task: Implement homepage layout
+↓ Blocks
+Task: Write homepage copy
+↓ Blocks
+Task: Deploy homepage
+```
+
+Set up the relationships:
+
+1. Open "Implement homepage layout"
+2. In **Blocked By** field, link: "Design homepage mockups"
+3. The reverse relationship auto-updates!
+
+### 5.3 Create a Dependencies View
+
+1. New view: **"Dependencies"**
+2. Type: `Table`
+3. Show columns: Name, Status, Blocks, Blocked By
+4. Filter: Show only tasks that block or are blocked
+5. Conditional formatting:
+   - Highlight tasks blocked by incomplete tasks (red)
+   - Highlight tasks blocking others (yellow)
+
+> **Note:** 
+**Warning:** Too many dependencies create complexity. Use them for critical path items only.
+
+
+---
+
+## Step 6: Milestones and Sprints
+
+Let's add sprint planning capabilities.
+
+### 6.1 Create a Sprints Base
+
+1. New base: `Sprints`
+2. Fields:
+
+```
+Sprint Structure:
+
+Name: Text (e.g., "Sprint 12")
+Number: Number (12)
+Goal: Long Text (Sprint objective)
+Start Date: Date
+End Date: Date
+Status: Select (Planning, Active, Complete)
+Tasks: Relation (Links to Tasks)
+Capacity: Number (Total team hours)
+Velocity: Formula (Completed story points)
+```
+
+### 6.2 Create a Milestones Base
+
+1. New base: `Milestones`
+2. Fields:
+
+```
+Milestone Structure:
+
+Name: Text (e.g., "MVP Launch")
+Date: Date (Target date)
+Status: Select (Upcoming, At Risk, Achieved, Missed)
+Project: Relation (Links to Projects)
+Tasks: Relation (Links to Tasks)
+Completion: Formula (% of linked tasks done)
+Description: Long Text
+```
+
+### 6.3 Link Everything Together
+
+Now your system has this structure:
+
+```
+Projects
+  ├── Contains multiple Tasks
+  ├── Contains multiple Milestones
+  └── Tracked across multiple Sprints
+
+Sprints
+  ├── Contains multiple Tasks
+  └── Contributes to Milestones
+
+Milestones
+  ├── Belongs to a Project
+  └── Comprises multiple Tasks
+```
+
+> **Note:** 
+**Info:** This relational structure provides incredible flexibility. View data from any angle: by project, by sprint, by milestone, by person.
+
+
+---
+
+## Step 7: Team Collaboration Features
+
+Let's set up collaboration workflows.
+
+### 7.1 Add Collaboration Fields
+
+Enhance your Tasks base:
+
+```
+New Fields:
+
+Comments: Long Text (Discussion thread)
+Watchers: Multi-person (Who's following this)
+Last Updated: Last Modified Time
+Updated By: Last Modified By
+Attachments: Files (Screenshots, docs)
+Links: URL (External resources)
+```
+
+### 7.2 Create Team Views
+
+**View: My Tasks**
+- Filter: Assignee is [Current User]
+- Sort: Priority, then Due Date
+- Personal dashboard for each team member
+
+**View: Team Board**
+- Type: Kanban
+- Group by: Assignee
+- See what everyone is working on
+
+**View: This Week**
+- Filter: Due Date is this week
+- Sort: Priority
+- Focus on immediate deadlines
+
+**View: Overdue**
+- Filter: Due Date is before today AND Status is not Done
+- Sort: Due Date (oldest first)
+- Conditional formatting: Red highlight
+
+### 7.3 Set Up Notifications
+
+Configure base settings:
+
+1. Click base settings (⚙️)
+2. Go to **Notifications**
+3. Enable:
+   - Task assigned to me
+   - Task due tomorrow
+   - Task blocked by incomplete task
+   - Comments on my tasks
+   - Changes to tasks I'm watching
+
+
+---
+
+## Step 8: Automation and Formulas
+
+Let's automate repetitive tasks.
+
+### 8.1 Formula Fields
+
+Add calculated fields to Projects base:
+
+**Progress Formula:**
+```javascript
+// Calculate project progress from linked tasks
+if (empty(prop("Tasks"))) {
+  return 0
+}
+
+let tasks = prop("Tasks")
+let completed = tasks.filter(t => t.prop("Status") == "Done").length
+return (completed / tasks.length) * 100
+```
+
+**Days Remaining:**
+```javascript
+// Calculate days until deadline
+let endDate = prop("End Date")
+let today = now()
+return dateBetween(endDate, today, "days")
+```
+
+**Budget Status:**
+```javascript
+// Show budget health
+let spent = prop("Spent")
+let budget = prop("Budget")
+let percentage = (spent / budget) * 100
+
+if (percentage > 90) {
+  return "⚠️ Over Budget"
+} else if (percentage > 75) {
+  return "⚠️ Watch Budget"
+} else {
+  return "✅ On Budget"
+}
+```
+
+### 8.2 Automation Rules
+
+Set up automated actions:
+
+**Auto-assign to Project Lead:**
+```
+When: New task created in project
+Action: Set assignee to project owner
+```
+
+**Auto-move to Review:**
+```
+When: Task progress reaches 100%
+Action: Change status to "Review"
+```
+
+**Notify on Block:**
+```
+When: Task is marked as blocked
+Action: Notify assignee and project owner
+```
+
+**Weekly Summary:**
+```
+When: Every Friday at 4 PM
+Action: Generate weekly report with:
+  - Tasks completed
+  - Tasks in progress
+  - Blockers
+  - Next week priorities
+```
+
+> **Note:** 
+**Pro Tip:** Start with simple automations. Add complexity only when manual processes become painful.
+
+
+---
+
+## Step 9: Reports and Dashboards
+
+Create dashboards to track project health.
+
+### 9.1 Create a Dashboard Base
+
+1. New base: `Dashboard`
+2. Use it to aggregate metrics from other bases
+
+### 9.2 Key Metrics to Track
+
+**Project Metrics:**
+- Active projects count
+- Projects at risk
+- Average project progress
+- Budget utilization
+
+**Task Metrics:**
+- Total tasks
+- Tasks by status
+- Tasks by priority
+- Overdue tasks
+- Tasks completed this week
+- Average task completion time
+
+**Team Metrics:**
+- Tasks per team member
+- Workload distribution
+- Team velocity (tasks/week)
+- Blocked tasks
+
+### 9.3 Visualization Options
+
+**Embed Views:**
+```markdown
+# Project Dashboard
+
+## Active Projects
+<embed-view base="Projects" view="Active Projects">
+
+## Task Distribution
+<embed-view base="Tasks" view="By Status">
+
+## This Week
+<embed-view base="Tasks" view="This Week">
+```
+
+**Charts and Graphs:**
+- Pie chart: Tasks by status
+- Bar chart: Tasks by assignee
+- Line chart: Velocity over time
+- Burn-down chart: Sprint progress
+
+
+---
+
+## Step 10: Templates and Best Practices
+
+Let's create reusable templates.
+
+### 10.1 Project Template
+
+Create a template for new projects:
+
+```markdown
+# [Project Name]
+
+## Overview
+**Status:** Planning
+**Owner:** [Name]
+**Timeline:** [Start] - [End]
+**Budget:** $[Amount]
+
+## Objectives
+- [Objective 1]
+- [Objective 2]
+- [Objective 3]
+
+## Deliverables
+- [ ] [Deliverable 1]
+- [ ] [Deliverable 2]
+- [ ] [Deliverable 3]
+
+## Phases
+
+### Phase 1: Discovery (Weeks 1-2)
+- [ ] Stakeholder interviews
+- [ ] Requirements gathering
+- [ ] Technical feasibility
+
+### Phase 2: Planning (Weeks 3-4)
+- [ ] Architecture design
+- [ ] Resource allocation
+- [ ] Timeline finalization
+
+### Phase 3: Execution (Weeks 5-12)
+- [ ] Development
+- [ ] Testing
+- [ ] Documentation
+
+### Phase 4: Launch (Week 13)
+- [ ] Deployment
+- [ ] Training
+- [ ] Monitoring
+
+## Risks
+| Risk | Impact | Likelihood | Mitigation |
+|------|--------|------------|------------|
+| | | | |
+
+## Stakeholders
+- **Sponsor:** [Name]
+- **Users:** [Group]
+- **Team:** [Names]
+
+## Success Metrics
+- [Metric 1]: [Target]
+- [Metric 2]: [Target]
+- [Metric 3]: [Target]
+
+## Related
+- [[Projects Base]]
+- [[Team Resources]]
+```
+
+### 10.2 Sprint Planning Template
+
+```markdown
+# Sprint [Number] - [Name]
+
+**Duration:** [Start Date] - [End Date]
+**Goal:** [Sprint goal in one sentence]
+
+## Capacity
+- Team size: [N] people
+- Available hours: [H] hours
+- Planned velocity: [P] points
+
+## Sprint Backlog
+
+### High Priority
+- [ ] [Task 1] - [Points] - [Assignee]
+- [ ] [Task 2] - [Points] - [Assignee]
+
+### Medium Priority
+- [ ] [Task 3] - [Points] - [Assignee]
+- [ ] [Task 4] - [Points] - [Assignee]
+
+### Nice to Have
+- [ ] [Task 5] - [Points] - [Assignee]
+
+## Definition of Done
+- [ ] Code complete
+- [ ] Tests passing
+- [ ] Code reviewed
+- [ ] Documentation updated
+- [ ] Deployed to staging
+
+## Daily Standup Notes
+
+### Day 1 - [Date]
+**Done Yesterday:**
+**Doing Today:**
+**Blockers:**
+
+### Day 2 - [Date]
+...
+
+## Sprint Review
+**Completed:** [N] tasks ([P] points)
+**Incomplete:** [N] tasks ([P] points)
+**Velocity:** [Actual vs Planned]
+
+## Retrospective
+**What went well:**
+-
+
+**What could improve:**
+-
+
+**Action items:**
+- [ ]
+```
+
+### 10.3 Meeting Notes Template
+
+```markdown
+# [Meeting Type] - [Date]
+
+**Attendees:** [Names]
+**Duration:** [Start] - [End]
+**Project:** [[Project Link]]
+
+## Agenda
+1. [Topic 1]
+2. [Topic 2]
+3. [Topic 3]
+
+## Discussion
+
+### [Topic 1]
+Notes...
+
+**Decisions:**
+-
+
+**Action Items:**
+- [ ] [Action] - [Owner] - [Due Date]
+
+### [Topic 2]
+...
+
+## Next Meeting
+**Date:** [Next Date]
+**Topics:**
+- [ ] Review action items
+- [ ] [New topic]
+```
+
+---
+
+## Real-World Workflows
+
+### Workflow 1: Agile Scrum
+
+**Weekly Sprint Planning:**
+1. Review last sprint velocity
+2. Pull tasks from backlog
+3. Assign to current sprint
+4. Break large tasks into subtasks
+5. Estimate story points
+
+**Daily Standup:**
+1. Check "Team Board" view
+2. Each person updates their tasks
+3. Mark blockers in red
+4. Move completed tasks to Done
+
+**Sprint Review:**
+1. Demo completed features
+2. Update project progress
+3. Calculate actual velocity
+4. Archive completed sprint
+
+### Workflow 2: Kanban Flow
+
+**Continuous Flow:**
+1. New requests enter Backlog
+2. Team pulls from To Do (respecting WIP limits)
+3. Tasks flow through: In Progress → Review → Done
+4. Monitor cycle time in analytics
+5. Optimize bottlenecks
+
+**Weekly Review:**
+1. Archive Done tasks
+2. Prioritize Backlog
+3. Check for stalled tasks
+4. Adjust WIP limits if needed
+
+### Workflow 3: Project-Based
+
+**Project Kickoff:**
+1. Create project from template
+2. Define phases and milestones
+3. Create initial task list
+4. Assign team and timeline
+5. Set up project dashboard
+
+**Weekly Progress:**
+1. Update task statuses
+2. Review milestone progress
+3. Identify risks and blockers
+4. Adjust timeline if needed
+5. Communicate status to stakeholders
+
+---
+
+## Tips for Success
+
+### Do's
+
+✅ **Start Simple:** Begin with basic task tracking, add complexity as needed
+
+✅ **Consistent Updates:** Make updating tasks part of your daily routine
+
+✅ **Clear Naming:** Use descriptive task and project names
+
+✅ **Link Liberally:** Connect related tasks, projects, and notes
+
+✅ **Review Regularly:** Weekly reviews keep the system clean and current
+
+✅ **Customize Views:** Create views for different contexts and users
+
+✅ **Use Templates:** Standardize recurring project types
+
+### Don'ts
+
+❌ **Over-complicate:** Don't create fields and views you won't use
+
+❌ **Ignore Dependencies:** Track critical path items to avoid delays
+
+❌ **Skip Reviews:** Stale data makes the system useless
+
+❌ **Work in Silos:** Share information with your team
+
+❌ **Forget to Archive:** Old projects clutter your workspace
+
+❌ **Rely Solely on Tools:** Communication still matters
+
+---
+
+## Troubleshooting
+
+### "My board is too cluttered"
+
+**Solution:** Use filters and multiple views. Create focused views like "My Tasks This Week" instead of showing everything.
+
+### "Tasks are falling through the cracks"
+
+**Solution:**
+- Set up automated reminders for due dates
+- Create an "Overdue" view
+- Review unassigned tasks weekly
+
+### "Team isn't updating task status"
+
+**Solution:**
+- Make it part of daily standup
+- Show how data helps the team (not just management)
+- Reduce friction with templates and defaults
+
+### "Can't see the big picture"
+
+**Solution:**
+- Create dashboard with high-level metrics
+- Use timeline view for Gantt perspective
+- Maintain project-level summary notes
+
+---
+
+## Next Steps
+
+Congratulations! You now have a complete project management system in Lokus.
+
+### This Week
+
+- Migrate 1-2 active projects into your system
+- Get team members set up with access
+- Create your first sprint or project phase
+- Schedule daily standup to update tasks
+
+### This Month
+
+- Refine your workflow based on what works
+- Create templates for recurring project types
+- Set up automations for repetitive tasks
+- Establish review cadence (daily standup, weekly review)
+
+### Continue Learning
+
+- **Next Tutorial:** [Content Creation Pipeline](/tutorials/content-creation) - Manage creative projects
+- **Related:** [Advanced Search](/tutorials/advanced-search) - Find information faster
+- **Explore:** [Plugin Development](/tutorials/plugin-development) - Build custom project tools
+
+### Join the Community
+
+- Share your project management setup
+- Learn from other teams' workflows
+- Contribute templates and best practices
+
+---
+
+## Summary
+
+In this tutorial, you learned:
+
+✅ How to create and configure bases for project management
+✅ Setting up Kanban boards for visual task tracking
+✅ Creating multiple views (table, calendar, timeline, kanban)
+✅ Implementing task dependencies and relationships
+✅ Setting up sprints and milestones
+✅ Configuring team collaboration features
+✅ Using formulas and automation
+✅ Building dashboards and reports
+✅ Creating reusable templates
+✅ Implementing real-world workflows (Agile, Kanban, Project-based)
+
+Your Lokus workspace is now a powerful project management hub that combines structured task tracking with flexible knowledge management. As you use the system, continue to refine it to match your team's unique needs.
+
+---
+
+**Resources:**
+- [Bases Documentation](/docs/bases)
+- [Views and Filters Guide](/docs/views)
+- [Formulas Reference](/docs/formulas)
+- [Automation Documentation](/docs/automation)
+- [Project Management Templates](/templates/project-management)
+
+**Estimated Completion Time:** 40 minutes
+**Difficulty:** Intermediate
+**Last Updated:** January 2024

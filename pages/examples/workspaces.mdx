@@ -1,0 +1,1121 @@
+---
+title: Workspace Structure Examples
+description: Complete workspace configurations for different industries - startup operations, content creation, software development, event planning, and sales CRM
+keywords: lokud workspace examples, workspace templates, workspace structure, industry templates
+---
+
+# Workspace Structure Examples
+
+Complete, production-ready workspace configurations for various industries and use cases. Each example includes databases, views, fields, and recommended plugins.
+
+## Startup Operations Workspace
+
+A comprehensive workspace for early-stage startups managing everything in one place.
+
+```yaml
+# startup-operations.yaml
+name: Startup Operations Hub
+version: 1.0
+description: All-in-one workspace for startup operations, product, and growth
+
+settings:
+  timezone: UTC
+  currency: USD
+  date_format: YYYY-MM-DD
+
+bases:
+  # Product & Roadmap
+  - name: Product Roadmap
+    type: roadmap
+    icon: rocket
+    color: blue
+    views:
+      - type: timeline
+        name: Roadmap View
+        start_field: Start Date
+        end_field: Launch Date
+        group_by: Quarter
+      - type: board
+        name: Status Board
+        group_by: Status
+      - type: list
+        name: All Features
+        sort:
+          field: Priority Score
+          order: desc
+    fields:
+      - name: Feature
+        type: text
+        required: true
+        primary: true
+      - name: Description
+        type: rich_text
+      - name: Status
+        type: select
+        options:
+          - Idea
+          - Planned
+          - In Development
+          - Testing
+          - Launched
+        colors:
+          Idea: gray
+          Planned: yellow
+          In Development: blue
+          Testing: purple
+          Launched: green
+      - name: Quarter
+        type: select
+        options:
+          - Q1 2025
+          - Q2 2025
+          - Q3 2025
+          - Q4 2025
+      - name: Start Date
+        type: date
+      - name: Launch Date
+        type: date
+      - name: Owner
+        type: person
+      - name: Priority Score
+        type: number
+        min: 0
+        max: 100
+      - name: Customer Impact
+        type: select
+        options:
+          - High
+          - Medium
+          - Low
+      - name: Engineering Effort
+        type: select
+        options:
+          - Small (< 1 week)
+          - Medium (1-4 weeks)
+          - Large (1-3 months)
+          - XLarge (> 3 months)
+      - name: Related Tasks
+        type: relation
+        related_base: Tasks
+      - name: User Stories
+        type: rich_text
+
+  # Task Management
+  - name: Tasks
+    type: task
+    icon: check-square
+    color: green
+    views:
+      - type: kanban
+        name: Sprint Board
+        group_by: Status
+      - type: list
+        name: My Tasks
+        filter:
+          field: Assignee
+          operator: is_current_user
+      - type: calendar
+        name: Due Date Calendar
+        date_field: Due Date
+      - type: list
+        name: High Priority
+        filter:
+          field: Priority
+          operator: equals
+          value: High
+    fields:
+      - name: Task
+        type: text
+        required: true
+        primary: true
+      - name: Description
+        type: rich_text
+      - name: Status
+        type: select
+        options:
+          - Backlog
+          - To Do
+          - In Progress
+          - Review
+          - Done
+        default: Backlog
+      - name: Assignee
+        type: person
+      - name: Reporter
+        type: person
+        auto_fill: current_user
+      - name: Priority
+        type: select
+        options:
+          - High
+          - Medium
+          - Low
+      - name: Due Date
+        type: date
+      - name: Estimated Hours
+        type: number
+      - name: Actual Hours
+        type: number
+      - name: Sprint
+        type: select
+        options:
+          - Sprint 1
+          - Sprint 2
+          - Sprint 3
+          - Backlog
+      - name: Feature
+        type: relation
+        related_base: Product Roadmap
+      - name: Tags
+        type: multi_select
+        options:
+          - Frontend
+          - Backend
+          - Design
+          - Bug
+          - Enhancement
+      - name: Blocked
+        type: checkbox
+
+  # Customer Feedback
+  - name: Customer Feedback
+    type: feedback
+    icon: message-circle
+    color: orange
+    views:
+      - type: list
+        name: Recent Feedback
+        sort:
+          field: Received Date
+          order: desc
+      - type: board
+        name: By Category
+        group_by: Category
+      - type: gallery
+        name: Feature Requests
+        filter:
+          field: Type
+          operator: equals
+          value: Feature Request
+    fields:
+      - name: Title
+        type: text
+        required: true
+        primary: true
+      - name: Feedback
+        type: rich_text
+      - name: Type
+        type: select
+        options:
+          - Feature Request
+          - Bug Report
+          - Improvement
+          - Question
+          - Complaint
+          - Praise
+      - name: Category
+        type: select
+        options:
+          - Product
+          - UX
+          - Performance
+          - Documentation
+          - Billing
+          - Support
+      - name: Customer Name
+        type: text
+      - name: Customer Email
+        type: email
+      - name: Customer
+        type: relation
+        related_base: Customers
+      - name: Received Date
+        type: date
+        auto_fill: created_at
+      - name: Priority
+        type: select
+        options:
+          - Critical
+          - High
+          - Medium
+          - Low
+      - name: Status
+        type: select
+        options:
+          - New
+          - Under Review
+          - Planned
+          - In Progress
+          - Shipped
+          - Won't Fix
+      - name: Related Feature
+        type: relation
+        related_base: Product Roadmap
+      - name: Vote Count
+        type: number
+        default: 1
+
+  # Customers
+  - name: Customers
+    type: crm
+    icon: users
+    color: purple
+    views:
+      - type: list
+        name: All Customers
+      - type: board
+        name: By Plan
+        group_by: Plan
+      - type: list
+        name: Trial Users
+        filter:
+          field: Plan
+          operator: equals
+          value: Trial
+    fields:
+      - name: Company Name
+        type: text
+        required: true
+        primary: true
+      - name: Contact Name
+        type: text
+      - name: Email
+        type: email
+        required: true
+      - name: Phone
+        type: phone
+      - name: Plan
+        type: select
+        options:
+          - Trial
+          - Starter
+          - Professional
+          - Enterprise
+      - name: MRR
+        type: number
+        format: currency
+      - name: Sign Up Date
+        type: date
+      - name: Trial End Date
+        type: date
+      - name: Status
+        type: select
+        options:
+          - Active
+          - Trial
+          - Churned
+          - At Risk
+      - name: Account Owner
+        type: person
+      - name: Industry
+        type: select
+        options:
+          - Technology
+          - Finance
+          - Healthcare
+          - Education
+          - Retail
+          - Other
+      - name: Company Size
+        type: select
+        options:
+          - 1-10
+          - 11-50
+          - 51-200
+          - 201-1000
+          - 1000+
+      - name: Website
+        type: url
+      - name: Notes
+        type: rich_text
+      - name: Feedback
+        type: relation
+        related_base: Customer Feedback
+
+  # OKRs (Objectives & Key Results)
+  - name: OKRs
+    type: goals
+    icon: target
+    color: red
+    views:
+      - type: list
+        name: Current Quarter
+        filter:
+          field: Quarter
+          operator: equals
+          value: Q1 2025
+      - type: board
+        name: By Owner
+        group_by: Owner
+    fields:
+      - name: Objective
+        type: text
+        required: true
+        primary: true
+      - name: Description
+        type: rich_text
+      - name: Quarter
+        type: select
+        options:
+          - Q1 2025
+          - Q2 2025
+          - Q3 2025
+          - Q4 2025
+      - name: Owner
+        type: person
+      - name: Department
+        type: select
+        options:
+          - Product
+          - Engineering
+          - Sales
+          - Marketing
+          - Customer Success
+          - Operations
+      - name: Key Result 1
+        type: text
+      - name: KR1 Target
+        type: number
+      - name: KR1 Current
+        type: number
+      - name: KR1 Progress
+        type: formula
+        formula: "KR1 Current / KR1 Target * 100"
+      - name: Key Result 2
+        type: text
+      - name: KR2 Target
+        type: number
+      - name: KR2 Current
+        type: number
+      - name: Key Result 3
+        type: text
+      - name: KR3 Target
+        type: number
+      - name: KR3 Current
+        type: number
+      - name: Overall Progress
+        type: progress
+      - name: Status
+        type: select
+        options:
+          - On Track
+          - At Risk
+          - Off Track
+          - Completed
+
+  # Team Wiki
+  - name: Documentation
+    type: wiki
+    icon: book
+    color: gray
+    views:
+      - type: list
+        name: All Docs
+      - type: board
+        name: By Category
+        group_by: Category
+    fields:
+      - name: Title
+        type: text
+        required: true
+        primary: true
+      - name: Content
+        type: rich_text
+      - name: Category
+        type: select
+        options:
+          - Process
+          - Engineering
+          - Product
+          - Sales
+          - Marketing
+          - HR
+          - Legal
+      - name: Owner
+        type: person
+      - name: Last Updated
+        type: date
+        auto_fill: updated_at
+      - name: Status
+        type: select
+        options:
+          - Draft
+          - Review
+          - Published
+          - Archived
+      - name: Tags
+        type: multi_select
+
+plugins:
+  - name: sprint-automation
+    enabled: true
+    config:
+      auto_create_sprints: true
+      sprint_duration_weeks: 2
+      auto_archive_completed: true
+
+  - name: slack-notifications
+    enabled: true
+    config:
+      channels:
+        product_updates: "#product"
+        customer_feedback: "#feedback"
+        high_priority_tasks: "#engineering"
+
+  - name: analytics-dashboard
+    enabled: true
+    config:
+      metrics:
+        - customer_growth
+        - mrr
+        - task_completion_rate
+        - okr_progress
+
+automation:
+  - name: New Customer Welcome
+    trigger:
+      type: record_created
+      base: Customers
+    actions:
+      - type: send_notification
+        to: account_owner
+        message: "New customer: {{Company Name}}"
+      - type: create_task
+        base: Tasks
+        fields:
+          Task: "Onboard {{Company Name}}"
+          Assignee: "{{Account Owner}}"
+          Priority: High
+
+  - name: Trial Ending Soon
+    trigger:
+      type: scheduled
+      schedule: daily
+    conditions:
+      - field: Trial End Date
+        operator: is_within
+        value: 3 days
+    actions:
+      - type: send_notification
+        to: account_owner
+        message: "Trial ending soon for {{Company Name}}"
+
+  - name: Feature Shipped
+    trigger:
+      type: record_updated
+      base: Product Roadmap
+      field: Status
+      new_value: Launched
+    actions:
+      - type: send_notification
+        channel: slack
+        message: "🚀 Feature shipped: {{Feature}}"
+```
+
+## Content Creation Workspace
+
+For content creators, bloggers, and marketing teams.
+
+```yaml
+# content-creation.yaml
+name: Content Creation Studio
+version: 1.0
+description: Manage content from ideation to publication
+
+bases:
+  # Content Calendar
+  - name: Content Calendar
+    type: calendar
+    icon: calendar
+    color: blue
+    views:
+      - type: calendar
+        name: Publishing Calendar
+        date_field: Publish Date
+      - type: kanban
+        name: Production Pipeline
+        group_by: Status
+      - type: list
+        name: This Month
+        filter:
+          field: Publish Date
+          operator: is_within
+          value: current_month
+      - type: gallery
+        name: Published Content
+        image_field: Featured Image
+        filter:
+          field: Status
+          operator: equals
+          value: Published
+    fields:
+      - name: Title
+        type: text
+        required: true
+        primary: true
+      - name: Content Type
+        type: select
+        options:
+          - Blog Post
+          - Video
+          - Podcast
+          - Social Media
+          - Newsletter
+          - Ebook
+          - Whitepaper
+        required: true
+      - name: Status
+        type: select
+        options:
+          - Idea
+          - Outlined
+          - First Draft
+          - Review
+          - Revisions
+          - Approved
+          - Scheduled
+          - Published
+        default: Idea
+      - name: Author
+        type: person
+      - name: Editor
+        type: person
+      - name: Designer
+        type: person
+      - name: Publish Date
+        type: date
+      - name: Due Date
+        type: date
+      - name: Topic
+        type: relation
+        related_base: Topics
+      - name: Keywords
+        type: multi_select
+      - name: Target Audience
+        type: select
+        options:
+          - Beginners
+          - Intermediate
+          - Advanced
+          - All Levels
+      - name: Platform
+        type: multi_select
+        options:
+          - Blog
+          - YouTube
+          - LinkedIn
+          - Twitter
+          - Instagram
+          - Medium
+          - Newsletter
+      - name: Featured Image
+        type: image
+      - name: Draft URL
+        type: url
+      - name: Published URL
+        type: url
+      - name: Content
+        type: rich_text
+      - name: Outline
+        type: rich_text
+      - name: SEO Title
+        type: text
+      - name: Meta Description
+        type: text
+        max_length: 160
+      - name: Word Count
+        type: number
+      - name: Estimated Read Time
+        type: number
+      - name: Performance Score
+        type: number
+      - name: Views
+        type: number
+      - name: Engagement Rate
+        type: number
+        format: percent
+      - name: Notes
+        type: rich_text
+
+  # Topics & Themes
+  - name: Topics
+    type: library
+    icon: tag
+    color: purple
+    views:
+      - type: list
+        name: All Topics
+      - type: board
+        name: By Category
+        group_by: Category
+    fields:
+      - name: Topic
+        type: text
+        required: true
+        primary: true
+      - name: Description
+        type: rich_text
+      - name: Category
+        type: select
+        options:
+          - Technology
+          - Business
+          - Lifestyle
+          - Education
+          - Entertainment
+          - How-To
+      - name: Priority
+        type: select
+        options:
+          - High
+          - Medium
+          - Low
+      - name: Search Volume
+        type: number
+      - name: Competition
+        type: select
+        options:
+          - Low
+          - Medium
+          - High
+      - name: Content Ideas
+        type: number
+        formula: "count(related_content)"
+      - name: Related Content
+        type: relation
+        related_base: Content Calendar
+      - name: Status
+        type: select
+        options:
+          - Active
+          - On Hold
+          - Completed
+
+  # Content Assets
+  - name: Media Library
+    type: asset
+    icon: image
+    color: pink
+    views:
+      - type: gallery
+        name: Gallery View
+        image_field: Thumbnail
+      - type: list
+        name: All Assets
+    fields:
+      - name: Asset Name
+        type: text
+        required: true
+        primary: true
+      - name: Type
+        type: select
+        options:
+          - Image
+          - Video
+          - Audio
+          - Graphic
+          - Icon
+          - Template
+      - name: File
+        type: file
+      - name: Thumbnail
+        type: image
+      - name: Dimensions
+        type: text
+      - name: File Size
+        type: text
+      - name: Created By
+        type: person
+        auto_fill: current_user
+      - name: Created Date
+        type: date
+        auto_fill: created_at
+      - name: Tags
+        type: multi_select
+      - name: Used In
+        type: relation
+        related_base: Content Calendar
+      - name: License
+        type: select
+        options:
+          - Original
+          - Stock
+          - Creative Commons
+          - Licensed
+      - name: Source URL
+        type: url
+
+  # Social Media Posts
+  - name: Social Media Queue
+    type: social
+    icon: share-2
+    color: green
+    views:
+      - type: calendar
+        name: Posting Schedule
+        date_field: Scheduled Time
+      - type: board
+        name: By Platform
+        group_by: Platform
+      - type: list
+        name: This Week
+        filter:
+          field: Scheduled Time
+          operator: is_within
+          value: current_week
+    fields:
+      - name: Post
+        type: text
+        required: true
+        primary: true
+      - name: Full Text
+        type: rich_text
+      - name: Platform
+        type: select
+        options:
+          - Twitter
+          - LinkedIn
+          - Instagram
+          - Facebook
+          - TikTok
+        required: true
+      - name: Status
+        type: select
+        options:
+          - Draft
+          - Scheduled
+          - Published
+          - Failed
+        default: Draft
+      - name: Scheduled Time
+        type: date
+        include_time: true
+      - name: Posted Time
+        type: date
+        include_time: true
+      - name: Media
+        type: relation
+        related_base: Media Library
+      - name: Related Content
+        type: relation
+        related_base: Content Calendar
+      - name: Hashtags
+        type: multi_select
+      - name: CTA
+        type: text
+      - name: Link
+        type: url
+      - name: Impressions
+        type: number
+      - name: Engagements
+        type: number
+      - name: Clicks
+        type: number
+      - name: Engagement Rate
+        type: formula
+        formula: "Engagements / Impressions * 100"
+
+plugins:
+  - name: seo-analyzer
+    enabled: true
+    config:
+      auto_analyze: true
+      check_keywords: true
+      readability_score: true
+
+  - name: social-scheduler
+    enabled: true
+    config:
+      auto_post: true
+      platforms:
+        - twitter
+        - linkedin
+        - instagram
+
+  - name: content-templates
+    enabled: true
+    templates:
+      - name: Blog Post
+        structure: "Introduction / Main Points / Conclusion"
+      - name: Video Script
+        structure: "Hook / Context / Content / CTA"
+      - name: Newsletter
+        structure: "Header / Featured / News / Resources"
+```
+
+## Software Development Workspace
+
+Complete workspace for development teams.
+
+```yaml
+# software-development.yaml
+name: Software Development Hub
+version: 1.0
+description: Manage sprints, bugs, features, and releases
+
+bases:
+  # Sprint Planning
+  - name: Sprints
+    type: sprint
+    icon: zap
+    color: yellow
+    views:
+      - type: list
+        name: All Sprints
+      - type: board
+        name: Current Sprint
+        filter:
+          field: Status
+          operator: equals
+          value: Active
+    fields:
+      - name: Sprint Name
+        type: text
+        required: true
+        primary: true
+      - name: Status
+        type: select
+        options:
+          - Planning
+          - Active
+          - Completed
+      - name: Start Date
+        type: date
+      - name: End Date
+        type: date
+      - name: Goal
+        type: rich_text
+      - name: Team
+        type: multi_person
+      - name: Story Points Planned
+        type: number
+      - name: Story Points Completed
+        type: number
+      - name: Velocity
+        type: formula
+        formula: "Story Points Completed / Story Points Planned * 100"
+      - name: Tasks
+        type: relation
+        related_base: Development Tasks
+
+  # Development Tasks
+  - name: Development Tasks
+    type: task
+    icon: code
+    color: blue
+    views:
+      - type: kanban
+        name: Sprint Board
+        group_by: Status
+      - type: list
+        name: My Tasks
+        filter:
+          field: Assignee
+          operator: is_current_user
+      - type: list
+        name: Blocked Tasks
+        filter:
+          field: Blocked
+          operator: is_checked
+    fields:
+      - name: Task Title
+        type: text
+        required: true
+        primary: true
+      - name: Description
+        type: rich_text
+      - name: Type
+        type: select
+        options:
+          - Feature
+          - Bug
+          - Improvement
+          - Technical Debt
+          - Documentation
+      - name: Status
+        type: select
+        options:
+          - Backlog
+          - To Do
+          - In Progress
+          - Code Review
+          - Testing
+          - Done
+      - name: Priority
+        type: select
+        options:
+          - Critical
+          - High
+          - Medium
+          - Low
+      - name: Assignee
+        type: person
+      - name: Reporter
+        type: person
+      - name: Sprint
+        type: relation
+        related_base: Sprints
+      - name: Story Points
+        type: number
+      - name: Estimated Hours
+        type: number
+      - name: Actual Hours
+        type: number
+      - name: Due Date
+        type: date
+      - name: Labels
+        type: multi_select
+        options:
+          - Frontend
+          - Backend
+          - Database
+          - API
+          - UI/UX
+          - Performance
+          - Security
+      - name: Branch Name
+        type: text
+      - name: Pull Request
+        type: url
+      - name: Blocked
+        type: checkbox
+      - name: Blocked Reason
+        type: text
+      - name: Related Tasks
+        type: relation
+        related_base: Development Tasks
+      - name: Test Cases
+        type: rich_text
+
+  # Bug Tracker
+  - name: Bugs
+    type: bug
+    icon: alert-circle
+    color: red
+    views:
+      - type: list
+        name: Open Bugs
+        filter:
+          field: Status
+          operator: not_equals
+          value: Closed
+        sort:
+          field: Severity
+          order: asc
+      - type: board
+        name: By Severity
+        group_by: Severity
+      - type: list
+        name: Critical Bugs
+        filter:
+          field: Severity
+          operator: equals
+          value: Critical
+    fields:
+      - name: Bug Title
+        type: text
+        required: true
+        primary: true
+      - name: Description
+        type: rich_text
+      - name: Steps to Reproduce
+        type: rich_text
+      - name: Expected Behavior
+        type: rich_text
+      - name: Actual Behavior
+        type: rich_text
+      - name: Status
+        type: select
+        options:
+          - New
+          - Confirmed
+          - In Progress
+          - Testing
+          - Closed
+          - Won't Fix
+      - name: Severity
+        type: select
+        options:
+          - Critical
+          - High
+          - Medium
+          - Low
+      - name: Priority
+        type: select
+        options:
+          - P0
+          - P1
+          - P2
+          - P3
+      - name: Assignee
+        type: person
+      - name: Reporter
+        type: person
+      - name: Environment
+        type: select
+        options:
+          - Production
+          - Staging
+          - Development
+          - Local
+      - name: Browser
+        type: multi_select
+        options:
+          - Chrome
+          - Firefox
+          - Safari
+          - Edge
+      - name: OS
+        type: multi_select
+        options:
+          - Windows
+          - MacOS
+          - Linux
+          - iOS
+          - Android
+      - name: Version
+        type: text
+      - name: Screenshots
+        type: file
+      - name: Logs
+        type: rich_text
+      - name: Related Task
+        type: relation
+        related_base: Development Tasks
+      - name: Date Reported
+        type: date
+        auto_fill: created_at
+      - name: Date Resolved
+        type: date
+
+plugins:
+  - name: github-integration
+    enabled: true
+    config:
+      auto_sync: true
+      sync_prs: true
+      sync_issues: true
+      webhook_url: "https://api.github.com/repos/yourorg/yourrepo"
+
+  - name: code-review-automation
+    enabled: true
+    config:
+      auto_assign_reviewers: true
+      require_approvals: 2
+
+automation:
+  - name: Auto-assign Sprint
+    trigger:
+      type: record_created
+      base: Development Tasks
+    conditions:
+      - field: Status
+        operator: equals
+        value: To Do
+    actions:
+      - type: update_field
+        field: Sprint
+        value: current_active_sprint
+```
+
+This is just the first part. Would you like me to continue with more workspace examples?

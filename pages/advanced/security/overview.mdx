@@ -1,0 +1,355 @@
+---
+title: Security Overview
+description: Comprehensive overview of Lokus security architecture, principles, threat model, and defense-in-depth strategies for protecting your workspace and data.
+keywords: [security, security architecture, threat model, defense-in-depth, file system security, data protection, security principles]
+---
+
+# Security Overview
+
+Comprehensive guide to Lokus security architecture, principles, and threat mitigation strategies.
+
+**Version:** 1.3.1 | **Status:** Production Ready
+
+## What's New in v1.3
+
+**OAuth 2.0 + PKCE**
+Production-ready OAuth 2.0 implementation with PKCE (Proof Key for Code Exchange) for enhanced security. Prevents authorization code interception attacks and eliminates need for client secrets in native apps.
+
+**Platform-Native Token Storage**
+Secure credential storage using macOS Keychain and Windows Credential Manager. Tokens encrypted at rest with OS-level security.
+
+**Hybrid Redirect Flow**
+Smart redirect handling using deep links with localhost fallback. Seamless OAuth experience across platforms.
+
+**Automatic Token Refresh**
+Background token renewal without user intervention. Maintains session continuity with exponential backoff retry logic.
+
+---
+
+## Security Architecture
+
+Lokus implements defense-in-depth security with multiple layers of protection:
+
+1. **File System Sandboxing** - Restricted file access
+2. **Plugin Permissions** - Granular permission system
+3. **Secure Storage** - Platform-native credential storage
+4. **Input Validation** - XSS and injection prevention
+5. **Network Security** - HTTPS enforcement, CORS protection
+6. **OAuth Security** - Secure authentication flows
+
+import { Callout } from 'nextra/components'
+
+> **Note:** 
+Security is a shared responsibility. Lokus provides robust security features, but users must follow best practices and keep software updated to maintain a secure environment.
+
+
+---
+
+## Threat Model
+
+Understanding potential security threats helps us build better defenses:
+
+### File System Threats
+
+**Directory Traversal Attacks**
+- Attackers attempt to access files outside workspace
+- Mitigated by path validation and normalization
+- Protected against `../../../etc/passwd` patterns
+
+**Symbolic Link Attacks**
+- Malicious symlinks pointing to sensitive files
+- Prevented by resolving and validating real paths
+- Workspace boundary enforcement
+
+**Race Conditions (TOCTOU)**
+- Time-of-check to time-of-use vulnerabilities
+- Atomic file operations where possible
+- File locking mechanisms
+
+### Network Threats
+
+**Man-in-the-Middle Attacks**
+- Interception of network traffic
+- Mitigated by HTTPS enforcement
+- TLS 1.3 for all connections
+
+**Cross-Site Request Forgery (CSRF)**
+- Unauthorized actions on behalf of user
+- Protected by state parameter validation
+- PKCE code verifier for OAuth flows
+
+**Authorization Code Interception**
+- OAuth code stealing attacks
+- Prevented by PKCE implementation
+- No client secret exposure
+
+### Plugin Threats
+
+**Malicious Plugins**
+- Plugins with harmful intent
+- Mitigated by permission system
+- Sandbox execution environment
+
+**Plugin Vulnerabilities**
+- Bugs in trusted plugins
+- Memory limits and timeouts
+- Regular security audits
+
+---
+
+## File System Security
+
+### Path Validation
+
+All file operations validate paths to prevent directory traversal attacks:
+
+```typescript
+function isValidPath(path: string): boolean {
+  // Prevent directory traversal
+  if (path.includes('..')) {
+    return false;
+  }
+
+  // Ensure path is within workspace
+  const normalizedPath = normalizePath(path);
+  const workspacePath = getWorkspacePath();
+
+  return normalizedPath.startsWith(workspacePath);
+}
+```
+
+> **Note:** 
+**Protected Against:**
+- `../../../etc/passwd` - Directory traversal
+- `file:///etc/passwd` - Absolute paths outside workspace
+- Symbolic link attacks
+- Race conditions (TOCTOU)
+
+
+---
+
+### File Type Validation
+
+Lokus validates file types to prevent execution of malicious files:
+
+```typescript
+const ALLOWED_FILE_TYPES = [
+  '.md', '.txt', '.json',
+  '.js', '.ts', '.jsx', '.tsx',
+  '.html', '.css', '.yaml', '.toml'
+];
+
+function validateFileType(path: string): boolean {
+  const ext = path.toLowerCase().match(/\.[^.]+$/)?.[0];
+  return ALLOWED_FILE_TYPES.includes(ext);
+}
+```
+
+**Configure allowed types:**
+```json
+{
+  "security": {
+    "allowedFileTypes": [".md", ".txt", ".json"],
+    "validateFileTypes": true
+  }
+}
+```
+
+---
+
+### File Size Limits
+
+Prevent denial-of-service attacks from large files:
+
+```json
+{
+  "security": {
+    "maxFileSize": 10485760,
+    "maxUploadSize": 5242880
+  }
+}
+```
+
+**Default limits:**
+- Max file size: 10MB
+- Max upload size: 5MB
+- Max workspace size: Unlimited (user discretion)
+
+> **Note:** 
+Configure file size limits based on your use case. Lower limits provide better protection against resource exhaustion attacks.
+
+
+---
+
+## Data Protection
+
+### Encryption at Rest
+
+**Encrypt sensitive settings:**
+
+```rust
+use aes_gcm::{Aes256Gcm, Key, Nonce};
+use aes_gcm::aead::{Aead, NewAead};
+
+fn encrypt_data(data: &str, key: &[u8]) -> Result<Vec<u8>, String> {
+    let cipher = Aes256Gcm::new(Key::from_slice(key));
+    let nonce = Nonce::from_slice(b"unique nonce");
+
+    cipher.encrypt(nonce, data.as_bytes())
+        .map_err(|e| e.to_string())
+}
+
+fn decrypt_data(encrypted: &[u8], key: &[u8]) -> Result<String, String> {
+    let cipher = Aes256Gcm::new(Key::from_slice(key));
+    let nonce = Nonce::from_slice(b"unique nonce");
+
+    let decrypted = cipher.decrypt(nonce, encrypted)
+        .map_err(|e| e.to_string())?;
+
+    String::from_utf8(decrypted)
+        .map_err(|e| e.to_string())
+}
+```
+
+---
+
+### Encryption in Transit
+
+All network communication uses TLS 1.3:
+
+```typescript
+const agent = new https.Agent({
+  minVersion: 'TLSv1.3',
+  maxVersion: 'TLSv1.3',
+  rejectUnauthorized: true
+});
+
+await fetch(url, { agent });
+```
+
+---
+
+## Security Auditing
+
+### Logging
+
+Track security-relevant events:
+
+```typescript
+class SecurityLogger {
+  logAuthAttempt(user: string, success: boolean) {
+    console.log(`[AUTH] ${user} - ${success ? 'SUCCESS' : 'FAILURE'}`);
+  }
+
+  logFileAccess(plugin: string, path: string, operation: string) {
+    console.log(`[FILE] ${plugin} - ${operation} - ${path}`);
+  }
+
+  logPermissionDenied(plugin: string, permission: string) {
+    console.warn(`[SECURITY] ${plugin} denied ${permission}`);
+  }
+
+  logSuspiciousActivity(activity: string, details: any) {
+    console.error(`[SECURITY ALERT] ${activity}`, details);
+  }
+}
+```
+
+---
+
+### Monitoring
+
+Detect and respond to security incidents:
+
+```typescript
+class SecurityMonitor {
+  private failedAttempts = new Map<string, number>();
+
+  recordFailedAuth(user: string) {
+    const attempts = this.failedAttempts.get(user) || 0;
+    this.failedAttempts.set(user, attempts + 1);
+
+    // Alert after 5 failed attempts
+    if (attempts >= 5) {
+      this.alertSecurityIncident('Brute force attempt', { user });
+    }
+  }
+
+  alertSecurityIncident(type: string, details: any) {
+    // Send alert notification
+    console.error(`SECURITY INCIDENT: ${type}`, details);
+
+    // Could integrate with external monitoring
+  }
+}
+```
+
+---
+
+## Compliance
+
+### GDPR Compliance
+
+Lokus is designed for GDPR compliance:
+
+- **Data Minimization** - Collect only necessary data
+- **Right to Access** - Export all user data
+- **Right to Erasure** - Delete user data
+- **Data Portability** - Standard file formats
+- **Privacy by Design** - Security by default
+- **Transparency** - Clear privacy policy
+
+---
+
+### Data Retention
+
+Configure data retention policies:
+
+```json
+{
+  "security": {
+    "dataRetention": {
+      "logs": 90,
+      "cache": 7,
+      "backups": 365
+    }
+  }
+}
+```
+
+---
+
+## Vulnerability Reporting
+
+If you discover a security vulnerability:
+
+1. **Do Not** publicly disclose the vulnerability
+2. **Email** security@lokus.app with details
+3. **Include** steps to reproduce
+4. **Wait** for response before disclosure
+5. **Receive** credit in security advisories
+
+> **Note:** 
+**Security Vulnerabilities:** Never publicly disclose security vulnerabilities. Use responsible disclosure practices to protect all users.
+
+
+**Bug Bounty Program:** Coming soon
+
+---
+
+## Security Updates
+
+Stay informed about security updates:
+
+1. **GitHub Security Advisories** - Watch repository
+2. **Release Notes** - Read security sections
+3. **Newsletter** - Subscribe for alerts
+4. **RSS Feed** - Follow security feed
+
+---
+
+## Next Steps
+
+- [OAuth Security](/advanced/security/oauth) - Authentication and authorization
+- [Plugin Security](/advanced/security/plugins) - Sandboxing and permissions
+- [Security Best Practices](/advanced/security/best-practices) - Recommendations and guidelines

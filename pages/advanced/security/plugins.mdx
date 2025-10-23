@@ -1,0 +1,577 @@
+---
+title: Plugin Security
+description: Comprehensive guide to plugin security in Lokus, including permission system, sandboxing, validation, and secure plugin development practices.
+keywords: [plugin security, permissions, sandboxing, plugin validation, secure plugins, plugin development, security best practices]
+---
+
+# Plugin Security
+
+Comprehensive guide to plugin security, sandboxing, and permission management in Lokus.
+
+import { Callout } from 'nextra/components'
+
+## Permission System
+
+Plugins must declare required permissions before accessing sensitive features. This granular permission model ensures users understand what each plugin can do.
+
+### Declaring Permissions
+
+Plugins declare permissions in their manifest file:
+
+```json
+{
+  "name": "example-plugin",
+  "version": "1.0.0",
+  "permissions": [
+    "read:files",
+    "write:files",
+    "network:https"
+  ]
+}
+```
+
+> **Note:** 
+Users are prompted to review and approve permissions when installing a plugin. Requesting minimal permissions improves trust and reduces security risk.
+
+
+---
+
+### Available Permissions
+
+**File System Permissions:**
+- `read:files` - Read workspace files
+- `write:files` - Write to workspace files
+- `read:workspace` - Read workspace metadata
+- `write:workspace` - Modify workspace configuration
+
+**System Permissions:**
+- `execute:commands` - Execute system commands
+
+**Network Permissions:**
+- `network:http` - Make HTTP requests
+- `network:https` - Make HTTPS requests (recommended)
+
+**UI Permissions:**
+- `ui:editor` - Modify editor content
+- `ui:sidebar` - Add sidebar panels
+- `ui:statusbar` - Add status bar items
+
+**Storage Permissions:**
+- `storage:local` - Access local storage
+
+**Clipboard Permissions:**
+- `clipboard:read` - Read clipboard contents
+- `clipboard:write` - Write to clipboard
+
+> **Note:** 
+**Security Tip:** The `execute:commands` permission is particularly powerful and should only be granted to trusted plugins. It allows execution of arbitrary system commands.
+
+
+---
+
+## Permission Enforcement
+
+Lokus enforces permissions at runtime, blocking unauthorized operations:
+
+```typescript
+class PluginAPI {
+  async readFile(path: string): Promise<string> {
+    // Check permission
+    if (!this.hasPermission('read:files')) {
+      throw new Error('Plugin lacks read:files permission');
+    }
+
+    // Validate path
+    if (!isValidPath(path)) {
+      throw new Error('Invalid file path');
+    }
+
+    // Perform operation
+    return await invoke('read_file_content', { path });
+  }
+
+  async writeFile(path: string, content: string): Promise<void> {
+    // Check permission
+    if (!this.hasPermission('write:files')) {
+      throw new Error('Plugin lacks write:files permission');
+    }
+
+    // Validate path
+    if (!isValidPath(path)) {
+      throw new Error('Invalid file path');
+    }
+
+    // Validate content size
+    if (content.length > MAX_FILE_SIZE) {
+      throw new Error('Content exceeds maximum file size');
+    }
+
+    // Perform operation
+    await invoke('write_file_content', { path, content });
+  }
+
+  async executeCommand(command: string): Promise<string> {
+    // Check permission
+    if (!this.hasPermission('execute:commands')) {
+      throw new Error('Plugin lacks execute:commands permission');
+    }
+
+    // Validate command (prevent shell injection)
+    if (!isSafeCommand(command)) {
+      throw new Error('Unsafe command detected');
+    }
+
+    // Execute with timeout
+    return await invoke('execute_command', {
+      command,
+      timeout: 30000 // 30 seconds
+    });
+  }
+
+  private hasPermission(permission: string): boolean {
+    return this.manifest.permissions.includes(permission);
+  }
+}
+```
+
+---
+
+## Plugin Sandboxing
+
+Lokus executes plugins in an isolated sandbox environment to prevent malicious behavior:
+
+```json
+{
+  "security": {
+    "sandboxPlugins": true,
+    "pluginTimeout": 30000,
+    "maxPluginMemory": 104857600
+  }
+}
+```
+
+**Sandbox Features:**
+- **Isolated execution context** - Plugins cannot access other plugins
+- **Memory limits** - Default 100MB per plugin
+- **Timeout protection** - Default 30 seconds per operation
+- **No access to Node.js APIs** - Prevents file system bypass
+- **No eval() or Function()** - Prevents code injection
+
+> **Note:** 
+Sandboxing provides defense-in-depth protection. Even if a plugin is compromised, the sandbox limits potential damage to the system.
+
+
+---
+
+### Sandbox Implementation
+
+```typescript
+class PluginSandbox {
+  private worker: Worker;
+  private memoryLimit: number;
+  private timeout: number;
+
+  constructor(manifest: PluginManifest, config: SandboxConfig) {
+    this.memoryLimit = config.maxPluginMemory;
+    this.timeout = config.pluginTimeout;
+
+    // Create isolated worker
+    this.worker = new Worker(manifest.entryPoint, {
+      type: 'module',
+      // Restrict worker capabilities
+      credentials: 'omit',
+      // Set memory limit
+      resourceLimits: {
+        maxOldGenerationSizeMb: this.memoryLimit / 1024 / 1024
+      }
+    });
+
+    // Monitor memory usage
+    this.monitorMemory();
+  }
+
+  async execute(method: string, args: any[]): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        this.worker.terminate();
+        reject(new Error('Plugin execution timeout'));
+      }, this.timeout);
+
+      this.worker.postMessage({ method, args });
+
+      this.worker.onmessage = (event) => {
+        clearTimeout(timeoutId);
+        resolve(event.data);
+      };
+
+      this.worker.onerror = (error) => {
+        clearTimeout(timeoutId);
+        reject(error);
+      };
+    });
+  }
+
+  private monitorMemory() {
+    setInterval(() => {
+      // Check memory usage
+      const usage = this.getMemoryUsage();
+      if (usage > this.memoryLimit) {
+        this.worker.terminate();
+        throw new Error('Plugin exceeded memory limit');
+      }
+    }, 5000); // Check every 5 seconds
+  }
+
+  terminate() {
+    this.worker.terminate();
+  }
+}
+```
+
+---
+
+## Plugin Validation
+
+All plugins undergo validation before installation:
+
+```typescript
+async function validatePlugin(manifest: PluginManifest): Promise<ValidationResult> {
+  const errors: ValidationError[] = [];
+  const warnings: ValidationWarning[] = [];
+
+  // Validate name
+  if (!/^[a-zA-Z0-9-_]+$/.test(manifest.name)) {
+    errors.push({
+      field: 'name',
+      message: 'Invalid plugin name. Use only alphanumeric characters, hyphens, and underscores.'
+    });
+  }
+
+  // Validate version
+  if (!semver.valid(manifest.version)) {
+    errors.push({
+      field: 'version',
+      message: 'Invalid semantic version. Use format: MAJOR.MINOR.PATCH'
+    });
+  }
+
+  // Validate permissions
+  for (const permission of manifest.permissions) {
+    if (!VALID_PERMISSIONS.includes(permission)) {
+      errors.push({
+        field: 'permissions',
+        message: `Invalid permission: ${permission}`
+      });
+    }
+  }
+
+  // Warn about dangerous permissions
+  const dangerousPermissions = ['execute:commands', 'write:workspace'];
+  for (const permission of manifest.permissions) {
+    if (dangerousPermissions.includes(permission)) {
+      warnings.push({
+        field: 'permissions',
+        message: `Permission '${permission}' grants significant access. Ensure you trust this plugin.`,
+        severity: 'high'
+      });
+    }
+  }
+
+  // Validate entry point exists
+  if (!await fileExists(manifest.entryPoint)) {
+    errors.push({
+      field: 'entryPoint',
+      message: 'Entry point file not found'
+    });
+  }
+
+  // Validate dependencies
+  if (manifest.dependencies) {
+    for (const [name, version] of Object.entries(manifest.dependencies)) {
+      if (!semver.validRange(version)) {
+        errors.push({
+          field: 'dependencies',
+          message: `Invalid version range for dependency '${name}': ${version}`
+        });
+      }
+    }
+  }
+
+  // Check for known malicious patterns
+  const codeValidation = await validatePluginCode(manifest.entryPoint);
+  if (!codeValidation.safe) {
+    errors.push({
+      field: 'code',
+      message: 'Plugin code contains suspicious patterns',
+      details: codeValidation.issues
+    });
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+    warnings
+  };
+}
+```
+
+---
+
+### Code Pattern Detection
+
+```typescript
+async function validatePluginCode(entryPoint: string): Promise<CodeValidation> {
+  const code = await readFile(entryPoint, 'utf-8');
+  const issues: string[] = [];
+
+  // Check for eval() usage
+  if (/\beval\s*\(/.test(code)) {
+    issues.push('Uses eval() which can execute arbitrary code');
+  }
+
+  // Check for Function constructor
+  if (/new\s+Function\s*\(/.test(code)) {
+    issues.push('Uses Function constructor which can execute arbitrary code');
+  }
+
+  // Check for process access
+  if (/\bprocess\.(env|exit|kill)/.test(code)) {
+    issues.push('Attempts to access Node.js process object');
+  }
+
+  // Check for file system access outside API
+  if (/require\s*\(\s*['"]fs['"]/.test(code)) {
+    issues.push('Attempts to directly access file system');
+  }
+
+  // Check for child process execution
+  if (/require\s*\(\s*['"]child_process['"]/.test(code)) {
+    issues.push('Attempts to execute child processes');
+  }
+
+  // Check for network access outside API
+  if (/require\s*\(\s*['"]https?['"]/.test(code)) {
+    issues.push('Attempts to make direct network requests');
+  }
+
+  return {
+    safe: issues.length === 0,
+    issues
+  };
+}
+```
+
+> **Note:** 
+**Security Alert:** Plugins that attempt to bypass the API and directly access Node.js modules should not be installed. These patterns indicate potentially malicious behavior.
+
+
+---
+
+## Secure Plugin Development
+
+Best practices for developing secure plugins:
+
+### 1. Request Minimal Permissions
+
+Only request permissions your plugin actually needs:
+
+```json
+{
+  "permissions": [
+    "read:files"  // Only if you need to read files
+  ]
+}
+```
+
+### 2. Validate All Input
+
+Never trust user input - always validate and sanitize:
+
+```typescript
+function processUserInput(input: string): string {
+  // Validate length
+  if (input.length > MAX_INPUT_LENGTH) {
+    throw new Error('Input too long');
+  }
+
+  // Sanitize HTML
+  const sanitized = DOMPurify.sanitize(input);
+
+  // Validate format
+  if (!isValidFormat(sanitized)) {
+    throw new Error('Invalid input format');
+  }
+
+  return sanitized;
+}
+```
+
+### 3. Use HTTPS Only
+
+Never make HTTP requests - always use HTTPS:
+
+```typescript
+async function fetchData(url: string) {
+  // Enforce HTTPS
+  if (!url.startsWith('https://')) {
+    throw new Error('Only HTTPS URLs are allowed');
+  }
+
+  const response = await fetch(url);
+  return response.json();
+}
+```
+
+### 4. Secure API Key Storage
+
+Use plugin settings storage for sensitive data:
+
+```typescript
+class MyPlugin {
+  async storeApiKey(apiKey: string) {
+    // Store securely (encrypted by Lokus)
+    await this.api.settings.set('apiKey', apiKey);
+  }
+
+  async getApiKey(): Promise<string | null> {
+    return await this.api.settings.get('apiKey');
+  }
+}
+```
+
+> **Note:** 
+Never hardcode API keys or secrets in your plugin code. Always use secure storage and environment variables.
+
+
+### 5. Error Handling
+
+Don't expose sensitive information in error messages:
+
+```typescript
+try {
+  const data = await fetchSensitiveData(apiKey);
+} catch (error) {
+  // Don't expose API key or sensitive details
+  throw new Error('Failed to fetch data');
+
+  // Log detailed error privately
+  console.error('[Plugin] Fetch failed:', error);
+}
+```
+
+### 6. Content Security
+
+Sanitize all content before rendering:
+
+```typescript
+import DOMPurify from 'dompurify';
+
+function renderContent(html: string) {
+  const clean = DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'a'],
+    ALLOWED_ATTR: ['href']
+  });
+
+  return <div dangerouslySetInnerHTML={{ __html: clean }} />;
+}
+```
+
+---
+
+## Plugin Security Checklist
+
+Before publishing your plugin, verify:
+
+- [ ] Minimal permissions requested
+- [ ] All user input validated and sanitized
+- [ ] HTTPS enforced for all network requests
+- [ ] No hardcoded secrets or API keys
+- [ ] Error messages don't leak sensitive data
+- [ ] All HTML content sanitized
+- [ ] Dependencies are up-to-date and secure
+- [ ] Code reviewed for security vulnerabilities
+- [ ] No use of eval() or Function constructor
+- [ ] No direct access to Node.js APIs
+- [ ] Timeout handling for long operations
+- [ ] Memory usage is reasonable
+- [ ] Testing includes security scenarios
+
+---
+
+## Security Review Process
+
+For sensitive plugins, consider a security review:
+
+1. **Code Audit** - Review all code for vulnerabilities
+2. **Dependency Scan** - Check for known CVEs in dependencies
+3. **Permission Analysis** - Verify permissions are minimal
+4. **Static Analysis** - Run security linters
+5. **Penetration Testing** - Test for common exploits
+6. **Third-party Review** - External security audit
+
+---
+
+## Reporting Plugin Vulnerabilities
+
+If you discover a vulnerability in a plugin:
+
+1. **Report to plugin author** - Give them time to fix
+2. **Report to Lokus team** - security@lokus.app
+3. **Include details** - Steps to reproduce
+4. **Responsible disclosure** - Wait before public disclosure
+
+---
+
+## Plugin Isolation
+
+Plugins run in separate contexts and cannot:
+
+- Access other plugins' data
+- Modify other plugins' configuration
+- Intercept other plugins' API calls
+- Access system resources outside their permissions
+- Persist data outside designated storage
+
+```typescript
+// Each plugin gets isolated API instance
+class PluginRuntime {
+  private apis = new Map<string, PluginAPI>();
+
+  loadPlugin(manifest: PluginManifest) {
+    // Create isolated API for this plugin
+    const api = new PluginAPI(manifest, {
+      permissions: manifest.permissions,
+      storage: this.createIsolatedStorage(manifest.name),
+      sandbox: this.createSandbox(manifest)
+    });
+
+    this.apis.set(manifest.name, api);
+  }
+
+  private createIsolatedStorage(pluginName: string): Storage {
+    return {
+      async get(key: string) {
+        return await invoke('get_plugin_storage', {
+          plugin: pluginName,
+          key
+        });
+      },
+      async set(key: string, value: any) {
+        await invoke('set_plugin_storage', {
+          plugin: pluginName,
+          key,
+          value
+        });
+      }
+    };
+  }
+}
+```
+
+---
+
+## Next Steps
+
+- [OAuth Security](/advanced/security/oauth) - Authentication flows
+- [Security Best Practices](/advanced/security/best-practices) - User and developer guidelines
+- [Plugin API Reference](/reference/plugin-api) - Complete API documentation

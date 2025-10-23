@@ -1,14 +1,5 @@
 export default {
-  "overview": {
-    "title": "Overview",
-    "theme": {
-      "breadcrumb": true,
-      "footer": true,
-      "sidebar": true,
-      "toc": true,
-      "pagination": true
-    }
-  },
+  "overview": "Overview",
   "editor": "Rich Text Editor",
   "wiki-links": "Wiki Links & Backlinks",
   "graph": "Graph Visualization",
@@ -16,7 +7,16 @@ export default {
   "search": "Search & Discovery",
   "tasks": "Task Management & Kanban",
   "bases": "Bases (Database Views)",
-  "templates": "Templates & Automation",
+  "templates": "Templates",
   "gmail": "Gmail Integration",
-  "themes": "Themes & Customization"
+  "themes": "Themes & Customization",
+  "file-management": "File Management",
+  "workspace": "Workspace",
+  "command-palette": "Command Palette",
+  "keyboard-shortcuts": "Keyboard Shortcuts",
+  "settings": "Settings",
+  "import-export": "Import & Export",
+  "folders-tags": "Folders & Tags",
+  "markdown": "Markdown",
+  "automation": "Automation"
 }

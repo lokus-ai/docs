@@ -1,0 +1,879 @@
+---
+title: Security Best Practices
+description: Essential security best practices for Lokus users, plugin developers, and self-hosters to maintain a secure workspace environment.
+keywords: [security best practices, secure development, user security, self-hosting security, security guidelines, security recommendations]
+---
+
+# Security Best Practices
+
+Essential security recommendations for users, plugin developers, and self-hosters.
+
+import { Callout } from 'nextra/components'
+
+## For Users
+
+### 1. Keep Lokus Updated
+
+Install security updates promptly to protect against known vulnerabilities:
+
+```bash
+# Check for updates
+lokus --version
+
+# Update to latest version
+lokus update
+```
+
+> **Note:** 
+Security updates often patch critical vulnerabilities. Enable automatic updates or check for updates weekly.
+
+
+---
+
+### 2. Use Strong Passwords
+
+Protect workspace encryption with strong, unique passwords:
+
+**Password Requirements:**
+- Minimum 12 characters
+- Mix of uppercase, lowercase, numbers, symbols
+- No dictionary words or common patterns
+- Unique to Lokus (don't reuse passwords)
+
+```typescript
+// Good password examples:
+"K9$mP#vL2@nQ7wX!"  // Strong: random, mixed characters
+"correct-horse-battery-staple-2024" // Strong: passphrase with numbers
+
+// Bad password examples:
+"password123"  // Weak: common pattern
+"lokus2024"    // Weak: predictable
+"qwerty"       // Weak: keyboard pattern
+```
+
+**Password Manager Recommended:**
+Use a password manager like 1Password, Bitwarden, or LastPass to generate and store strong passwords.
+
+---
+
+### 3. Review Plugin Permissions
+
+Carefully review permissions before installing plugins:
+
+**Before Installing:**
+1. Check required permissions
+2. Verify they match plugin functionality
+3. Research plugin author reputation
+4. Read user reviews
+5. Check for recent updates
+
+**Red Flags:**
+- Excessive permissions (e.g., markdown viewer requesting `execute:commands`)
+- Unknown or new developers
+- No source code available
+- Poor or no documentation
+- Many negative reviews
+
+> **Note:** 
+**Warning:** Only install plugins from trusted sources. A malicious plugin with `execute:commands` permission can compromise your entire system.
+
+
+---
+
+### 4. Enable Two-Factor Authentication
+
+Enable 2FA for all connected services:
+
+**Supported Services:**
+- Gmail / Google Workspace
+- GitHub
+- GitLab
+- Bitbucket
+- Custom OAuth providers
+
+**Setup Example (Gmail):**
+1. Go to Google Account settings
+2. Navigate to Security
+3. Enable 2-Step Verification
+4. Use authenticator app (recommended) or SMS
+
+---
+
+### 5. Regular Backups
+
+Protect against data loss with automated backups:
+
+```json
+{
+  "backup": {
+    "enabled": true,
+    "schedule": "0 2 * * *",  // Daily at 2 AM
+    "destination": "/path/to/backup",
+    "encryption": true,
+    "retention": 30  // Keep 30 days of backups
+  }
+}
+```
+
+**Backup Best Practices:**
+- Automate backups (don't rely on manual)
+- Encrypt backup files
+- Store backups off-site (cloud storage)
+- Test restore process regularly
+- Keep multiple versions (30 day retention recommended)
+
+---
+
+### 6. Secure Your Workspace
+
+Use full disk encryption to protect workspace data:
+
+**macOS - FileVault:**
+```bash
+# Check FileVault status
+sudo fdesetup status
+
+# Enable FileVault
+sudo fdesetup enable
+```
+
+**Windows - BitLocker:**
+1. Open Control Panel
+2. System and Security
+3. BitLocker Drive Encryption
+4. Turn on BitLocker
+
+**Linux - LUKS:**
+```bash
+# Encrypt partition during installation
+# Or use dm-crypt for existing systems
+```
+
+---
+
+### 7. Log Out on Shared Computers
+
+Always log out when using shared or public computers:
+
+```typescript
+// Lokus auto-logout configuration
+{
+  "security": {
+    "autoLogout": true,
+    "inactivityTimeout": 900000  // 15 minutes in milliseconds
+  }
+}
+```
+
+---
+
+### 8. Network Security
+
+#### Use Trusted Networks
+
+Avoid public Wi-Fi for sensitive operations:
+- Use VPN on public networks
+- Prefer cellular data over public Wi-Fi
+- Verify network name (avoid fake hotspots)
+
+#### Enable Firewall
+
+Ensure firewall is active:
+
+**macOS:**
+```bash
+# Enable firewall
+sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setglobalstate on
+```
+
+**Windows:**
+```powershell
+# Enable firewall
+Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled True
+```
+
+---
+
+### 9. Monitor Access Logs
+
+Regularly review security logs for suspicious activity:
+
+```bash
+# View recent authentication attempts
+lokus logs --filter auth --limit 50
+
+# View failed login attempts
+lokus logs --filter auth:failed
+```
+
+**Suspicious Patterns:**
+- Multiple failed login attempts
+- Logins from unknown locations
+- Access at unusual times
+- Unauthorized file modifications
+
+---
+
+### 10. Secure API Keys
+
+Protect API keys and tokens:
+
+**Best Practices:**
+- Store in Lokus settings (encrypted)
+- Never commit to version control
+- Rotate keys regularly (every 90 days)
+- Use environment-specific keys
+- Revoke unused keys immediately
+
+```typescript
+// Good: Use settings storage
+await api.settings.set('apiKey', process.env.API_KEY);
+
+// Bad: Hardcoded in code
+const API_KEY = "sk_live_123456789...";  // Never do this!
+```
+
+---
+
+## For Plugin Developers
+
+### 1. Minimal Permissions
+
+Request only permissions your plugin needs:
+
+```json
+{
+  "name": "markdown-preview",
+  "permissions": [
+    "read:files"  // Only read permission needed
+  ]
+}
+```
+
+> **Note:** 
+Users are more likely to install plugins that request minimal permissions. It also reduces security risk if your plugin is compromised.
+
+
+---
+
+### 2. Validate All Input
+
+Never trust user input - validate and sanitize:
+
+```typescript
+function validateFilePath(path: string): boolean {
+  // Check length
+  if (path.length > 1000) {
+    return false;
+  }
+
+  // Prevent directory traversal
+  if (path.includes('..') || path.includes('~')) {
+    return false;
+  }
+
+  // Ensure valid characters
+  if (!/^[a-zA-Z0-9._/-]+$/.test(path)) {
+    return false;
+  }
+
+  return true;
+}
+
+function sanitizeUserInput(input: string): string {
+  // Remove dangerous characters
+  let sanitized = input.replace(/[<>&"']/g, '');
+
+  // Limit length
+  sanitized = sanitized.slice(0, 1000);
+
+  // Trim whitespace
+  sanitized = sanitized.trim();
+
+  return sanitized;
+}
+```
+
+---
+
+### 3. Secure API Keys
+
+Use plugin settings storage for secrets:
+
+```typescript
+class MyPlugin {
+  private apiKey: string | null = null;
+
+  async initialize() {
+    // Load from secure storage
+    this.apiKey = await this.api.settings.get('apiKey');
+  }
+
+  async setApiKey(key: string) {
+    // Validate key format
+    if (!this.isValidApiKey(key)) {
+      throw new Error('Invalid API key format');
+    }
+
+    // Store securely
+    await this.api.settings.set('apiKey', key);
+    this.apiKey = key;
+  }
+
+  private isValidApiKey(key: string): boolean {
+    // Validate format (example for typical API key)
+    return /^[a-zA-Z0-9_-]{32,}$/.test(key);
+  }
+}
+```
+
+> **Note:** 
+Never include API keys or secrets in your plugin code or repository. Use environment variables during development and settings storage in production.
+
+
+---
+
+### 4. HTTPS Only
+
+Enforce HTTPS for all network requests:
+
+```typescript
+async function makeRequest(url: string) {
+  // Validate HTTPS
+  if (!url.startsWith('https://')) {
+    throw new Error('Only HTTPS requests are allowed');
+  }
+
+  // Additional URL validation
+  if (!isValidUrl(url)) {
+    throw new Error('Invalid URL');
+  }
+
+  try {
+    const response = await fetch(url, {
+      // Set timeout
+      signal: AbortSignal.timeout(10000),
+      // Verify SSL certificates
+      // (automatically done by fetch)
+    });
+
+    return await response.json();
+  } catch (error) {
+    // Don't expose internal details
+    throw new Error('Request failed');
+  }
+}
+
+function isValidUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    // Only allow https protocol
+    if (parsed.protocol !== 'https:') {
+      return false;
+    }
+    // Check domain is valid
+    if (!parsed.hostname || parsed.hostname === 'localhost') {
+      return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+```
+
+---
+
+### 5. Error Handling
+
+Don't leak sensitive information in errors:
+
+```typescript
+async function processData(apiKey: string, data: any) {
+  try {
+    const result = await api.process(apiKey, data);
+    return result;
+  } catch (error) {
+    // Log detailed error privately
+    console.error('[Plugin] Processing failed:', {
+      error: error.message,
+      stack: error.stack,
+      timestamp: Date.now()
+    });
+
+    // Return generic error to user
+    // Don't expose API key, stack traces, or internal details
+    throw new Error('Failed to process data. Please try again.');
+  }
+}
+```
+
+---
+
+### 6. Code Review
+
+Review code for security issues before publishing:
+
+**Security Checklist:**
+- [ ] No hardcoded secrets
+- [ ] Input validation on all user data
+- [ ] HTTPS enforced
+- [ ] Error messages don't leak data
+- [ ] Dependencies are up-to-date
+- [ ] No use of eval() or Function()
+- [ ] XSS protection in place
+- [ ] CSRF protection for forms
+- [ ] Rate limiting on API calls
+- [ ] Proper timeout handling
+
+---
+
+### 7. Regular Updates
+
+Keep dependencies updated and patch vulnerabilities:
+
+```bash
+# Check for outdated dependencies
+npm outdated
+
+# Update to latest secure versions
+npm update
+
+# Audit for vulnerabilities
+npm audit
+
+# Fix vulnerabilities automatically
+npm audit fix
+```
+
+**Update Schedule:**
+- Check for updates weekly
+- Apply security patches immediately
+- Test updates before publishing
+- Monitor CVE databases
+- Subscribe to security advisories
+
+---
+
+### 8. Content Security
+
+Sanitize all HTML content before rendering:
+
+```typescript
+import DOMPurify from 'dompurify';
+
+function renderUserContent(html: string) {
+  // Configure allowed tags and attributes
+  const clean = DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: [
+      'p', 'br', 'strong', 'em', 'u', 'a',
+      'h1', 'h2', 'h3', 'ul', 'ol', 'li',
+      'code', 'pre', 'blockquote'
+    ],
+    ALLOWED_ATTR: ['href', 'class', 'id'],
+    // Block dangerous protocols
+    ALLOWED_URI_REGEXP: /^(?:https?|mailto):/
+  });
+
+  return <div dangerouslySetInnerHTML={{ __html: clean }} />;
+}
+
+// Also sanitize URLs
+function sanitizeUrl(url: string): string {
+  // Remove javascript: and data: protocols
+  if (url.match(/^(javascript|data):/i)) {
+    return '';
+  }
+  return url;
+}
+```
+
+---
+
+### 9. Rate Limiting
+
+Implement rate limiting to prevent abuse:
+
+```typescript
+class RateLimiter {
+  private requests = new Map<string, number[]>();
+  private maxRequests = 100;
+  private timeWindow = 60000; // 1 minute
+
+  async checkLimit(userId: string): Promise<boolean> {
+    const now = Date.now();
+    const userRequests = this.requests.get(userId) || [];
+
+    // Remove old requests outside time window
+    const validRequests = userRequests.filter(
+      time => now - time < this.timeWindow
+    );
+
+    // Check if limit exceeded
+    if (validRequests.length >= this.maxRequests) {
+      return false;
+    }
+
+    // Add new request
+    validRequests.push(now);
+    this.requests.set(userId, validRequests);
+
+    return true;
+  }
+}
+
+// Usage
+const limiter = new RateLimiter();
+
+async function handleRequest(userId: string) {
+  if (!await limiter.checkLimit(userId)) {
+    throw new Error('Rate limit exceeded. Please try again later.');
+  }
+
+  // Process request
+}
+```
+
+---
+
+## For Self-Hosters
+
+### 1. Firewall Configuration
+
+Restrict network access to necessary services only:
+
+```bash
+# Ubuntu/Debian - UFW
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw allow 22/tcp    # SSH
+sudo ufw allow 443/tcp   # HTTPS
+sudo ufw enable
+
+# CentOS/RHEL - firewalld
+sudo firewall-cmd --set-default-zone=public
+sudo firewall-cmd --zone=public --add-service=ssh --permanent
+sudo firewall-cmd --zone=public --add-service=https --permanent
+sudo firewall-cmd --reload
+```
+
+---
+
+### 2. Regular Updates
+
+Keep system and dependencies updated:
+
+```bash
+# Ubuntu/Debian
+sudo apt update && sudo apt upgrade -y
+sudo apt autoremove -y
+
+# CentOS/RHEL
+sudo yum update -y
+
+# Update Lokus
+cd /path/to/lokus
+git pull
+npm install
+npm run build
+sudo systemctl restart lokus
+```
+
+**Update Schedule:**
+- Security updates: Immediately
+- Minor updates: Weekly
+- Major updates: Monthly (after testing)
+
+---
+
+### 3. Access Control
+
+Implement principle of least privilege:
+
+```bash
+# Create dedicated user for Lokus
+sudo useradd -r -s /bin/false lokus
+
+# Set proper permissions
+sudo chown -R lokus:lokus /opt/lokus
+sudo chmod -R 750 /opt/lokus
+
+# Run as non-root user
+sudo systemctl edit lokus.service
+```
+
+```ini
+[Service]
+User=lokus
+Group=lokus
+```
+
+---
+
+### 4. Monitoring and Logging
+
+Set up comprehensive logging and monitoring:
+
+```json
+{
+  "logging": {
+    "level": "info",
+    "file": "/var/log/lokus/app.log",
+    "maxSize": "100M",
+    "maxFiles": 10,
+    "auditLog": true
+  }
+}
+```
+
+**Monitor:**
+- Failed authentication attempts
+- Unusual access patterns
+- Resource usage spikes
+- Error rates
+- API usage
+
+**Alerting:**
+```bash
+# Setup log monitoring with fail2ban
+sudo apt install fail2ban
+
+# Configure for Lokus
+sudo nano /etc/fail2ban/jail.local
+```
+
+```ini
+[lokus]
+enabled = true
+port = https
+filter = lokus-auth
+logpath = /var/log/lokus/app.log
+maxretry = 5
+bantime = 3600
+```
+
+---
+
+### 5. Backup Strategy
+
+Implement automated, encrypted backups:
+
+```bash
+#!/bin/bash
+# /usr/local/bin/backup-lokus.sh
+
+DATE=$(date +%Y%m%d_%H%M%S)
+BACKUP_DIR="/backups/lokus"
+SOURCE_DIR="/opt/lokus/data"
+
+# Create backup
+tar -czf "$BACKUP_DIR/backup_$DATE.tar.gz" "$SOURCE_DIR"
+
+# Encrypt backup
+gpg --encrypt --recipient admin@example.com \
+    "$BACKUP_DIR/backup_$DATE.tar.gz"
+
+# Remove unencrypted backup
+rm "$BACKUP_DIR/backup_$DATE.tar.gz"
+
+# Upload to remote storage (S3, etc.)
+aws s3 cp "$BACKUP_DIR/backup_$DATE.tar.gz.gpg" \
+    s3://my-backup-bucket/lokus/
+
+# Keep only last 30 days locally
+find "$BACKUP_DIR" -name "backup_*.tar.gz.gpg" -mtime +30 -delete
+```
+
+```bash
+# Schedule with cron
+sudo crontab -e
+```
+
+```cron
+0 2 * * * /usr/local/bin/backup-lokus.sh
+```
+
+---
+
+### 6. SSL/TLS Configuration
+
+Use strong TLS configuration:
+
+```nginx
+# nginx configuration
+server {
+    listen 443 ssl http2;
+    server_name lokus.example.com;
+
+    # SSL certificates
+    ssl_certificate /etc/letsencrypt/live/lokus.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/lokus.example.com/privkey.pem;
+
+    # SSL configuration
+    ssl_protocols TLSv1.3 TLSv1.2;
+    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512;
+    ssl_prefer_server_ciphers on;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+
+    # HSTS
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+    # Other security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+```
+
+---
+
+### 7. Incident Response Plan
+
+Have a plan for security incidents:
+
+**Preparation:**
+1. Document contact information
+2. Establish communication channels
+3. Define roles and responsibilities
+4. Create runbooks for common scenarios
+
+**Detection:**
+1. Monitor logs for anomalies
+2. Set up automated alerts
+3. Regular security audits
+4. User reported issues
+
+**Response:**
+1. Isolate affected systems
+2. Preserve evidence
+3. Identify root cause
+4. Apply fixes
+5. Restore from backup if needed
+6. Document incident
+
+**Recovery:**
+1. Verify systems are clean
+2. Monitor for reoccurrence
+3. Update security measures
+4. Communicate with users
+
+---
+
+### 8. Security Audits
+
+Conduct regular security reviews:
+
+**Monthly:**
+- Review access logs
+- Check for failed login attempts
+- Verify backup integrity
+- Update dependencies
+
+**Quarterly:**
+- Security scan with tools
+- Review user permissions
+- Audit plugin installations
+- Update documentation
+
+**Annually:**
+- Full security audit
+- Penetration testing
+- Disaster recovery drill
+- Policy review
+
+---
+
+## Network Security Best Practices
+
+### Request Validation
+
+Validate all incoming requests:
+
+```typescript
+interface RequestOptions {
+  url: string;
+  method: string;
+  headers?: Record<string, string>;
+  body?: string;
+}
+
+async function makeSecureRequest(options: RequestOptions) {
+  // Validate URL
+  if (!isValidUrl(options.url)) {
+    throw new Error('Invalid URL');
+  }
+
+  // Enforce HTTPS
+  if (!options.url.startsWith('https://')) {
+    throw new Error('HTTPS required');
+  }
+
+  // Validate headers
+  validateHeaders(options.headers);
+
+  // Make request
+  return await fetch(options.url, {
+    method: options.method,
+    headers: options.headers,
+    body: options.body
+  });
+}
+
+function validateHeaders(headers?: Record<string, string>) {
+  if (!headers) return;
+
+  // Block dangerous headers
+  const dangerous = ['Cookie', 'Set-Cookie'];
+  for (const header of Object.keys(headers)) {
+    if (dangerous.includes(header)) {
+      throw new Error(`Header ${header} not allowed`);
+    }
+  }
+}
+```
+
+---
+
+## Content Security Policy
+
+Implement CSP headers:
+
+```html
+<meta http-equiv="Content-Security-Policy"
+  content="default-src 'self';
+           script-src 'self' 'unsafe-inline';
+           style-src 'self' 'unsafe-inline';
+           img-src 'self' data: https:;
+           connect-src 'self' https://api.example.com;">
+```
+
+---
+
+## Security Resources
+
+**Stay Informed:**
+- [OWASP Top 10](https://owasp.org/www-project-top-ten/)
+- [CVE Database](https://cve.mitre.org/)
+- [Security Advisories](https://github.com/advisories)
+- [npm Security Advisories](https://www.npmjs.com/advisories)
+
+**Tools:**
+- `npm audit` - Dependency vulnerability scanning
+- `snyk` - Security vulnerability detection
+- `eslint-plugin-security` - Security-focused linting
+- `OWASP ZAP` - Security testing
+
+---
+
+## Next Steps
+
+- [Security Overview](/advanced/security/overview) - Architecture and threat model
+- [OAuth Security](/advanced/security/oauth) - Authentication flows
+- [Plugin Security](/advanced/security/plugins) - Sandboxing and permissions

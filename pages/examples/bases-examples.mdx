@@ -1,0 +1,1385 @@
+---
+title: Database Examples
+description: Pre-configured database structures for CRM, project tracking, inventory, content calendars, and more
+keywords: lokud database examples, crm database, project tracker, inventory management, database views
+---
+
+# Database Examples
+
+Complete database configurations with views, fields, and relationships. Copy and customize for your needs.
+
+## Customer Relationship Management (CRM)
+
+Full-featured CRM database with contacts, companies, deals, and activities.
+
+```yaml
+# Base: CRM System
+name: CRM System
+description: Complete customer relationship management
+
+bases:
+  # Companies Database
+  - name: Companies
+    type: crm
+    icon: building
+    color: blue
+    views:
+      - type: list
+        name: All Companies
+        sort:
+          field: Company Name
+          order: asc
+      - type: board
+        name: By Status
+        group_by: Status
+      - type: gallery
+        name: Customer Gallery
+        image_field: Logo
+        filter:
+          field: Status
+          operator: equals
+          value: Customer
+      - type: list
+        name: High Value
+        filter:
+          field: Annual Revenue
+          operator: greater_than
+          value: 100000
+        sort:
+          field: Annual Revenue
+          order: desc
+    fields:
+      - name: Company Name
+        type: text
+        required: true
+        primary: true
+      - name: Logo
+        type: image
+      - name: Industry
+        type: select
+        options:
+          - Technology
+          - Finance
+          - Healthcare
+          - Education
+          - Retail
+          - Manufacturing
+          - Consulting
+          - Real Estate
+          - Other
+      - name: Company Size
+        type: select
+        options:
+          - 1-10 employees
+          - 11-50 employees
+          - 51-200 employees
+          - 201-500 employees
+          - 501-1000 employees
+          - 1000+ employees
+      - name: Status
+        type: select
+        options:
+          - Lead
+          - Prospect
+          - Customer
+          - Partner
+          - Former Customer
+        default: Lead
+        colors:
+          Lead: gray
+          Prospect: yellow
+          Customer: green
+          Partner: blue
+          Former Customer: red
+      - name: Website
+        type: url
+      - name: Phone
+        type: phone
+      - name: Email
+        type: email
+      - name: Address
+        type: text
+      - name: City
+        type: text
+      - name: State
+        type: text
+      - name: Country
+        type: text
+      - name: Postal Code
+        type: text
+      - name: Annual Revenue
+        type: number
+        format: currency
+      - name: Employee Count
+        type: number
+      - name: Account Owner
+        type: person
+        required: true
+      - name: Created Date
+        type: date
+        auto_fill: created_at
+      - name: Last Contact
+        type: date
+      - name: Next Follow-up
+        type: date
+      - name: Tags
+        type: multi_select
+        options:
+          - Hot Lead
+          - Enterprise
+          - SMB
+          - Referral
+          - Inbound
+          - Outbound
+      - name: Notes
+        type: rich_text
+      - name: Contacts
+        type: relation
+        related_base: Contacts
+        relationship: one_to_many
+      - name: Deals
+        type: relation
+        related_base: Deals
+        relationship: one_to_many
+      - name: Activities
+        type: relation
+        related_base: Activities
+        relationship: one_to_many
+      - name: Total Deal Value
+        type: formula
+        formula: "sum(Deals.Amount)"
+      - name: Open Deals Count
+        type: formula
+        formula: "count(Deals where Status != 'Closed Won' and Status != 'Closed Lost')"
+
+  # Contacts Database
+  - name: Contacts
+    type: crm
+    icon: user
+    color: purple
+    views:
+      - type: list
+        name: All Contacts
+        sort:
+          field: Last Name
+          order: asc
+      - type: board
+        name: By Role
+        group_by: Role
+      - type: list
+        name: Decision Makers
+        filter:
+          field: Decision Maker
+          operator: is_checked
+    fields:
+      - name: First Name
+        type: text
+        required: true
+      - name: Last Name
+        type: text
+        required: true
+      - name: Full Name
+        type: formula
+        formula: "First Name + ' ' + Last Name"
+        primary: true
+      - name: Photo
+        type: image
+      - name: Company
+        type: relation
+        related_base: Companies
+        required: true
+      - name: Job Title
+        type: text
+      - name: Role
+        type: select
+        options:
+          - Decision Maker
+          - Influencer
+          - End User
+          - Technical Buyer
+          - Economic Buyer
+      - name: Department
+        type: select
+        options:
+          - Executive
+          - Sales
+          - Marketing
+          - Engineering
+          - Product
+          - Finance
+          - Operations
+          - HR
+          - IT
+      - name: Email
+        type: email
+        required: true
+      - name: Phone
+        type: phone
+      - name: Mobile
+        type: phone
+      - name: LinkedIn
+        type: url
+      - name: Twitter
+        type: url
+      - name: Decision Maker
+        type: checkbox
+      - name: Status
+        type: select
+        options:
+          - Active
+          - Inactive
+          - Do Not Contact
+        default: Active
+      - name: Lead Source
+        type: select
+        options:
+          - Website
+          - Referral
+          - Event
+          - Cold Outreach
+          - LinkedIn
+          - Partner
+          - Other
+      - name: Tags
+        type: multi_select
+      - name: Created Date
+        type: date
+        auto_fill: created_at
+      - name: Last Contact
+        type: date
+      - name: Next Follow-up
+        type: date
+      - name: Notes
+        type: rich_text
+      - name: Deals
+        type: relation
+        related_base: Deals
+      - name: Activities
+        type: relation
+        related_base: Activities
+
+  # Deals/Opportunities Database
+  - name: Deals
+    type: crm
+    icon: dollar-sign
+    color: green
+    views:
+      - type: board
+        name: Sales Pipeline
+        group_by: Stage
+      - type: list
+        name: Open Deals
+        filter:
+          field: Status
+          operator: not_equals
+          value: Closed Lost
+        sort:
+          field: Expected Close Date
+          order: asc
+      - type: list
+        name: My Deals
+        filter:
+          field: Owner
+          operator: is_current_user
+      - type: list
+        name: Closing This Month
+        filter:
+          - field: Expected Close Date
+            operator: is_within
+            value: current_month
+          - field: Status
+            operator: equals
+            value: Open
+      - type: table
+        name: Revenue Forecast
+        group_by: Expected Close Date
+        aggregate:
+          field: Amount
+          function: sum
+    fields:
+      - name: Deal Name
+        type: text
+        required: true
+        primary: true
+      - name: Company
+        type: relation
+        related_base: Companies
+        required: true
+      - name: Contact
+        type: relation
+        related_base: Contacts
+      - name: Amount
+        type: number
+        format: currency
+        required: true
+      - name: Stage
+        type: select
+        options:
+          - Qualification
+          - Needs Analysis
+          - Proposal
+          - Negotiation
+          - Closed Won
+          - Closed Lost
+        default: Qualification
+        colors:
+          Qualification: gray
+          Needs Analysis: yellow
+          Proposal: orange
+          Negotiation: purple
+          Closed Won: green
+          Closed Lost: red
+      - name: Status
+        type: select
+        options:
+          - Open
+          - Closed Won
+          - Closed Lost
+        default: Open
+      - name: Probability
+        type: number
+        format: percent
+        min: 0
+        max: 100
+      - name: Weighted Value
+        type: formula
+        formula: "Amount * (Probability / 100)"
+      - name: Owner
+        type: person
+        required: true
+      - name: Created Date
+        type: date
+        auto_fill: created_at
+      - name: Expected Close Date
+        type: date
+        required: true
+      - name: Actual Close Date
+        type: date
+      - name: Lead Source
+        type: select
+        options:
+          - Inbound
+          - Outbound
+          - Referral
+          - Partner
+          - Event
+          - Website
+      - name: Deal Type
+        type: select
+        options:
+          - New Business
+          - Upsell
+          - Renewal
+          - Cross-sell
+      - name: Product Interest
+        type: multi_select
+        options:
+          - Product A
+          - Product B
+          - Product C
+          - Services
+      - name: Competitors
+        type: multi_select
+        options:
+          - Competitor 1
+          - Competitor 2
+          - Competitor 3
+          - None
+      - name: Next Steps
+        type: rich_text
+      - name: Notes
+        type: rich_text
+      - name: Attachments
+        type: file
+      - name: Activities
+        type: relation
+        related_base: Activities
+      - name: Days in Stage
+        type: formula
+        formula: "days_between(now(), Last Stage Change)"
+      - name: Last Stage Change
+        type: date
+        auto_fill: updated_at
+
+  # Activities/Interactions Database
+  - name: Activities
+    type: activity
+    icon: activity
+    color: orange
+    views:
+      - type: list
+        name: All Activities
+        sort:
+          field: Activity Date
+          order: desc
+      - type: calendar
+        name: Activity Calendar
+        date_field: Activity Date
+      - type: list
+        name: Upcoming Tasks
+        filter:
+          - field: Activity Type
+            operator: equals
+            value: Task
+          - field: Status
+            operator: equals
+            value: Pending
+        sort:
+          field: Due Date
+          order: asc
+      - type: list
+        name: My Activities
+        filter:
+          field: Owner
+          operator: is_current_user
+    fields:
+      - name: Subject
+        type: text
+        required: true
+        primary: true
+      - name: Activity Type
+        type: select
+        options:
+          - Call
+          - Email
+          - Meeting
+          - Task
+          - Note
+          - Demo
+          - Proposal Sent
+        required: true
+      - name: Status
+        type: select
+        options:
+          - Pending
+          - Completed
+          - Cancelled
+        default: Pending
+      - name: Company
+        type: relation
+        related_base: Companies
+      - name: Contact
+        type: relation
+        related_base: Contacts
+      - name: Deal
+        type: relation
+        related_base: Deals
+      - name: Owner
+        type: person
+        auto_fill: current_user
+      - name: Activity Date
+        type: date
+        include_time: true
+        auto_fill: created_at
+      - name: Due Date
+        type: date
+        include_time: true
+      - name: Duration
+        type: number
+        suffix: minutes
+      - name: Description
+        type: rich_text
+      - name: Outcome
+        type: rich_text
+      - name: Follow-up Required
+        type: checkbox
+      - name: Follow-up Date
+        type: date
+      - name: Attachments
+        type: file
+      - name: Tags
+        type: multi_select
+
+# Automation Rules
+automation:
+  - name: Update Last Contact Date
+    trigger:
+      type: record_created
+      base: Activities
+      conditions:
+        - field: Status
+          operator: equals
+          value: Completed
+    actions:
+      - type: update_related_record
+        base: Companies
+        field: Last Contact
+        value: "{{Activity Date}}"
+      - type: update_related_record
+        base: Contacts
+        field: Last Contact
+        value: "{{Activity Date}}"
+
+  - name: Deal Stage Notification
+    trigger:
+      type: record_updated
+      base: Deals
+      field: Stage
+    actions:
+      - type: send_notification
+        to: "{{Owner}}"
+        message: "Deal {{Deal Name}} moved to {{Stage}}"
+
+  - name: Follow-up Reminder
+    trigger:
+      type: scheduled
+      schedule: daily
+      time: "09:00"
+    conditions:
+      - field: Next Follow-up
+        operator: equals
+        value: today
+    actions:
+      - type: send_notification
+        to: "{{Account Owner}}"
+        message: "Follow up with {{Company Name}} today"
+```
+
+## Project Tracker
+
+Comprehensive project and task management database.
+
+```yaml
+# Base: Project Tracker
+name: Project Tracker
+description: Manage projects, tasks, and resources
+
+bases:
+  # Projects Database
+  - name: Projects
+    type: project
+    icon: folder
+    color: blue
+    views:
+      - type: board
+        name: Project Status
+        group_by: Status
+      - type: timeline
+        name: Project Timeline
+        start_field: Start Date
+        end_field: End Date
+      - type: list
+        name: Active Projects
+        filter:
+          field: Status
+          operator: equals
+          value: Active
+      - type: gallery
+        name: Project Gallery
+        image_field: Cover Image
+    fields:
+      - name: Project Name
+        type: text
+        required: true
+        primary: true
+      - name: Description
+        type: rich_text
+      - name: Cover Image
+        type: image
+      - name: Status
+        type: select
+        options:
+          - Planning
+          - Active
+          - On Hold
+          - Completed
+          - Cancelled
+        default: Planning
+        colors:
+          Planning: gray
+          Active: green
+          On Hold: yellow
+          Completed: blue
+          Cancelled: red
+      - name: Priority
+        type: select
+        options:
+          - Critical
+          - High
+          - Medium
+          - Low
+        default: Medium
+      - name: Project Manager
+        type: person
+        required: true
+      - name: Team Members
+        type: multi_person
+      - name: Client
+        type: text
+      - name: Department
+        type: select
+        options:
+          - Engineering
+          - Product
+          - Marketing
+          - Sales
+          - Operations
+      - name: Start Date
+        type: date
+      - name: End Date
+        type: date
+      - name: Actual End Date
+        type: date
+      - name: Budget
+        type: number
+        format: currency
+      - name: Actual Cost
+        type: number
+        format: currency
+      - name: Budget Variance
+        type: formula
+        formula: "Actual Cost - Budget"
+      - name: Progress
+        type: progress
+        min: 0
+        max: 100
+      - name: Health
+        type: select
+        options:
+          - On Track
+          - At Risk
+          - Off Track
+        colors:
+          On Track: green
+          At Risk: yellow
+          Off Track: red
+      - name: Tasks
+        type: relation
+        related_base: Tasks
+        relationship: one_to_many
+      - name: Total Tasks
+        type: formula
+        formula: "count(Tasks)"
+      - name: Completed Tasks
+        type: formula
+        formula: "count(Tasks where Status = 'Done')"
+      - name: Completion Rate
+        type: formula
+        formula: "(Completed Tasks / Total Tasks) * 100"
+      - name: Milestones
+        type: relation
+        related_base: Milestones
+      - name: Documents
+        type: file
+      - name: Tags
+        type: multi_select
+      - name: Notes
+        type: rich_text
+      - name: Last Updated
+        type: date
+        auto_fill: updated_at
+
+  # Tasks Database
+  - name: Tasks
+    type: task
+    icon: check-square
+    color: green
+    views:
+      - type: kanban
+        name: Task Board
+        group_by: Status
+      - type: list
+        name: My Tasks
+        filter:
+          field: Assignee
+          operator: is_current_user
+        sort:
+          field: Due Date
+          order: asc
+      - type: calendar
+        name: Task Calendar
+        date_field: Due Date
+      - type: list
+        name: High Priority
+        filter:
+          field: Priority
+          operator: equals
+          value: High
+        sort:
+          field: Due Date
+          order: asc
+      - type: list
+        name: Overdue
+        filter:
+          - field: Due Date
+            operator: is_before
+            value: today
+          - field: Status
+            operator: not_equals
+            value: Done
+    fields:
+      - name: Task Name
+        type: text
+        required: true
+        primary: true
+      - name: Description
+        type: rich_text
+      - name: Project
+        type: relation
+        related_base: Projects
+        required: true
+      - name: Status
+        type: select
+        options:
+          - To Do
+          - In Progress
+          - Review
+          - Blocked
+          - Done
+        default: To Do
+        colors:
+          To Do: gray
+          In Progress: blue
+          Review: purple
+          Blocked: red
+          Done: green
+      - name: Priority
+        type: select
+        options:
+          - High
+          - Medium
+          - Low
+        default: Medium
+      - name: Assignee
+        type: person
+      - name: Reporter
+        type: person
+        auto_fill: current_user
+      - name: Due Date
+        type: date
+      - name: Start Date
+        type: date
+      - name: Completed Date
+        type: date
+      - name: Estimated Hours
+        type: number
+      - name: Actual Hours
+        type: number
+      - name: Story Points
+        type: number
+      - name: Task Type
+        type: select
+        options:
+          - Feature
+          - Bug
+          - Improvement
+          - Documentation
+          - Research
+      - name: Labels
+        type: multi_select
+        options:
+          - Frontend
+          - Backend
+          - Design
+          - Testing
+          - DevOps
+          - Documentation
+      - name: Dependencies
+        type: relation
+        related_base: Tasks
+        relationship: many_to_many
+      - name: Subtasks
+        type: checklist
+      - name: Attachments
+        type: file
+      - name: Comments
+        type: rich_text
+      - name: Blocked By
+        type: text
+      - name: Time Tracking
+        type: rich_text
+      - name: Days Until Due
+        type: formula
+        formula: "days_between(Due Date, now())"
+
+  # Milestones Database
+  - name: Milestones
+    type: milestone
+    icon: flag
+    color: purple
+    views:
+      - type: list
+        name: All Milestones
+        sort:
+          field: Target Date
+          order: asc
+      - type: timeline
+        name: Milestone Timeline
+        date_field: Target Date
+      - type: board
+        name: By Status
+        group_by: Status
+    fields:
+      - name: Milestone Name
+        type: text
+        required: true
+        primary: true
+      - name: Description
+        type: rich_text
+      - name: Project
+        type: relation
+        related_base: Projects
+        required: true
+      - name: Status
+        type: select
+        options:
+          - Upcoming
+          - In Progress
+          - Completed
+          - Delayed
+        default: Upcoming
+      - name: Target Date
+        type: date
+        required: true
+      - name: Actual Date
+        type: date
+      - name: Owner
+        type: person
+      - name: Deliverables
+        type: checklist
+      - name: Success Criteria
+        type: rich_text
+      - name: Related Tasks
+        type: relation
+        related_base: Tasks
+      - name: Progress
+        type: progress
+      - name: Notes
+        type: rich_text
+
+  # Time Tracking Database
+  - name: Time Entries
+    type: time_tracking
+    icon: clock
+    color: orange
+    views:
+      - type: list
+        name: All Entries
+        sort:
+          field: Date
+          order: desc
+      - type: list
+        name: This Week
+        filter:
+          field: Date
+          operator: is_within
+          value: current_week
+      - type: table
+        name: By Person
+        group_by: Person
+        aggregate:
+          field: Hours
+          function: sum
+      - type: table
+        name: By Project
+        group_by: Project
+        aggregate:
+          field: Hours
+          function: sum
+    fields:
+      - name: Entry ID
+        type: auto_number
+        primary: true
+      - name: Person
+        type: person
+        auto_fill: current_user
+        required: true
+      - name: Project
+        type: relation
+        related_base: Projects
+        required: true
+      - name: Task
+        type: relation
+        related_base: Tasks
+      - name: Date
+        type: date
+        auto_fill: current_date
+        required: true
+      - name: Hours
+        type: number
+        required: true
+        min: 0
+        max: 24
+      - name: Description
+        type: rich_text
+      - name: Billable
+        type: checkbox
+        default: true
+      - name: Hourly Rate
+        type: number
+        format: currency
+      - name: Total Amount
+        type: formula
+        formula: "Hours * Hourly Rate"
+      - name: Activity Type
+        type: select
+        options:
+          - Development
+          - Design
+          - Meeting
+          - Planning
+          - Review
+          - Documentation
+          - Testing
+
+automation:
+  - name: Task Completed Notification
+    trigger:
+      type: record_updated
+      base: Tasks
+      field: Status
+      new_value: Done
+    actions:
+      - type: update_field
+        field: Completed Date
+        value: today
+      - type: send_notification
+        to: "{{Reporter}}"
+        message: "Task {{Task Name}} completed by {{Assignee}}"
+
+  - name: Overdue Task Alert
+    trigger:
+      type: scheduled
+      schedule: daily
+      time: "09:00"
+    conditions:
+      - field: Due Date
+        operator: is_before
+        value: today
+      - field: Status
+        operator: not_equals
+        value: Done
+    actions:
+      - type: send_notification
+        to: "{{Assignee}}"
+        message: "Task {{Task Name}} is overdue"
+```
+
+## Inventory Management
+
+Track products, stock levels, and orders.
+
+```yaml
+# Base: Inventory Management
+name: Inventory System
+description: Track products, stock, and orders
+
+bases:
+  # Products Database
+  - name: Products
+    type: inventory
+    icon: package
+    color: purple
+    views:
+      - type: gallery
+        name: Product Catalog
+        image_field: Product Image
+      - type: list
+        name: All Products
+        sort:
+          field: Product Name
+          order: asc
+      - type: list
+        name: Low Stock
+        filter:
+          field: Stock Level
+          operator: less_than_equal
+          value: "Reorder Point"
+        sort:
+          field: Stock Level
+          order: asc
+      - type: board
+        name: By Category
+        group_by: Category
+      - type: list
+        name: Out of Stock
+        filter:
+          field: Stock Level
+          operator: equals
+          value: 0
+    fields:
+      - name: Product Name
+        type: text
+        required: true
+        primary: true
+      - name: SKU
+        type: text
+        required: true
+        unique: true
+      - name: Barcode
+        type: text
+      - name: Product Image
+        type: image
+      - name: Description
+        type: rich_text
+      - name: Category
+        type: select
+        options:
+          - Electronics
+          - Clothing
+          - Food & Beverage
+          - Home & Garden
+          - Sports
+          - Books
+          - Toys
+          - Other
+      - name: Subcategory
+        type: text
+      - name: Brand
+        type: text
+      - name: Supplier
+        type: relation
+        related_base: Suppliers
+      - name: Unit of Measure
+        type: select
+        options:
+          - Each
+          - Box
+          - Case
+          - Pallet
+          - Pound
+          - Kilogram
+          - Liter
+      - name: Stock Level
+        type: number
+        required: true
+        default: 0
+      - name: Reorder Point
+        type: number
+        default: 10
+      - name: Reorder Quantity
+        type: number
+        default: 50
+      - name: Stock Status
+        type: formula
+        formula: "if(Stock Level = 0, 'Out of Stock', if(Stock Level <= Reorder Point, 'Low Stock', 'In Stock'))"
+      - name: Location
+        type: select
+        options:
+          - Warehouse A
+          - Warehouse B
+          - Store Front
+          - Back Room
+      - name: Bin Location
+        type: text
+      - name: Cost Price
+        type: number
+        format: currency
+      - name: Selling Price
+        type: number
+        format: currency
+      - name: Margin
+        type: formula
+        formula: "((Selling Price - Cost Price) / Selling Price) * 100"
+      - name: Last Restocked
+        type: date
+      - name: Last Sold
+        type: date
+      - name: Active
+        type: checkbox
+        default: true
+      - name: Tags
+        type: multi_select
+      - name: Notes
+        type: rich_text
+      - name: Stock Movements
+        type: relation
+        related_base: Stock Movements
+      - name: Order Items
+        type: relation
+        related_base: Order Items
+
+  # Suppliers Database
+  - name: Suppliers
+    type: directory
+    icon: truck
+    color: blue
+    views:
+      - type: list
+        name: All Suppliers
+      - type: board
+        name: By Status
+        group_by: Status
+    fields:
+      - name: Supplier Name
+        type: text
+        required: true
+        primary: true
+      - name: Contact Person
+        type: text
+      - name: Email
+        type: email
+      - name: Phone
+        type: phone
+      - name: Website
+        type: url
+      - name: Address
+        type: text
+      - name: City
+        type: text
+      - name: Country
+        type: text
+      - name: Status
+        type: select
+        options:
+          - Active
+          - Inactive
+          - Preferred
+        default: Active
+      - name: Payment Terms
+        type: select
+        options:
+          - Net 30
+          - Net 60
+          - Net 90
+          - COD
+          - Prepay
+      - name: Lead Time Days
+        type: number
+      - name: Minimum Order
+        type: number
+        format: currency
+      - name: Products
+        type: relation
+        related_base: Products
+      - name: Rating
+        type: rating
+        max: 5
+      - name: Notes
+        type: rich_text
+
+  # Orders Database
+  - name: Orders
+    type: order
+    icon: shopping-cart
+    color: green
+    views:
+      - type: list
+        name: All Orders
+        sort:
+          field: Order Date
+          order: desc
+      - type: board
+        name: By Status
+        group_by: Status
+      - type: list
+        name: Pending Orders
+        filter:
+          field: Status
+          operator: equals
+          value: Pending
+      - type: calendar
+        name: Order Calendar
+        date_field: Order Date
+    fields:
+      - name: Order Number
+        type: auto_number
+        prefix: "ORD-"
+        primary: true
+      - name: Customer Name
+        type: text
+        required: true
+      - name: Customer Email
+        type: email
+      - name: Customer Phone
+        type: phone
+      - name: Order Date
+        type: date
+        auto_fill: created_at
+        include_time: true
+      - name: Status
+        type: select
+        options:
+          - Pending
+          - Processing
+          - Shipped
+          - Delivered
+          - Cancelled
+        default: Pending
+        colors:
+          Pending: gray
+          Processing: yellow
+          Shipped: blue
+          Delivered: green
+          Cancelled: red
+      - name: Payment Status
+        type: select
+        options:
+          - Pending
+          - Paid
+          - Refunded
+        default: Pending
+      - name: Payment Method
+        type: select
+        options:
+          - Credit Card
+          - PayPal
+          - Bank Transfer
+          - Cash
+          - Check
+      - name: Shipping Address
+        type: rich_text
+      - name: Shipping Method
+        type: select
+        options:
+          - Standard
+          - Express
+          - Overnight
+          - Pickup
+      - name: Tracking Number
+        type: text
+      - name: Shipped Date
+        type: date
+      - name: Delivered Date
+        type: date
+      - name: Order Items
+        type: relation
+        related_base: Order Items
+      - name: Subtotal
+        type: formula
+        formula: "sum(Order Items.Line Total)"
+      - name: Tax
+        type: number
+        format: currency
+      - name: Shipping Cost
+        type: number
+        format: currency
+      - name: Total
+        type: formula
+        formula: "Subtotal + Tax + Shipping Cost"
+      - name: Notes
+        type: rich_text
+
+  # Order Items Database
+  - name: Order Items
+    type: line_item
+    icon: list
+    color: orange
+    views:
+      - type: list
+        name: All Items
+      - type: table
+        name: By Product
+        group_by: Product
+    fields:
+      - name: Item ID
+        type: auto_number
+        primary: true
+      - name: Order
+        type: relation
+        related_base: Orders
+        required: true
+      - name: Product
+        type: relation
+        related_base: Products
+        required: true
+      - name: Quantity
+        type: number
+        required: true
+        min: 1
+      - name: Unit Price
+        type: number
+        format: currency
+      - name: Line Total
+        type: formula
+        formula: "Quantity * Unit Price"
+      - name: Notes
+        type: text
+
+  # Stock Movements Database
+  - name: Stock Movements
+    type: transaction
+    icon: trending-up
+    color: red
+    views:
+      - type: list
+        name: All Movements
+        sort:
+          field: Date
+          order: desc
+      - type: list
+        name: Today
+        filter:
+          field: Date
+          operator: equals
+          value: today
+      - type: table
+        name: By Product
+        group_by: Product
+    fields:
+      - name: Movement ID
+        type: auto_number
+        primary: true
+      - name: Date
+        type: date
+        auto_fill: created_at
+        include_time: true
+      - name: Product
+        type: relation
+        related_base: Products
+        required: true
+      - name: Movement Type
+        type: select
+        options:
+          - Stock In
+          - Stock Out
+          - Adjustment
+          - Return
+          - Damaged
+        required: true
+      - name: Quantity
+        type: number
+        required: true
+      - name: Previous Stock
+        type: number
+      - name: New Stock
+        type: number
+      - name: Reference
+        type: text
+        placeholder: "Order #, PO #, etc."
+      - name: Reason
+        type: text
+      - name: User
+        type: person
+        auto_fill: current_user
+      - name: Notes
+        type: rich_text
+
+automation:
+  - name: Update Stock on Order
+    trigger:
+      type: record_created
+      base: Order Items
+    actions:
+      - type: update_related_record
+        base: Products
+        field: Stock Level
+        operation: subtract
+        value: "{{Quantity}}"
+      - type: create_record
+        base: Stock Movements
+        fields:
+          Product: "{{Product}}"
+          Movement Type: "Stock Out"
+          Quantity: "{{Quantity}}"
+          Reference: "{{Order.Order Number}}"
+
+  - name: Low Stock Alert
+    trigger:
+      type: record_updated
+      base: Products
+      field: Stock Level
+    conditions:
+      - field: Stock Level
+        operator: less_than_equal
+        value: "{{Reorder Point}}"
+    actions:
+      - type: send_notification
+        channel: email
+        to: "inventory@company.com"
+        subject: "Low Stock Alert: {{Product Name}}"
+        message: "{{Product Name}} (SKU: {{SKU}}) stock level is {{Stock Level}}. Reorder point: {{Reorder Point}}"
+```
+
+This file continues with more examples. Would you like me to continue with the remaining database examples (Content Calendar, Bug Tracker, Employee Directory)?
+

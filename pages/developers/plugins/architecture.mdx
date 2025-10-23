@@ -1,0 +1,426 @@
+---
+title: "Plugin Architecture"
+description: "Deep dive into Lokus plugin architecture - runtime, sandboxing, core components, and API design"
+keywords: ["plugin architecture", "sandboxing", "plugin runtime", "api design", "plugin host"]
+author: "Lokus Team"
+lastUpdated: "2025-10-23"
+version: "1.3.1"
+---
+
+# Plugin Architecture
+
+Understanding the architecture behind Lokus plugins helps you build more efficient, secure, and maintainable extensions. This guide covers the runtime environment, core components, and architectural patterns.
+
+## Plugin Runtime
+
+The Lokus plugin system is built on a sandboxed architecture that ensures plugin safety and application stability:
+
+```
+┌─────────────────────────────────────────────────┐
+│              Lokus Application                  │
+├─────────────────────────────────────────────────┤
+│                                                 │
+│  ┌──────────────┐      ┌──────────────┐       │
+│  │   Plugin     │      │   Plugin     │       │
+│  │  Sandbox 1   │      │  Sandbox 2   │       │
+│  │              │      │              │       │
+│  │  ┌────────┐  │      │  ┌────────┐  │       │
+│  │  │ Plugin │  │      │  │ Plugin │  │       │
+│  │  │   A    │  │      │  │   B    │  │       │
+│  │  └────────┘  │      │  └────────┘  │       │
+│  │      ↕       │      │      ↕       │       │
+│  │  ┌────────┐  │      │  ┌────────┐  │       │
+│  │  │  API   │  │      │  │  API   │  │       │
+│  │  │ Proxy  │  │      │  │ Proxy  │  │       │
+│  │  └────────┘  │      │  └────────┘  │       │
+│  └──────┬───────┘      └──────┬───────┘       │
+│         │                     │               │
+│         └─────────┬───────────┘               │
+│                   ↓                           │
+│         ┌──────────────────┐                  │
+│         │   Plugin Host    │                  │
+│         │   (Core APIs)    │                  │
+│         └──────────────────┘                  │
+│                   ↓                           │
+│         ┌──────────────────┐                  │
+│         │  Lokus Core      │                  │
+│         │  (Editor, UI)    │                  │
+│         └──────────────────┘                  │
+└─────────────────────────────────────────────────┘
+```
+
+## Core Components
+
+### Plugin Manager
+
+The Plugin Manager is responsible for the complete lifecycle of plugins:
+
+**Responsibilities:**
+- Loading and validating plugin manifests
+- Activating plugins based on triggers
+- Managing plugin dependencies
+- Enforcing resource limits
+- Handling inter-plugin communication
+- Monitoring plugin health
+
+**Key Features:**
+```typescript
+class PluginManager {
+  // Load plugin from path
+  async loadPlugin(path: string): Promise<Plugin>
+
+  // Activate plugin
+  async activatePlugin(id: string): Promise<void>
+
+  // Deactivate plugin
+  async deactivatePlugin(id: string): Promise<void>
+
+  // Get plugin metadata
+  getPluginInfo(id: string): PluginMetadata
+
+  // List all plugins
+  listPlugins(): PluginMetadata[]
+
+  // Check plugin health
+  getPluginHealth(id: string): HealthStatus
+}
+```
+
+### Plugin Host
+
+The Plugin Host provides the sandboxed execution environment:
+
+**Isolation Mechanisms:**
+- Separate JavaScript context per plugin
+- Memory heap isolation
+- No access to Node.js native modules
+- Controlled API surface
+- Resource monitoring
+
+**API Proxying:**
+```typescript
+// Host creates proxied API objects
+class PluginHost {
+  createAPIProxy(plugin: Plugin): PluginAPI {
+    return new Proxy(this.baseAPI, {
+      get(target, prop) {
+        // Check permissions before allowing access
+        if (!plugin.hasPermission(prop)) {
+          throw new PermissionError(`Missing permission: ${prop}`)
+        }
+
+        // Wrap API calls with monitoring
+        return wrapWithMonitoring(target[prop], plugin.id)
+      }
+    })
+  }
+}
+```
+
+### API Layer
+
+The API Layer provides versioned, type-safe interfaces:
+
+**Design Principles:**
+- Declarative over imperative
+- Async by default
+- Consistent error handling
+- Backward compatibility
+- Progressive disclosure
+
+**API Structure:**
+```typescript
+interface PluginAPI {
+  // Core APIs
+  commands: CommandsAPI
+  editor: EditorAPI
+  ui: UIAPI
+  workspace: WorkspaceAPI
+  fs: FileSystemAPI
+  network: NetworkAPI
+  storage: StorageAPI
+  events: EventsAPI
+
+  // MCP Integration (v1.3+)
+  mcp: MCPAPI
+
+  // Metadata
+  version: ApiVersion
+
+  // Utilities
+  log(level: LogLevel, message: string): void
+  dispose(): void
+}
+```
+
+## Security Model
+
+### Permission System
+
+Plugins must declare required permissions in their manifest:
+
+```json
+{
+  "name": "my-plugin",
+  "version": "1.0.0",
+  "permissions": [
+    "editor:read",
+    "editor:write",
+    "filesystem:read",
+    "network:fetch"
+  ]
+}
+```
+
+**Available Permissions:**
+
+| Permission | Description | Risk Level |
+|-----------|-------------|------------|
+| `editor:read` | Read editor content | Low |
+| `editor:write` | Modify editor content | Medium |
+| `filesystem:read` | Read files | Medium |
+| `filesystem:write` | Write files | High |
+| `network:fetch` | Make HTTP requests | High |
+| `workspace:read` | Read workspace data | Low |
+| `workspace:write` | Modify workspace | Medium |
+| `ui:create` | Create UI elements | Low |
+| `commands:execute` | Execute commands | Medium |
+| `storage:read` | Read plugin storage | Low |
+| `storage:write` | Write plugin storage | Low |
+
+**Runtime Enforcement:**
+```typescript
+// Permission check at API boundary
+function enforcePermission(plugin: Plugin, permission: string) {
+  if (!plugin.manifest.permissions.includes(permission)) {
+    throw new PermissionError(
+      `Plugin "${plugin.id}" requires permission: ${permission}`
+    )
+  }
+
+  // Log permission usage for auditing
+  auditLog.record({
+    plugin: plugin.id,
+    permission,
+    timestamp: Date.now()
+  })
+}
+```
+
+### Sandboxing
+
+Plugins run in isolated contexts with strict limits:
+
+**Memory Limits:**
+- Default: 128MB per plugin
+- Configurable: 16MB - 512MB
+- Automatic cleanup of inactive plugins
+- Warning at 80% usage
+- Throttling at 90% usage
+
+**CPU Throttling:**
+- Expensive operations throttled after 100ms
+- Background tasks use `requestIdleCallback`
+- Prevents UI freezing
+- Maintains 60 FPS target
+
+**API Rate Limits:**
+- 1000 API calls per second per plugin
+- Automatic backpressure and queuing
+- Batch operations encouraged
+
+### Code Review Process
+
+All plugins submitted to the official registry undergo:
+
+1. **Automated Security Scanning**
+   - Static analysis for vulnerabilities
+   - Dependency vulnerability checks
+   - Pattern matching for malicious code
+   - License compliance verification
+
+2. **Manual Code Review**
+   - Permission appropriateness
+   - Code quality assessment
+   - Documentation completeness
+   - Performance considerations
+
+3. **Testing Requirements**
+   - Unit tests required
+   - Integration tests recommended
+   - Performance benchmarks encouraged
+
+## Plugin Lifecycle
+
+### Activation Flow
+
+Plugins are activated based on events defined in the manifest:
+
+```json
+{
+  "activationEvents": [
+    "onStartup",
+    "onLanguage:markdown",
+    "onCommand:myPlugin.hello",
+    "workspaceContains:**/*.custom"
+  ]
+}
+```
+
+**Activation Sequence:**
+
+```
+1. Trigger Event Detected
+   ↓
+2. Load Plugin Manifest
+   ↓
+3. Validate Manifest Format
+   ↓
+4. Check Dependencies
+   ↓
+5. Verify Permissions
+   ↓
+6. Create Sandbox Environment
+   ↓
+7. Load Plugin Code
+   ↓
+8. Instantiate Plugin Class
+   ↓
+9. Call activate() Method
+   ↓
+10. Register Contributions
+    ↓
+11. Plugin Active
+```
+
+**Example Implementation:**
+```typescript
+export default class MyPlugin implements Plugin {
+  private disposables: Disposable[] = []
+
+  async activate(context: PluginContext) {
+    // Activation happens here
+    const command = context.api.commands.register({
+      id: 'myPlugin.hello',
+      title: 'Say Hello',
+      handler: () => {
+        context.api.ui.showNotification('Hello!', 'info')
+      }
+    })
+
+    // Track disposables for cleanup
+    this.disposables.push(command)
+
+    // Subscribe to events
+    const subscription = context.api.events.on('editor:change', (event) => {
+      // Handle event
+    })
+
+    this.disposables.push(subscription)
+  }
+
+  async deactivate() {
+    // Cleanup all resources
+    this.disposables.forEach(d => d.dispose())
+    this.disposables = []
+  }
+}
+```
+
+### Deactivation Flow
+
+Clean plugin shutdown ensures no resource leaks:
+
+**Deactivation Triggers:**
+- User disables plugin
+- Plugin uninstallation
+- Application shutdown
+- Plugin error/crash
+- Resource limit exceeded
+
+**Deactivation Sequence:**
+
+```
+1. Deactivation Triggered
+   ↓
+2. Call deactivate() Method
+   ↓
+3. Wait for Cleanup (max 5s)
+   ↓
+4. Dispose All Subscriptions
+   ↓
+5. Clear Plugin Storage Cache
+   ↓
+6. Terminate Sandbox
+   ↓
+7. Release Memory
+   ↓
+8. Plugin Inactive
+```
+
+## Versioning and Compatibility
+
+### Semantic Versioning
+
+Plugins use semantic versioning:
+
+```json
+{
+  "version": "1.2.3",
+  "lokusVersion": "^1.0.0",
+  "engines": {
+    "lokus": ">=1.0.0 &lt;2.0.0"
+  }
+}
+```
+
+### API Compatibility
+
+APIs are versioned for backward compatibility:
+
+```typescript
+// Check API version at runtime
+if (context.api.version.major >= 2) {
+  // Use v2 API features
+  await context.api.editor.applyEdit(edit)
+} else {
+  // Fallback to v1 API
+  await context.api.editor.insertText(text)
+}
+```
+
+### Breaking Changes
+
+Major version changes indicate breaking changes:
+- Plugin manifest format changes
+- API signature changes
+- Behavior changes
+- Deprecated feature removal
+
+**Migration Support:**
+```typescript
+// Plugin SDK provides compatibility layer
+import { compat } from '@lokus/plugin-sdk'
+
+export default class MyPlugin implements Plugin {
+  async activate(context: PluginContext) {
+    // Use compatibility layer for older APIs
+    const api = compat.wrapAPI(context.api, {
+      targetVersion: '1.0.0',
+      currentVersion: context.api.version
+    })
+
+    // Works with both v1 and v2
+    await api.editor.insertText('Hello')
+  }
+}
+```
+
+## Next Steps
+
+Explore related topics:
+
+- **[Overview](/developers/plugins/overview)** - Plugin system introduction
+- **[MCP Integration](/developers/plugins/mcp-integration)** - Build AI-powered plugins
+- **[Performance](/developers/plugins/performance)** - Optimization techniques
+- **[Advanced Topics](/developers/plugins/advanced)** - Testing, debugging, and distribution

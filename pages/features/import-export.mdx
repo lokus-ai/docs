@@ -1,0 +1,704 @@
+---
+title: "Import & Export - Complete Migration Guide"
+description: "Master data portability in Lokus: import from Obsidian, Notion, Roam Research, Evernote, and other note apps. Export to PDF, DOCX, HTML, Markdown with custom templates. Batch operations, publishing workflows, migration guides, and troubleshooting included."
+keywords: "import export, data migration, obsidian import, notion import, roam research, evernote import, pdf export, docx export, html export, markdown export, batch export, data portability, publishing workflow, migration guide"
+author: "Lokus Documentation Team"
+lastUpdated: "2025-01-23"
+version: "1.3.1"
+category: "features"
+tags: ["import", "export", "migration", "pdf", "markdown", "portability"]
+---
+
+# Import & Export
+
+Lokus provides powerful import and export capabilities for seamless data migration and publishing workflows. Move your notes from other apps or export to various formats for sharing and archiving.
+
+**Version:** 1.3.1 | **Formats:** 10+ | **Sources:** Obsidian, Notion, Roam, Evernote
+
+## Overview
+
+### Import Capabilities
+- **Obsidian**: Full vault import with attachments
+- **Notion**: Database and page exports
+- **Roam Research**: JSON export processing
+- **Evernote**: ENEX file import
+- **Standard Markdown**: Any markdown files
+- **HTML**: Web page conversion
+- **Plain Text**: Bulk text import
+
+### Export Formats
+- **PDF**: Print-ready documents
+- **DOCX**: Microsoft Word format
+- **HTML**: Web publishing
+- **Markdown**: Standard format
+- **ZIP**: Batch archive
+- **JSON**: Data exchange
+- **Print**: Physical documents
+
+## Importing from Other Apps
+
+### Import from Obsidian
+
+**Full Vault Import:**
+
+```
+1. Open Command Palette (Cmd+K)
+2. Type "Import from Obsidian"
+3. Select Obsidian vault folder
+4. Configure import options:
+   ✓ Preserve wiki links
+   ✓ Import attachments
+   ✓ Maintain folder structure
+   ✓ Convert plugins to Lokus equivalents
+5. Click "Import"
+```
+
+**What Gets Imported:**
+- All markdown files (.md)
+- Attachments and images
+- Folder structure
+- Frontmatter metadata
+- Tags (converted to Lokus format)
+- Wiki links `[[]]`
+- Aliases and file properties
+- Templates
+
+**Compatibility Notes:**
+```
+✓ Wiki links: [[note]] → Fully compatible
+✓ Embeds: ![[note]] → Converted
+✓ Tags: #tag → Compatible
+✓ Callouts: >[!note] → Compatible
+✓ Math: $$ equations $$ → Compatible
+✗ Dataview queries: Manual conversion needed
+✗ Custom plugins: Check Lokus plugin library
+```
+
+**Post-Import Steps:**
+```
+1. Verify all files imported
+2. Check broken links report
+3. Review attachment locations
+4. Test wiki links functionality
+5. Install equivalent plugins
+6. Adjust workspace settings
+```
+
+### Import from Notion
+
+**Export from Notion:**
+```
+1. In Notion: Settings → Export all workspace content
+2. Format: Markdown & CSV
+3. Include subpages: Yes
+4. Create folders for subpages: Yes
+5. Export button → Wait for zip file
+6. Download and unzip
+```
+
+**Import to Lokus:**
+```
+1. Command Palette → "Import from Notion"
+2. Select unzipped folder
+3. Configure:
+   ✓ Convert Notion blocks to markdown
+   ✓ Import databases as Lokus Bases
+   ✓ Convert properties to frontmatter
+   ✓ Import inline images
+4. Start import
+```
+
+**Notion to Lokus Conversions:**
+```
+Notion Blocks → Lokus Markdown
+- Text blocks → Paragraphs
+- Headings → # ## ### Headings
+- Bullet lists → - items
+- Numbered lists → 1. items
+- Toggle lists → Callout blocks
+- Quotes → > Blockquotes
+- Code blocks → ``` code ```
+- Databases → Lokus Bases
+- Callouts → >[!note] Callouts
+- Embeds → Links/Images
+```
+
+### Import from Roam Research
+
+**Export from Roam:**
+```
+1. Roam: Settings → Export All
+2. Format: JSON
+3. Download roam-export.json
+```
+
+**Import to Lokus:**
+```
+1. Command Palette → "Import from Roam Research"
+2. Select roam-export.json
+3. Configure:
+   ✓ Convert block references
+   ✓ Maintain daily notes structure
+   ✓ Convert page links to wiki links
+   ✓ Import block embeds as quotes
+4. Import
+```
+
+**Roam Conversions:**
+```
+- ((block-ref)) → [[note#heading]]
+- #[[Page Link]] → [[Page Link]]
+- [[Page Link]] → [[Page Link]] (compatible)
+- {{TODO}} → - [ ] Task checkbox
+- {{[[TODO]]}} → Task with date
+- {{query}} → Manual recreation needed
+- {{[[table]]}} → Convert to markdown table
+```
+
+### Import from Evernote
+
+**Export from Evernote:**
+```
+1. Evernote: File → Export Notes
+2. Format: ENEX (.enex)
+3. Select notebooks
+4. Export
+```
+
+**Import to Lokus:**
+```
+1. Command Palette → "Import from Evernote"
+2. Select .enex file(s)
+3. Configure:
+   ✓ Convert to markdown
+   ✓ Import attachments
+   ✓ Preserve tags
+   ✓ Extract creation dates
+   ✓ Maintain notebooks as folders
+4. Import
+```
+
+**Conversion Notes:**
+```
+Evernote → Lokus
+- Notebooks → Folders
+- Tags → #tags in Lokus
+- Rich text → Markdown
+- Attachments → attachments/ folder
+- Web clips → HTML or markdown
+- Sketches → Image files
+- Audio → Media files
+```
+
+### Import Standard Markdown
+
+**Bulk Markdown Import:**
+```
+1. Drag folder into Lokus window
+   OR
+   Command Palette → "Import Folder"
+
+2. Select markdown folder
+3. Options:
+   ✓ Preserve structure
+   ✓ Copy images to attachments
+   ✓ Create index file
+   ✓ Scan for tags
+4. Import
+```
+
+**Supported Markdown:**
+```
+✓ Standard Markdown (CommonMark)
+✓ GitHub Flavored Markdown (GFM)
+✓ MultiMarkdown
+✓ Pandoc Markdown
+✓ Markdown Extra
+```
+
+### Batch Import
+
+**Import Multiple Sources:**
+```
+1. Command Palette → "Batch Import"
+2. Add import jobs:
+   - Obsidian vault
+   - Notion export
+   - Folder of markdown
+3. Configure each import
+4. Set destination folders
+5. Start batch import
+6. Monitor progress
+```
+
+## Exporting from Lokus
+
+### Export to PDF
+
+**Single File Export:**
+```
+1. Open note to export
+2. Command Palette → "Export to PDF"
+   OR Right-click note → "Export"
+3. Configure options:
+   - Page size: A4, Letter, Legal
+   - Orientation: Portrait/Landscape
+   - Margins: Normal, Narrow, Wide
+   - Include: TOC, page numbers, header/footer
+   - Style: Current theme or custom CSS
+4. Export
+```
+
+**Advanced PDF Options:**
+```json
+{
+  "pdf": {
+    "pageSize": "a4",
+    "orientation": "portrait",
+    "margins": {
+      "top": 2.5,
+      "bottom": 2.5,
+      "left": 2.5,
+      "right": 2.5
+    },
+    "header": {
+      "enabled": true,
+      "content": "{{title}}",
+      "align": "center"
+    },
+    "footer": {
+      "enabled": true,
+      "content": "Page {{page}} of {{pages}}",
+      "align": "right"
+    },
+    "toc": true,
+    "pageNumbers": true,
+    "embedFonts": true,
+    "quality": "high"
+  }
+}
+```
+
+**Batch PDF Export:**
+```
+1. Select multiple files (Cmd+Click)
+2. Right-click → "Export Selected to PDF"
+3. Choose:
+   - Single PDF (merged)
+   - Multiple PDFs (separate files)
+4. Export to folder
+```
+
+### Export to DOCX
+
+**Microsoft Word Export:**
+```
+1. Open note
+2. Command Palette → "Export to DOCX"
+3. Options:
+   - Template: Default, Academic, Business
+   - Styles: Heading levels, fonts
+   - Include images: Yes/No
+   - Convert tables: Yes/No
+4. Export
+```
+
+**DOCX Features:**
+```
+✓ Heading styles preserved
+✓ Bold, italic, underline
+✓ Lists (bulleted, numbered)
+✓ Tables with borders
+✓ Images (embedded or linked)
+✓ Hyperlinks active
+✓ Code blocks (monospace)
+✗ Math equations (converted to images)
+✗ Custom callouts (converted to quotes)
+```
+
+### Export to HTML
+
+**Web Page Export:**
+```
+1. Command Palette → "Export to HTML"
+2. Options:
+   - Template: Minimal, Full, Blog
+   - Include CSS: Inline or external
+   - JavaScript: None, Basic, Full
+   - Images: Embed or link
+   - Syntax highlighting: Yes/No
+3. Export
+```
+
+**HTML Templates:**
+
+**Minimal Template:**
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{{title}}</title>
+  <style>/* minimal styles */</style>
+</head>
+<body>
+  {{content}}
+</body>
+</html>
+```
+
+**Blog Template:**
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{{title}}</title>
+  <meta name="description" content="{{description}}">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <article>
+    <header>
+      <h1>{{title}}</h1>
+      <time>{{date}}</time>
+      <div class="tags">{{tags}}</div>
+    </header>
+    <main>{{content}}</main>
+  </article>
+</body>
+</html>
+```
+
+### Export to Markdown
+
+**Clean Markdown Export:**
+```
+1. Right-click note → "Export to Markdown"
+2. Options:
+   ✓ Preserve wiki links or convert to standard
+   ✓ Include frontmatter
+   ✓ Relative or absolute image paths
+   ✓ Line break style (\\n or <br>)
+3. Export
+```
+
+**Use Cases:**
+- Backup pure markdown
+- Publish to Jekyll/Hugo
+- Submit to GitHub
+- Convert to other formats with Pandoc
+
+### Batch Export
+
+**Export Multiple Files:**
+```
+1. Select files in file tree
+2. Right-click → "Export Selected"
+3. Choose format: PDF, DOCX, HTML, MD
+4. Export as:
+   - ZIP archive
+   - Folder with files
+   - Single merged document
+5. Export
+```
+
+### Export Folder
+
+**Full Folder Export:**
+```
+1. Right-click folder → "Export Folder"
+2. Format: PDF, Markdown, HTML
+3. Options:
+   ✓ Include subfolders
+   ✓ Preserve structure
+   ✓ Create index/TOC
+   ✓ Export attachments
+4. Export as ZIP
+```
+
+## Custom Export Templates
+
+### Creating Templates
+
+**Template Structure:**
+```
+templates/export/
+├── pdf/
+│   ├── default.css
+│   ├── academic.css
+│   └── business.css
+├── html/
+│   ├── blog.html
+│   ├── documentation.html
+│   └── minimal.html
+└── docx/
+    └── template.docx
+```
+
+**PDF Template (CSS):**
+```css
+/* templates/export/pdf/custom.css */
+@page {
+  size: A4;
+  margin: 2.5cm;
+}
+
+body {
+  font-family: "Merriweather", serif;
+  font-size: 11pt;
+  line-height: 1.6;
+  color: #333;
+}
+
+h1 {
+  font-size: 24pt;
+  margin-top: 2em;
+  border-bottom: 2px solid #3b82f6;
+}
+
+h2 {
+  font-size: 18pt;
+  margin-top: 1.5em;
+}
+
+code {
+  background: #f5f5f5;
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-family: "JetBrains Mono", monospace;
+}
+```
+
+**HTML Template:**
+```html
+<!-- templates/export/html/blog.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{title}}</title>
+  <meta name="description" content="{{description}}">
+  <meta name="author" content="{{author}}">
+  <meta name="date" content="{{date}}">
+  <style>
+    {{styles}}
+  </style>
+</head>
+<body>
+  <article>
+    <header>
+      <h1>{{title}}</h1>
+      <div class="meta">
+        <time datetime="{{isoDate}}">{{date}}</time>
+        {{#if tags}}
+        <div class="tags">
+          {{#each tags}}
+          <span class="tag">{{this}}</span>
+          {{/each}}
+        </div>
+        {{/if}}
+      </div>
+    </header>
+    <main>
+      {{content}}
+    </main>
+    <footer>
+      <p>Exported from Lokus on {{exportDate}}</p>
+    </footer>
+  </article>
+</body>
+</html>
+```
+
+### Template Variables
+
+**Available Variables:**
+```
+{{title}}          - Note title
+{{content}}        - Rendered markdown
+{{date}}           - Creation date
+{{modified}}       - Last modified date
+{{author}}         - Author name
+{{tags}}           - Array of tags
+{{description}}    - Note description
+{{path}}           - File path
+{{word Count}}     - Word count
+{{readingTime}}    - Est. reading time
+{{exportDate}}     - Export timestamp
+{{toc}}            - Table of contents
+{{backlinks}}      - List of backlinks
+```
+
+## Publishing Workflows
+
+### Static Site Generation
+
+**Jekyll Setup:**
+```
+1. Export to Markdown
+2. Structure:
+   _posts/
+   ├── 2025-01-23-note-title.md
+   ├── 2025-01-24-another-note.md
+   └── ...
+
+3. Frontmatter conversion:
+---
+title: Note Title
+date: 2025-01-23
+categories: [notes, ideas]
+tags: [tag1, tag2]
+---
+
+4. Push to GitHub Pages
+```
+
+**Hugo Setup:**
+```
+1. Export to Markdown
+2. Structure:
+   content/
+   ├── posts/
+   │   ├── note-1.md
+   │   └── note-2.md
+   └── ...
+
+3. Build: hugo
+4. Deploy to Netlify/Vercel
+```
+
+### Blog Publishing
+
+**Medium/Dev.to:**
+```
+1. Export single post to Markdown
+2. Include frontmatter
+3. Upload images to hosting
+4. Update image URLs
+5. Copy-paste to platform
+6. Publish
+```
+
+**Ghost/WordPress:**
+```
+1. Export to HTML or Markdown
+2. Use platform's import tool
+3. Or: API-based publishing plugin
+```
+
+## Migration Guides
+
+### Obsidian → Lokus
+
+```
+Complete Migration:
+1. Backup Obsidian vault
+2. Import vault to Lokus
+3. Verify wiki links work
+4. Check attachments imported
+5. Install equivalent plugins
+6. Test workflows
+7. Gradually transition
+```
+
+### Notion → Lokus
+
+```
+Database Migration:
+1. Export Notion workspace
+2. Import to Lokus
+3. Convert databases to Bases
+4. Recreate views (table/grid/list)
+5. Set up filters
+6. Train on Bases usage
+```
+
+### Evernote → Lokus
+
+```
+Full Migration:
+1. Export notebooks as ENEX
+2. Import each ENEX file
+3. Organize into folders
+4. Re-tag notes
+5. Check attachments
+6. Set up templates
+7. Configure sync
+```
+
+## Troubleshooting
+
+### Import Issues
+
+**Files Not Importing:**
+```
+- Check file format is supported
+- Verify source folder structure
+- Look for special characters in filenames
+- Check import logs for errors
+- Try importing in smaller batches
+```
+
+**Broken Links After Import:**
+```
+1. Open link repair tool
+2. Scan for broken links
+3. Auto-fix where possible
+4. Manually review remaining
+5. Update link format in settings
+```
+
+**Images Not Showing:**
+```
+- Verify images in attachments folder
+- Check image path format
+- Ensure file extensions are correct
+- Try re-importing with "Copy images" on
+```
+
+### Export Issues
+
+**PDF Export Failing:**
+```
+- Check page size settings
+- Reduce image quality
+- Export in smaller batches
+- Try different PDF engine
+- Clear export cache
+```
+
+**DOCX Formatting Issues:**
+```
+- Use simpler markdown
+- Avoid custom HTML
+- Check heading levels
+- Simplify tables
+- Use standard fonts
+```
+
+## Best Practices
+
+### Before Migrating
+
+```
+1. Backup source app data
+2. Plan folder structure
+3. Document custom workflows
+4. List required plugins
+5. Test with sample data
+6. Prepare team for transition
+```
+
+### After Export
+
+```
+1. Verify all files exported
+2. Check formatting preserved
+3. Test links and images
+4. Review in target format
+5. Archive original source
+```
+
+---
+
+**Last Updated:** January 23, 2025 | **Version:** 1.3.1 | **Formats:** 10+

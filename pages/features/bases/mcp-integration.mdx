@@ -1,0 +1,714 @@
+---
+title: "Bases MCP Integration - AI Assistant Access - Lokus Documentation"
+description: "Integrate AI assistants with Lokus Bases using Model Context Protocol. Query, update, and automate your databases with AI-powered workflows."
+keywords: [lokus, bases, mcp, model context protocol, ai integration, automation, api, ai assistants]
+---
+
+# MCP Integration for Bases
+
+Lokus Bases integrate seamlessly with the Model Context Protocol (MCP), allowing AI assistants to query, manipulate, and automate your databases programmatically. This powerful integration enables natural language database operations and intelligent automation.
+
+> **📚 Prerequisites:** Familiar with [Bases Overview](/features/bases/overview)? MCP builds on Bases functionality to provide AI access.
+
+## What is MCP?
+
+The **Model Context Protocol (MCP)** is an open standard that allows AI assistants to interact with applications and data sources. Lokus implements MCP to give AI assistants secure, controlled access to your Bases.
+
+**What You Can Do:**
+- Query Bases using natural language
+- Update properties programmatically
+- Create saved views automatically
+- Export data on demand
+- Automate repetitive tasks
+- Generate reports and insights
+
+**Security:**
+- MCP server runs locally (no cloud API calls)
+- Full control over what AI can access
+- All operations follow your permissions
+- Audit log of all MCP operations
+
+## MCP Setup
+
+### Automatic Setup
+
+The MCP server starts automatically with Lokus - **no configuration needed!**
+
+**Verify MCP Status:**
+
+1. Check the status bar at bottom of Lokus window
+   - Look for: `MCP: Running` (green indicator)
+
+2. Or navigate to: **Preferences → MCP Server → Status**
+   - Status should show: `✓ Running on port 3000`
+
+### Manual Configuration (Advanced)
+
+For custom setups, you can configure MCP manually:
+
+**Location:** `~/.lokus/mcp-config.json`
+
+```json
+{
+  "enabled": true,
+  "port": 3000,
+  "allowed_operations": [
+    "search_base",
+    "create_base_view",
+    "update_base_property",
+    "export_base"
+  ],
+  "rate_limit": {
+    "requests_per_minute": 60,
+    "burst": 10
+  },
+  "audit_log": true
+}
+```
+
+**Configuration Options:**
+- `enabled` - Enable/disable MCP server
+- `port` - Port number (default: 3000)
+- `allowed_operations` - Whitelist of allowed MCP tools
+- `rate_limit` - Prevent abuse from excessive requests
+- `audit_log` - Log all MCP operations for security
+
+> **⚠️ Warning:** Changing the default port may require updating AI assistant configurations.
+
+## Available MCP Tools
+
+### `search_base`
+
+Query a Base with filters, sorting, and limits.
+
+**Syntax:**
+```javascript
+{
+  "tool": "search_base",
+  "arguments": {
+    "base": "projects",              // Base name
+    "query": "status:Active",         // Filter query
+    "sort": "due_date ASC",          // Sort configuration
+    "limit": 20                       // Max results
+  }
+}
+```
+
+**Query Syntax:**
+```javascript
+// Property filters
+"status:Active"
+"priority:High"
+"completed:true"
+
+// Comparisons
+"budget:>10000"              // Greater than
+"budget:&lt;50000"              // Less than
+"score:>=80"                 // Greater than or equal
+
+// Date filters
+"due_date:>today"            // After today
+"due_date:&lt;2025-12-31"       // Before date
+"modified:>2025-01-01"       // After date
+
+// Text searches
+"title:*Project*"            // Contains "Project"
+"title:^WIP"                 // Starts with "WIP"
+"description:*urgent*"       // Contains "urgent"
+
+// Tag filters
+"tag:#web"                   // Has tag "web"
+"tags:any[web,mobile]"       // Has web OR mobile
+"tags:all[frontend,react]"   // Has frontend AND react
+
+// Complex queries with AND/OR
+"status:Active AND priority:High"
+"status:Urgent OR due_date:<today"
+"(status:Active OR status:Doing) AND assignee:John"
+```
+
+**Sort Options:**
+```javascript
+"property ASC"               // Ascending
+"property DESC"              // Descending
+"priority DESC, due_date ASC" // Multi-column sort
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "results": [
+    {
+      "file": "project-alpha.md",
+      "path": "/projects/project-alpha.md",
+      "properties": {
+        "title": "Project Alpha",
+        "status": "Active",
+        "priority": "High",
+        "due_date": "2025-11-15",
+        "owner": "John Doe"
+      }
+    }
+  ],
+  "count": 15,
+  "total": 150
+}
+```
+
+**Use Cases:**
+- Find overdue tasks
+- List high-priority items
+- Get items by assignee
+- Search by keywords
+- Generate filtered lists
+
+### `create_base_view`
+
+Create a saved view in a Base with filters and sorting.
+
+**Syntax:**
+```javascript
+{
+  "tool": "create_base_view",
+  "arguments": {
+    "base": "projects",
+    "name": "Urgent Tasks",
+    "description": "High priority items due soon",
+    "filters": [
+      {
+        "property": "status",
+        "operator": "equals",
+        "value": "In Progress"
+      },
+      {
+        "property": "priority",
+        "operator": "equals",
+        "value": "High"
+      },
+      {
+        "property": "due_date",
+        "operator": "after",
+        "value": "today"
+      }
+    ],
+    "sortBy": "due_date",
+    "sortOrder": "asc",
+    "viewType": "table"
+  }
+}
+```
+
+**Filter Operators:**
+```javascript
+// Text
+"equals", "not_equals", "contains", "not_contains",
+"starts_with", "ends_with", "is_empty", "is_not_empty"
+
+// Number
+"equals", "not_equals", "greater_than", "less_than",
+"greater_than_or_equal", "less_than_or_equal", "between"
+
+// Date
+"equals", "before", "after", "between", "relative"
+
+// Tags
+"contains_any", "contains_all", "is_empty", "is_not_empty"
+
+// Boolean
+"is_true", "is_false", "is_empty"
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "view_id": "view_abc123",
+  "name": "Urgent Tasks",
+  "url": "lokus://base/projects/view/abc123"
+}
+```
+
+**Use Cases:**
+- Create custom filtered views
+- Set up team dashboards
+- Save complex queries
+- Automate view creation
+- Standardize team views
+
+### `update_base_property`
+
+Update a property value in a note via Base.
+
+**Syntax:**
+```javascript
+{
+  "tool": "update_base_property",
+  "arguments": {
+    "base": "projects",
+    "file": "project-alpha.md",
+    "property": "status",
+    "value": "Done"
+  }
+}
+```
+
+**Multiple Property Updates:**
+```javascript
+{
+  "tool": "update_base_property",
+  "arguments": {
+    "base": "projects",
+    "file": "project-alpha.md",
+    "updates": [
+      {
+        "property": "status",
+        "value": "Done"
+      },
+      {
+        "property": "completed_date",
+        "value": "2025-10-23"
+      },
+      {
+        "property": "completed",
+        "value": true
+      }
+    ]
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "file": "project-alpha.md",
+  "updated_properties": ["status", "completed_date", "completed"],
+  "previous_values": {
+    "status": "In Progress",
+    "completed_date": null,
+    "completed": false
+  }
+}
+```
+
+**Use Cases:**
+- Bulk status updates
+- Automated property changes
+- Workflow automation
+- Scheduled updates
+- Batch processing
+
+> **⚠️ Warning:** Property updates modify your markdown files directly. Ensure you have backups or version control!
+
+### `export_base`
+
+Export Base data in various formats.
+
+**Syntax:**
+```javascript
+{
+  "tool": "export_base",
+  "arguments": {
+    "base": "projects",
+    "format": "csv",              // csv, json, markdown
+    "includeFilters": true,        // Apply current filters
+    "includeHidden": false,        // Include hidden properties
+    "properties": [                // Optional: specific properties only
+      "title",
+      "status",
+      "due_date",
+      "owner"
+    ]
+  }
+}
+```
+
+**Export Formats:**
+
+**CSV:**
+```csv
+title,status,due_date,owner
+"Project Alpha","Active","2025-11-15","John Doe"
+"Project Beta","Planning","2025-12-01","Sarah Smith"
+```
+
+**JSON:**
+```json
+[
+  {
+    "title": "Project Alpha",
+    "status": "Active",
+    "due_date": "2025-11-15",
+    "owner": "John Doe"
+  },
+  {
+    "title": "Project Beta",
+    "status": "Planning",
+    "due_date": "2025-12-01",
+    "owner": "Sarah Smith"
+  }
+]
+```
+
+**Markdown:**
+```markdown
+# Projects Export
+
+## Project Alpha
+- Status: Active
+- Due Date: 2025-11-15
+- Owner: John Doe
+
+## Project Beta
+- Status: Planning
+- Due Date: 2025-12-01
+- Owner: Sarah Smith
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "format": "csv",
+  "content": "title,status,...",
+  "filepath": "/exports/projects-2025-10-23.csv",
+  "entry_count": 45
+}
+```
+
+**Use Cases:**
+- Generate reports
+- Data backup
+- External tool integration
+- Spreadsheet import
+- Data analysis
+
+## AI Workflow Examples
+
+### Workflow 1: Find Overdue Tasks
+
+**User Request:**
+```
+"Show me all overdue high-priority tasks"
+```
+
+**AI Uses MCP:**
+```javascript
+search_base({
+  base: "tasks",
+  query: "due_date:<today AND priority:High AND status:!Done",
+  sort: "due_date ASC",
+  limit: 50
+})
+```
+
+**AI Response:**
+```
+Found 7 overdue high-priority tasks:
+
+1. **Design mockups** (Due: Oct 20)
+   - Priority: High
+   - Assignee: Sarah
+   - Status: In Progress
+
+2. **Write tests** (Due: Oct 21)
+   - Priority: High
+   - Assignee: John
+   - Status: Todo
+
+[... more results ...]
+
+Would you like me to:
+- Update their status?
+- Reassign tasks?
+- Extend deadlines?
+```
+
+### Workflow 2: Bulk Status Update
+
+**User Request:**
+```
+"Mark all completed tasks in the design project as done"
+```
+
+**AI Workflow:**
+
+**Step 1:** Search for matching tasks
+```javascript
+search_base({
+  base: "tasks",
+  query: "project:Design AND completed:true AND status:!Done"
+})
+```
+
+**Step 2:** Update each task
+```javascript
+// For each result:
+update_base_property({
+  base: "tasks",
+  file: "task-1.md",
+  updates: [
+    { property: "status", value: "Done" },
+    { property: "completed_date", value: "2025-10-23" }
+  ]
+})
+```
+
+**AI Response:**
+```
+✓ Updated 12 tasks in Design project to Done status
+- Added completed_date to all tasks
+- All tasks now marked as complete
+
+Summary:
+- Design mockups → Done
+- Write copy → Done
+- Review feedback → Done
+[... 9 more ...]
+```
+
+### Workflow 3: Generate Report
+
+**User Request:**
+```
+"Create a summary of active projects by owner"
+```
+
+**AI Workflow:**
+
+**Step 1:** Query active projects
+```javascript
+search_base({
+  base: "projects",
+  query: "status:Active",
+  sort: "owner ASC"
+})
+```
+
+**Step 2:** Process and group results
+```javascript
+// AI analyzes results and groups by owner
+```
+
+**AI Response:**
+```markdown
+# Active Projects by Owner
+
+## John Doe (5 projects)
+- **Website Redesign** - Due: Nov 15, Priority: High
+- **Mobile App** - Due: Dec 1, Priority: Medium
+- **API Refactor** - Due: Nov 30, Priority: Low
+- **Dashboard Updates** - Due: Oct 31, Priority: High
+- **Security Audit** - Due: Dec 15, Priority: Medium
+
+Total Budget: $145,000
+
+## Sarah Smith (3 projects)
+- **Marketing Site** - Due: Nov 5, Priority: High
+- **Analytics Integration** - Due: Nov 20, Priority: Medium
+- **User Research** - Due: Oct 28, Priority: Low
+
+Total Budget: $85,000
+
+## Totals
+- Active Projects: 8
+- Total Budget: $230,000
+- Average Budget: $28,750
+```
+
+### Workflow 4: Create Weekly View
+
+**User Request:**
+```
+"Create a view for tasks due this week that are not done"
+```
+
+**AI Uses MCP:**
+```javascript
+create_base_view({
+  base: "tasks",
+  name: "This Week",
+  description: "Tasks due this week that need attention",
+  filters: [
+    {
+      property: "due_date",
+      operator: "relative",
+      value: "this week"
+    },
+    {
+      property: "status",
+      operator: "not_equals",
+      value: "Done"
+    }
+  ],
+  sortBy: "due_date",
+  sortOrder: "asc",
+  viewType: "table"
+})
+```
+
+**AI Response:**
+```
+✓ Created view "This Week" in Tasks base
+
+View includes:
+- 15 tasks due this week
+- Sorted by due date (earliest first)
+- Filtered out completed tasks
+
+[Open View in Lokus →]
+```
+
+### Workflow 5: Data Export
+
+**User Request:**
+```
+"Export all active projects to CSV for my spreadsheet"
+```
+
+**AI Uses MCP:**
+```javascript
+export_base({
+  base: "projects",
+  format: "csv",
+  includeFilters: true,  // Only active projects
+  properties: [
+    "title",
+    "status",
+    "priority",
+    "owner",
+    "budget",
+    "due_date"
+  ]
+})
+```
+
+**AI Response:**
+```
+✓ Exported 24 active projects to CSV
+
+File saved to: /exports/projects-2025-10-23.csv
+Size: 8.5 KB
+Entries: 24
+
+Included properties:
+- Title, Status, Priority
+- Owner, Budget, Due Date
+
+[Download CSV →]
+```
+
+## Security & Permissions
+
+### MCP Security Model
+
+**Local Execution:**
+- MCP server runs locally on your machine
+- No data sent to external servers
+- Full control over all operations
+
+**Permission Levels:**
+- **Read**: Search and query Bases
+- **Write**: Update properties
+- **Create**: Create views and entries
+- **Export**: Export data
+- **Admin**: Full Base management
+
+**Configure Permissions:**
+```json
+{
+  "mcp_permissions": {
+    "search_base": "all",
+    "create_base_view": "all",
+    "update_base_property": "admin_only",
+    "export_base": "all"
+  }
+}
+```
+
+### Audit Logging
+
+All MCP operations are logged:
+
+**Log Location:** `~/.lokus/mcp-audit.log`
+
+**Log Entry Example:**
+```json
+{
+  "timestamp": "2025-10-23T10:30:00Z",
+  "operation": "update_base_property",
+  "base": "projects",
+  "file": "project-alpha.md",
+  "property": "status",
+  "old_value": "In Progress",
+  "new_value": "Done",
+  "user": "AI Assistant",
+  "success": true
+}
+```
+
+**Review Audit Log:**
+1. Preferences → MCP Server → Audit Log
+2. Filter by operation, base, or date
+3. Export log for compliance
+
+> **💡 Tip:** Enable audit logging for security compliance and debugging. Logs help track what AI assistants are doing with your data.
+
+## Troubleshooting
+
+### MCP Server Not Running
+
+**Issue:** Status shows "MCP: Offline"
+
+**Solutions:**
+1. Restart Lokus
+2. Check Preferences → MCP Server → Status
+3. View error log: `~/.lokus/mcp-error.log`
+4. Ensure port 3000 is not in use
+5. Re-enable MCP in preferences
+
+### AI Assistant Can't Connect
+
+**Issue:** AI assistant reports connection error
+
+**Solutions:**
+1. Verify MCP server is running
+2. Check AI assistant is configured for `localhost:3000`
+3. Ensure firewall allows local connections
+4. Restart both Lokus and AI assistant
+
+### Operations Failing
+
+**Issue:** MCP operations return errors
+
+**Solutions:**
+1. Check audit log for error details
+2. Verify Base name is correct
+3. Ensure property names match YAML
+4. Check permissions for operation
+5. Validate query syntax
+
+### Performance Issues
+
+**Issue:** MCP queries are slow
+
+**Solutions:**
+1. Enable [Quantum Search](/features/bases/overview#quantum-search-integration)
+2. Use more specific queries
+3. Reduce result limits
+4. Add source folder filters
+5. Close unused Bases
+
+## What's Next?
+
+- **[Filtering](/features/bases/filtering)** - Understand query syntax for MCP
+- **[Examples](/features/bases/examples)** - See real-world MCP automation examples
+- **[Overview](/features/bases/overview)** - Back to Bases fundamentals
+- **[Developer Guide](/developers)** - Build custom MCP integrations
+
+## Learn More
+
+- [MCP Integration Guide](/developers/mcp/overview)
+- [MCP Tools Reference](/reference/mcp-api)
+- [AI Integration Examples](/developers/mcp/examples)

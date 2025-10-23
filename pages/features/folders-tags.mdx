@@ -1,0 +1,729 @@
+---
+title: "Folders & Tags - Complete Organization Guide"
+description: "Master note organization in Lokus with folders and tags: folder structure strategies, nested tags, smart folders, saved searches, tag autocomplete, folder templates, tag-based workflows, and organization best practices for efficient knowledge management."
+keywords: "folders, tags, organization, nested tags, smart folders, tag management, folder structure, saved searches, tag autocomplete, knowledge organization, note organization, tag hierarchy, folder templates, workflows"
+author: "Lokus Documentation Team"
+lastUpdated: "2025-01-23"
+version: "1.3.1"
+category: "features"
+tags: ["folders", "tags", "organization", "workflows", "management"]
+---
+
+# Folders & Tags
+
+Organize your knowledge effectively with Lokus's powerful folder and tag system. Use folders for hierarchical structure and tags for flexible cross-references.
+
+**Version:** 1.3.1 | **Tag System:** Nested | **Smart Folders:** Yes
+
+## Overview
+
+### Organization Methods
+
+**Folders:**
+- Hierarchical structure
+- File location based
+- Easy visualization
+- Traditional navigation
+- One location per file
+
+**Tags:**
+- Flexible categorization
+- Multiple per file
+- Cross-cutting concerns
+- Advanced queries
+- Nested hierarchies
+
+**Best Practice:** Use both! Folders for primary organization, tags for relationships and themes.
+
+## Folder Organization
+
+### Creating Folders
+
+**Quick Create:**
+```
+Shortcut: Cmd+Shift+N
+1. Press Cmd+Shift+N
+2. Enter folder name
+3. Optional: Use slash for nesting
+   Example: "Projects/2025/Q1"
+4. Press Enter
+```
+
+**Context Menu:**
+```
+1. Right-click file tree
+2. Select "New Folder"
+3. Enter name
+4. Press Enter
+```
+
+### Folder Strategies
+
+#### PARA Method
+
+```
+workspace/
+├── 1-Projects/          Active work with deadlines
+│   ├── Website-Redesign/
+│   ├── Book-Draft/
+│   └── Research-Paper/
+├── 2-Areas/             Ongoing responsibilities
+│   ├── Health/
+│   ├── Finances/
+│   └── Learning/
+├── 3-Resources/         Reference material
+│   ├── Articles/
+│   ├── Books/
+│   └── Courses/
+└── 4-Archive/           Completed or inactive
+    └── 2024/
+```
+
+#### Zettelkasten Method
+
+```
+workspace/
+├── 1-Inbox/            Fleeting notes (unsorted)
+│   └── quick-capture/
+├── 2-Literature/       Reading notes
+│   ├── books/
+│   └── papers/
+├── 3-Permanent/        Processed ideas
+│   ├── concepts/
+│   ├── principles/
+│   └── models/
+├── 4-Projects/         Active work
+│   └── current/
+└── 5-Index/            Entry points
+    └── maps-of-content/
+```
+
+#### GTD (Getting Things Done)
+
+```
+workspace/
+├── Inbox/              Unprocessed items
+├── Next-Actions/       Tasks to do
+│   ├── calls/
+│   ├── computer/
+│   └── errands/
+├── Projects/           Multi-step outcomes
+├── Waiting-For/        Delegated items
+├── Someday-Maybe/      Future possibilities
+└── Reference/          Archived information
+```
+
+#### Date-Based
+
+```
+workspace/
+├── Daily/
+│   └── 2025/
+│       ├── 01-January/
+│       │   ├── 2025-01-01.md
+│       │   └── 2025-01-02.md
+│       └── 02-February/
+├── Weekly/
+│   └── 2025/
+│       ├── Week-01.md
+│       └── Week-02.md
+└── Monthly/
+    └── 2025/
+        ├── 2025-01.md
+        └── 2025-02.md
+```
+
+### Nested Folders
+
+**Creating Deep Hierarchies:**
+```
+Method 1: Create path during file creation
+"Projects/Web/Frontend/Components/Button.md"
+
+Method 2: Create folders step-by-step
+1. Projects/
+2. Projects/Web/
+3. Projects/Web/Frontend/
+4. Projects/Web/Frontend/Components/
+```
+
+**Best Practices:**
+```
+✓ Limit depth to 3-4 levels
+✓ Use descriptive names
+✓ Consider mobile navigation
+✗ Avoid very deep nesting (6+ levels)
+✗ Don't duplicate folder names at different levels
+```
+
+### Folder Navigation
+
+**Keyboard Navigation:**
+```
+↓ / ↑        Move between items
+→            Expand folder
+←            Collapse folder
+Enter        Open selected item
+Cmd+B        Toggle sidebar
+Cmd+Shift+E  Focus file tree
+```
+
+**Quick Jump:**
+```
+1. Click folder name
+2. Start typing folder name
+3. Folders filter as you type
+4. Press Enter to open
+```
+
+### Folder Properties
+
+**View Folder Info:**
+```
+Right-click folder → Properties
+
+Shows:
+- Path
+- Number of files
+- Total size
+- Date created
+- Last modified
+- Subfolders count
+- Tag distribution
+```
+
+## Tag System
+
+### Using Tags
+
+**Inline Tags:**
+```markdown
+This note is about #productivity and #workflows.
+
+Tags can appear anywhere: #project/work #status/active
+
+Multi-word tags: #machine-learning #deep-learning
+```
+
+**Frontmatter Tags:**
+```yaml
+---
+tags:
+  - productivity
+  - workflows
+  - tutorial
+---
+```
+
+**Tag Syntax:**
+```
+✓ Valid tags:
+  #tag
+  #multi-word-tag
+  #nested/tag
+  #project/2025/q1
+
+✗ Invalid:
+  # tag (space after #)
+  #tag with spaces (unquoted spaces)
+  ##tag (double hash)
+```
+
+### Nested Tags
+
+**Creating Hierarchies:**
+```markdown
+#work
+#work/projects
+#work/projects/website
+#work/meetings
+#work/meetings/standup
+
+#personal
+#personal/health
+#personal/health/fitness
+#personal/health/nutrition
+```
+
+**Benefits:**
+```
+- Organize by category
+- Filter at any level
+- Inherit from parents
+- Visual hierarchy in tag browser
+- Quick drill-down
+```
+
+**Viewing Hierarchy:**
+```
+Tag Browser shows:
+work (15)
+├── projects (8)
+│   └── website (3)
+└── meetings (7)
+    └── standup (5)
+
+Click 'work' → See all 15 notes
+Click 'work/projects' → See 8 notes
+```
+
+### Tag Management
+
+**Tag Browser:**
+```
+Access: View → Tag Browser
+or: Cmd+Shift+T
+
+Features:
+- View all tags
+- See tag counts
+- Click to filter notes
+- Hierarchical display
+- Search tags
+- Rename tags
+- Merge tags
+- Delete unused tags
+```
+
+**Renaming Tags:**
+```
+1. Right-click tag in browser
+2. Select "Rename Tag"
+3. Enter new name
+4. All notes automatically updated
+```
+
+**Merging Tags:**
+```
+1. Select multiple tags (Cmd+Click)
+2. Right-click → "Merge Tags"
+3. Choose primary tag name
+4. Confirm merge
+5. All notes consolidated
+```
+
+**Deleting Tags:**
+```
+1. Right-click tag → "Delete Tag"
+2. Options:
+   - Remove from all notes
+   - Keep in existing notes
+3. Confirm deletion
+```
+
+### Tag Autocomplete
+
+**Inline Completion:**
+```
+1. Type #
+2. Start typing tag name
+3. Suggestions appear
+4. Use ↑↓ to navigate
+5. Press Enter to insert
+```
+
+**Fuzzy Matching:**
+```
+Type: #proj
+Matches:
+- #project
+- #projects
+- #work/project
+- #personal/project
+```
+
+**Recent Tags:**
+```
+Most recently used tags appear first
+- Last 20 tags tracked
+- Ordered by recency
+- Across all notes
+```
+
+### Tag Statistics
+
+**View Tag Analytics:**
+```
+Tag Browser → Statistics
+
+Shows:
+- Total unique tags
+- Most used tags
+- Orphaned tags (no notes)
+- Tag growth over time
+- Tag distribution chart
+- Related tag suggestions
+```
+
+## Smart Folders
+
+### Creating Smart Folders
+
+**Based on Tags:**
+```
+1. Right-click in sidebar
+2. "New Smart Folder"
+3. Name: "Active Projects"
+4. Criteria:
+   - Has tag: #status/active
+   - Has tag: #project
+5. Save
+```
+
+**Based on Dates:**
+```
+Name: "This Week's Notes"
+Criteria:
+- Created: Last 7 days
+- OR Modified: Last 7 days
+```
+
+**Based on Properties:**
+```
+Name: "Incomplete Tasks"
+Criteria:
+- Contains: - [ ]
+- NOT contains: - [x]
+- Type: task-list
+```
+
+**Combined Criteria:**
+```
+Name: "Urgent Work Items"
+Criteria:
+- Tag: #work
+- Tag: #priority/high
+- Modified: Last 3 days
+- Contains: TODO or URGENT
+```
+
+### Smart Folder Examples
+
+**Personal Dashboard:**
+```
+Smart Folders:
+1. "Today" (created today)
+2. "This Week" (modified this week)
+3. "Untagged" (no tags)
+4. "Favorites" (starred)
+5. "Drafts" (tag: #draft)
+```
+
+**Project Management:**
+```
+1. "Active Projects" (#project + #active)
+2. "Blocked" (#project + #blocked)
+3. "Review Needed" (#needs-review)
+4. "Completed" (#project + #done)
+```
+
+**Learning System:**
+```
+1. "To Study" (#learn + #pending)
+2. "In Progress" (#learn + #active)
+3. "Completed" (#learn + #done)
+4. "Review Queue" (#review-due)
+```
+
+## Saved Searches
+
+### Creating Saved Searches
+
+**Basic Search:**
+```
+1. Cmd+Shift+F (Global Search)
+2. Enter query
+3. Click "Save Search"
+4. Name it
+5. Choose icon
+6. Appears in sidebar
+```
+
+**Advanced Query:**
+```
+Query: tag:#work AND (urgent OR priority)
+Name: "Urgent Work Items"
+Saved in: Searches section
+```
+
+**Regex Search:**
+```
+Query: /TODO:.*urgent/i
+Name: "Urgent TODOs"
+```
+
+### Search Query Syntax
+
+**Tag Searches:**
+```
+tag:#work                Single tag
+tag:#work OR tag:#personal  Multiple tags
+tag:#work AND tag:#urgent  Combined tags
+tag:#work/projects         Nested tag
+-tag:#archive             Exclude tag
+```
+
+**Content Searches:**
+```
+"exact phrase"            Exact match
+word1 AND word2           Both words
+word1 OR word2            Either word
+word1 NOT word2           Exclude word
+file:projects/            In folder
+path:2025                 Path contains
+```
+
+**Property Searches:**
+```
+created:today             Created today
+modified:>2025-01-01      Modified after date
+created:&lt;7d               Last 7 days
+wordcount:>1000           Word count over
+has:tasks                 Contains tasks
+has:links                 Has wiki links
+```
+
+## Tag-Based Workflows
+
+### Knowledge Management
+
+**Progressive Summarization:**
+```
+Tagging levels:
+1. #inbox (first capture)
+2. #inbox + #type/article (categorized)
+3. #processed + #topic/ai (highlighted)
+4. #evergreen + #topic/ai (summarized)
+5. #moc + #topic/ai (map of content)
+```
+
+**Spaced Repetition:**
+```
+1. #learn (new concept)
+2. #review (needs review)
+3. #mastered (understood)
+4. #refresh (periodic review)
+
+Auto-tag based on review intervals
+```
+
+### Project Management
+
+**Status Tags:**
+```
+#status/planning
+#status/active
+#status/blocked
+#status/review
+#status/done
+#status/archived
+```
+
+**Priority Tags:**
+```
+#priority/urgent
+#priority/high
+#priority/medium
+#priority/low
+```
+
+**Context Tags:**
+```
+#context/work
+#context/home
+#context/computer
+#context/phone
+#context/errands
+```
+
+### Research Workflows
+
+**Source Tags:**
+```
+#source/book
+#source/paper
+#source/article
+#source/video
+#source/podcast
+#source/conversation
+```
+
+**Processing Tags:**
+```
+#to-read
+#reading
+#to-extract
+#extracted
+#to-summarize
+#summarized
+```
+
+## Folder Templates
+
+### Creating Templates
+
+**Template Structure:**
+```
+templates/
+├── project-folder/
+│   ├── README.md
+│   ├── notes/
+│   ├── resources/
+│   └── archive/
+├── research-folder/
+│   ├── papers/
+│   ├── notes/
+│   └── summaries/
+└── area-folder/
+    ├── journal/
+    ├── goals/
+    └── reviews/
+```
+
+**Applying Templates:**
+```
+1. Right-click sidebar
+2. "New Folder from Template"
+3. Select template
+4. Name new folder
+5. Structure created automatically
+```
+
+### Template Variables
+
+**In Template Files:**
+```markdown
+---
+title: {{FOLDER_NAME}} - Overview
+created: {{DATE}}
+tags:
+  - {{FOLDER_NAME_SLUG}}
+  - project
+---
+
+# {{FOLDER_NAME}}
+
+Created: {{DATE}}
+Status: Planning
+```
+
+## Best Practices
+
+### Folder Best Practices
+
+```
+✓ Do:
+- Use descriptive names
+- Maintain consistent depth
+- Create logical hierarchies
+- Archive old folders
+- Use templates for common structures
+
+✗ Don't:
+- Create too many top-level folders
+- Nest too deeply (3-4 max)
+- Use special characters
+- Duplicate structure with tags
+- Create single-file folders
+```
+
+### Tag Best Practices
+
+```
+✓ Do:
+- Use lowercase
+- Be consistent
+- Create hierarchies
+- Review periodically
+- Merge similar tags
+
+✗ Don't:
+- Over-tag (5-7 max per note)
+- Use very similar tags
+- Create too many levels (3 max)
+- Forget to tag important notes
+- Use spaces (use hyphens)
+```
+
+### Combined Strategy
+
+```
+PARA + Tags:
+
+Folders (Where):
+1-Projects/
+2-Areas/
+3-Resources/
+4-Archive/
+
+Tags (What/How/When):
+#type/note #type/task #type/reference
+#status/active #status/done
+#priority/high #priority/low
+#context/work #context/personal
+#topic/productivity #topic/health
+```
+
+## Tips & Tricks
+
+### Power User Tips
+
+**Quick Tag Entry:**
+```
+Create tag templates:
+#work/project/{{name}}
+#status/{{status}}
+
+Assign to keyboard shortcuts
+```
+
+**Tag Combinations:**
+```
+Saved searches for common combinations:
+- #work + #urgent → "Work Urgent"
+- #personal + #goal → "Personal Goals"
+- #learn + #review → "Review Queue"
+```
+
+**Folder Bookmarks:**
+```
+Right-click folder → "Add to Bookmarks"
+Quick access from sidebar
+Keyboard shortcut: Cmd+1-9
+```
+
+### Bulk Operations
+
+**Bulk Tagging:**
+```
+1. Select multiple notes
+2. Right-click → "Add Tags"
+3. Enter tags
+4. Apply to all
+```
+
+**Bulk Moving:**
+```
+1. Select notes
+2. Drag to target folder
+3. All move together
+4. Links update automatically
+```
+
+**Bulk Re-tagging:**
+```
+1. Tag Browser → Select tag
+2. "Rename" or "Replace With"
+3. All notes updated
+```
+
+## Related Documentation
+
+- [File Management](/features/file-management) - File operations
+- [Search](/features/search) - Advanced search queries
+- [Workflow](/features/automation) - Automate organization
+- [Templates](/features/templates) - Folder templates
+
+---
+
+**Last Updated:** January 23, 2025 | **Version:** 1.3.1

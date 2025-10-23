@@ -1,0 +1,2080 @@
+---
+title: Frequently Asked Questions (FAQ) - Lokus
+description: Get answers to common questions about Lokus - installation, features, privacy, performance, plugins, troubleshooting, migration, and more. Complete FAQ guide for new and existing users.
+keywords: lokus faq, lokus help, lokus questions, lokus troubleshooting, lokus guide, lokus support, knowledge management faq
+---
+
+import { Callout, Tabs, Steps, Cards, Card } from 'nextra/components'
+
+# Frequently Asked Questions (FAQ)
+
+Find answers to the most common questions about Lokus. Can't find what you're looking for? Join our [Discord community](https://discord.gg/lokus) or check [GitHub Discussions](https://github.com/lokus-ai/lokus/discussions).
+
+---
+
+## General Questions
+
+### What is Lokus?
+
+Lokus is a **local-first knowledge management platform** that combines powerful note-taking with advanced features like database views (Bases), graph visualization, and AI integration. Think of it as Obsidian + Notion + AI, but faster, privacy-focused, and completely free.
+
+**Key highlights:**
+- Local-only storage (your data never leaves your computer)
+- Plain markdown files (future-proof and portable)
+- Blazing fast Rust backend (100x faster search)
+- Built-in database views (Bases)
+- Native AI integration via MCP (68+ tools)
+- Free and open source (MIT license)
+
+### Why was Lokus created?
+
+Lokus was born from frustration with existing tools:
+- **Notion**: Great features but cloud-only, privacy concerns, subscription costs
+- **Obsidian**: Excellent local-first approach but lacks built-in databases and AI
+- **Roam**: Pioneered bidirectional linking but expensive ($180/year) and cloud-only
+
+Lokus combines the best of all worlds: local-first privacy, database functionality, AI integration, and modern performance—all free and open source.
+
+### Is Lokus really free?
+
+**Yes, completely free forever.** No hidden costs, no premium tiers, no subscription fees.
+
+- Free for personal use
+- Free for commercial use
+- Free for unlimited notes
+- Free for unlimited storage (limited only by your hard drive)
+- Free for all features (Bases, AI, Graph, etc.)
+
+Lokus is MIT-licensed open source. You can even modify the code if you want.
+
+### How does Lokus make money if it's free?
+
+Lokus is a community-driven open source project, not a commercial product. Development is funded by:
+- Open source contributors donating time
+- Optional donations from users (not required)
+- Potential future enterprise features (never affecting core free product)
+
+The philosophy: **Core Lokus will always be free.** Any future revenue would come from optional services (like hosted sync for enterprises), not paywalling features.
+
+### Who is Lokus for?
+
+Lokus is perfect for:
+
+**Researchers & Academics**: Local storage for sensitive research, LaTeX support, citation management, graph visualization
+
+**Developers & Engineers**: Fast performance, Git-friendly markdown, syntax highlighting (100+ languages), MCP AI for code
+
+**Writers & Content Creators**: Long-form editor, templates, version control, distraction-free writing
+
+**Students & Learners**: Free forever, daily notes for classes, graph for visual learning, flashcards
+
+**Product Managers**: Database views (Bases) for roadmaps, kanban boards, task management
+
+**Privacy-Conscious Users**: Local-only storage, no telemetry, no account required, open source (auditable)
+
+### What platforms does Lokus support?
+
+**Currently available:**
+- Windows (10/11)
+- macOS (11+)
+- Linux (Ubuntu, Fedora, Arch, etc.)
+
+**Coming in v1.4 (Q1 2026):**
+- iOS (iPhone, iPad)
+- Android (phones, tablets)
+
+Desktop apps are native (built with Tauri + Rust), not web apps wrapped in Electron. This means better performance and lower resource usage.
+
+### Is Lokus open source?
+
+**Yes!** Lokus is fully open source under the MIT license:
+- Source code: [github.com/lokus-ai/lokus](https://github.com/lokus-ai/lokus)
+- License: MIT (permissive, commercial-friendly)
+- Contributions: Welcome via pull requests
+- Transparency: All code is public and auditable
+
+You can:
+- View the entire codebase
+- Report bugs and request features
+- Contribute code improvements
+- Fork and modify for your needs
+- Use commercially without restrictions
+
+### How is Lokus different from Obsidian?
+
+Main differences:
+
+**Lokus advantages:**
+- 100x faster search (Rust backend vs JavaScript)
+- Built-in database views (Bases) - no plugins needed
+- Native AI integration (MCP with 68+ tools)
+- 3D graph visualization (hardware-accelerated)
+- Completely free (no paid sync/publish tiers)
+- Open source (MIT license)
+
+**Obsidian advantages:**
+- Mature mobile apps (Lokus coming v1.4)
+- Larger plugin ecosystem (1,000+ vs 100+)
+- Bigger community
+- Commercial support options
+
+[See detailed comparison →](/comparison#obsidian)
+
+### How is Lokus different from Notion?
+
+Main differences:
+
+**Lokus advantages:**
+- Local-only storage (complete privacy)
+- Full offline mode (Notion needs internet)
+- Native performance (no network lag)
+- Free forever (Notion $120/year for full features)
+- Plain markdown (Notion proprietary format)
+- Open source (Notion closed)
+
+**Notion advantages:**
+- Real-time collaboration (Lokus roadmap)
+- Polished mobile apps (Lokus v1.4)
+- Easier for non-technical users
+- Automatic cloud sync (Lokus requires manual setup)
+
+[See detailed comparison →](/comparison#notion)
+
+---
+
+## Installation & Setup
+
+### How do I install Lokus?
+
+<Steps>
+
+### Download
+
+Visit [lokus.ai/download](https://lokus.ai/download) and download for your platform:
+- **Windows**: `.exe` installer
+- **macOS**: `.dmg` disk image
+- **Linux**: `.AppImage`, `.deb`, or `.rpm`
+
+### Install
+
+**Windows**: Run the `.exe` and follow installer prompts
+
+**macOS**: Open `.dmg`, drag Lokus to Applications folder
+
+**Linux AppImage**:
+```bash
+chmod +x Lokus-*.AppImage
+./Lokus-*.AppImage
+```
+
+**Linux Debian/Ubuntu**:
+```bash
+sudo dpkg -i lokus_*.deb
+```
+
+### Launch
+
+Open Lokus from your applications menu. First launch may take a few seconds to initialize.
+
+### Create Workspace
+
+1. Click "Create New Workspace" or "Open Existing Folder"
+2. Choose a folder on your computer (Lokus will store notes here)
+3. Start creating notes!
+
+</Steps>
+
+[Full installation guide →](/getting-started/installation)
+
+### What are the system requirements?
+
+**Minimum:**
+- OS: Windows 10, macOS 11, or Linux (kernel 4.15+)
+- RAM: 2GB
+- Storage: 200MB for app + space for your notes
+- CPU: Any 64-bit processor
+
+**Recommended:**
+- RAM: 4GB+ (for large vaults with 1,000+ notes)
+- SSD: For faster search and file access
+- CPU: Multi-core for better performance
+
+Lokus is lightweight and runs well on older hardware. The Rust backend is very efficient.
+
+### Do I need an account to use Lokus?
+
+**No account required!** Lokus is fully local:
+- No sign-up process
+- No login credentials
+- No email verification
+- No terms of service to accept
+- No data collection
+
+Just download, install, and start using it. Your data stays on your computer.
+
+### Where does Lokus store my data?
+
+**Your data is stored wherever you choose:**
+
+When creating a workspace, you select a folder on your computer. Lokus stores all notes as plain markdown files (`.md`) in that folder. You have complete control.
+
+**Application data** (settings, plugins, themes):
+- **Windows**: `C:\Users\<username>\AppData\Roaming\lokus`
+- **macOS**: `~/Library/Application Support/lokus`
+- **Linux**: `~/.config/lokus`
+
+Your notes are separate from application settings, so you can:
+- Move them anywhere
+- Sync them with Git, Dropbox, etc.
+- Back them up easily
+- Access them with other apps
+
+### Can I use multiple workspaces?
+
+**Yes!** You can have as many workspaces as you want:
+
+- Create separate workspaces for work, personal, research, etc.
+- Each workspace is just a folder on your computer
+- Switch between workspaces: File → Switch Workspace
+- Recent workspaces shown in welcome screen
+
+**Use cases:**
+- Personal vs. work notes (keep them separate)
+- Different projects (client A, client B, side project)
+- Shared vs. private (sync one to cloud, keep another local)
+- Testing (try new plugins without affecting main vault)
+
+### How do I set up sync between devices?
+
+Lokus doesn't have built-in sync (by design—keeps it simple and free), but you can use any sync method:
+
+**Option 1: Git (Recommended for developers)**
+```bash
+cd ~/lokus-vault
+git init
+git add .
+git commit -m "Initial commit"
+git remote add origin https://github.com/yourusername/notes.git
+git push -u origin main
+```
+
+On other device:
+```bash
+git clone https://github.com/yourusername/notes.git ~/lokus-vault
+```
+
+**Option 2: Cloud Storage**
+- Put Lokus folder in Dropbox, Google Drive, OneDrive, iCloud Drive
+- Let cloud service handle sync
+- Works automatically
+
+**Option 3: Syncthing (Self-hosted)**
+- Free, open source, peer-to-peer sync
+- No cloud servers, direct device-to-device
+- Very secure and private
+
+**Option 4: rsync (Linux/Mac)**
+```bash
+rsync -av ~/lokus-vault/ user@server:~/lokus-vault/
+```
+
+> **Note:** 
+**Git is recommended** for developers: version control + sync in one. Plus, it's free with GitHub/GitLab.
+
+
+### Can I import notes from other apps?
+
+**Yes!** Lokus can import from:
+
+**Obsidian**: Just point Lokus to your Obsidian vault folder—works immediately (same markdown format)
+
+**Notion**: Export from Notion (Markdown & CSV), then import to Lokus. [See migration guide →](/comparison#notion)
+
+**Roam**: Export as Markdown, convert with `roam-to-markdown` tool, import to Lokus. [See migration guide →](/comparison#roam)
+
+**Logseq**: Point Lokus to Logseq folder—both apps can coexist on same data
+
+**Evernote**: Export as ENEX, convert with `yarle` tool, import to Lokus
+
+**Plain text**: Copy `.md` or `.txt` files directly into Lokus folder
+
+**Word/Google Docs**: Use Pandoc to convert to markdown:
+```bash
+pandoc document.docx -o document.md
+```
+
+[See all migration guides →](/comparison#migration-guides-summary)
+
+---
+
+## Features & Functionality
+
+### What is markdown and why does Lokus use it?
+
+**Markdown** is a simple text formatting language. Instead of buttons (like Word), you use characters:
+
+```markdown
+# This is a heading
+**This is bold**
+*This is italic*
+[This is a link](https://example.com)
+- This is a bullet point
+```
+
+**Why Lokus uses markdown:**
+- **Universal**: Works in any text editor (VS Code, Vim, Notepad)
+- **Future-proof**: Plain text never goes obsolete
+- **Git-friendly**: Perfect for version control
+- **Human-readable**: Easy to read even without rendering
+- **Portable**: Move notes anywhere, anytime
+- **Standard**: Open format, not proprietary
+
+You can edit Lokus notes with any app—not locked to Lokus.
+
+### What are Wiki Links?
+
+**Wiki links** create connections between notes using double brackets:
+
+```markdown
+See [[Project Planning]] for details.
+This relates to [[Research Notes]] and [[Ideas]].
+```
+
+**Features:**
+- **Autocomplete**: Type `[[` and get suggestions
+- **Create on click**: Link to non-existent note creates it
+- **Bidirectional**: Shows both outgoing and incoming links
+- **Graph visualization**: See all connections visually
+
+**Why they're powerful:**
+- Build a network of connected knowledge
+- Discover relationships between ideas
+- Navigate your notes like Wikipedia
+- Enable "networked thinking"
+
+[Learn more about wiki links →](/features/wiki-links)
+
+### What are Bases (Database Views)?
+
+**Bases** are Lokus's database system. Think "Notion databases" but backed by plain markdown.
+
+**Key features:**
+- **Multiple views**: Table, kanban, gallery, calendar, list
+- **Properties**: Add metadata to notes via YAML frontmatter
+- **Filtering**: Complex queries (AND, OR, comparisons)
+- **Sorting**: Multi-column sorting
+- **Inline editing**: Click cells to edit directly
+- **MCP integration**: AI can query and manipulate bases
+
+**Example use case:**
+
+Track projects in a Base:
+```markdown
+---
+title: Website Redesign
+status: In Progress
+priority: High
+due_date: 2025-11-15
+owner: Sarah
+---
+
+# Website Redesign
+
+Project content here...
+```
+
+View in Base as:
+- **Table**: Spreadsheet-like view of all projects
+- **Kanban**: Cards organized by status
+- **Calendar**: Projects on timeline
+
+[Learn more about Bases →](/features/bases)
+
+### How does the graph view work?
+
+The **graph view** visualizes connections between your notes:
+
+**Features:**
+- **2D view**: Traditional force-directed graph
+- **3D view**: Hardware-accelerated 3D graph with WebGL
+- **Interactive**: Click nodes to open notes, drag to explore
+- **Filters**: Show/hide by tags, folders, or properties
+- **Clustering**: Automatically groups related notes
+- **Colors**: Customize by folder, tag, or property
+
+**Use cases:**
+- Discover unexpected connections
+- Find orphaned notes (no links)
+- Visualize knowledge structure
+- Identify knowledge clusters
+- Navigate notes spatially
+
+[Learn more about graph view →](/features/graph)
+
+### What is the MCP server?
+
+**MCP (Model Context Protocol)** is a standard for integrating AI assistants with applications. Lokus includes an MCP server with **68+ specialized tools**.
+
+**What it enables:**
+- Connect any MCP-compatible AI assistant to Lokus
+- AI can read, search, create, and edit notes
+- AI can query Bases (databases)
+- AI can navigate graph, use templates, manage tasks
+- Privacy-preserving (use local AI models)
+
+**Example AI commands:**
+- "Find all high-priority tasks due this week"
+- "Create a project plan from this template"
+- "Summarize my daily notes from last month"
+- "Add all meeting notes to the Projects base"
+
+**Supported AI tools:**
+- Any MCP-compatible AI (platform-agnostic)
+- Works with local models (privacy-focused)
+
+[Learn more about MCP →](/developers/mcp/overview)
+
+### How do templates work?
+
+**Templates** automate repetitive note structures:
+
+**Creating templates:**
+1. Create a note in `/templates` folder
+2. Use variables: `{{title}}`, `{{date}}`, `{{time}}`
+3. Add default content and structure
+
+**Example template:**
+```markdown
+---
+title: {{title}}
+date: {{date}}
+tags: [meeting]
+---
+
+# {{title}}
+
+## Attendees
+-
+
+## Agenda
+1.
+
+## Notes
+
+
+## Action Items
+- [ ]
+```
+
+**Using templates:**
+- Right-click folder → New from Template
+- Or use command palette: Cmd/Ctrl+P → "New from template"
+
+**Advanced features:**
+- Variables: `{{date}}`, `{{time}}`, `{{user}}`, `{{clipboard}}`
+- Conditional content
+- JavaScript expressions
+- Template folders
+
+[Learn more about templates →](/features/templates)
+
+### Can I customize the appearance?
+
+**Yes!** Lokus is highly customizable:
+
+**Themes:**
+- Light and dark themes built-in
+- Community themes from plugin marketplace
+- Custom CSS for advanced styling
+
+**Changing themes:**
+Settings → Appearance → Theme
+
+**Custom CSS:**
+1. Settings → Appearance → Custom CSS
+2. Add your CSS rules:
+```css
+/* Example: Change heading colors */
+h1 { color: #ff6b6b; }
+h2 { color: #4ecdc4; }
+
+/* Example: Change editor font */
+.editor { font-family: 'JetBrains Mono', monospace; }
+```
+
+**Font settings:**
+- Editor font
+- Monospace font (code blocks)
+- Font size
+- Line height
+
+[Learn more about themes →](/features/themes)
+
+### What file formats does Lokus support?
+
+**Primary format:**
+- **Markdown** (`.md`, `.markdown`): Full support with extensions
+
+**Embedded/attachments:**
+- **Images**: PNG, JPG, GIF, SVG, WebP
+- **PDFs**: Embedded PDF viewer
+- **Videos**: MP4, WebM (embedded player)
+- **Audio**: MP3, WAV, OGG
+- **Code**: 100+ languages with syntax highlighting
+- **Other**: Any file can be attached (opens with system default app)
+
+**Specialized formats:**
+- **LaTeX**: Math equations with KaTeX
+- **Mermaid**: Diagrams and flowcharts
+- **Excalidraw**: Drawings (via plugin)
+- **Canvas**: TLDraw whiteboard
+
+### Does Lokus support LaTeX math?
+
+**Yes!** Full LaTeX math support via KaTeX:
+
+**Inline math:**
+```markdown
+Einstein's equation: $E = mc^2$
+```
+Renders: Einstein's equation: E = mc²
+
+**Display math:**
+```markdown
+$$
+\int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}
+$$
+```
+
+**Features:**
+- Fast rendering (KaTeX, not MathJax)
+- Full LaTeX syntax support
+- Automatic equation numbering
+- Copy LaTeX code
+
+Perfect for researchers, students, mathematicians, physicists.
+
+### Can I embed other notes or files?
+
+**Yes!** Lokus supports various embed types:
+
+**Embed notes:**
+```markdown
+![[Other Note]]
+```
+Shows the entire note inline.
+
+**Embed specific section:**
+```markdown
+![[Other Note#Section Heading]]
+```
+
+**Embed block:**
+```markdown
+![[Other Note^block-id]]
+```
+
+**Embed images:**
+```markdown
+![[image.png]]
+![[image.png|300]]  <!-- with width -->
+```
+
+**Embed PDFs:**
+```markdown
+![[document.pdf]]
+![[document.pdf#page=5]]  <!-- specific page -->
+```
+
+**Embed web content:**
+```markdown
+<iframe src="https://example.com"></iframe>
+```
+
+---
+
+## Privacy & Security
+
+### Is my data private?
+
+**Absolutely.** Lokus is designed for maximum privacy:
+
+**Local-only storage:**
+- All notes stored on YOUR computer
+- Never uploaded to cloud (unless YOU choose to sync)
+- No Lokus servers see your data
+
+**No telemetry:**
+- Zero tracking
+- No analytics
+- No usage data collection
+- No crash reports sent (unless you opt-in)
+
+**No account required:**
+- No email address
+- No personal information
+- No login credentials
+
+**Open source:**
+- Code is public and auditable
+- No hidden backdoors
+- Community can verify security
+
+**Perfect for:**
+- Medical notes (HIPAA-sensitive)
+- Legal documents (client privilege)
+- Business strategy (trade secrets)
+- Personal journals (complete privacy)
+- Research data (institutional requirements)
+
+### Does Lokus collect any data?
+
+**No.** Lokus collects zero data by default.
+
+**Optional opt-in telemetry:**
+- Settings → Privacy → Anonymous crash reports
+- Only basic crash data (if you enable it)
+- No note content, ever
+- No identifying information
+- Helps improve stability
+
+**What is NEVER collected:**
+- Note content
+- File names
+- Personal information
+- Usage patterns
+- Search queries
+- Location data
+
+### Can Lokus work completely offline?
+
+**Yes!** Lokus is fully functional offline:
+
+- No internet required for core features
+- All data is local
+- Search works offline
+- Graph visualization works offline
+- Bases (databases) work offline
+- Templates work offline
+
+**Features requiring internet:**
+- AI assistants (if using cloud APIs)
+- Plugin downloads from marketplace
+- Updates (can be downloaded manually)
+- Sync (if using cloud storage)
+
+**Perfect for:**
+- Airplane work
+- Remote locations
+- Internet-restricted environments
+- Privacy-focused users
+- Air-gapped systems
+
+### How do I back up my notes?
+
+**Your notes are just files in a folder**, so any backup method works:
+
+**Option 1: Git (Recommended)**
+```bash
+cd ~/lokus-vault
+git init
+git add .
+git commit -m "Backup $(date)"
+git push
+```
+
+**Option 2: Cloud Storage**
+- Put Lokus folder in Dropbox, Google Drive, etc.
+- Automatic backup and versioning
+
+**Option 3: Manual Copy**
+```bash
+# Copy entire folder
+cp -r ~/lokus-vault ~/lokus-vault-backup-2025-10-23
+```
+
+**Option 4: Automated Backup Script**
+```bash
+#!/bin/bash
+rsync -av ~/lokus-vault/ /backup/lokus-vault-$(date +%Y-%m-%d)/
+```
+
+**Option 5: Time Machine / Windows Backup**
+- Include Lokus folder in system backups
+
+> **Note:** 
+**Back up regularly!** While Lokus is stable, hardware can fail. Use version control (Git) or regular backups.
+
+
+### Is Lokus encrypted?
+
+**Application-level encryption:** No, Lokus doesn't encrypt notes by default (they're plain text markdown).
+
+**However, you can add encryption:**
+
+**Option 1: Encrypted volume**
+- Windows: BitLocker
+- macOS: FileVault (encrypt entire disk)
+- Linux: LUKS encrypted partition
+
+**Option 2: Encrypted folder**
+- VeraCrypt: Create encrypted container for Lokus folder
+
+**Option 3: Git-crypt**
+For Git repos:
+```bash
+git-crypt init
+git-crypt add-gpg-user your-email@example.com
+```
+
+**Option 4: Encrypting plugin**
+- Community plugins available for note-level encryption
+
+**Recommendation:** Use full-disk encryption (BitLocker/FileVault) for simplicity and security.
+
+### Can I use Lokus for work/business?
+
+**Yes!** Lokus is free for commercial use:
+
+- MIT license allows commercial use
+- No "business" tier required
+- No user limits
+- No feature restrictions
+- No per-seat pricing
+
+**Business use cases:**
+- Internal knowledge base
+- Project documentation
+- Client notes (CRM)
+- Meeting notes
+- Product requirements
+- Engineering documentation
+
+**Enterprise considerations:**
+- Self-hosted (your infrastructure)
+- No vendor lock-in
+- GDPR compliant (local storage)
+- Audit logs (via Git)
+- Team sync (via Git or shared drives)
+
+---
+
+## Performance
+
+### How fast is Lokus compared to other apps?
+
+**Very fast.** Lokus uses a Rust backend for performance-critical operations:
+
+**Search performance (10,000 notes):**
+- Lokus Quantum Search: ~10ms
+- Obsidian: ~1 second
+- Notion: ~5-10 seconds
+
+**Startup time:**
+- Lokus: &lt;1 second
+- Obsidian: 1-2 seconds
+- Notion: 2-5 seconds
+
+**Graph rendering (1,000 nodes):**
+- Lokus 3D: 60fps (hardware-accelerated)
+- Obsidian 2D: ~30fps
+- Notion: No graph
+
+**Memory usage (5,000 notes):**
+- Lokus: ~200MB
+- Obsidian: ~300MB
+- Notion: ~500MB+ (web app)
+
+The Rust backend makes Lokus 10-100x faster for intensive operations.
+
+### What is Quantum Search?
+
+**Quantum Search** is Lokus's ultra-fast search engine, powered by Rust:
+
+**Performance:**
+- 100x faster than traditional search
+- Handles 10,000+ notes in milliseconds
+- Sub-millisecond query processing
+- Real-time results as you type
+
+**Features:**
+- Full-text search across all notes
+- Fuzzy matching (typo-tolerant)
+- Regular expressions
+- File name search
+- Tag search
+- Property search (Bases)
+
+**How to enable:**
+Settings → Performance → Enable Quantum Search → Restart Lokus
+
+**System requirements:**
+- 4GB RAM (for large vaults)
+- SSD recommended (faster indexing)
+
+[Learn more about Quantum Search →](/features/search)
+
+### Can Lokus handle large vaults?
+
+**Yes!** Lokus is optimized for large note collections:
+
+**Tested scale:**
+- 10,000+ notes: Excellent performance
+- 50,000+ notes: Good performance (with Quantum Search)
+- 100,000+ notes: Functional (may need tuning)
+
+**Performance optimizations:**
+- Incremental indexing (only index changed files)
+- Lazy loading (load content on demand)
+- Virtual scrolling (render only visible items)
+- Background processing (don't block UI)
+- Rust backend (native-level speed)
+
+**Tips for large vaults:**
+1. Enable Quantum Search
+2. Use SSD (faster file access)
+3. Increase RAM if needed
+4. Close unused Bases tabs
+5. Exclude large folders (node_modules, archives)
+
+### Why does Lokus use less battery than Electron apps?
+
+**Lokus uses Tauri (Rust), not Electron:**
+
+**Electron (used by Obsidian, VS Code):**
+- Bundles entire Chromium browser
+- JavaScript engine constantly running
+- High CPU usage even when idle
+- ~100-200MB base memory overhead
+
+**Tauri (used by Lokus):**
+- Uses system webview (already on your computer)
+- Rust backend (native code, very efficient)
+- Low CPU usage when idle
+- ~50-80MB base memory overhead
+
+**Result:**
+- 30-50% less CPU usage
+- 30-50% less RAM usage
+- Longer battery life on laptops
+- Faster startup
+
+### What are the performance tips?
+
+**For large vaults (5,000+ notes):**
+
+1. **Enable Quantum Search**
+   - Settings → Performance → Quantum Search
+   - 100x faster indexing and search
+
+2. **Use SSD, not HDD**
+   - SSDs dramatically faster for file operations
+   - Indexing 10,000 notes: SSD ~2s, HDD ~30s
+
+3. **Increase RAM allocation**
+   - Settings → Performance → Memory Limit
+   - Recommended: 1GB per 10,000 notes
+
+4. **Exclude unnecessary folders**
+   - Settings → Files → Excluded Folders
+   - Exclude: `node_modules`, `.git`, archives
+
+5. **Close unused Bases**
+   - Each open Base uses memory
+   - Close tabs you're not actively using
+
+6. **Optimize images**
+   - Compress large images
+   - Use web-optimized formats (WebP)
+
+7. **Archive old notes**
+   - Move old notes to separate archive folder
+   - Exclude archive from indexing
+
+---
+
+## Plugins & Extensibility
+
+### What are plugins?
+
+**Plugins** extend Lokus with new features:
+
+**Types of plugins:**
+- **Editor plugins**: Custom editor commands, shortcuts
+- **UI plugins**: New sidebar panels, views
+- **Data providers**: Connect external data sources
+- **Themes**: Visual appearance customization
+- **Commands**: Add to command palette
+
+**Popular plugins:**
+- PDF annotator
+- Flashcards
+- Calendar view
+- Habit tracker
+- Git integration
+- Kanban boards
+- Mind maps
+- Citations manager
+
+### How do I install plugins?
+
+**From Plugin Marketplace:**
+
+<Steps>
+
+### Open Marketplace
+
+Settings → Plugins → Browse Marketplace
+
+Or: Cmd/Ctrl+P → "Browse plugins"
+
+### Search and Install
+
+1. Search for plugin by name
+2. Click plugin card
+3. Read description and reviews
+4. Click "Install"
+5. Enable plugin (toggle switch)
+
+### Configure
+
+Click "Settings" on plugin card to configure options.
+
+</Steps>
+
+**Manual installation:**
+
+1. Download plugin `.zip` file
+2. Settings → Plugins → Install from file
+3. Select `.zip` file
+4. Enable plugin
+
+### Are plugins safe?
+
+**Plugin security:**
+
+**Official marketplace plugins:**
+- Reviewed by maintainers
+- Code inspected for malicious behavior
+- Community-vetted (ratings, reviews)
+- Sandboxed execution (limited permissions)
+
+**Community plugins:**
+- Check GitHub stars/reviews
+- Read source code if possible
+- Install from trusted developers
+- Check permissions requested
+
+**Plugins CANNOT:**
+- Access files outside Lokus folder (sandboxed)
+- Make network requests without permission
+- Execute system commands without permission
+- Access your passwords or credentials
+
+**Best practices:**
+- Install plugins from official marketplace
+- Read reviews before installing
+- Grant minimum necessary permissions
+- Keep plugins updated
+- Disable unused plugins
+
+### Can I create my own plugins?
+
+**Yes!** Lokus has a comprehensive plugin API:
+
+**Plugin development:**
+- **Language**: TypeScript/JavaScript
+- **Framework**: React components
+- **API**: Full Lokus API access
+- **Documentation**: Complete API reference
+
+**Quick start:**
+```bash
+npm create lokus-plugin my-plugin
+cd my-plugin
+npm install
+npm run dev
+```
+
+**What you can build:**
+- Custom editor extensions (TipTap)
+- UI panels and views (React)
+- Data providers (import/export)
+- Commands (command palette)
+- Themes (CSS/Tailwind)
+
+**Resources:**
+- [Plugin Development Guide →](/developers/plugins/getting-started)
+- [Plugin API Reference →](/developers/plugins/api)
+- [Example Plugins →](https://github.com/lokus-ai/example-plugins)
+
+### How do I update plugins?
+
+**Auto-update (recommended):**
+- Settings → Plugins → Auto-update plugins (enable)
+- Plugins update automatically in background
+
+**Manual update:**
+1. Settings → Plugins
+2. See "Update available" badge
+3. Click "Update" button
+
+**Update all:**
+- Settings → Plugins → Update All
+
+**View changelog:**
+Click plugin card → "Changelog" tab to see what's new.
+
+### Can plugins access my notes?
+
+**Yes, but with permissions:**
+
+**Plugin permissions:**
+- **Read notes**: Read note content
+- **Write notes**: Create/edit/delete notes
+- **Read settings**: Access Lokus settings
+- **Network**: Make HTTP requests
+- **Clipboard**: Access system clipboard
+
+**You control permissions:**
+- Plugins request permissions on install
+- You approve or deny each permission
+- Revoke permissions anytime: Settings → Plugins → Plugin Name → Permissions
+
+**Safe plugins:**
+- Most plugins only need read/write notes
+- Network permission should have good reason (e.g., sync plugin)
+- Be cautious with "Execute commands" permission
+
+---
+
+## Troubleshooting
+
+### Lokus won't start or crashes on launch
+
+**Common fixes:**
+
+**1. Check system requirements:**
+- Windows 10+, macOS 11+, or Linux
+- 2GB+ RAM
+- 200MB+ free storage
+
+**2. Clear application cache:**
+```bash
+# Windows
+del /Q "%APPDATA%\lokus\cache\*"
+
+# macOS
+rm -rf ~/Library/Application\ Support/lokus/cache/*
+
+# Linux
+rm -rf ~/.config/lokus/cache/*
+```
+
+**3. Reset settings:**
+- Hold Shift while launching Lokus
+- Or delete settings file:
+  - Windows: `%APPDATA%\lokus\settings.json`
+  - macOS: `~/Library/Application Support/lokus/settings.json`
+  - Linux: `~/.config/lokus/settings.json`
+
+**4. Reinstall:**
+- Uninstall Lokus
+- Download latest version
+- Install fresh
+
+**5. Check antivirus:**
+- Some antivirus blocks Tauri apps
+- Add Lokus to whitelist
+
+**Still not working?**
+- [Report issue on GitHub](https://github.com/lokus-ai/lokus/issues)
+- Include: OS, version, error message, steps to reproduce
+
+### Search is slow or not working
+
+**Fixes:**
+
+**1. Enable Quantum Search:**
+- Settings → Performance → Enable Quantum Search
+- Restart Lokus
+
+**2. Rebuild search index:**
+- Settings → Search → Rebuild Index
+- Wait for completion (may take a few minutes)
+
+**3. Check excluded folders:**
+- Settings → Files → Excluded Folders
+- Make sure important folders aren't excluded
+
+**4. Clear search cache:**
+- Settings → Search → Clear Cache
+
+**5. Reduce vault size:**
+- Large vaults (50,000+ notes) need more RAM
+- Consider archiving old notes
+
+### Notes aren't syncing between devices
+
+Lokus doesn't have built-in sync (you choose your method). Check your sync setup:
+
+**Git sync:**
+```bash
+# On device 1
+git pull  # Get changes from other devices
+git add .
+git commit -m "Update"
+git push
+
+# On device 2
+git pull  # Get changes
+```
+
+**Cloud storage (Dropbox, Google Drive):**
+- Check if sync service is running
+- Check for sync conflicts (duplicate files)
+- Ensure folder isn't paused
+
+**Syncthing:**
+- Check if both devices are connected
+- Check sync status in Syncthing UI
+
+**Common issues:**
+- **Merge conflicts**: Resolve in Git or your sync tool
+- **File locks**: Close Lokus on other device
+- **Network**: Ensure internet connection
+
+### Graph view is laggy or not showing connections
+
+**Fixes:**
+
+**1. Reduce visible nodes:**
+- Graph view → Filters → Limit to recent notes
+- Or filter by specific tags/folders
+
+**2. Use 2D instead of 3D:**
+- 3D requires more GPU power
+- Switch to 2D if experiencing lag
+
+**3. Update graphics drivers:**
+- 3D graph uses WebGL (requires updated drivers)
+- Download latest drivers for your GPU
+
+**4. Disable physics simulation:**
+- Graph view → Settings → Static layout
+- Faster but less dynamic
+
+**5. Rebuild graph index:**
+- Settings → Graph → Rebuild Graph Index
+
+**Graph showing no connections:**
+- Make sure you're using wiki links: `[[Note Name]]`
+- Check if notes are in excluded folders
+
+### Bases (databases) not updating
+
+**Fixes:**
+
+**1. Refresh Base:**
+- Click refresh icon in Base toolbar
+
+**2. Rebuild Base index:**
+- Base settings → Rebuild Index
+
+**3. Check YAML frontmatter:**
+Ensure properties are in frontmatter:
+```markdown
+---
+title: My Note
+status: Active
+priority: High
+---
+
+Note content here...
+```
+
+**4. Verify property types:**
+- Check property configuration in Base
+- Ensure values match expected types (date, number, etc.)
+
+**5. Close and reopen Base:**
+- Sometimes cached data needs refresh
+
+### Plugins aren't working
+
+**Fixes:**
+
+**1. Check if plugin is enabled:**
+- Settings → Plugins → Find plugin → Toggle enabled
+
+**2. Update plugin:**
+- Settings → Plugins → Check for updates
+
+**3. Check plugin permissions:**
+- Settings → Plugins → Plugin name → Permissions
+- Grant necessary permissions
+
+**4. Restart Lokus:**
+- Some plugins need restart to activate
+
+**5. Check plugin compatibility:**
+- Settings → Plugins → Plugin name → Details
+- Ensure plugin supports your Lokus version
+
+**6. Reinstall plugin:**
+- Uninstall plugin
+- Restart Lokus
+- Reinstall from marketplace
+
+**7. Check console for errors:**
+- View → Developer → Toggle Developer Tools
+- Check Console tab for errors
+
+### High memory usage
+
+**Possible causes and fixes:**
+
+**1. Large vault:**
+- 10,000+ notes use more RAM
+- Increase system RAM if possible
+
+**2. Too many open tabs:**
+- Close unused note tabs
+- Close unused Base tabs
+
+**3. Memory leak in plugin:**
+- Disable plugins one by one to identify culprit
+- Report to plugin developer
+
+**4. Large images/PDFs:**
+- Compress large attachments
+- Settings → Performance → Limit inline preview size
+
+**5. Clear cache:**
+- Settings → Advanced → Clear Cache
+
+**6. Restart Lokus:**
+- Periodic restart clears memory
+
+### Files or folders missing
+
+**Possible causes:**
+
+**1. Excluded from workspace:**
+- Settings → Files → Excluded Folders
+- Remove from exclusion list
+
+**2. Hidden files:**
+- Settings → Files → Show hidden files (enable)
+
+**3. File system issues:**
+- Check file still exists in folder (outside Lokus)
+- Check file permissions
+
+**4. Sync conflict:**
+- Check for duplicate files (e.g., `note.conflict-2025-10-23.md`)
+- Resolve in sync tool
+
+**5. Refresh workspace:**
+- File → Refresh Workspace
+- Or restart Lokus
+
+---
+
+## Migration & Data
+
+### How do I migrate from Obsidian?
+
+**Super easy!** Obsidian and Lokus use the same markdown format:
+
+<Steps>
+
+### Open Obsidian Vault in Lokus
+
+1. Open Lokus
+2. File → Open Workspace
+3. Select your Obsidian vault folder
+4. Done! Everything works immediately.
+
+### Verify Compatibility
+
+- Wiki links `[[like this]]` work identically
+- YAML frontmatter is fully supported
+- Tags, embeds, LaTeX all work
+
+### Use Both Apps (Optional)
+
+You can run Obsidian and Lokus on the same vault simultaneously:
+- Use Obsidian for mobile
+- Use Lokus for desktop power
+
+### Replace Plugins
+
+Find Lokus equivalents:
+- Dataview → Lokus Bases (built-in)
+- Kanban → Bases kanban view
+- Templater → Lokus Templates
+
+</Steps>
+
+**Migration time: 5 minutes** (literally just opening the folder)
+
+[Detailed Obsidian migration guide →](/comparison#obsidian)
+
+### How do I migrate from Notion?
+
+**Medium complexity** (2-4 hours):
+
+<Steps>
+
+### Export from Notion
+
+1. Notion → Settings & Members → Settings
+2. "Export all workspace content"
+3. Format: Markdown & CSV
+4. Download ZIP
+
+### Clean Up Export
+
+Notion export is messy. Clean it:
+
+```bash
+# Remove Notion IDs from filenames
+find . -name "*.md" -exec sed -i '' 's/ [a-f0-9]\{32\}\.md//g' {} \;
+
+# Fix image links
+find . -name "*.md" -exec sed -i '' 's/%20/ /g' {} \;
+```
+
+Or use: `notion-to-markdown-converter` tool
+
+### Import to Lokus
+
+1. Open Lokus
+2. File → Open Workspace
+3. Select cleaned folder
+
+### Convert Databases
+
+Notion databases export as CSV:
+
+1. Create Base in Lokus
+2. Import CSV
+3. Map columns to properties
+4. Configure views
+
+### Fix Wiki Links
+
+Tools → Convert Links → Notion to Wiki Links
+
+Converts `[Title](file.md)` to `[[Title]]`
+
+</Steps>
+
+[Detailed Notion migration guide →](/comparison#notion)
+
+### Can I export my notes from Lokus?
+
+**Your notes are already exported!** They're plain markdown files in a folder.
+
+**No export needed:**
+- Copy folder anywhere
+- Open with any markdown editor
+- Commit to Git
+- Sync to cloud
+
+**Additional export formats:**
+
+**Bases to CSV:**
+- Open Base → Export → CSV
+
+**Notes to PDF:**
+- Open note → File → Export to PDF
+
+**Entire vault to static site:**
+- Use static site generator (Jekyll, Hugo, MkDocs)
+- Many Lokus users publish documentation this way
+
+**No lock-in:** Your data is yours, in an open format, always accessible.
+
+### How do I organize my notes?
+
+**Popular organization methods:**
+
+**1. Folder-based (hierarchical):**
+```
+/Work
+  /Projects
+  /Meetings
+  /Clients
+/Personal
+  /Journal
+  /Ideas
+/Archive
+```
+
+**2. Tag-based (flat):**
+- Keep notes in root folder
+- Use tags: #work, #personal, #project-a
+- Filter and search by tags
+
+**3. Hybrid (folders + tags):**
+- Top-level folders for major areas
+- Tags for cross-cutting concerns
+- Example: `/Work` folder + `#urgent` tag
+
+**4. Zettelkasten (linked notes):**
+- Atomic notes (one idea per note)
+- Heavy use of [[wiki links]]
+- Numbers/IDs for notes: `202510231045 Note.md`
+- [Zettelkasten guide →](/tutorials/zettelkasten)
+
+**5. PARA Method:**
+- Projects (active)
+- Areas (ongoing)
+- Resources (reference)
+- Archive (completed)
+
+**Tips:**
+- Start simple, evolve over time
+- Use what feels natural to YOU
+- Folders for structure, tags for flexibility
+- Don't over-organize (diminishing returns)
+
+### What's the best workflow for daily notes?
+
+**Daily notes** are notes created automatically each day:
+
+**Setup daily notes:**
+1. Settings → Daily Notes → Enable
+2. Set folder (e.g., `/daily`)
+3. Set template (optional)
+4. Set hotkey (e.g., Cmd/Ctrl+D)
+
+**Template example:**
+```markdown
+---
+date: {{date}}
+tags: [daily]
+---
+
+# {{date:YYYY-MM-DD}}
+
+## Tasks
+- [ ]
+
+## Notes
+
+
+## Journal
+
+
+## Links to other notes
+-
+```
+
+**Workflows:**
+
+**1. Morning routine:**
+- Open daily note (Cmd/Ctrl+D)
+- Review yesterday's note
+- Plan today's tasks
+- Link to relevant project notes
+
+**2. Throughout day:**
+- Quick capture in daily note
+- Link to related notes: `See [[Project X]]`
+- Tasks that emerge: `- [ ] Do thing`
+
+**3. Evening review:**
+- Review what happened
+- Move tasks to project notes
+- Journal/reflection
+- Plan tomorrow
+
+**Why daily notes:**
+- Capture without deciding where to put it
+- Chronological record
+- Link to projects: `Worked on [[Project X]]`
+- Easy to find: just search by date
+
+---
+
+## Pricing & Licensing
+
+### Is there a paid version of Lokus?
+
+**No.** Lokus is completely free:
+
+- No "Pro" tier
+- No "Premium" features
+- No "Enterprise" edition (yet)
+- All features included
+
+**Potential future (not decided):**
+- Optional enterprise features (team management, SSO)
+- Optional hosted sync service (convenience, not required)
+
+**Core promise:** Local-first features will always be free.
+
+### Can I donate or support development?
+
+**Yes! Several ways to support:**
+
+**1. GitHub Sponsors:**
+- [github.com/sponsors/lokus-ai](https://github.com/sponsors/lokus-ai)
+- One-time or recurring donations
+- 100% goes to development
+
+**2. Contribute code:**
+- Report bugs
+- Submit pull requests
+- Improve documentation
+- Create plugins
+
+**3. Spread the word:**
+- Share Lokus with others
+- Write blog posts or tutorials
+- Rate/review on social media
+
+**4. Community support:**
+- Help users in Discord/forums
+- Answer questions
+- Create content (videos, guides)
+
+**Not required:** Lokus is free forever, regardless. Donations support continued development.
+
+### What is the license?
+
+**MIT License** - very permissive:
+
+**You can:**
+- Use commercially (business, products)
+- Modify the source code
+- Distribute modified versions
+- Use privately (personal projects)
+- Sublicense (include in your products)
+
+**You cannot:**
+- Hold Lokus liable (warranty disclaimer)
+- Use Lokus trademark without permission
+
+**Obligation:**
+- Include MIT license in distributions
+
+**Simple summary:** Use Lokus however you want, including making money with it. Just don't claim you wrote it.
+
+### Can I use Lokus in my company/product?
+
+**Yes!** MIT license allows commercial use:
+
+**As internal tool:**
+- Use for company knowledge base
+- No license fees
+- No user limits
+- No need to contact us
+
+**Embedded in your product:**
+- You can include Lokus in your application
+- Keep MIT license notice
+- Can charge for your product
+
+**White-label:**
+- Technically allowed by MIT license
+- Please don't claim you made it (attribution)
+
+**Questions?** Reach out: [hello@lokus.ai](mailto:hello@lokus.ai)
+
+---
+
+## Advanced Topics
+
+### Can I use Lokus with version control (Git)?
+
+**Absolutely!** Lokus is Git-friendly:
+
+**Why Git + Lokus is powerful:**
+- Version history (see changes over time)
+- Collaboration (merge changes from team)
+- Backup (remote repos are backups)
+- Sync (pull/push across devices)
+
+**Setup Git:**
+
+```bash
+cd ~/lokus-vault
+
+# Initialize repo
+git init
+
+# Create .gitignore
+echo ".lokus/cache" > .gitignore
+echo ".DS_Store" >> .gitignore
+echo "node_modules" >> .gitignore
+
+# First commit
+git add .
+git commit -m "Initial commit"
+
+# Add remote (GitHub, GitLab, etc.)
+git remote add origin https://github.com/yourusername/notes.git
+git push -u origin main
+```
+
+**Daily workflow:**
+```bash
+# Pull changes from other devices
+git pull
+
+# Make changes in Lokus...
+
+# Commit changes
+git add .
+git commit -m "Daily notes and project updates"
+git push
+```
+
+**Advanced:**
+- Use Git plugin for Lokus (commit from UI)
+- Set up Git hooks (auto-commit on close)
+- Use Git LFS for large files
+
+### How do I use Lokus with Obsidian (same vault)?
+
+**Yes, they can coexist!** Both use standard markdown:
+
+**Use case: Desktop + Mobile**
+- Use Lokus on desktop (performance, Bases, AI)
+- Use Obsidian on mobile (mature mobile apps)
+- Same vault, no conflicts
+
+**Setup:**
+1. Use existing Obsidian vault or Lokus workspace
+2. Open same folder in both apps
+3. Both apps work on same files
+
+**Considerations:**
+
+**Compatible:**
+- Markdown files
+- Wiki links `[[like this]]`
+- YAML frontmatter
+- Tags
+- Embeds
+- LaTeX
+
+**App-specific (won't transfer):**
+- Plugin data (unless plugin exists in both)
+- App settings (separate configs)
+- Cached data
+
+**Workflow:**
+- Morning/evening: Review in Lokus (Bases, graphs)
+- During day: Quick edits in Obsidian mobile
+- Both apps see all changes
+
+**Caution:**
+- Don't edit same note simultaneously in both
+- Let sync finish before switching
+
+### Can I script or automate Lokus?
+
+**Yes!** Several automation options:
+
+**1. MCP API (for AI assistants):**
+- 68+ tools for AI automation
+- Read/write notes programmatically
+- Query Bases
+- [MCP documentation →](/developers/mcp/overview)
+
+**2. Plugin API:**
+- Write plugins to automate tasks
+- JavaScript/TypeScript
+- [Plugin API →](/developers/plugins/api)
+
+**3. Command-line scripts:**
+Since notes are markdown files:
+
+```bash
+# Create note from template
+cat template.md | sed "s/{{date}}/$(date +%Y-%m-%d)/" > "note.md"
+
+# Bulk rename
+for file in *.md; do
+  mv "$file" "${file// /-}"
+done
+
+# Search and replace across all notes
+find . -name "*.md" -exec sed -i 's/old/new/g' {} \;
+```
+
+**4. Git hooks:**
+Automate on commit:
+
+`.git/hooks/pre-commit`:
+```bash
+#!/bin/bash
+# Auto-generate index of notes
+ls -1 *.md > index.md
+git add index.md
+```
+
+**5. Cron jobs (scheduled tasks):**
+```bash
+# Daily backup
+0 0 * * * cp -r ~/lokus-vault ~/backups/lokus-$(date +%Y%m%d)
+```
+
+### How do I self-host documentation with Lokus?
+
+**Lokus notes → static website:**
+
+**Option 1: MkDocs**
+```bash
+# Install MkDocs
+pip install mkdocs mkdocs-material
+
+# Configure
+cat > mkdocs.yml << EOF
+site_name: My Documentation
+theme:
+  name: material
+docs_dir: ~/lokus-vault
+EOF
+
+# Build
+mkdocs build
+
+# Serve locally
+mkdocs serve
+
+# Deploy to GitHub Pages
+mkdocs gh-deploy
+```
+
+**Option 2: Hugo**
+```bash
+# Install Hugo
+brew install hugo  # macOS
+
+# Create site
+hugo new site my-docs
+
+# Copy Lokus notes to content/
+cp -r ~/lokus-vault/* my-docs/content/
+
+# Build
+hugo
+
+# Deploy (to Netlify, Vercel, GitHub Pages, etc.)
+```
+
+**Option 3: Nextra (Next.js)**
+- Same framework this documentation uses
+- Great for technical docs
+- MDX support (React in markdown)
+
+**Why self-host docs:**
+- Free hosting (GitHub Pages, Netlify)
+- Version controlled
+- No vendor lock-in
+- Custom domain
+- Collaborative editing
+
+### Can I use Lokus for a team wiki?
+
+**Yes, with some setup:**
+
+**Sharing options:**
+
+**1. Git repository (recommended):**
+- Create shared Git repo
+- Team members clone repo
+- Each uses Lokus on local clone
+- Commit and push changes
+- Pull to get team updates
+
+**2. Shared network drive:**
+- Put Lokus folder on shared drive
+- Team members open same folder
+- Be careful: don't edit simultaneously
+
+**3. Cloud storage (Dropbox, etc.):**
+- Shared Dropbox/Drive folder
+- Similar to option 2
+
+**Limitations (no real-time collaboration):**
+- Lokus is single-user (currently)
+- No real-time editing (like Google Docs)
+- Must merge changes via Git
+- Team collaboration features coming later
+
+**Best practices:**
+- Use Git for merge conflict resolution
+- Communicate who's editing what
+- Use branches for big changes
+- Review changes via Git diffs
+
+**Future:** Real-time collaboration on roadmap (v1.5+)
+
+---
+
+## Still Have Questions?
+
+### Where can I get help?
+
+**Community support:**
+
+**Discord:**
+- [Join Lokus Discord](https://discord.gg/lokus)
+- Real-time chat
+- Community help
+- Feature discussions
+
+**GitHub Discussions:**
+- [GitHub Discussions](https://github.com/lokus-ai/lokus/discussions)
+- Q&A format
+- Searchable archive
+- Official team responses
+
+**GitHub Issues:**
+- [Report bugs](https://github.com/lokus-ai/lokus/issues)
+- Request features
+- Track development
+
+**Forum:**
+- [community.lokus.ai](https://community.lokus.ai)
+- Long-form discussions
+- Tutorials and guides
+- Workflow sharing
+
+**Documentation:**
+- [docs.lokus.ai](https://docs.lokus.ai) (you're here!)
+- Comprehensive guides
+- API reference
+- Examples
+
+### How do I report a bug?
+
+**Before reporting:**
+1. Check if it's a known issue: [GitHub Issues](https://github.com/lokus-ai/lokus/issues)
+2. Update to latest version (Settings → About → Check for updates)
+3. Try reproducing in safe mode (disable plugins)
+
+**Reporting:**
+
+1. Go to [GitHub Issues](https://github.com/lokus-ai/lokus/issues/new)
+2. Choose "Bug Report" template
+3. Fill in:
+   - Lokus version
+   - OS and version
+   - Steps to reproduce
+   - Expected vs actual behavior
+   - Screenshots/videos if helpful
+   - Error messages or console logs
+
+**Good bug report example:**
+```
+Title: Search crashes when using regex with graph open
+
+Version: Lokus 1.3.1
+OS: macOS 14.1
+
+Steps:
+1. Open graph view
+2. Open search (Cmd+F)
+3. Enter regex: /test[0-9]+/
+4. Press Enter
+
+Expected: Search results appear
+Actual: Lokus crashes with "SIGSEGV" error
+
+Logs:
+[paste error logs from Console]
+
+Video: [link to screen recording]
+```
+
+**The better your report, the faster we can fix it!**
+
+### How do I request a feature?
+
+**Feature requests:**
+
+1. Check if it's already requested: [GitHub Issues](https://github.com/lokus-ai/lokus/issues?q=label%3Aenhancement)
+2. If exists, upvote (👍 reaction)
+3. If new, create issue:
+   - Choose "Feature Request" template
+   - Describe the feature
+   - Explain use case (why you need it)
+   - Provide examples (mockups, workflows)
+
+**Good feature request:**
+```
+Title: Add "Reading Mode" for long-form notes
+
+Description:
+A distraction-free reading mode for long notes, similar to Medium or Ghost readers.
+
+Use Case:
+I write long essays in Lokus and want to read them without the editor toolbar and sidebar visible. This would help me focus on the content.
+
+Proposed Features:
+- Hide all UI except note content
+- Center text with max width (like Medium)
+- Keyboard shortcut: Cmd/Ctrl+E (toggle)
+- Scroll progress indicator
+
+Mockup:
+[screenshot of desired layout]
+
+Similar to:
+- Obsidian Reading View
+- Typora Focus Mode
+- iA Writer
+```
+
+**Note:** Features are prioritized by:
+- Number of upvotes
+- Alignment with Lokus vision
+- Implementation complexity
+- Contributor availability
+
+### Where can I learn more?
+
+**Resources:**
+
+**Official:**
+- [Website](https://lokus.ai)
+- [Documentation](https://docs.lokus.ai)
+- [Blog](https://lokus.ai/blog)
+- [GitHub](https://github.com/lokus-ai/lokus)
+
+**Community:**
+- [Discord](https://discord.gg/lokus)
+- [Forum](https://community.lokus.ai)
+- [Reddit](https://reddit.com/r/lokus)
+
+**Learning:**
+- [Getting Started Guide](/getting-started/quick-start)
+- [Video Tutorials](https://youtube.com/@lokus)
+- [Examples](/examples)
+
+**Comparison:**
+- [Lokus vs Others](/comparison)
+- [Migration Guides](/comparison#migration-guides-summary)
+
+**Development:**
+- [Developer Docs](/developers/setup)
+- [Plugin Guide](/developers/plugins/getting-started)
+- [MCP Integration](/developers/mcp/overview)
+- [API Reference](/reference/plugin-api)
+
+### What's on the roadmap?
+
+**v1.4 (Q1 2026):**
+- Mobile apps (iOS, Android)
+- Real-time collaboration (alpha)
+- Formula and rollup properties (Bases)
+- Advanced graph filters
+- Performance improvements
+
+**v1.5 (Q2 2026):**
+- Team workspaces
+- Permissions system
+- Commenting and annotations
+- Advanced search operators
+- Plugin marketplace v2
+
+**v2.0 (2026):**
+- Self-hosted sync service (optional)
+- End-to-end encryption
+- Block-level references
+- Advanced queries
+- Publishing platform
+
+**Community-driven:**
+- Features prioritized by user feedback
+- Vote on [GitHub Discussions](https://github.com/lokus-ai/lokus/discussions/categories/feature-requests)
+
+[View full roadmap →](https://github.com/lokus-ai/lokus/projects/1)
+
+### How can I contribute?
+
+**Ways to contribute:**
+
+**Code:**
+- Fix bugs
+- Implement features
+- Improve performance
+- [Contribution guide →](/developers/contributing)
+
+**Plugins:**
+- Create community plugins
+- Share with marketplace
+- [Plugin development →](/developers/plugins/getting-started)
+
+**Documentation:**
+- Fix typos
+- Write guides
+- Translate to other languages
+- [Docs repo →](https://github.com/lokus-ai/docs)
+
+**Community:**
+- Answer questions in Discord/forum
+- Write tutorials or blog posts
+- Create video guides
+- Share your workflows
+
+**Testing:**
+- Test beta releases
+- Report bugs
+- Verify fixes
+
+**Design:**
+- UI/UX improvements
+- Icons and assets
+- Theme creation
+
+**No contribution is too small!** Every bug report, answered question, or documentation fix helps.
+
+---
+
+## Need More Help?
+
+Can't find your answer? We're here to help:
+
+<Cards>
+  <Card title="Join Discord" href="https://discord.gg/lokus">
+    Real-time chat with community and developers
+  </Card>
+
+  <Card title="GitHub Discussions" href="https://github.com/lokus-ai/lokus/discussions">
+    Ask questions, share workflows, discuss features
+  </Card>
+
+  <Card title="Report Bug" href="https://github.com/lokus-ai/lokus/issues">
+    Found a bug? Let us know so we can fix it
+  </Card>
+
+  <Card title="View Docs" href="/getting-started/installation">
+    Complete documentation and guides
+  </Card>
+</Cards>
+
+---
+
+<div className="nx-mt-8 nx-mb-8 nx-p-6 nx-bg-blue-50 dark:nx-bg-blue-900/20 nx-rounded-lg">
+  <h3 className="nx-text-xl nx-font-bold nx-mb-4">Ready to Get Started?</h3>
+  <p className="nx-mb-4">
+    Lokus is free, open source, and takes 5 minutes to set up. Your notes stay on your computer, and you're never locked in.
+  </p>
+  <div className="nx-flex nx-gap-4">
+    <a href="/getting-started/installation" className="nx-inline-flex nx-items-center nx-px-6 nx-py-3 nx-border nx-border-transparent nx-text-base nx-font-medium nx-rounded-md nx-text-white nx-bg-blue-600 hover:nx-bg-blue-700">
+      Download Lokus
+    </a>
+    <a href="/getting-started/quick-start" className="nx-inline-flex nx-items-center nx-px-6 nx-py-3 nx-border nx-border-gray-300 nx-text-base nx-font-medium nx-rounded-md nx-text-gray-700 nx-bg-white hover:nx-bg-gray-50 dark:nx-bg-gray-800 dark:nx-text-gray-200 dark:nx-border-gray-700">
+      Quick Start Guide
+    </a>
+  </div>
+</div>

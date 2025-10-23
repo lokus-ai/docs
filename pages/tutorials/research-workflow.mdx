@@ -1,0 +1,1570 @@
+---
+title: Academic Research Workflow in Lokus
+description: Streamline your academic research process with Lokus. Organize literature, manage citations, take research notes, and synthesize findings from sources to publication.
+keywords: [academic research, literature review, citation management, research notes, academic workflow, paper writing, research organization]
+---
+
+# Academic Research Workflow
+
+Learn how to manage your entire academic research workflow in Lokus, from collecting sources to writing and publishing your findings.
+
+## What You'll Learn
+
+By the end of this tutorial, you'll be able to:
+- Organize research sources and literature
+- Take effective research notes with proper citations
+- Manage references and bibliographies
+- Synthesize findings from multiple sources
+- Structure research papers and theses
+- Collaborate with research teams
+- Track research progress and milestones
+- Implement a sustainable research workflow
+
+## Prerequisites
+
+- Completed [Building Your First Workspace](/tutorials/first-workspace) or familiar with Lokus basics
+- Recommended: [Setting Up a Zettelkasten System](/tutorials/zettelkasten) for note-taking methodology
+- 50 minutes of focused time
+
+## Time Estimate
+
+**50 minutes** - Build a complete research management system
+
+---
+
+## Understanding the Research Lifecycle
+
+Before setting up your system, let's understand the research workflow stages.
+
+### The Research Process
+
+```
+1. Discovery → Find relevant sources
+2. Collection → Gather and organize papers
+3. Reading → Deep reading and annotation
+4. Note-taking → Extract key ideas
+5. Synthesis → Connect findings
+6. Writing → Draft papers/thesis
+7. Revision → Refine and polish
+8. Publication → Submit and share
+```
+
+### Why Use Lokus for Research?
+
+- **Unified System:** Sources, notes, and writing in one place
+- **Bidirectional Links:** Connect ideas across sources
+- **Flexible Organization:** Tags, folders, and networks
+- **Citation Management:** Track references properly
+- **Version Control:** Track thinking evolution
+- **Collaboration:** Share with advisors and collaborators
+
+> **Note:** 
+**Info:** Many researchers use multiple tools (Mendeley, Evernote, Word, etc.). Lokus unifies these workflows while remaining flexible.
+
+
+---
+
+## Step 1: Setting Up Your Research Workspace
+
+Let's create a dedicated research workspace.
+
+### 1.1 Create the Workspace
+
+1. Create new workspace: `Research - [Your Topic]`
+   - Example: `Research - Machine Learning Ethics`
+2. Choose a dedicated folder location
+3. Configure workspace settings:
+   - Enable citation features
+   - Set default note template
+   - Configure PDF annotation
+
+### 1.2 Create Folder Structure
+
+Set up this organization:
+
+```
+Research/
+├── 0-Inbox/              # New sources and quick captures
+├── 1-Literature/         # Papers, books, articles
+│   ├── Papers/
+│   ├── Books/
+│   └── Articles/
+├── 2-Notes/             # Research notes
+│   ├── Literature-Notes/
+│   ├── Methodology-Notes/
+│   └── Data-Notes/
+├── 3-Synthesis/         # Integrated findings
+│   ├── Themes/
+│   └── Arguments/
+├── 4-Writing/           # Papers and drafts
+│   ├── Drafts/
+│   ├── Outlines/
+│   └── Published/
+├── 5-Admin/             # Project management
+│   ├── Timeline/
+│   ├── Tasks/
+│   └── Meeting-Notes/
+└── 6-Resources/         # Methods, datasets, code
+```
+
+> **Note:** 
+**Pro Tip:** This structure follows the research process flow: capture → read → analyze → write. Material moves through folders as it's processed.
+
+
+### 1.3 Create Research Bases
+
+Create specialized bases for structured data:
+
+**Sources Base:**
+```
+Fields:
+- Title (Text)
+- Authors (Text)
+- Year (Number)
+- Type (Select: Paper, Book, Article, Thesis, etc.)
+- Status (Select: To Read, Reading, Read, Cited)
+- Rating (Rating: 1-5 stars)
+- DOI/URL (URL)
+- Abstract (Long Text)
+- Key Findings (Long Text)
+- Methodology (Text)
+- Tags (Multi-select)
+- Citation Count (Number)
+- Related Sources (Relation to Sources)
+- Notes (Relation to Notes)
+- PDF (File attachment)
+```
+
+**Research Tasks Base:**
+```
+Fields:
+- Task (Text)
+- Type (Select: Reading, Analysis, Writing, Admin)
+- Status (Select: To Do, In Progress, Done)
+- Priority (Select: High, Medium, Low)
+- Due Date (Date)
+- Time Estimate (Number)
+- Related Source (Relation to Sources)
+- Notes (Long Text)
+```
+
+
+---
+
+## Step 2: Collecting and Organizing Sources
+
+Let's build your research library.
+
+### 2.1 Create a Source Template
+
+In `1-Literature/Papers/`, create a template:
+
+```markdown
+---
+title: [Paper Title]
+authors: [Author Names]
+year: [YYYY]
+type: paper
+status: to-read
+doi: [DOI or URL]
+tags: [topic1, topic2, methodology]
+---
+
+# [Paper Title]
+
+**Authors:** [Full names]
+**Year:** [Publication year]
+**Journal/Conference:** [Publication venue]
+**DOI:** [DOI link]
+
+## Citation
+
+> [Author, A., & Author, B. (Year). Title. Journal, Volume(Issue), Pages. DOI]
+
+## Abstract
+
+[Copy abstract here]
+
+## Research Question
+
+What problem is this paper addressing?
+
+## Methodology
+
+- **Type:** [Experimental, Survey, Case Study, etc.]
+- **Sample:** [Population and size]
+- **Approach:** [Brief description]
+- **Tools/Data:** [What was used]
+
+## Key Findings
+
+### Finding 1
+[Description]
+**Evidence:** [Quote or data]
+**Significance:** [Why it matters]
+
+### Finding 2
+[Description]
+
+### Finding 3
+[Description]
+
+## Strengths
+
+- [Strength 1]
+- [Strength 2]
+
+## Limitations
+
+- [Limitation 1]
+- [Limitation 2]
+
+## Relevance to My Research
+
+[How this connects to your work]
+
+**Useful for:**
+- [Application 1]
+- [Application 2]
+
+## Quotes
+
+> "[Notable quote]" (p. X)
+
+> "[Another quote]" (p. Y)
+
+## Connections
+
+Related papers:
+- [[Paper 1]] - [How related]
+- [[Paper 2]] - [How related]
+
+Related concepts:
+- [[Concept 1]]
+- [[Concept 2]]
+
+Conflicts with:
+- [[Paper 3]] - [Nature of conflict]
+
+## My Thoughts
+
+[Personal reflections, critiques, ideas this sparked]
+
+## Follow-up Questions
+
+- [ ] [Question 1]
+- [ ] [Question 2]
+
+## References to Check
+
+- [ ] [Citation 1]
+- [ ] [Citation 2]
+
+---
+
+**Status:** To Read
+**Added:** [Date]
+**Read:** [Date when completed]
+**Tags:** #paper #[topic] #[methodology]
+```
+
+### 2.2 Add Sources to Your Library
+
+Let's add some example sources:
+
+**Example Paper 1:**
+```markdown
+---
+title: Attention Is All You Need
+authors: Vaswani et al.
+year: 2017
+type: paper
+status: read
+doi: https://arxiv.org/abs/1706.03762
+tags: [deep-learning, transformers, nlp, foundational]
+---
+
+# Attention Is All You Need
+
+**Authors:** Vaswani, A., Shazeer, N., Parmar, N., et al.
+**Year:** 2017
+**Conference:** NeurIPS 2017
+**Citations:** 90,000+ (highly influential)
+
+## Citation
+
+> Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A. N., ... & Polosukhin, I. (2017). Attention is all you need. Advances in neural information processing systems, 30.
+
+## Research Question
+
+Can we build an effective sequence transduction model based entirely on attention mechanisms, without recurrence or convolutions?
+
+## Methodology
+
+- **Type:** Experimental (Model architecture)
+- **Approach:** Propose Transformer architecture using self-attention
+- **Evaluation:** Machine translation (WMT 2014 English-German, English-French)
+- **Baselines:** RNN/LSTM-based models
+
+## Key Findings
+
+### Self-Attention Suffices
+RNNs and convolutions are not necessary for sequence modeling. Pure attention mechanisms can achieve SOTA results.
+
+**Evidence:** Transformer achieved BLEU score of 28.4 on WMT 2014 En-De (2 BLEU better than previous best).
+
+**Significance:** Opened path for models like BERT, GPT, and modern LLMs.
+
+### Parallelization Advantage
+Self-attention allows parallelization across sequence length, unlike RNNs which are inherently sequential.
+
+**Impact:** Training time reduced from 3.5 days to 12 hours on same hardware.
+
+### Multi-Head Attention
+Multiple attention heads allow model to attend to different aspects simultaneously.
+
+## Strengths
+
+- Novel and elegant architecture
+- Strong empirical results
+- Highly parallelizable
+- Foundational for modern NLP
+
+## Limitations
+
+- Quadratic complexity in sequence length (O(n²))
+- Requires more data than RNNs
+- Less effective for very long sequences (pre-efficient transformers)
+
+## Relevance to My Research
+
+Critical foundational work for understanding modern LLMs and attention mechanisms in AI ethics research.
+
+**Useful for:**
+- Understanding technical basis of models I'm studying
+- Discussing computational efficiency concerns
+- Historical context for transformer-based models
+
+## Connections
+
+Foundational for:
+- [[BERT - Devlin et al 2018]]
+- [[GPT-3 - Brown et al 2020]]
+- [[Vision Transformers - Dosovitskiy et al 2020]]
+
+Built upon:
+- [[Neural Machine Translation - Bahdanau et al 2014]] (attention mechanism)
+
+## My Thoughts
+
+This paper fundamentally changed NLP. The simplicity of the idea - "attention is all you need" - is powerful. However, the quadratic complexity creates real issues for long context (though efficient transformers address this).
+
+For my ethics work: The efficiency gains enabled scaling to massive models, which created new ethical concerns around compute access and environmental impact.
+
+## Follow-up Questions
+
+- [x] How does attention complexity scale?
+- [ ] What are the environmental costs of transformer training?
+- [ ] How have efficient transformers addressed the O(n²) problem?
+
+---
+
+**Status:** Read
+**Rating:** ⭐⭐⭐⭐⭐ (Foundational)
+**Tags:** #paper #transformers #deep-learning #foundational
+```
+
+### 2.3 Quick Capture Workflow
+
+For quick source captures:
+
+1. Create note in `0-Inbox/`
+2. Use quick template:
+
+```markdown
+# [Title]
+
+**Link:** [URL]
+**Found:** [Date]
+**Source:** [Where I found it]
+
+## Why Interesting
+
+[One sentence]
+
+## Next Action
+
+- [ ] Read abstract
+- [ ] Add to Sources base
+- [ ] Create full literature note
+```
+
+> **Note:** 
+**Pro Tip:** Use a browser extension or email-to-Lokus to quickly capture sources. Process inbox weekly.
+
+
+---
+
+## Step 3: Reading and Annotation Workflow
+
+Let's establish an effective reading process.
+
+### 3.1 Three-Pass Reading Method
+
+**Pass 1: Survey (5-10 minutes)**
+- Read title, abstract, introduction, section headings, conclusion
+- Look at figures and tables
+- Goal: Understand what, why, and main contribution
+
+**Pass 2: Grasp Content (1 hour)**
+- Read with greater care, but skip details
+- Note key points and mark for follow-up
+- Understand arguments and evidence
+- Goal: Grasp paper's content
+
+**Pass 3: Deep Understanding (4-5 hours for important papers)**
+- Virtual re-implementation: understand every assumption
+- Challenge every statement
+- Think about how you'd present this work
+- Goal: Expert-level understanding
+
+### 3.2 Annotation Strategy
+
+While reading, mark:
+
+**Highlights:**
+- 🟡 Yellow: Key findings
+- 🔵 Blue: Methodology details
+- 🟢 Green: Definitions and concepts
+- 🔴 Red: Critiques or concerns
+- 🟣 Purple: Connections to my work
+
+**Margin Notes:**
+- ❓ Questions
+- 💡 Ideas this sparked
+- ⚠️ Limitations or concerns
+- ✅ Important for my research
+- 🔗 Connections to other work
+
+### 3.3 Create Reading Notes
+
+After each pass, update your literature note:
+
+```markdown
+## Reading Progress
+
+### Pass 1 - Survey (2024-01-15)
+- Main contribution: [Summary]
+- Relevance: [High/Medium/Low]
+- Decision: [Read deeply / Skim / Archive]
+
+### Pass 2 - Content (2024-01-18)
+- Key points: [List]
+- Questions raised: [List]
+- Next: [What to focus on in pass 3]
+
+### Pass 3 - Deep (2024-01-22)
+- Full understanding achieved
+- Created permanent notes for:
+  - [[Concept 1]]
+  - [[Concept 2]]
+- Added to argument for [[My Paper Topic]]
+```
+
+
+---
+
+## Step 4: Research Note-Taking
+
+Transform sources into permanent knowledge.
+
+### 4.1 Literature Notes
+
+Literature notes summarize sources in your own words (see templates above).
+
+**Key principles:**
+- One note per source
+- Include full citation
+- Write in your own words
+- Connect to your research questions
+- Link to related sources and concepts
+
+### 4.2 Concept Notes
+
+Create atomic notes for key concepts:
+
+```markdown
+# Self-Attention Mechanism
+
+A mechanism that allows each position in a sequence to attend to all positions in the previous layer.
+
+## Explanation
+
+Unlike RNNs that process sequences sequentially, self-attention computes representations by attending to all positions simultaneously. Each element computes weighted sums of all elements based on learned attention weights.
+
+## Mathematical Formulation
+
+```
+Attention(Q, K, V) = softmax(QK^T / √d_k)V
+```
+
+Where:
+- Q (Query): What am I looking for?
+- K (Key): What do I contain?
+- V (Value): What do I actually contain?
+
+## Advantages
+
+- Parallelizable across sequence
+- Constant path length between positions
+- Can capture long-range dependencies
+
+## Disadvantages
+
+- O(n²) complexity in sequence length
+- Requires more data to learn
+- Memory intensive for long sequences
+
+## Applications
+
+- Machine translation
+- Language modeling
+- Image classification (Vision Transformers)
+- Protein structure prediction (AlphaFold)
+
+## Variations
+
+- [[Multi-Head Attention]] - Multiple attention functions in parallel
+- [[Cross-Attention]] - Attend to different sequence
+- [[Sparse Attention]] - Efficient variants
+
+## Sources
+
+- [[Attention Is All You Need - Vaswani 2017]] - Introduced for Transformers
+- [[Attention Mechanism - Bahdanau 2014]] - Original attention idea
+
+---
+
+#concept #deep-learning #attention #permanent
+```
+
+### 4.3 Methodology Notes
+
+Document research methods:
+
+```markdown
+# Thematic Analysis Method
+
+A method for identifying, analyzing, and reporting patterns (themes) within qualitative data.
+
+## Process
+
+### Phase 1: Familiarization
+- Transcribe data
+- Read and re-read
+- Note initial ideas
+
+### Phase 2: Generating Initial Codes
+- Code interesting features systematically
+- Collate data relevant to each code
+
+### Phase 3: Searching for Themes
+- Collate codes into potential themes
+- Gather data relevant to each theme
+
+### Phase 4: Reviewing Themes
+- Check themes against coded extracts
+- Generate thematic map
+
+### Phase 5: Defining Themes
+- Refine theme specifics
+- Generate clear definitions
+
+### Phase 6: Producing Report
+- Select compelling examples
+- Relate analysis to research question
+- Produce scholarly report
+
+## When to Use
+
+- Qualitative data analysis
+- Identifying patterns across data sets
+- Interpretive analysis needed
+- Flexible framework desired
+
+## Strengths
+
+- Flexible and accessible
+- Theoretically flexible
+- Good for participatory research
+
+## Limitations
+
+- Can lack depth
+- Time-intensive
+- Subjectivity in theme identification
+
+## My Application
+
+Used for analyzing interview data with AI researchers about ethical concerns. Identified 5 major themes across 20 interviews.
+
+## Sources
+
+- [[Braun & Clarke 2006]] - Foundational paper
+- [[My Interview Analysis]] - My application
+
+---
+
+#methodology #qualitative-research #permanent
+```
+
+### 4.4 Data and Results Notes
+
+Track empirical findings:
+
+```markdown
+# Survey Results - AI Ethics Concerns
+
+## Study Details
+
+**Date:** January 2024
+**n:** 150 AI researchers
+**Method:** Online survey
+**Response Rate:** 43%
+
+## Key Findings
+
+### Finding 1: Top Ethical Concerns
+
+| Concern | % Respondents |
+|---------|---------------|
+| Bias and fairness | 87% |
+| Privacy | 76% |
+| Accountability | 68% |
+| Job displacement | 54% |
+| Existential risk | 23% |
+
+### Finding 2: Responsibility
+
+73% believe AI developers bear primary responsibility for ethical outcomes (vs. 12% managers, 15% policymakers).
+
+### Finding 3: Training Gap
+
+Only 31% received formal ethics training in their education.
+
+## Statistical Analysis
+
+- Chi-square test: Concerns vary significantly by subfield (p < 0.01)
+- ML researchers more concerned about bias
+- Robotics researchers more concerned about safety
+
+## Visualizations
+
+![Survey results chart](/data/survey-viz-01.png)
+
+## Interpretation
+
+Results suggest:
+1. Fairness is the dominant ethical concern
+2. Developers feel responsible but may lack training
+3. Existential risk is minority concern (vs. media portrayal)
+
+## Limitations
+
+- Self-selection bias (ethics-interested researchers more likely to respond)
+- Limited geographic diversity (70% US/Europe)
+- Snapshot in time (Jan 2024)
+
+## Related
+
+- [[Literature - AI Ethics Surveys]]
+- [[Argument - Developer Responsibility]]
+- My paper: [[Draft - AI Ethics Education Gap]]
+
+---
+
+#data #survey #results #my-research
+```
+
+> **Note:** 
+**Success:** You're building a web of interconnected research knowledge! Each note adds context to others.
+
+
+---
+
+## Step 5: Synthesis and Themes
+
+Connect findings across sources.
+
+### 5.1 Create Synthesis Notes
+
+In `3-Synthesis/Themes/`, create thematic notes:
+
+```markdown
+# Theme: AI Accountability Gap
+
+An emerging theme in AI ethics literature: despite calls for accountability, there's ambiguity about who is accountable for AI harms.
+
+## The Problem
+
+Multiple sources identify that AI systems involve many actors:
+- Developers who build models
+- Managers who deploy systems
+- Users who operate systems
+- Policymakers who regulate
+
+But responsibility is diffuse, creating an accountability gap.
+
+## Evidence Across Sources
+
+### Developer Perspective
+[[Smith et al 2023]] found 73% of developers believe they're responsible, but:
+- 68% say they lack authority to stop harmful deployments
+- 54% report pressure to prioritize performance over ethics
+
+### Organizational Perspective
+[[Jones & Lee 2022]] studied 50 AI companies:
+- Only 12% have clear accountability structures
+- 78% rely on "ethical culture" without formal processes
+
+### Legal Perspective
+[[Brown 2023]] analyzes legal frameworks:
+- Existing liability laws ill-suited for AI
+- Causal chain too complex for traditional tort law
+- Call for new "algorithmic accountability" frameworks
+
+### User Perspective
+[[Davis et al 2024]] surveyed 2000 users:
+- 82% believe companies are responsible
+- But 61% continue using systems they view as harmful
+- Accountability expectations don't match behavior
+
+## Theoretical Frameworks
+
+### Many Hands Problem
+[[Thompson 1980]] - When many contribute, no one is fully responsible.
+Applied to AI by [[Matthias 2004]].
+
+### Responsibility Gap
+[[Sparrow 2007]] - For autonomous systems, traditional responsibility concepts fail.
+Extended by [[Nyholm 2018]].
+
+## My Synthesis
+
+The accountability gap exists at multiple levels:
+1. **Individual level:** Developers feel responsible but powerless
+2. **Organizational level:** No clear accountability structures
+3. **Legal level:** Frameworks lagging behind technology
+4. **Societal level:** Expectations not matched by action
+
+This multi-level gap is a central challenge for AI ethics.
+
+## Implications for My Research
+
+This theme is central to my dissertation argument:
+- Chapter 3 will analyze each level
+- Chapter 4 will propose multi-level accountability framework
+- Survey data provides empirical support
+
+## Open Questions
+
+- Can blockchain provide technical accountability?
+- How do other high-risk industries handle distributed responsibility?
+- What role for professional ethics codes?
+
+## Related Themes
+
+- [[Theme: AI Transparency]]
+- [[Theme: Developer Autonomy]]
+- [[Theme: Regulatory Approaches]]
+
+## Contributing Sources
+
+- [[Smith et al 2023]]
+- [[Jones & Lee 2022]]
+- [[Brown 2023]]
+- [[Davis et al 2024]]
+- [[Thompson 1980]]
+- [[Matthias 2004]]
+- [[Sparrow 2007]]
+- [[My Survey Results]]
+
+---
+
+#synthesis #theme #accountability #ai-ethics
+```
+
+### 5.2 Create Argument Notes
+
+Build arguments from evidence:
+
+```markdown
+# Argument: AI Ethics Training Should Be Mandatory
+
+## Claim
+
+Computer science programs should mandate AI ethics training for all students.
+
+## Supporting Evidence
+
+### Point 1: Current Gap
+[[My Survey Results]] shows only 31% of AI researchers received formal ethics training.
+
+→ Most practitioners lack foundational knowledge
+
+### Point 2: Demand Exists
+[[Brown & Davis 2023]]: 89% of AI researchers say they want ethics training.
+
+→ Practitioners recognize their own knowledge gaps
+
+### Point 3: Precedent in Other Fields
+Medical ethics is mandatory in all medical schools (100%).
+Engineering ethics is mandatory in 87% of engineering programs.
+
+→ Precedent exists in comparable professions
+
+### Point 4: Real Harms
+[[AI Incident Database]]: 500+ documented cases of AI harms
+Many involved developers unaware of potential issues.
+
+→ Lack of training has real consequences
+
+### Point 5: Effectiveness
+[[Johnson et al 2024]]: Ethics training increases:
+- Awareness of potential harms (+67%)
+- Consideration of ethical implications (+54%)
+- Willingness to raise concerns (+43%)
+
+→ Training demonstrably changes behavior
+
+## Counter-Arguments
+
+### Counter 1: "Ethics Can't Be Taught"
+**Response:** Ethics education isn't about teaching universal truths, but frameworks for ethical reasoning and awareness of considerations.
+
+Evidence: [[Rest 1986]] shows moral reasoning can be developed through education.
+
+### Counter 2: "Technical Skills Are More Important"
+**Response:** False dichotomy. Both are essential. Just as medical students learn both biology and ethics.
+
+Ethics training typically 1-2 courses (3-6 credits) in 120+ credit program.
+
+### Counter 3: "Industry Can Provide Training"
+**Response:** Only 23% of tech companies provide ethics training ([[Tech Ethics Report 2023]]).
+
+Industry training is sporadic and often superficial.
+
+### Counter 4: "This Will Slow Innovation"
+**Response:** Actually, ethical awareness prevents costly mistakes. [[Martin 2019]]: Companies with ethics training have 40% fewer PR crises related to AI.
+
+## Conclusion
+
+Given:
+- Current training gap
+- Practitioner demand
+- Precedent in other fields
+- Real-world harms
+- Demonstrated effectiveness
+- Weak counter-arguments
+
+Computer science programs should mandate AI ethics training.
+
+## Application to My Paper
+
+This argument forms Section 4.2 of my paper: "Policy Recommendations for AI Ethics Education."
+
+Will add:
+- Policy analysis of current CS accreditation standards
+- Interview data from CS department heads
+- Proposed curriculum framework
+
+---
+
+#argument #ai-ethics #education #my-position
+```
+
+> **Note:** 
+**Pro Tip:** Build arguments incrementally. Start with a claim, add evidence as you read, refine as understanding deepens.
+
+
+---
+
+## Step 6: Writing and Drafting
+
+Transform research into publications.
+
+### 6.1 Create Paper Structure
+
+In `4-Writing/Outlines/`, create:
+
+```markdown
+# Paper Outline: AI Accountability in Practice
+
+**Target:** Conference on Fairness, Accountability, and Transparency (FAccT)
+**Word Limit:** 6000 words
+**Deadline:** February 1, 2024
+
+## Abstract (200 words)
+
+[Draft]
+
+Despite widespread calls for AI accountability, there remains significant ambiguity about who is accountable when AI systems cause harm. This paper examines the "AI accountability gap" through multiple lenses: developer surveys (n=150), organizational case studies (n=50), and legal analysis. We find accountability diffusion at individual, organizational, legal, and societal levels. We propose a multi-level accountability framework that clarifies responsibilities across stakeholders while maintaining innovation capacity. Our framework has been validated through expert interviews (n=20) and offers practical guidance for practitioners, organizations, and policymakers.
+
+## 1. Introduction (800 words)
+
+### 1.1 The Problem
+- Open with motivating example: [[Case - Facial Recognition Wrongful Arrest]]
+- Who was accountable? Everyone and no one
+- This pattern is pervasive
+
+### 1.2 Research Questions
+- RQ1: Where does the accountability gap exist?
+- RQ2: Why does it persist?
+- RQ3: How can it be addressed?
+
+### 1.3 Contributions
+- Empirical analysis of accountability perceptions
+- Multi-level framework for distributed accountability
+- Practical recommendations
+
+### 1.4 Paper Structure
+[Outline rest of paper]
+
+**Sources to cite:**
+- [[Smith et al 2023]] - Developer responsibility
+- [[Jones & Lee 2022]] - Organizational accountability
+- [[Incident Database]] - Real harms
+
+## 2. Background and Related Work (1200 words)
+
+### 2.1 AI Ethics Principles
+- Overview of ethical principles in AI
+- [[Jobin et al 2019]] - Convergence on fairness, accountability, transparency
+
+**Key sources:**
+- [[Jobin et al 2019]]
+- [[Floridi et al 2018]]
+
+### 2.2 Accountability Concepts
+- Traditional accountability (legal, moral)
+- "Many hands" problem [[Thompson 1980]]
+- Responsibility gap [[Sparrow 2007]]
+
+**Key sources:**
+- [[Thompson 1980]]
+- [[Matthias 2004]]
+- [[Sparrow 2007]]
+- [[Nyholm 2018]]
+
+### 2.3 Existing Frameworks
+- Review of proposed accountability frameworks
+- Limitations of current approaches
+
+**Key sources:**
+- [[Diakopoulos 2016]] - Algorithmic accountability
+- [[Wachter et al 2017]] - Right to explanation
+- [[Raji et al 2020]] - Model cards
+
+## 3. Methods (1000 words)
+
+### 3.1 Developer Survey
+- Design, recruitment, analysis
+- [[My Survey Methodology Note]]
+
+### 3.2 Organizational Case Studies
+- 50 companies, document analysis + interviews
+- [[Case Study Protocol]]
+
+### 3.3 Legal Analysis
+- Comparative analysis of liability frameworks across jurisdictions
+
+### 3.4 Expert Validation
+- 20 expert interviews to validate framework
+
+## 4. Findings (2000 words)
+
+### 4.1 Individual Level: Developer Perspectives
+**From:** [[My Survey Results]]
+- Developers feel responsible (73%)
+- But lack authority (68%)
+- Experience pressure (54%)
+
+**Implication:** Accountability without authority
+
+### 4.2 Organizational Level: Structural Gaps
+**From:** [[Case Study Analysis]]
+- Only 12% have clear structures
+- Reliance on culture, not process
+
+**Implication:** Accountability not embedded
+
+### 4.3 Legal Level: Framework Inadequacy
+**From:** [[Legal Analysis Note]]
+- Traditional liability laws ill-suited
+- Causal complexity challenges tort law
+
+**Implication:** Legal accountability gap
+
+### 4.4 Societal Level: Expectation-Behavior Gap
+**From:** [[Davis et al 2024]] + [[My Survey Results]]
+- Users expect accountability
+- But continue using harmful systems
+
+**Implication:** Market mechanisms insufficient
+
+## 5. A Multi-Level Accountability Framework (1500 words)
+
+### 5.1 Framework Overview
+[Diagram]
+
+Four interconnected levels:
+- Individual: Developer responsibility and authority
+- Organizational: Institutional accountability structures
+- Legal: Updated regulatory frameworks
+- Societal: Informed user expectations
+
+### 5.2 Individual Level: Developer Empowerment
+- Right to refuse harmful deployments
+- Protected whistleblowing
+- Professional ethics codes
+
+**Supporting evidence:**
+- [[Whistleblowing in Tech - Smith 2023]]
+- [[ACM Code of Ethics]]
+
+### 5.3 Organizational Level: Accountability by Design
+- Mandatory impact assessments
+- Ethics boards with teeth
+- Audit trails and documentation
+
+**Supporting evidence:**
+- [[Impact Assessment Frameworks]]
+- [[Case Study - Microsoft AETHER]]
+
+### 5.4 Legal Level: Algorithmic Accountability Laws
+- Strict liability for high-risk systems
+- Mandatory transparency
+- Right to explanation
+
+**Supporting evidence:**
+- [[EU AI Act Analysis]]
+- [[Brown 2023 - Legal Frameworks]]
+
+### 5.5 Societal Level: Informed Consent
+- User education
+- Transparent deployment
+- Meaningful choice
+
+### 5.6 Framework Validation
+- Expert feedback (n=20)
+- 85% agreement on feasibility
+- Refinements based on feedback
+
+## 6. Discussion (700 words)
+
+### 6.1 Implications for Practice
+- Developers: Know your rights
+- Organizations: Implement structures
+- Policymakers: Update frameworks
+
+### 6.2 Limitations
+- Survey sample: Self-selection bias
+- Case studies: Primarily US/Europe
+- Framework: Needs real-world testing
+
+### 6.3 Future Work
+- Test framework in practice
+- Expand to other jurisdictions
+- Longitudinal study of implementation
+
+## 7. Conclusion (300 words)
+
+- Restate problem and contributions
+- Call to action
+- Hopeful note on path forward
+
+---
+
+## Writing Schedule
+
+- Week 1 (Jan 8-14): Complete draft of Sections 1-3
+- Week 2 (Jan 15-21): Complete draft of Sections 4-5
+- Week 3 (Jan 22-28): Complete Section 6-7, full draft
+- Week 4 (Jan 29-Feb 1): Revisions, submission
+
+## Notes
+
+- Keep to word limit (currently 6500, need to cut 500)
+- Ensure all claims have citations
+- Check FAccT formatting guidelines
+- Get feedback from advisor by Jan 25
+```
+
+### 6.2 Create Draft Sections
+
+In `4-Writing/Drafts/`, write sections:
+
+```markdown
+# Introduction - AI Accountability in Practice
+
+In June 2023, Robert Williams was wrongfully arrested by Detroit police after facial recognition software incorrectly identified him as a shoplifting suspect. The AI system was trained by one company, licensed by a second, deployed by a third, and operated by a fourth. When Williams sued for wrongful arrest, determining who was accountable for the error proved nearly impossible. The software vendor blamed the police for misuse. The police blamed the vendor for inaccurate training data. The licensing company claimed they only provided infrastructure. This case illustrates a pervasive problem in AI systems: the *accountability gap*.
+
+[Continue drafting...]
+
+**Status:** Draft v1
+**Word Count:** 847 / 800 target
+**Todo:**
+- [ ] Cut 47 words
+- [ ] Add citation for Williams case
+- [ ] Strengthen transition to research questions
+
+**Notes from Advisor (2024-01-18):**
+- Opening is strong
+- Consider adding one more example for generalizability
+- Make research questions more explicit
+```
+
+> **Note:** 
+**Pro Tip:** Write in Lokus with inline links to your notes. When ready to submit, export and convert links to citations.
+
+
+---
+
+## Step 7: Citation and Bibliography Management
+
+Keep track of references properly.
+
+### 7.1 Citation Format Templates
+
+Create citation templates:
+
+**APA Format:**
+```markdown
+## APA Citation
+
+Author, A. A., Author, B. B., & Author, C. C. (Year). Title of article. *Title of Journal, Volume*(Issue), pages. https://doi.org/xxx
+
+### Example:
+Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A. N., ... & Polosukhin, I. (2017). Attention is all you need. *Advances in Neural Information Processing Systems, 30*.
+```
+
+**Chicago Format:**
+```markdown
+## Chicago Citation
+
+Author, Author. "Title of Article." *Title of Journal* Volume, no. Issue (Year): pages.
+
+### Example:
+Vaswani, Ashish, et al. "Attention Is All You Need." *Advances in Neural Information Processing Systems* 30 (2017).
+```
+
+### 7.2 Generate Bibliography
+
+Create a bibliography note that pulls from all cited sources:
+
+```markdown
+# Bibliography - AI Accountability Paper
+
+## Papers
+
+[[Braun & Clarke 2006]]
+- Braun, V., & Clarke, V. (2006). Using thematic analysis in psychology. *Qualitative Research in Psychology, 3*(2), 77-101.
+
+[[Brown 2023]]
+- Brown, J. (2023). Algorithmic accountability and the law. *Harvard Law Review, 136*(4), 1205-1267.
+
+[[Davis et al 2024]]
+- Davis, M., Johnson, K., & Lee, S. (2024). User perceptions of AI accountability. *CHI Conference on Human Factors in Computing Systems*.
+
+[Continue for all sources...]
+
+## Books
+
+[[Thompson 1980]]
+- Thompson, D. F. (1980). Moral responsibility of public officials: The problem of many hands. *American Political Science Review, 74*(4), 905-916.
+
+## Total Sources: 47
+
+**By Type:**
+- Journal articles: 28
+- Conference papers: 12
+- Books: 5
+- Technical reports: 2
+
+**Generated:** 2024-01-25
+**For Paper:** AI Accountability in Practice
+```
+
+### 7.3 Auto-generate Citation Keys
+
+Use Lokus formula fields or plugins:
+
+```javascript
+// Generate citation key from metadata
+function generateCitationKey(author, year, title) {
+  let firstAuthor = author.split(',')[0].split(' ').pop()
+  let firstWord = title.split(' ')[0].toLowerCase()
+  return `${firstAuthor}${year}${firstWord}`
+}
+
+// Example: vaswani2017attention
+```
+
+> **Note:** 
+**Info:** Consider using Lokus's BibTeX integration for seamless citation management with LaTeX.
+
+
+---
+
+## Step 8: Collaboration and Review
+
+Share work with advisors and collaborators.
+
+### 8.1 Share Specific Notes
+
+Create a shared collection:
+
+```
+Shared/
+├── For Advisor Review/
+│   ├── [[Draft - Introduction]]
+│   ├── [[Survey Results Summary]]
+│   └── [[Questions for Meeting]]
+├── Co-author Workspace/
+│   ├── [[Section 4 - Analysis]] (Alex editing)
+│   ├── [[Section 5 - Framework]] (Jordan editing)
+│   └── [[Shared Bibliography]]
+└── Public/
+    └── [[Preprint Version]]
+```
+
+### 8.2 Track Feedback
+
+Create feedback tracking notes:
+
+```markdown
+# Feedback - Dr. Johnson (Advisor)
+
+**Date:** 2024-01-20
+**On:** Draft sections 1-3
+
+## Comments
+
+### Introduction
+> "Strong opening, but research questions need to be more explicit"
+
+**Action:** ✅ Rewrote RQ section, now clearer
+
+### Literature Review
+> "Missing recent work on algorithmic auditing"
+
+**Action:** 🔄 In progress - added 3 papers, still reviewing 2 more
+
+### Methodology
+> "Need to justify sample size for survey"
+
+**Action:** ⏳ Todo - run power analysis, add justification
+
+## Next Meeting
+
+**Date:** 2024-01-27
+**Agenda:**
+- [ ] Review revised introduction
+- [ ] Discuss findings section structure
+- [ ] Timeline for completion
+
+## Related
+
+- [[Draft - Introduction v2]] (revised version)
+- [[Literature Review - Algorithmic Auditing]] (new additions)
+```
+
+### 8.3 Version Control for Drafts
+
+Track versions:
+
+```
+Draft - Introduction
+  ├── v1 (2024-01-10): Initial draft
+  ├── v2 (2024-01-18): After advisor feedback
+  ├── v3 (2024-01-23): Cut 500 words
+  └── v4 (2024-01-25): Final version
+```
+
+Create version notes:
+
+```markdown
+# Draft Versions - AI Accountability Paper
+
+## v1.0 - Initial Draft (2024-01-10)
+- Complete first draft all sections
+- 7,200 words (1,200 over limit)
+- [[Full Draft v1.0]]
+
+## v2.0 - Post-Feedback (2024-01-18)
+**Changes:**
+- Revised introduction per advisor feedback
+- Added 5 citations to literature review
+- Expanded methodology section
+- 7,400 words
+
+**Feedback incorporated:**
+- ✅ Dr. Johnson comments
+- ✅ Co-author Alex suggestions
+- ⏳ Waiting on Jordan's section
+
+## v3.0 - Cut to Length (2024-01-23)
+**Changes:**
+- Cut 1,400 words to meet 6,000 limit
+- Tightened introduction (-200)
+- Shortened literature review (-400)
+- Condensed findings (-600)
+- Streamlined discussion (-200)
+- 6,000 words exactly
+
+## v4.0 - Final (2024-01-25)
+**Changes:**
+- Final proofreading
+- All citations verified
+- Formatting per FAccT guidelines
+- Ready for submission
+
+**Final Stats:**
+- Words: 6,000
+- Figures: 3
+- Tables: 4
+- References: 47
+```
+
+---
+
+## Step 9: Research Project Management
+
+Track progress and deadlines.
+
+### 9.1 Create Research Timeline
+
+```markdown
+# PhD Timeline - AI Ethics Research
+
+## Year 1: Foundation (Sep 2023 - Aug 2024)
+
+### Fall 2023
+- ✅ Literature review (Sep-Dec)
+- ✅ Research design (Oct-Nov)
+- ✅ Ethics approval (Dec)
+
+### Spring 2024
+- 🔄 Data collection (Jan-Apr)
+  - ✅ Survey (Jan)
+  - 🔄 Interviews (Jan-Mar)
+  - ⏳ Case studies (Feb-Apr)
+- ⏳ Preliminary analysis (Mar-May)
+- ⏳ First paper submission (May)
+
+### Summer 2024
+- Coursework completion
+- Conference attendance (if paper accepted)
+
+## Year 2: Deep Dive (Sep 2024 - Aug 2025)
+
+### Fall 2024
+- Additional data collection
+- Advanced analysis
+- Second paper
+
+### Spring 2025
+- Theory development
+- Third paper (theory paper)
+- Comprehensive exams
+
+## Year 3: Synthesis (Sep 2025 - Aug 2026)
+
+### Fall 2025
+- Dissertation proposal
+- Final data collection
+
+### Spring 2026
+- Dissertation writing
+- Fourth paper
+
+## Year 4: Completion (Sep 2026 - Aug 2027)
+
+### Fall 2026
+- Complete dissertation
+- Job market preparation
+
+### Spring 2027
+- Defense (Target: March)
+- Graduation (May)
+
+---
+
+**Current Status:** Year 1, Spring 2024
+**Next Milestone:** First paper submission (May 2024)
+```
+
+### 9.2 Track Research Tasks
+
+Use Research Tasks base (created earlier):
+
+```
+Current Tasks:
+
+High Priority:
+- [ ] Finish interview transcription (5 remaining)
+- [ ] Complete Section 4 analysis
+- [ ] Revise introduction based on feedback
+
+Medium Priority:
+- [ ] Read 3 papers on algorithmic auditing
+- [ ] Create visualization for survey data
+- [ ] Draft abstract for conference
+
+Low Priority:
+- [ ] Update CV
+- [ ] Organize digital files
+- [ ] Clean up inbox
+```
+
+### 9.3 Weekly Research Log
+
+```markdown
+# Research Log - Week of Jan 15, 2024
+
+## Accomplished
+
+- ✅ Completed 5 interviews (now 15/20 done)
+- ✅ Analyzed survey data, found significant results
+- ✅ Drafted introduction and methods sections
+- ✅ Met with advisor, received feedback
+
+## Challenges
+
+- Recruiting last 5 interview participants is slow
+- Survey response rate lower than expected (43% vs 60% goal)
+- Word limit is tight, struggling to include all findings
+
+## Insights
+
+- Accountability gap theme is stronger than anticipated
+- Data supports multi-level framework well
+- May need follow-up survey on specific points
+
+## Next Week Priorities
+
+1. Complete remaining interviews
+2. Revise introduction per advisor feedback
+3. Draft findings section
+4. Create data visualizations
+
+## Reading This Week
+
+- [[Brown 2023]] - Legal frameworks
+- [[Martin 2019]] - Ethics training effectiveness
+- [[Raji et al 2020]] - Model cards
+
+## Ideas
+
+- Might extract methodology section into standalone paper
+- Consider organizing workshop on accountability frameworks
+- Potential collaboration with law school professor
+
+---
+
+**Hours This Week:** 42
+**Mood:** Productive
+**Next Meeting:** Jan 27 with Dr. Johnson
+```
+
+> **Note:** 
+**Success:** You have a complete research management system! From sources to publication, everything is tracked and connected.
+
+
+---
+
+## Tips for Research Success
+
+### Do's
+
+✅ **Process sources promptly:** Read and take notes within 1-2 weeks of acquisition
+
+✅ **Link generously:** Connect ideas across sources
+
+✅ **Write in your own words:** Don't just quote, synthesize
+
+✅ **Track versions:** Keep revision history for papers
+
+✅ **Schedule regular reviews:** Weekly review of progress
+
+✅ **Back up everything:** Use cloud sync and backups
+
+✅ **Cite as you write:** Don't leave citations for later
+
+### Don'ts
+
+❌ **Collect without reading:** Don't hoard papers you'll never read
+
+❌ **Take notes without context:** Always link to sources
+
+❌ **Wait for "complete" understanding:** Write notes even when uncertain
+
+❌ **Keep everything in your head:** Externalize your thinking
+
+❌ **Work in isolation:** Share with advisors and peers
+
+❌ **Perfectionism:** Ship drafts, iterate
+
+---
+
+## Next Steps
+
+### This Week
+- Import 10-15 key sources into your system
+- Create literature notes for 3-5 papers
+- Set up your workspace structure
+- Begin daily note-taking practice
+
+### This Month
+- Process all sources for current project
+- Create synthesis notes for 2-3 themes
+- Draft outline for paper or chapter
+- Establish weekly review routine
+
+### Continue Learning
+
+- **Related Tutorial:** [Zettelkasten System](/tutorials/zettelkasten) - Enhanced note-taking
+- **Related Tutorial:** [Content Creation Pipeline](/tutorials/content-creation) - Writing workflows
+- **Resource:** [Academic Writing Guide](/docs/academic-writing)
+
+---
+
+## Summary
+
+In this tutorial, you learned:
+
+✅ How to set up a research workspace in Lokus
+✅ Collecting and organizing research sources
+✅ Effective reading and annotation strategies
+✅ Taking literature, concept, and methodology notes
+✅ Synthesizing findings across sources
+✅ Building arguments from evidence
+✅ Managing paper writing and drafts
+✅ Citation and bibliography management
+✅ Collaborating with advisors and co-authors
+✅ Project management for research
+
+Your Lokus workspace is now a complete research environment that supports the entire research lifecycle. As you work, continue to refine your system to match your unique research needs.
+
+---
+
+**Resources:**
+- [Research Templates](/templates/research)
+- [Citation Management Guide](/docs/citations)
+- [Academic Writing Resources](/docs/academic-writing)
+- [Collaboration Features](/docs/collaboration)
+- Research community forum
+
+**Estimated Completion Time:** 50 minutes
+**Difficulty:** Intermediate
+**Last Updated:** January 2024

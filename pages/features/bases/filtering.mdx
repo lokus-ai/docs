@@ -1,0 +1,756 @@
+---
+title: "Base Filtering & Queries - Advanced Guide - Lokus Documentation"
+description: "Master advanced filtering in Lokus Bases. Learn operators, filter groups, saved filters, and complex queries to find exactly what you need."
+keywords: [lokus, bases, filtering, queries, search, operators, advanced filtering, saved filters]
+---
+
+# Base Filtering & Queries
+
+Filtering is one of the most powerful features in Bases, allowing you to narrow down large datasets to exactly what you need. Lokus v1.3 supports comprehensive filtering with multiple operator types and complex query combinations.
+
+> **📚 Prerequisites:** This guide builds on [Bases Overview](/features/bases/overview) and [Properties](/features/bases/properties). Start there if you're new to Bases.
+
+## Filter Types & Operators
+
+### Text Operators
+
+Filter text-based properties with precision.
+
+**Available Operators:**
+
+```yaml
+equals           # Exact match (case-sensitive)
+not_equals       # Not equal
+contains         # Contains substring
+not_contains     # Doesn't contain substring
+starts_with      # Starts with text
+ends_with        # Ends with text
+is_empty         # No value or empty string
+is_not_empty     # Has a value
+matches_regex    # Regular expression match
+```
+
+**Examples:**
+
+```yaml
+# Find notes titled exactly "Project Alpha"
+title equals "Project Alpha"
+
+# Find notes with "urgent" anywhere in title
+title contains "urgent"
+
+# Find notes starting with "WIP:"
+title starts_with "WIP:"
+
+# Find notes with empty description
+description is_empty
+
+# Find notes matching pattern
+title matches_regex "^PRJ-\d{4}$"
+```
+
+**Use Cases:**
+- Finding specific projects by name
+- Identifying incomplete records
+- Pattern matching for codes/IDs
+- Text content searches
+
+> **💡 Tip:** Use `contains` for flexible searches, `equals` for exact matches. Most searches benefit from `contains`.
+
+### Number Operators
+
+Filter numeric properties with mathematical precision.
+
+**Available Operators:**
+
+```yaml
+equals                  # Equal to
+not_equals              # Not equal to
+greater_than            # >
+greater_than_or_equal   # >=
+less_than               # <
+less_than_or_equal      # <=
+between                 # Between two values (inclusive)
+is_empty                # No value set
+is_not_empty            # Has a value
+```
+
+**Examples:**
+
+```yaml
+# High priority items (score > 80)
+priority_score greater_than 80
+
+# Budget between $10K and $50K
+budget between 10000 50000
+
+# Items with cost assigned
+cost is_not_empty
+
+# Exact quantity match
+quantity equals 100
+
+# Low stock items
+stock_quantity less_than 10
+```
+
+**Use Cases:**
+- Budget filtering
+- Score/rating ranges
+- Quantity thresholds
+- Performance metrics
+
+> **⚠️ Warning:** `between` is inclusive on both ends. `between 10 20` includes both 10 and 20.
+
+### Date Operators
+
+Filter date properties with both absolute and relative date logic.
+
+**Available Operators:**
+
+```yaml
+equals           # Exact date match
+before           # Before date
+after            # After date
+between          # Between two dates
+relative         # Relative to today (see below)
+is_empty         # No date set
+is_not_empty     # Has a date
+```
+
+**Relative Date Options:**
+
+```yaml
+last 7 days      # Past week
+last 30 days     # Past month
+this week        # Current week (Mon-Sun)
+this month       # Current calendar month
+next week        # Upcoming week
+next month       # Upcoming month
+today            # Today only
+yesterday        # Yesterday only
+tomorrow         # Tomorrow only
+```
+
+**Examples:**
+
+```yaml
+# Due today
+due_date equals today
+
+# Overdue items
+due_date before today
+
+# Due in the next week
+due_date between today next_7_days
+
+# Items due this month
+due_date relative "this month"
+
+# Recently modified
+modified_date relative "last 7 days"
+
+# No due date set
+due_date is_empty
+```
+
+**Use Cases:**
+- Overdue task detection
+- Recently created/modified items
+- Upcoming deadlines
+- Scheduling and planning
+
+> **💡 Tip:** Relative dates update automatically! "last 7 days" always means the most recent week, no manual updates needed.
+
+### Array Operators (Tags/Multi-Select)
+
+Filter properties with multiple values.
+
+**Available Operators:**
+
+```yaml
+contains_any     # Contains any of the specified values
+contains_all     # Contains all specified values
+is_empty         # Empty array or no tags
+is_not_empty     # Has at least one tag
+```
+
+**Examples:**
+
+```yaml
+# Items tagged with "urgent" OR "high-priority"
+tags contains_any ["urgent", "high-priority"]
+
+# Items tagged with BOTH "web" AND "frontend"
+tags contains_all ["web", "frontend"]
+
+# Untagged items
+tags is_empty
+
+# Items with at least one category
+categories is_not_empty
+```
+
+**Use Cases:**
+- Multi-category filtering
+- Skill matching
+- Tag-based organization
+- Feature flag filtering
+
+> **💡 Tip:** Use `contains_any` for broad searches (OR logic), `contains_all` for specific combinations (AND logic).
+
+### Boolean (Checkbox) Operators
+
+Filter true/false properties.
+
+**Available Operators:**
+
+```yaml
+is_true          # Value is true
+is_false         # Value is false
+is_empty         # No value set (neither true nor false)
+```
+
+**Examples:**
+
+```yaml
+# Completed items
+completed is_true
+
+# Incomplete items
+completed is_false
+
+# Items without published status set
+is_public is_empty
+
+# Active items
+is_active is_true
+```
+
+**Use Cases:**
+- Task completion status
+- Published/draft filtering
+- Active/inactive records
+- Feature toggles
+
+## Filter Groups
+
+Combine multiple filters using logical operators to create complex queries.
+
+### AND Logic
+
+All conditions must be true.
+
+**Syntax:**
+```yaml
+Show entries where:
+  status equals "Active"
+  AND priority equals "High"
+  AND assignee is_not_empty
+```
+
+**Example:**
+```
+Find high-priority active tasks that are assigned:
+- Status = Active ✓
+- Priority = High ✓
+- Assignee = Sarah ✓
+Result: Included
+```
+
+**Use Cases:**
+- Finding very specific items
+- Narrowing down large datasets
+- Strict criteria matching
+
+### OR Logic
+
+Any condition can be true.
+
+**Syntax:**
+```yaml
+Show entries where:
+  status equals "Urgent"
+  OR priority equals "Critical"
+  OR due_date before today
+```
+
+**Example:**
+```
+Find items needing attention (any of these):
+- Status = Urgent ✓
+- Priority = Normal ✗
+- Due Date = Yesterday ✓
+Result: Included (met OR condition)
+```
+
+**Use Cases:**
+- Broadening search results
+- Multiple acceptable criteria
+- "Any of these" scenarios
+
+### NOT Logic
+
+Invert a condition.
+
+**Syntax:**
+```yaml
+Show entries where:
+  NOT status equals "Cancelled"
+  AND NOT status equals "Done"
+```
+
+**Equivalent to:**
+```yaml
+status not_equals "Cancelled"
+AND status not_equals "Done"
+```
+
+**Use Cases:**
+- Excluding specific values
+- "Everything except..." queries
+- Negative filtering
+
+### Nested Groups
+
+Create complex logic with nested groups.
+
+**Example 1: Urgent items or overdue high-priority items**
+
+```yaml
+Show entries where:
+  status equals "Urgent"
+  OR (
+    priority equals "High"
+    AND due_date before today
+  )
+```
+
+**Breakdown:**
+```
+Include if:
+  Status is Urgent
+  OR
+  (Priority is High AND Due Date is in the past)
+```
+
+**Example 2: Active projects in specific categories**
+
+```yaml
+Show entries where:
+  status equals "Active"
+  AND (
+    category equals "Web"
+    OR category equals "Mobile"
+    OR category equals "API"
+  )
+  AND assignee is_not_empty
+```
+
+**Breakdown:**
+```
+Include if:
+  Status is Active
+  AND
+  Category is Web, Mobile, or API
+  AND
+  Has an assignee
+```
+
+> **💡 Tip:** Use parentheses to group conditions clearly. This makes complex queries easier to understand and maintain.
+
+## Creating Filters
+
+### Method 1: Interactive Filter Builder
+
+1. Open your Base
+2. Click **"Filter"** button in toolbar
+3. Click **"+ Add Filter"**
+4. Select property
+5. Choose operator
+6. Enter value(s)
+7. Click **Apply**
+
+### Method 2: Quick Filters
+
+Click any cell value to create instant filter:
+
+1. Right-click a cell
+2. Select **"Filter by this value"**
+3. Filter applied immediately
+
+### Method 3: Text Query
+
+Advanced users can type queries directly:
+
+```
+status:Active AND priority:High
+```
+
+**Query Syntax:**
+```
+property:value                    # Equals
+property:!value                   # Not equals
+property:>value                   # Greater than
+property:<value                   # Less than
+property:*partial*                # Contains
+tag:#tagname                      # Has tag
+```
+
+## Saved Filters
+
+### Creating Saved Filters
+
+Save commonly-used filter combinations:
+
+1. Configure your filters
+2. Click **"Save Filter"** button
+3. Name the filter (e.g., "Overdue High Priority")
+4. Optional: Set as default view
+5. Click **Save**
+
+**Example Saved Filters:**
+
+```yaml
+"Active Tasks":
+  - status equals "Active"
+  - assignee is_not_empty
+
+"Overdue Items":
+  - due_date before today
+  - completed is_false
+
+"This Week":
+  - due_date relative "this week"
+  - status not_equals "Done"
+
+"Unassigned High Priority":
+  - priority equals "High"
+  - assignee is_empty
+```
+
+### Managing Saved Filters
+
+**Quick Switch:**
+- Click filter dropdown
+- Select saved filter
+- View updates instantly
+
+**Edit Filter:**
+1. Select saved filter
+2. Click **"Edit"** (pencil icon)
+3. Modify filters
+4. Save or Save As New
+
+**Delete Filter:**
+1. Select saved filter
+2. Click **"Delete"** (trash icon)
+3. Confirm deletion
+
+**Share Filter:**
+1. Right-click filter name
+2. **"Copy Filter Link"**
+3. Share with team members
+
+> **💡 Tip:** Create saved filters for your most common workflows. Examples: "My Tasks", "This Sprint", "Needs Review".
+
+## Pre-built Filters
+
+Lokus includes useful pre-built filters:
+
+**All Items**
+```yaml
+# No filters (default)
+```
+
+**Active Items**
+```yaml
+status not_equals "Done"
+AND status not_equals "Cancelled"
+AND status not_equals "Archived"
+```
+
+**Completed Items**
+```yaml
+status equals "Done"
+OR completed is_true
+```
+
+**Overdue Items**
+```yaml
+due_date before today
+AND completed is_false
+```
+
+**Assigned to Me**
+```yaml
+assignee equals "{{current_user}}"
+```
+
+**Unassigned**
+```yaml
+assignee is_empty
+```
+
+**This Week**
+```yaml
+due_date relative "this week"
+```
+
+**No Due Date**
+```yaml
+due_date is_empty
+```
+
+## Sorting
+
+### Sort Options
+
+Order your filtered results:
+
+**Sort Configuration:**
+```yaml
+sort:
+  - property: priority
+    direction: desc  # High to Low
+  - property: due_date
+    direction: asc   # Earliest to Latest
+  - property: title
+    direction: asc   # A to Z
+```
+
+**Sort Types:**
+- **Alphabetical**: A-Z or Z-A
+- **Numeric**: 0-9 or 9-0 (ascending/descending)
+- **Date**: Earliest-Latest or Latest-Earliest
+- **Custom**: Manual drag-and-drop order
+
+### Multi-Column Sorting
+
+Sort by multiple properties:
+
+1. Click first column header (primary sort)
+2. Hold `Cmd/Ctrl` and click second header (secondary sort)
+3. Hold `Cmd/Ctrl` and click third header (tertiary sort)
+
+**Example:**
+```
+Sort by:
+1. Priority (High → Low)
+2. Due Date (Earliest → Latest)
+3. Title (A → Z)
+
+Result:
+High Priority items first, ordered by due date
+Medium Priority items next, ordered by due date
+Low Priority items last, ordered by due date
+Within each group, alphabetically by title
+```
+
+### Manual Sorting
+
+Custom drag-and-drop ordering:
+
+1. Click **"Manual Sort"** toggle
+2. Drag rows to reorder
+3. Order persists across sessions
+4. Click **"Reset Sort"** to return to automatic
+
+> **⚠️ Warning:** Manual sort overrides automatic sorting. Use for custom prioritization, but remember to reset if you want automatic sorting later.
+
+## Grouping (Coming v1.4)
+
+### Group By Property
+
+Organize filtered entries into groups:
+
+**Example:**
+```yaml
+Group by: Status
+
+├─ Backlog (5 items)
+│  ├─ Task A
+│  ├─ Task B
+│  └─ Task C
+│
+├─ In Progress (3 items)
+│  ├─ Task D
+│  └─ Task E
+│
+└─ Done (12 items) [collapsed]
+   └─ (Hidden)
+```
+
+### Multi-Level Grouping
+
+```yaml
+Group by: Status → Priority
+
+├─ In Progress
+│  ├─ High (2 items)
+│  │  ├─ Task A
+│  │  └─ Task B
+│  └─ Medium (1 item)
+│     └─ Task C
+│
+└─ Done
+   └─ High (3 items)
+      └─ ...
+```
+
+### Group Aggregations
+
+Show statistics per group:
+
+```yaml
+Status: In Progress (3 items)
+  Total Hours: 15h
+  Average: 5h per item
+  Assignees: Sarah, John
+
+Status: Done (12 items)
+  Total Hours: 48h
+  Average: 4h per item
+  Completion Rate: 100%
+```
+
+## Advanced Query Examples
+
+### Example 1: This Week's Priorities
+
+```yaml
+Show entries where:
+  (
+    due_date relative "this week"
+    OR priority equals "High"
+  )
+  AND status not_equals "Done"
+  AND assignee equals "{{current_user}}"
+```
+
+**Use Case:** See your high-priority work and this week's deadlines
+
+### Example 2: Stale Projects
+
+```yaml
+Show entries where:
+  status equals "Active"
+  AND modified_date before "{{today-30d}}"
+  AND assignee is_not_empty
+```
+
+**Use Case:** Find active projects not updated in 30+ days
+
+### Example 3: Urgent Attention Needed
+
+```yaml
+Show entries where:
+  (
+    due_date before today
+    OR priority equals "Critical"
+  )
+  AND completed is_false
+  AND (
+    status equals "Blocked"
+    OR assignee is_empty
+  )
+```
+
+**Use Case:** Overdue or critical items that are blocked or unassigned
+
+### Example 4: Ready to Start
+
+```yaml
+Show entries where:
+  status equals "Todo"
+  AND assignee is_not_empty
+  AND tags contains_any ["ready", "approved"]
+  AND due_date is_not_empty
+```
+
+**Use Case:** Tasks ready to be worked on (assigned, approved, scheduled)
+
+### Example 5: Portfolio View
+
+```yaml
+Show entries where:
+  category contains_any ["Web", "Mobile", "API"]
+  AND budget greater_than 10000
+  AND (
+    status equals "Active"
+    OR status equals "Planning"
+  )
+```
+
+**Use Case:** Major projects in specific categories
+
+## Performance Tips
+
+### Optimize Filters for Large Datasets
+
+**Do:**
+- ✅ Use specific filters early (e.g., folder source)
+- ✅ Filter by indexed properties (status, dates)
+- ✅ Use `equals` instead of `contains` when possible
+- ✅ Limit results with pagination
+- ✅ Enable [Quantum Search](/features/bases/overview#quantum-search-integration)
+
+**Don't:**
+- ❌ Use only `contains` with wildcards on large datasets
+- ❌ Create overly complex nested groups (3+ levels)
+- ❌ Use regex filters on non-indexed fields
+- ❌ Leave filters too broad (returning 1,000+ results)
+
+### Filter Execution Order
+
+Filters execute in this order for best performance:
+
+1. **Source filters** (folder, tag)
+2. **Indexed properties** (status, dates, booleans)
+3. **Simple comparisons** (equals, not_equals)
+4. **Range comparisons** (greater_than, between)
+5. **String operations** (contains, starts_with)
+6. **Complex operations** (regex, nested groups)
+
+> **💡 Tip:** Put more restrictive filters first. "status equals Active" before "title contains Project" performs better.
+
+## Troubleshooting
+
+### Filters Not Working
+
+**Issue:** No results or wrong results
+
+**Solutions:**
+1. Check filter logic (AND vs OR)
+2. Verify property names match YAML
+3. Ensure values are correctly formatted
+4. Check for empty/null values
+5. Refresh Base index (Cmd/Ctrl + R)
+
+### Slow Filter Performance
+
+**Issue:** Filters take too long to apply
+
+**Solutions:**
+1. Reduce number of entries (use source filters)
+2. Enable Quantum Search
+3. Simplify complex nested groups
+4. Use indexed properties when possible
+5. Close other Bases to free memory
+
+### Filter Not Saving
+
+**Issue:** Saved filter doesn't persist
+
+**Solutions:**
+1. Ensure filter has a name
+2. Check for permission issues
+3. Verify workspace is syncing properly
+4. Try duplicating the view first
+
+## What's Next?
+
+- **[Views](/features/bases/views)** - Learn how filters work with different view types
+- **[Properties](/features/bases/properties)** - Understand property types for better filtering
+- **[MCP Integration](/features/bases/mcp-integration)** - Use AI to create complex filters
+- **[Examples](/features/bases/examples)** - See real-world filtering scenarios

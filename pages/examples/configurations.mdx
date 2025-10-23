@@ -1,0 +1,1332 @@
+---
+title: Configuration Examples
+description: Advanced configuration examples for Lokud - team setups, permissions, automation rules, and custom workflows
+keywords: lokud configuration, workspace config, team settings, automation config, custom configurations
+---
+
+# Configuration Examples
+
+Advanced configuration examples for different scenarios, from team collaboration to automation rules.
+
+## Complete Workspace Configuration
+
+A comprehensive workspace configuration with all available options.
+
+```yaml
+# complete-workspace.yaml
+name: Complete Workspace Example
+version: 2.0.0
+description: Full-featured workspace with all configuration options
+author: Your Team
+created: 2025-01-15
+
+# Global workspace settings
+settings:
+  # Localization
+  timezone: America/New_York
+  locale: en-US
+  currency: USD
+  date_format: MM/DD/YYYY
+  time_format: 12h
+  first_day_of_week: 0  # 0=Sunday, 1=Monday
+
+  # Workspace preferences
+  theme: auto  # auto, light, dark
+  accent_color: "#3B82F6"
+
+  # Default behaviors
+  auto_save: true
+  auto_save_interval: 30  # seconds
+  enable_offline_mode: true
+  sync_interval: 60  # seconds
+
+  # Collaboration
+  enable_comments: true
+  enable_mentions: true
+  enable_reactions: true
+
+  # Security
+  require_2fa: false
+  session_timeout: 3600  # seconds
+  password_policy:
+    min_length: 8
+    require_uppercase: true
+    require_lowercase: true
+    require_numbers: true
+    require_special_chars: true
+
+# Workspace members and permissions
+members:
+  - email: admin@example.com
+    role: admin
+    display_name: Admin User
+
+  - email: developer@example.com
+    role: member
+    display_name: Developer
+    permissions:
+      - edit_bases
+      - create_records
+      - edit_records
+
+  - email: viewer@example.com
+    role: viewer
+    display_name: Guest Viewer
+    permissions:
+      - view_bases
+      - view_records
+
+# Custom roles
+roles:
+  - name: editor
+    display_name: Content Editor
+    permissions:
+      - view_bases
+      - create_records
+      - edit_records
+      - delete_own_records
+      - comment
+    description: Can create and edit content but not delete others' work
+
+  - name: analyst
+    display_name: Data Analyst
+    permissions:
+      - view_bases
+      - export_data
+      - create_views
+    description: Read-only access with export capabilities
+
+# Bases (databases)
+bases:
+  - name: Projects
+    type: project
+    icon: folder
+    color: blue
+    description: Project tracking and management
+
+    # Base-level permissions
+    permissions:
+      admin: all
+      member: edit
+      viewer: view
+      editor: edit
+
+    # Fields
+    fields:
+      - name: Project Name
+        type: text
+        required: true
+        unique: true
+        primary: true
+        description: The project name
+        placeholder: Enter project name
+
+      - name: Status
+        type: select
+        options:
+          - value: planning
+            label: Planning
+            color: gray
+          - value: active
+            label: Active
+            color: green
+          - value: on_hold
+            label: On Hold
+            color: yellow
+          - value: completed
+            label: Completed
+            color: blue
+        default: planning
+        required: true
+
+      - name: Priority
+        type: select
+        options: [High, Medium, Low]
+        default: Medium
+
+      - name: Owner
+        type: person
+        required: true
+        auto_assign: true  # Auto-assign to creator
+
+      - name: Team
+        type: multi_person
+        description: Project team members
+
+      - name: Start Date
+        type: date
+        required: false
+
+      - name: End Date
+        type: date
+        validation:
+          custom: |
+            // End date must be after start date
+            if (this.value < record['Start Date']) {
+              return 'End date must be after start date';
+            }
+
+      - name: Budget
+        type: number
+        format: currency
+        currency: USD
+        min: 0
+        max: 1000000
+
+      - name: Progress
+        type: progress
+        min: 0
+        max: 100
+
+      - name: Description
+        type: rich_text
+        enable_markdown: true
+
+      - name: Tags
+        type: multi_select
+        options:
+          - Development
+          - Design
+          - Marketing
+          - Research
+        allow_create: true
+
+      - name: Attachments
+        type: file
+        allow_multiple: true
+        max_size: 10485760  # 10MB in bytes
+        allowed_types:
+          - .pdf
+          - .doc
+          - .docx
+          - .xls
+          - .xlsx
+          - .jpg
+          - .png
+
+      - name: Related Tasks
+        type: relation
+        related_base: Tasks
+        relation_type: has_many
+        display_field: Task Name
+
+      - name: Created By
+        type: person
+        auto_fill: creator
+        readonly: true
+
+      - name: Created At
+        type: date
+        auto_fill: created_at
+        readonly: true
+        include_time: true
+
+      - name: Updated At
+        type: date
+        auto_fill: updated_at
+        readonly: true
+        include_time: true
+
+    # Views
+    views:
+      - name: All Projects
+        type: table
+        default: true
+        columns:
+          - Project Name
+          - Status
+          - Priority
+          - Owner
+          - Progress
+        sort:
+          - field: Created At
+            order: desc
+        filter: null
+
+      - name: Active Projects
+        type: table
+        filter:
+          operator: and
+          conditions:
+            - field: Status
+              operator: equals
+              value: active
+
+      - name: My Projects
+        type: table
+        filter:
+          operator: or
+          conditions:
+            - field: Owner
+              operator: is_current_user
+            - field: Team
+              operator: contains_current_user
+
+      - name: Status Board
+        type: kanban
+        group_by: Status
+        card_fields:
+          - Priority
+          - Owner
+          - Progress
+        sort:
+          - field: Priority
+            order: asc
+
+      - name: Timeline
+        type: timeline
+        start_field: Start Date
+        end_field: End Date
+        group_by: Owner
+        color_by: Status
+
+      - name: Calendar
+        type: calendar
+        date_field: Start Date
+        end_date_field: End Date
+        color_by: Status
+
+      - name: Gallery
+        type: gallery
+        image_field: Cover Image
+        card_fields:
+          - Status
+          - Owner
+
+    # Automations
+    automations:
+      - name: Notify on Status Change
+        trigger:
+          type: record_updated
+          field: Status
+        conditions:
+          - field: Status
+            operator: equals
+            value: completed
+        actions:
+          - type: send_notification
+            to: "{{Owner}}"
+            title: Project Completed
+            message: "Project {{Project Name}} has been marked as completed!"
+
+      - name: Auto-assign Team Lead
+        trigger:
+          type: record_created
+        conditions:
+          - field: Priority
+            operator: equals
+            value: High
+        actions:
+          - type: update_field
+            field: Owner
+            value: team_lead_email@example.com
+
+# Plugins
+plugins:
+  - name: daily-notes
+    enabled: true
+    config:
+      target_base: Daily Notes
+      creation_time: "06:00"
+      template: daily-note-template
+
+  - name: slack-notifications
+    enabled: true
+    config:
+      webhook_url: https://hooks.slack.com/services/YOUR/WEBHOOK/URL
+      channels:
+        - name: general
+          events:
+            - record_created
+            - record_updated
+        - name: projects
+          events:
+            - status_changed
+          filters:
+            base: Projects
+
+  - name: backup
+    enabled: true
+    config:
+      schedule: "0 2 * * *"  # 2 AM daily
+      backup_path: ./backups
+      max_backups: 7
+
+# Automation rules
+automation_rules:
+  - name: Task Due Soon Reminder
+    enabled: true
+    trigger:
+      type: scheduled
+      schedule: "0 9 * * *"  # Every day at 9 AM
+    conditions:
+      - base: Tasks
+        field: Due Date
+        operator: is_within
+        value: 2 days
+      - base: Tasks
+        field: Status
+        operator: not_equals
+        value: Done
+    actions:
+      - type: send_notification
+        to: "{{Assignee}}"
+        title: Task Due Soon
+        message: "Task {{Task Name}} is due in {{days_until}} days"
+
+  - name: Auto-archive Completed
+    enabled: true
+    trigger:
+      type: scheduled
+      schedule: "0 0 * * 0"  # Weekly on Sunday
+    conditions:
+      - field: Status
+        operator: equals
+        value: Completed
+      - field: Completed Date
+        operator: older_than
+        value: 30 days
+    actions:
+      - type: move_to_base
+        target: Archive
+
+# Templates
+templates:
+  - name: daily-note-template
+    type: document
+    content: |
+      # {{date}}
+
+      ## Today's Focus
+      -
+
+      ## Notes
+
+
+      ## Completed
+      - [ ]
+
+  - name: project-brief-template
+    type: document
+    content: |
+      # Project Brief: {{title}}
+
+      ## Overview
+
+
+      ## Objectives
+      1.
+
+      ## Timeline
+      - Start Date:
+      - End Date:
+
+      ## Team
+      -
+
+      ## Resources
+
+
+# Custom fields (reusable field definitions)
+custom_fields:
+  - name: Priority
+    type: select
+    options:
+      - value: critical
+        label: Critical
+        color: red
+      - value: high
+        label: High
+        color: orange
+      - value: medium
+        label: Medium
+        color: yellow
+      - value: low
+        label: Low
+        color: gray
+
+  - name: Status Badge
+    type: select
+    options:
+      - label: Not Started
+        color: gray
+      - label: In Progress
+        color: blue
+      - label: Completed
+        color: green
+      - label: Blocked
+        color: red
+
+# Webhooks
+webhooks:
+  - name: External API Sync
+    url: https://api.example.com/webhook
+    events:
+      - record_created
+      - record_updated
+      - record_deleted
+    bases:
+      - Projects
+      - Tasks
+    headers:
+      Authorization: Bearer YOUR_TOKEN
+    retry_config:
+      max_retries: 3
+      retry_delay: 1000  # ms
+
+# Import/Export settings
+import_export:
+  # CSV settings
+  csv:
+    delimiter: ","
+    quote: "\""
+    encoding: utf-8
+    include_header: true
+
+  # Export formats
+  allowed_formats:
+    - csv
+    - json
+    - xlsx
+    - markdown
+
+# API settings
+api:
+  enabled: true
+  rate_limit:
+    requests_per_minute: 60
+    requests_per_hour: 1000
+  allowed_origins:
+    - https://app.example.com
+    - http://localhost:3000
+
+# Integrations
+integrations:
+  - name: github
+    enabled: true
+    config:
+      token: ghp_YOUR_TOKEN
+      repositories:
+        - owner/repo1
+        - owner/repo2
+      sync_issues: true
+      sync_prs: true
+
+  - name: google_calendar
+    enabled: true
+    config:
+      calendar_id: primary
+      sync_direction: both  # both, to_lokud, to_calendar
+
+# Notification settings
+notifications:
+  email:
+    enabled: true
+    from: noreply@example.com
+    smtp:
+      host: smtp.example.com
+      port: 587
+      secure: true
+      auth:
+        user: smtp_user
+        pass: smtp_password
+
+  push:
+    enabled: true
+    service: firebase
+    config:
+      server_key: YOUR_SERVER_KEY
+
+  slack:
+    enabled: true
+    webhook_url: https://hooks.slack.com/services/YOUR/WEBHOOK/URL
+
+# Backup and sync
+backup:
+  auto_backup: true
+  schedule: "0 2 * * *"
+  retention_days: 30
+  include_attachments: true
+  cloud_sync:
+    enabled: false
+    provider: s3
+    bucket: my-lokud-backups
+
+# Analytics
+analytics:
+  enabled: true
+  track_events:
+    - record_created
+    - record_updated
+    - user_login
+    - export_data
+  dashboards:
+    - name: Activity Overview
+      widgets:
+        - type: counter
+          title: Total Records
+          query: count(all_records)
+        - type: chart
+          title: Records Created Over Time
+          chart_type: line
+          query: count(records_by_date)
+```
+
+## Team Collaboration Configuration
+
+Optimized for team collaboration with permissions and workflows.
+
+```yaml
+# team-collaboration.yaml
+name: Team Workspace
+version: 1.0.0
+description: Collaborative workspace with role-based access
+
+settings:
+  timezone: UTC
+  enable_comments: true
+  enable_mentions: true
+  require_2fa: true
+
+# Define custom roles
+roles:
+  - name: team_lead
+    display_name: Team Lead
+    permissions:
+      - all_bases_access
+      - manage_members
+      - create_bases
+      - delete_bases
+      - manage_automations
+      - view_analytics
+
+  - name: developer
+    display_name: Developer
+    permissions:
+      - view_all_bases
+      - edit_assigned_records
+      - create_records
+      - comment
+      - export_data
+
+  - name: designer
+    display_name: Designer
+    permissions:
+      - view_all_bases
+      - edit_assigned_records
+      - create_records
+      - upload_assets
+      - comment
+
+  - name: client
+    display_name: Client
+    permissions:
+      - view_specific_bases
+      - comment
+      - view_assigned_records
+    restricted_bases:
+      - Projects
+      - Deliverables
+
+# Team members
+members:
+  - email: lead@company.com
+    role: team_lead
+    display_name: Team Lead
+
+  - email: dev1@company.com
+    role: developer
+    display_name: Developer 1
+    teams:
+      - Engineering
+
+  - email: designer1@company.com
+    role: designer
+    display_name: Designer 1
+    teams:
+      - Design
+
+  - email: client@external.com
+    role: client
+    display_name: Client
+    access:
+      bases:
+        - Projects
+      records:
+        filter:
+          field: Client
+          operator: equals
+          value: client@external.com
+
+# Teams for grouping
+teams:
+  - name: Engineering
+    members:
+      - dev1@company.com
+      - dev2@company.com
+    bases:
+      - Development Tasks
+      - Bugs
+      - Tech Debt
+
+  - name: Design
+    members:
+      - designer1@company.com
+      - designer2@company.com
+    bases:
+      - Design Tasks
+      - Assets
+      - Style Guide
+
+  - name: Management
+    members:
+      - lead@company.com
+      - manager@company.com
+    bases:
+      - Projects
+      - Roadmap
+      - OKRs
+
+bases:
+  - name: Projects
+    permissions:
+      team_lead: all
+      developer: view_edit_assigned
+      designer: view_edit_assigned
+      client: view_only
+
+    fields:
+      - name: Project Name
+        type: text
+        required: true
+
+      - name: Client
+        type: person
+        required: true
+        # Only team leads can change
+        edit_permissions:
+          - team_lead
+
+      - name: Status
+        type: select
+        options: [Planning, Active, Review, Completed]
+
+      - name: Team Members
+        type: multi_person
+        # Auto-filter to team members only
+        filter_users: true
+
+    # Row-level permissions
+    row_permissions:
+      - role: developer
+        condition:
+          field: Team Members
+          operator: contains_current_user
+
+      - role: client
+        condition:
+          field: Client
+          operator: is_current_user
+
+plugins:
+  - name: activity-log
+    enabled: true
+    config:
+      track_all_changes: true
+      notify_team_leads: true
+
+  - name: approval-workflow
+    enabled: true
+    config:
+      require_approval:
+        - base: Projects
+          field: Status
+          from: Review
+          to: Completed
+          approvers:
+            - team_lead
+```
+
+## Automation Configuration
+
+Advanced automation rules and workflows.
+
+```yaml
+# automation-config.yaml
+name: Automated Workspace
+version: 1.0.0
+description: Workspace with extensive automation
+
+automation_rules:
+  # Auto-assign tasks based on workload
+  - name: Smart Task Assignment
+    enabled: true
+    trigger:
+      type: record_created
+      base: Tasks
+    actions:
+      - type: run_script
+        script: |
+          // Get all team members
+          const members = await lokud.getMembers();
+
+          // Count active tasks per member
+          const taskCounts = {};
+          for (const member of members) {
+            const tasks = await lokud.query('Tasks', {
+              filter: {
+                Assignee: member.email,
+                Status: { not_equals: 'Done' }
+              }
+            });
+            taskCounts[member.email] = tasks.length;
+          }
+
+          // Find member with least tasks
+          const assignee = Object.keys(taskCounts).reduce((a, b) =>
+            taskCounts[a] < taskCounts[b] ? a : b
+          );
+
+          // Assign task
+          await record.update({ Assignee: assignee });
+
+  # Escalate overdue tasks
+  - name: Overdue Task Escalation
+    enabled: true
+    trigger:
+      type: scheduled
+      schedule: "0 10 * * *"  # Daily at 10 AM
+    conditions:
+      - base: Tasks
+        field: Due Date
+        operator: is_before
+        value: today
+      - base: Tasks
+        field: Status
+        operator: not_equals
+        value: Done
+      - base: Tasks
+        field: Priority
+        operator: not_equals
+        value: High
+    actions:
+      - type: update_field
+        field: Priority
+        value: High
+      - type: send_notification
+        to: "{{Assignee}}"
+        cc: "{{Manager}}"
+        title: Overdue Task Escalation
+        message: "Task '{{Task Name}}' is overdue and has been escalated to High priority"
+
+  # Auto-create follow-up tasks
+  - name: Create Follow-up Tasks
+    enabled: true
+    trigger:
+      type: record_updated
+      base: Meetings
+      field: Status
+      new_value: Completed
+    conditions:
+      - field: Action Items
+        operator: is_not_empty
+    actions:
+      - type: run_script
+        script: |
+          // Parse action items
+          const actionItems = record['Action Items'].split('\n');
+
+          // Create task for each action item
+          for (const item of actionItems) {
+            if (item.trim()) {
+              await lokud.createRecord('Tasks', {
+                'Task Name': item.trim(),
+                'Source': 'Meeting: ' + record['Meeting Title'],
+                'Status': 'To Do',
+                'Due Date': record['Follow-up Date'],
+                'Related Meeting': record.id
+              });
+            }
+          }
+
+  # Status change notifications
+  - name: Status Change Workflow
+    enabled: true
+    trigger:
+      type: record_updated
+      base: Projects
+      field: Status
+    actions:
+      # When moved to Active
+      - type: conditional
+        condition:
+          field: Status
+          operator: equals
+          value: Active
+        actions:
+          - type: send_notification
+            to: "{{Team Members}}"
+            title: Project Started
+            message: "Project '{{Project Name}}' is now active!"
+          - type: update_field
+            field: Start Date
+            value: today
+
+      # When moved to Completed
+      - type: conditional
+        condition:
+          field: Status
+          operator: equals
+          value: Completed
+        actions:
+          - type: send_notification
+            to: "{{Owner}}"
+            title: Project Completed
+            message: "Congratulations! Project '{{Project Name}}' is complete."
+          - type: update_field
+            field: Completion Date
+            value: today
+          - type: run_script
+            script: |
+              // Calculate project metrics
+              const startDate = new Date(record['Start Date']);
+              const endDate = new Date(record['Completion Date']);
+              const duration = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+
+              await record.update({
+                'Duration (days)': duration
+              });
+
+  # Data validation and cleanup
+  - name: Data Cleanup
+    enabled: true
+    trigger:
+      type: scheduled
+      schedule: "0 0 * * 0"  # Weekly on Sunday
+    actions:
+      - type: run_script
+        script: |
+          // Remove old records
+          const cutoffDate = new Date();
+          cutoffDate.setMonth(cutoffDate.getMonth() - 6);
+
+          const oldRecords = await lokud.query('Archive', {
+            filter: {
+              'Archived Date': { before: cutoffDate }
+            }
+          });
+
+          for (const record of oldRecords) {
+            await lokud.deleteRecord('Archive', record.id);
+          }
+
+          console.log(`Deleted ${oldRecords.length} old records`);
+
+  # Cross-base automation
+  - name: Sync Related Records
+    enabled: true
+    trigger:
+      type: record_updated
+      base: Projects
+      field: Budget
+    actions:
+      - type: run_script
+        script: |
+          // Update all related tasks
+          const tasks = await lokud.query('Tasks', {
+            filter: {
+              'Project': record.id
+            }
+          });
+
+          const budgetPerTask = record['Budget'] / tasks.length;
+
+          for (const task of tasks) {
+            await lokud.updateRecord('Tasks', task.id, {
+              'Allocated Budget': budgetPerTask
+            });
+          }
+
+# Scheduled jobs
+scheduled_jobs:
+  - name: Daily Standup Reminder
+    schedule: "0 9 * * 1-5"  # Weekdays at 9 AM
+    action:
+      type: send_notification
+      to: "@team"
+      title: Daily Standup
+      message: "Time for daily standup! Share your updates in #standup"
+
+  - name: Weekly Report
+    schedule: "0 17 * * 5"  # Friday at 5 PM
+    action:
+      type: run_script
+      script: |
+        // Generate weekly report
+        const startOfWeek = lokud.utils.startOfWeek(new Date());
+        const endOfWeek = lokud.utils.endOfWeek(new Date());
+
+        const completedTasks = await lokud.query('Tasks', {
+          filter: {
+            'Status': 'Done',
+            'Completion Date': {
+              between: [startOfWeek, endOfWeek]
+            }
+          }
+        });
+
+        const report = {
+          week: lokud.utils.getWeekNumber(new Date()),
+          completed: completedTasks.length,
+          tasks: completedTasks.map(t => t['Task Name'])
+        };
+
+        await lokud.createRecord('Weekly Reports', report);
+
+  - name: Backup Reminder
+    schedule: "0 18 * * *"  # Daily at 6 PM
+    action:
+      type: check_and_notify
+      check: last_backup_time
+      threshold: 24 hours
+      notification:
+        title: Backup Overdue
+        message: "Workspace hasn't been backed up in 24 hours"
+        priority: high
+```
+
+## API Configuration
+
+Configure API access and webhooks.
+
+```yaml
+# api-config.yaml
+name: API-Enabled Workspace
+version: 1.0.0
+
+api:
+  enabled: true
+  version: v1
+
+  # Authentication
+  authentication:
+    methods:
+      - api_key
+      - oauth2
+      - jwt
+
+    api_keys:
+      - name: Production App
+        key: lok_prod_xxxxxxxxxxxxx
+        permissions:
+          - read:all
+          - write:tasks
+          - write:projects
+        rate_limit: 1000  # per hour
+
+      - name: Analytics Service
+        key: lok_analytics_xxxxxxxxxxxxx
+        permissions:
+          - read:all
+        rate_limit: 5000
+
+    oauth2:
+      enabled: true
+      client_id: your_client_id
+      client_secret: your_client_secret
+      scopes:
+        - read:bases
+        - write:records
+        - admin:workspace
+
+  # Rate limiting
+  rate_limiting:
+    enabled: true
+    default_limit: 60  # requests per minute
+    burst_limit: 100
+    by_ip: true
+    by_api_key: true
+
+  # CORS
+  cors:
+    enabled: true
+    allowed_origins:
+      - https://app.example.com
+      - https://dashboard.example.com
+    allowed_methods:
+      - GET
+      - POST
+      - PUT
+      - PATCH
+      - DELETE
+    allowed_headers:
+      - Content-Type
+      - Authorization
+    expose_headers:
+      - X-Total-Count
+      - X-Page-Number
+    credentials: true
+    max_age: 86400
+
+  # Webhooks
+  webhooks:
+    - name: Primary Webhook
+      url: https://api.example.com/webhooks/lokud
+      events:
+        - record.created
+        - record.updated
+        - record.deleted
+      bases:
+        - Tasks
+        - Projects
+      headers:
+        Authorization: Bearer your_token
+        X-Custom-Header: value
+      retry_policy:
+        max_attempts: 3
+        backoff: exponential
+        initial_delay: 1000  # ms
+
+    - name: Analytics Webhook
+      url: https://analytics.example.com/events
+      events:
+        - record.created
+        - record.updated
+      bases: all
+      transform: |
+        // Transform data before sending
+        return {
+          event: event.type,
+          timestamp: new Date().toISOString(),
+          base: event.base,
+          record_id: event.record.id,
+          changes: event.changes
+        };
+
+  # API endpoints customization
+  endpoints:
+    # Custom endpoint
+    - path: /api/v1/custom/summary
+      method: GET
+      handler: |
+        async function handler(request, response) {
+          const projects = await lokud.query('Projects', {
+            filter: { Status: 'Active' }
+          });
+
+          const tasks = await lokud.query('Tasks', {
+            filter: { Status: { not_equals: 'Done' } }
+          });
+
+          return {
+            active_projects: projects.length,
+            pending_tasks: tasks.length,
+            timestamp: new Date().toISOString()
+          };
+        }
+
+    # Override default endpoint
+    - path: /api/v1/bases/:base/records
+      method: POST
+      middleware:
+        - validate_input
+        - check_permissions
+      handler: custom_create_record
+
+# External integrations
+integrations:
+  - name: Zapier
+    enabled: true
+    webhook_url: https://hooks.zapier.com/hooks/catch/xxxxx/
+
+  - name: Make (Integromat)
+    enabled: true
+    webhook_url: https://hook.integromat.com/xxxxx/
+
+  - name: n8n
+    enabled: true
+    config:
+      instance_url: https://n8n.example.com
+      api_key: your_n8n_api_key
+```
+
+## Multi-Environment Configuration
+
+Manage different environments (dev, staging, production).
+
+```yaml
+# base-config.yaml
+extends: null
+environment: ${LOKUD_ENV}
+
+environments:
+  development:
+    settings:
+      debug: true
+      log_level: debug
+      auto_save_interval: 10
+
+    api:
+      rate_limiting:
+        enabled: false
+
+    databases:
+      connection: sqlite:./dev.db
+
+    notifications:
+      email:
+        enabled: false
+
+  staging:
+    settings:
+      debug: true
+      log_level: info
+      auto_save_interval: 30
+
+    api:
+      rate_limiting:
+        enabled: true
+        default_limit: 100
+
+    databases:
+      connection: postgresql://staging-db
+
+    notifications:
+      email:
+        enabled: true
+        smtp:
+          host: smtp-staging.example.com
+
+  production:
+    settings:
+      debug: false
+      log_level: warn
+      auto_save_interval: 60
+
+    api:
+      rate_limiting:
+        enabled: true
+        default_limit: 60
+
+    databases:
+      connection: postgresql://prod-db
+      pool_size: 20
+
+    backup:
+      enabled: true
+      schedule: "0 */6 * * *"  # Every 6 hours
+
+    notifications:
+      email:
+        enabled: true
+        smtp:
+          host: smtp.example.com
+      slack:
+        enabled: true
+      sms:
+        enabled: true
+```
+
+## Security Configuration
+
+Enhanced security settings.
+
+```yaml
+# security-config.yaml
+name: Secure Workspace
+version: 1.0.0
+
+security:
+  # Authentication
+  authentication:
+    require_2fa: true
+    password_policy:
+      min_length: 12
+      require_uppercase: true
+      require_lowercase: true
+      require_numbers: true
+      require_special_chars: true
+      prevent_common_passwords: true
+      password_history: 5  # Can't reuse last 5 passwords
+
+    session:
+      timeout: 1800  # 30 minutes
+      absolute_timeout: 43200  # 12 hours
+      remember_me: false
+
+    lockout:
+      enabled: true
+      max_attempts: 5
+      lockout_duration: 900  # 15 minutes
+
+  # Encryption
+  encryption:
+    at_rest: true
+    algorithm: AES-256-GCM
+    key_rotation: 90  # days
+
+    encrypted_fields:
+      - base: Customers
+        fields:
+          - SSN
+          - Credit Card
+      - base: Employees
+        fields:
+          - Salary
+          - Personal Info
+
+  # Access control
+  access_control:
+    ip_whitelist:
+      - 192.168.1.0/24
+      - 10.0.0.0/8
+
+    require_vpn: true
+
+    # Field-level permissions
+    field_permissions:
+      - base: Employees
+        field: Salary
+        read: [admin, hr]
+        write: [admin]
+
+  # Audit logging
+  audit_log:
+    enabled: true
+    log_events:
+      - login
+      - logout
+      - failed_login
+      - record_created
+      - record_updated
+      - record_deleted
+      - permission_changed
+      - export_data
+    retention_days: 365
+    export_format: json
+
+  # Data privacy
+  privacy:
+    gdpr_compliance: true
+    ccpa_compliance: true
+
+    # Automatic PII detection
+    pii_detection: true
+    pii_fields:
+      - email
+      - phone
+      - ssn
+      - address
+
+    # Data retention
+    data_retention:
+      - base: User Activity
+        retention_days: 90
+        auto_delete: true
+
+      - base: Audit Logs
+        retention_days: 365
+        auto_archive: true
+```
+
+These configuration examples provide comprehensive setups for various scenarios. Copy and customize them based on your specific needs!

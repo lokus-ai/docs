@@ -1,0 +1,574 @@
+---
+title: "MCP Integration"
+description: "Build AI-powered plugins with Model Context Protocol - resources, tools, prompts, and best practices"
+keywords: ["mcp integration", "model context protocol", "ai plugins", "mcp tools", "mcp resources"]
+author: "Lokus Team"
+lastUpdated: "2025-10-23"
+version: "1.3.1"
+---
+
+# MCP Integration
+
+Lokus v1.3+ includes first-class support for the Model Context Protocol (MCP), enabling plugins to expose functionality to AI assistants. This guide covers everything you need to build AI-powered plugins.
+
+## What is MCP?
+
+Model Context Protocol (MCP) is an open protocol for AI assistants to interact with external tools and data sources. It provides a standardized way to:
+
+- **Expose Resources** - Data that AI can read
+- **Register Tools** - Actions that AI can execute
+- **Define Prompts** - Templates for common AI tasks
+
+## Complete MCP Plugin Structure
+
+Here's a comprehensive example showing all MCP capabilities:
+
+```typescript
+import {
+  Plugin,
+  PluginContext,
+  MCPResourceBuilder,
+  MCPToolBuilder,
+  MCPPromptBuilder,
+  MCPServer
+} from '@lokus/plugin-sdk'
+
+export default class MyMCPPlugin implements Plugin {
+  private mcpServer?: MCPServer
+
+  async activate(context: PluginContext) {
+    // Get MCP server instance
+    this.mcpServer = context.api.mcp.getServer()
+
+    // Register resources, tools, and prompts
+    this.registerResources()
+    this.registerTools()
+    this.registerPrompts()
+  }
+
+  private registerResources() {
+    // Resources: Data that AI can read
+    const notesResource = new MCPResourceBuilder()
+      .setUri('notes://workspace/all')
+      .setName('Workspace Notes')
+      .setDescription('All markdown notes in the workspace')
+      .setType('collection')
+      .setMimeType('application/json')
+      .setProvider(async () => {
+        const notes = await this.getAllNotes()
+        return {
+          data: notes,
+          metadata: {
+            count: notes.length,
+            lastModified: new Date().toISOString()
+          }
+        }
+      })
+      .build()
+
+    this.mcpServer?.registerResource(notesResource)
+  }
+
+  private registerTools() {
+    // Tools: Actions that AI can execute
+    const createNoteTool = new MCPToolBuilder()
+      .setName('create_note')
+      .setDescription('Create a new markdown note in the workspace')
+      .setInputSchema({
+        type: 'object',
+        properties: {
+          title: {
+            type: 'string',
+            description: 'Note title'
+          },
+          content: {
+            type: 'string',
+            description: 'Note content in markdown'
+          },
+          folder: {
+            type: 'string',
+            description: 'Optional folder path',
+            default: '/'
+          },
+          tags: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Optional tags'
+          }
+        },
+        required: ['title', 'content']
+      })
+      .setExecutor(async (args) => {
+        const note = await this.createNote(args)
+        return {
+          success: true,
+          noteId: note.id,
+          path: note.path,
+          message: `Created note "${args.title}" at ${note.path}`
+        }
+      })
+      .build()
+
+    this.mcpServer?.registerTool(createNoteTool)
+
+    // Advanced tool with analysis
+    const analyzeNoteTool = new MCPToolBuilder()
+      .setName('analyze_note')
+      .setDescription('Analyze note content and provide insights')
+      .setInputSchema({
+        type: 'object',
+        properties: {
+          noteId: { type: 'string', description: 'Note ID to analyze' },
+          analysisType: {
+            type: 'string',
+            enum: ['summary', 'keywords', 'links', 'todos', 'full'],
+            description: 'Type of analysis to perform'
+          }
+        },
+        required: ['noteId', 'analysisType']
+      })
+      .setExecutor(async (args) => {
+        const note = await this.getNote(args.noteId)
+        const analysis = await this.performAnalysis(note, args.analysisType)
+
+        return {
+          noteId: args.noteId,
+          analysisType: args.analysisType,
+          results: analysis,
+          wordCount: note.content.split(/\s+/).length,
+          charCount: note.content.length,
+          timestamp: new Date().toISOString()
+        }
+      })
+      .build()
+
+    this.mcpServer?.registerTool(analyzeNoteTool)
+  }
+
+  private registerPrompts() {
+    // Prompts: Templates for common AI tasks
+    const summarizePrompt = new MCPPromptBuilder()
+      .setName('summarize_note')
+      .setDescription('Generate a summary of a note')
+      .setArguments([
+        {
+          name: 'noteId',
+          description: 'ID of note to summarize',
+          required: true
+        },
+        {
+          name: 'length',
+          description: 'Summary length (short/medium/long)',
+          required: false
+        }
+      ])
+      .setTemplate(`
+        Please provide a {{length || "medium"}} summary of the following note:
+
+        Title: {{note.title}}
+        Created: {{note.created}}
+        Tags: {{note.tags.join(", ")}}
+
+        Content:
+        ---
+        {{note.content}}
+        ---
+
+        Summary should:
+        - Capture the main ideas
+        - Be {{length || "medium"}} length
+        - Use clear, concise language
+        - Preserve key technical details if present
+      `)
+      .build()
+
+    this.mcpServer?.registerPrompt(summarizePrompt)
+
+    // Advanced prompt with multiple arguments
+    const linkNotesPrompt = new MCPPromptBuilder()
+      .setName('suggest_links')
+      .setDescription('Suggest relevant wiki links for a note')
+      .setArguments([
+        { name: 'noteId', description: 'Current note ID', required: true },
+        { name: 'maxSuggestions', description: 'Max suggestions', required: false }
+      ])
+      .setTemplate(`
+        Analyze the following note and suggest relevant wiki links to other notes:
+
+        Current Note: {{currentNote.title}}
+        Content: {{currentNote.content}}
+
+        Available Notes:
+        {{#each availableNotes}}
+        - [[{{this.title}}]] ({{this.path}})
+        {{/each}}
+
+        Please suggest up to {{maxSuggestions || 5}} notes that would be relevant to link to,
+        and explain where in the content each link would be most appropriate.
+
+        Format:
+        1. [[Note Title]] - Reason and suggested location
+      `)
+      .build()
+
+    this.mcpServer?.registerPrompt(linkNotesPrompt)
+  }
+
+  async deactivate() {
+    // Cleanup MCP registrations
+    this.mcpServer?.dispose()
+  }
+}
+```
+
+## MCP Tools Best Practices
+
+### 1. Descriptive Schemas
+
+Provide clear, detailed schemas for better AI understanding:
+
+```typescript
+// Good - Clear, detailed schema
+{
+  type: 'object',
+  properties: {
+    query: {
+      type: 'string',
+      description: 'Search query using Lokus search syntax (supports: tag:, date:, path:)',
+      minLength: 1,
+      examples: ['tag:important', 'date:>2024-01-01 path:projects/']
+    },
+    limit: {
+      type: 'integer',
+      description: 'Maximum number of results to return',
+      minimum: 1,
+      maximum: 100,
+      default: 10
+    }
+  }
+}
+
+// Bad - Vague schema
+{
+  type: 'object',
+  properties: {
+    query: { type: 'string' },
+    limit: { type: 'number' }
+  }
+}
+```
+
+### 2. Comprehensive Error Handling
+
+Always handle errors gracefully:
+
+```typescript
+.setExecutor(async (args) => {
+  try {
+    // Validate input
+    if (!args.noteId) {
+      return {
+        success: false,
+        error: 'noteId is required',
+        code: 'INVALID_INPUT'
+      }
+    }
+
+    // Check permissions
+    if (!await hasPermission(args.noteId)) {
+      return {
+        success: false,
+        error: 'Permission denied',
+        code: 'PERMISSION_DENIED'
+      }
+    }
+
+    // Execute operation
+    const result = await performOperation(args)
+
+    return {
+      success: true,
+      data: result,
+      metadata: {
+        executionTime: Date.now() - startTime,
+        timestamp: new Date().toISOString()
+      }
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+      code: 'EXECUTION_ERROR',
+      details: error.stack
+    }
+  }
+})
+```
+
+### 3. Progressive Enhancement
+
+Start with basic tools and enhance with caching:
+
+```typescript
+// Basic tool
+const basicTool = new MCPToolBuilder()
+  .setName('search_notes')
+  .setDescription('Search notes')
+  .setInputSchema({ /* simple schema */ })
+  .setExecutor(async (args) => {
+    return await simpleSearch(args.query)
+  })
+  .build()
+
+// Enhanced tool with caching
+const enhancedTool = new MCPToolBuilder()
+  .setName('search_notes')
+  .setDescription('Search notes with caching and relevance ranking')
+  .setInputSchema({ /* detailed schema */ })
+  .setCaching({
+    enabled: true,
+    ttl: 300000, // 5 minutes
+    keyGenerator: (args) => `search:${args.query}:${args.limit}`
+  })
+  .setExecutor(async (args, context) => {
+    // Check cache
+    if (context.cache.has(args)) {
+      return context.cache.get(args)
+    }
+
+    // Perform search with ranking
+    const results = await advancedSearch({
+      query: args.query,
+      limit: args.limit,
+      rankBy: 'relevance',
+      includeSnippets: true
+    })
+
+    // Cache results
+    context.cache.set(args, results)
+
+    return results
+  })
+  .build()
+```
+
+## MCP Resource Patterns
+
+### Static Resources
+
+For configuration and settings:
+
+```typescript
+const configResource = new MCPResourceBuilder()
+  .setUri('config://plugin/settings')
+  .setName('Plugin Configuration')
+  .setType('static')
+  .setProvider(async () => ({
+    data: await this.getConfig(),
+    etag: this.configVersion,
+    lastModified: this.configLastModified
+  }))
+  .build()
+```
+
+### Dynamic Resources
+
+For frequently changing data:
+
+```typescript
+const recentNotesResource = new MCPResourceBuilder()
+  .setUri('notes://recent')
+  .setName('Recent Notes')
+  .setType('dynamic')
+  .setRefreshInterval(60000) // Refresh every minute
+  .setProvider(async () => {
+    const notes = await this.getRecentNotes(10)
+    return {
+      data: notes,
+      metadata: {
+        generated: new Date().toISOString(),
+        nextRefresh: Date.now() + 60000
+      }
+    }
+  })
+  .build()
+```
+
+### Paginated Resources
+
+For large datasets:
+
+```typescript
+const allNotesResource = new MCPResourceBuilder()
+  .setUri('notes://all')
+  .setName('All Notes')
+  .setType('paginated')
+  .setPagination({
+    pageSize: 50,
+    provider: async (page, pageSize) => {
+      const offset = page * pageSize
+      const notes = await this.getNotes(offset, pageSize)
+      const total = await this.getTotalNotes()
+
+      return {
+        data: notes,
+        pagination: {
+          page,
+          pageSize,
+          total,
+          hasNext: offset + pageSize < total
+        }
+      }
+    }
+  })
+  .build()
+```
+
+## Real-World Examples
+
+### Search Tool
+
+```typescript
+const searchTool = new MCPToolBuilder()
+  .setName('search_workspace')
+  .setDescription('Search all notes in the workspace')
+  .setInputSchema({
+    type: 'object',
+    properties: {
+      query: {
+        type: 'string',
+        description: 'Search query (supports AND, OR, NOT operators)',
+        minLength: 1
+      },
+      filters: {
+        type: 'object',
+        properties: {
+          tags: { type: 'array', items: { type: 'string' } },
+          dateFrom: { type: 'string', format: 'date' },
+          dateTo: { type: 'string', format: 'date' },
+          folder: { type: 'string' }
+        }
+      },
+      sortBy: {
+        type: 'string',
+        enum: ['relevance', 'date', 'title'],
+        default: 'relevance'
+      },
+      limit: {
+        type: 'integer',
+        minimum: 1,
+        maximum: 100,
+        default: 10
+      }
+    },
+    required: ['query']
+  })
+  .setExecutor(async (args) => {
+    const results = await searchNotes({
+      query: args.query,
+      filters: args.filters || {},
+      sortBy: args.sortBy || 'relevance',
+      limit: args.limit || 10
+    })
+
+    return {
+      query: args.query,
+      totalResults: results.total,
+      results: results.items.map(item => ({
+        id: item.id,
+        title: item.title,
+        path: item.path,
+        snippet: item.snippet,
+        score: item.score,
+        highlights: item.highlights
+      }))
+    }
+  })
+  .build()
+```
+
+### Export Tool
+
+```typescript
+const exportTool = new MCPToolBuilder()
+  .setName('export_note')
+  .setDescription('Export note to various formats')
+  .setInputSchema({
+    type: 'object',
+    properties: {
+      noteId: { type: 'string', description: 'Note ID' },
+      format: {
+        type: 'string',
+        enum: ['pdf', 'html', 'docx', 'md'],
+        description: 'Export format'
+      },
+      options: {
+        type: 'object',
+        properties: {
+          includeImages: { type: 'boolean', default: true },
+          theme: { type: 'string', enum: ['light', 'dark'] },
+          pageSize: { type: 'string', enum: ['a4', 'letter'] }
+        }
+      }
+    },
+    required: ['noteId', 'format']
+  })
+  .setExecutor(async (args) => {
+    const note = await getNote(args.noteId)
+    const exportPath = await exportNote(note, args.format, args.options)
+
+    return {
+      success: true,
+      noteId: args.noteId,
+      format: args.format,
+      exportPath,
+      fileSize: await getFileSize(exportPath),
+      message: `Note exported to ${exportPath}`
+    }
+  })
+  .build()
+```
+
+## Testing MCP Integrations
+
+Test your MCP tools with the built-in testing framework:
+
+```typescript
+import { createMockContext, TestHelper } from '@lokus/plugin-sdk/testing'
+
+describe('MCP Integration', () => {
+  let context: PluginContext
+  let plugin: MyMCPPlugin
+
+  beforeEach(async () => {
+    context = createMockContext()
+    plugin = new MyMCPPlugin()
+    await plugin.activate(context)
+  })
+
+  it('should register MCP tools', () => {
+    const tools = context.api.mcp.getServer().getTools()
+    expect(tools).toContain('create_note')
+    expect(tools).toContain('analyze_note')
+  })
+
+  it('should execute create_note tool', async () => {
+    const result = await context.api.mcp.executeTool('create_note', {
+      title: 'Test Note',
+      content: 'Test content'
+    })
+
+    expect(result.success).toBe(true)
+    expect(result.noteId).toBeDefined()
+  })
+})
+```
+
+## Next Steps
+
+Learn more about plugin development:
+
+- **[Overview](/developers/plugins/overview)** - Plugin system introduction
+- **[Architecture](/developers/plugins/architecture)** - Plugin architecture deep dive
+- **[Performance](/developers/plugins/performance)** - Optimization techniques
+- **[Advanced Topics](/developers/plugins/advanced)** - Testing and distribution

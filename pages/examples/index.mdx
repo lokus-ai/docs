@@ -1,0 +1,357 @@
+---
+title: Examples & Templates
+description: Real-world examples, templates, and configurations to get started quickly with Lokud. Browse through workspace structures, database views, plugins, and complete workflows.
+keywords: [examples, templates, workspace, configurations, workflows, plugin examples, database examples]
+---
+
+# Examples & Templates
+
+Welcome to the Lokud examples library! This section provides production-ready examples, templates, and configurations to help you get started quickly and learn best practices.
+
+## What You'll Find Here
+
+Our examples collection covers everything from simple templates to complete workspace configurations. Whether you're setting up your first vault or looking to optimize your workflow, you'll find practical, copy-pasteable code and detailed explanations.
+
+### Example Categories
+
+<Cards>
+  <Card title="Workspace Structures" href="/examples/workspaces" icon="folder">
+    Sample workspace layouts for personal knowledge bases, engineering wikis, academic research, and more.
+  </Card>
+
+  <Card title="Template Library" href="/examples/templates-library" icon="file-text">
+    Ready-to-use templates for meeting notes, daily notes, project plans, technical docs, and more.
+  </Card>
+
+  <Card title="Database Views" href="/examples/bases-examples" icon="database">
+    Complete database examples including CRMs, project trackers, content calendars, and habit trackers.
+  </Card>
+
+  <Card title="Plugin Examples" href="/examples/plugin-examples" icon="plug">
+    Full plugin implementations with source code, from simple commands to complex UI extensions.
+  </Card>
+
+  <Card title="Configurations" href="/examples/configurations" icon="settings">
+    Configuration examples for different workflows: minimalist, power user, team, and privacy-focused setups.
+  </Card>
+
+  <Card title="Integrations" href="/examples/integrations" icon="link">
+    Integration setups for Gmail, MCP servers, Git, and external tools with complete configuration examples.
+  </Card>
+
+  <Card title="Workflows" href="/examples/workflows" icon="repeat">
+    End-to-end workflows from morning routines to blog publishing, research, and sprint planning.
+  </Card>
+</Cards>
+
+## How to Use These Examples
+
+### 1. Browse by Use Case
+
+Start with your primary use case:
+- **Personal Knowledge Management**: Check out workspace structures and daily note templates
+- **Software Development**: Explore engineering wiki structures, project trackers, and Git integrations
+- **Content Creation**: Look at content calendars, blog workflows, and publishing templates
+- **Academic Research**: Review research vault structures, book note templates, and literature databases
+- **Business/Teams**: Examine CRM examples, project management bases, and team configurations
+
+### 2. Copy and Customize
+
+All examples are designed to be:
+- **Copy-pasteable**: Ready to use with minimal modifications
+- **Well-commented**: Detailed explanations of every section
+- **Customizable**: Easy to adapt to your specific needs
+- **Production-ready**: Tested and optimized for real-world use
+
+### 3. Combine Examples
+
+Mix and match examples to create your perfect setup:
+```
+Personal Workspace Structure
+  + Daily Note Template
+  + Habit Tracker Base
+  + Morning Routine Workflow
+  = Complete Personal System
+```
+
+## Quick Start Paths
+
+### Path 1: Complete Beginner
+
+1. Start with [Workspace Structures](/examples/workspaces) - choose a layout that matches your needs
+2. Grab templates from [Template Library](/examples/templates-library) - start with daily notes and meeting notes
+3. Follow a simple workflow from [Workflows](/examples/workflows) - try the morning routine
+
+### Path 2: Migrating from Another Tool
+
+1. Review [Configurations](/examples/configurations) to match your previous setup
+2. Check [Integrations](/examples/integrations) for connecting your existing tools
+3. Use [Database Examples](/examples/bases-examples) to recreate your databases
+4. Implement [Workflows](/examples/workflows) to match your current processes
+
+### Path 3: Power User Setup
+
+1. Study advanced [Workspace Structures](/examples/workspaces) - engineering or business layouts
+2. Explore [Plugin Examples](/examples/plugin-examples) for custom functionality
+3. Implement complex [Database Views](/examples/bases-examples) - CRM or project trackers
+4. Set up [Integrations](/examples/integrations) with external tools and AI assistants
+
+### Path 4: Team/Collaborative Use
+
+1. Start with team [Configurations](/examples/configurations)
+2. Set up collaborative [Workspace Structures](/examples/workspaces)
+3. Implement shared [Database Views](/examples/bases-examples) for project tracking
+4. Configure [Integrations](/examples/integrations) for team communication tools
+
+## Example Conventions
+
+Throughout this section, we use consistent conventions:
+
+### File Paths
+
+```
+vault/
+├── 01-inbox/           # Unsorted incoming notes
+├── 02-projects/        # Active projects
+├── 03-areas/           # Areas of responsibility
+├── 04-resources/       # Reference materials
+└── 05-archives/        # Completed or inactive items
+```
+
+### Frontmatter Format
+
+```yaml
+---
+title: Note Title
+created: 2025-01-15
+updated: 2025-01-20
+tags: [tag1, tag2, tag3]
+status: active
+---
+```
+
+### Template Variables
+
+```markdown
+{{title}}           # Note title
+{{date}}            # Current date
+{{time}}            # Current time
+{{author}}          # Current user
+{{vault}}           # Vault name
+```
+
+### Database Query Syntax
+
+```yaml
+filters:
+  - field: status
+    operator: equals
+    value: active
+sort:
+  - field: priority
+    direction: desc
+```
+
+## Example Structure
+
+Each example page follows this structure:
+
+1. **Overview**: What the example demonstrates and who it's for
+2. **Use Case**: Real-world scenarios where this example applies
+3. **Complete Code**: Full, copy-pasteable implementation
+4. **Explanation**: Detailed breakdown of how it works
+5. **Customization**: How to adapt it to your needs
+6. **Tips & Tricks**: Best practices and optimization suggestions
+
+## Contributing Examples
+
+Have a great example to share? We welcome contributions!
+
+### What Makes a Good Example
+
+- **Practical**: Solves a real problem
+- **Complete**: Includes all necessary code and configuration
+- **Documented**: Well-commented and explained
+- **Reusable**: Easy for others to adapt
+- **Tested**: Works in production environments
+
+### Example Template
+
+When creating examples, use this structure:
+
+```markdown
+## Example Name
+
+**Use Case**: Brief description
+
+**Difficulty**: Beginner | Intermediate | Advanced
+
+### Complete Code
+
+\`\`\`language
+// Full implementation with comments
+\`\`\`
+
+### How It Works
+
+1. Step-by-step explanation
+2. Key concepts
+3. Important details
+
+### Customization Options
+
+- Option 1: Description
+- Option 2: Description
+
+### Common Issues
+
+- Issue 1: Solution
+- Issue 2: Solution
+```
+
+## Example Categories Explained
+
+### Workspace Structures
+
+Complete folder hierarchies and organization systems for different use cases. These examples show you how to organize your vault from day one.
+
+**What you'll learn:**
+- Folder structure best practices
+- Naming conventions
+- Tagging strategies
+- Index file organization
+
+### Template Library
+
+Ready-to-use note templates for common note types. Copy, paste, and start writing.
+
+**What you'll learn:**
+- Template syntax and variables
+- Frontmatter configuration
+- Dynamic content generation
+- Template best practices
+
+### Database Views
+
+Complete database implementations with filters, sorts, and custom views. Perfect for project management, CRM, content calendars, and more.
+
+**What you'll learn:**
+- Database schema design
+- Query and filter syntax
+- View configuration
+- Data relationships
+
+### Plugin Examples
+
+Full plugin implementations from simple commands to complex UI extensions. Includes source code, manifests, and installation instructions.
+
+**What you'll learn:**
+- Plugin architecture
+- API usage
+- UI components
+- Event handling
+
+### Configurations
+
+Configuration files for different workflows and use cases. From minimalist to power user setups.
+
+**What you'll learn:**
+- Configuration options
+- Keyboard shortcuts
+- Theme customization
+- Performance optimization
+
+### Integrations
+
+Complete integration setups for connecting Lokud with external tools and services.
+
+**What you'll learn:**
+- API configuration
+- Authentication setup
+- Data synchronization
+- Workflow automation
+
+### Workflows
+
+End-to-end workflows that combine templates, databases, and configurations into complete systems.
+
+**What you'll learn:**
+- Process design
+- Automation strategies
+- Tool combinations
+- Productivity patterns
+
+## Tips for Learning from Examples
+
+### 1. Start Simple
+
+Don't try to implement everything at once. Start with one example that matches your most pressing need.
+
+### 2. Understand Before Copying
+
+Read through the entire example and explanations before copying code. Understanding how it works will help you customize it effectively.
+
+### 3. Experiment in a Test Vault
+
+Create a separate test vault to try examples without affecting your main workspace.
+
+### 4. Customize Incrementally
+
+Copy the base example first, get it working, then make small customizations one at a time.
+
+### 5. Keep Notes
+
+Document what works for you and what doesn't. Your customization notes are valuable for future reference.
+
+## Common Use Cases
+
+### Personal Knowledge Management
+- [Personal workspace structure](/examples/workspaces#personal-knowledge-base)
+- [Daily notes template](/examples/templates-library#daily-notes)
+- [Book notes template](/examples/templates-library#book-notes)
+- [Morning routine workflow](/examples/workflows#morning-routine)
+
+### Software Engineering
+- [Engineering wiki structure](/examples/workspaces#software-engineering-wiki)
+- [Technical documentation template](/examples/templates-library#technical-documentation)
+- [Code snippet template](/examples/templates-library#code-snippet)
+- [Git integration](/examples/integrations#git-integration)
+
+### Content Creation
+- [Content creator workspace](/examples/workspaces#content-creator-workspace)
+- [Blog post template](/examples/templates-library#blog-post)
+- [Content calendar base](/examples/bases-examples#content-calendar)
+- [Blog writing workflow](/examples/workflows#blog-writing)
+
+### Academic Research
+- [Research vault structure](/examples/workspaces#academic-research-vault)
+- [Literature database](/examples/bases-examples#reading-list)
+- [Research workflow](/examples/workflows#research-workflow)
+
+### Business & Teams
+- [Business workspace structure](/examples/workspaces#business-startup-workspace)
+- [CRM base](/examples/bases-examples#crm)
+- [Project tracker](/examples/bases-examples#project-tracker)
+- [Sprint planning workflow](/examples/workflows#sprint-planning)
+
+## Next Steps
+
+Ready to dive in? Here's where to go next:
+
+1. **Choose your path**: Pick one of the quick start paths above based on your needs
+2. **Browse examples**: Explore the category that interests you most
+3. **Copy and test**: Try an example in a test vault
+4. **Customize**: Adapt the example to your specific needs
+5. **Combine**: Mix examples to create your perfect system
+
+## Need Help?
+
+If you're stuck or have questions about any example:
+- Check the [Troubleshooting Guide](/guides/troubleshooting)
+- Review the [API Reference](/api/overview) for detailed documentation
+- Join the community discussions
+- Search for similar use cases in other examples
+
+---
+
+**Pro Tip**: Bookmark this page and refer back to it as you grow your Lokud skills. Examples you skip today might be perfect for tomorrow's needs.

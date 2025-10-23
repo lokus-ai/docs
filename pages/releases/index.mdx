@@ -1,0 +1,162 @@
+---
+title: Release Notes
+description: Complete version history and release notes for Lokus
+keywords: [lokus, releases, changelog, version history, updates]
+---
+
+# Release Notes
+
+Stay up-to-date with the latest features, improvements, and bug fixes in Lokus.
+
+## Version History
+
+### [v1.3 "Quantum Leap"](/releases/v1.3)
+**Released:** October 2025 | **Status:** Production Ready
+
+Major release featuring Bases (database system), MCP Server with 68+ AI tools, Quantum Performance Architecture, OAuth 2.0 authentication, and full Windows support.
+
+**Highlights:**
+- 🗄️ Bases - Transform notes into databases
+- 🤖 MCP Server - 68+ tools for AI integration
+- ⚡ 100x faster search performance
+- 🔐 Production OAuth 2.0 + PKCE
+- 🪟 Full Windows compatibility
+- 📊 Split panes, enhanced Kanban, and more
+
+[Read full release notes →](/releases/v1.3)
+
+---
+
+### v1.2 "Velocity"
+**Released:** July 2025 | **Status:** Stable
+
+Enhanced performance and developer experience with improved plugin system and graph optimizations.
+
+**Key Features:**
+- Enhanced plugin API with better sandboxing
+- Graph performance improvements (5x faster for large graphs)
+- Improved search with better relevance scoring
+- Template system overhaul
+- Bug fixes and stability improvements
+
+---
+
+### v1.1 "Foundation"
+**Released:** April 2025 | **Status:** Stable
+
+First public release with core features and plugin system.
+
+**Key Features:**
+- Rich markdown editor with TipTap
+- Wiki-style linking system
+- 2D/3D graph visualization
+- Basic plugin support
+- Template system
+- Gmail integration (beta)
+
+---
+
+### v1.0 "Genesis"
+**Released:** January 2025 | **Status:** Legacy
+
+Initial release with fundamental note-taking capabilities.
+
+**Key Features:**
+- Core markdown editor
+- File-based storage
+- Basic search functionality
+- Cross-platform support (macOS, Linux)
+
+---
+
+## Release Schedule
+
+Lokus follows a regular release cycle:
+
+- **Major releases** (x.0) - Every 6-8 months, introducing significant new features
+- **Minor releases** (x.y) - Every 2-3 months, adding features and improvements
+- **Patch releases** (x.y.z) - As needed, focusing on bug fixes and security
+
+## Upgrade Guide
+
+### From v1.2 to v1.3
+
+v1.3 introduces several new features but maintains backward compatibility with v1.2 workspaces.
+
+**What's Changed:**
+- New YAML frontmatter support for Bases (optional)
+- OAuth configuration for Gmail (re-authentication required)
+- Performance improvements (no action needed)
+
+**Action Required:**
+1. Review OAuth settings if using Gmail integration
+2. Optional: Add YAML frontmatter to notes for Bases features
+3. Recommended: Review new MCP server capabilities
+
+### From v1.1 to v1.2
+
+Mostly backward compatible. Plugin developers should review the new plugin API.
+
+**Action Required:**
+1. Update plugins to use new API (if applicable)
+2. Review template syntax changes
+
+---
+
+## Pre-Release Channels
+
+Want to try upcoming features early?
+
+### Beta Channel
+- New features before stable release
+- Generally stable, but may have bugs
+- Updated every 2-3 weeks
+
+### Nightly Channel
+- Latest development builds
+- Cutting-edge features
+- May be unstable
+- Updated daily
+
+[Learn how to switch channels →](/getting-started/installation#release-channels)
+
+---
+
+## Deprecation Policy
+
+Lokus follows a clear deprecation policy to ensure smooth upgrades:
+
+1. **Deprecation Notice** - Feature marked as deprecated, but still functional
+2. **Grace Period** - At least two major versions before removal
+3. **Migration Guide** - Provided when features are deprecated
+4. **Removal** - Only after grace period and adequate notice
+
+## Security Updates
+
+Security updates are released as soon as possible after identification.
+
+- **Critical vulnerabilities** - Patch within 24-48 hours
+- **High severity** - Patch within 1 week
+- **Medium/Low severity** - Included in next scheduled release
+
+[Report security issues →](https://github.com/lokus-ai/lokus/security)
+
+---
+
+## Subscribe to Updates
+
+Stay informed about new releases:
+
+- **GitHub Releases** - [Watch repository](https://github.com/lokus-ai/lokus)
+- **Discussions** - [Join discussions](https://github.com/lokus-ai/lokus/discussions)
+- **RSS Feed** - Subscribe to release feed
+
+---
+
+## Feedback
+
+Found a bug or have a feature request?
+
+- [Report bugs](https://github.com/lokus-ai/lokus/issues/new?template=bug_report.md)
+- [Request features](https://github.com/lokus-ai/lokus/issues/new?template=feature_request.md)
+- [Join discussions](https://github.com/lokus-ai/lokus/discussions)

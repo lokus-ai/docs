@@ -1,0 +1,1400 @@
+---
+title: Templates Library
+description: Reusable templates for common scenarios - meeting notes, project briefs, weekly reviews, SOPs, and more
+keywords: lokud templates, document templates, meeting notes template, project brief template
+---
+
+# Templates Library
+
+Copy-pasteable templates for common documents and workflows. Each template is ready to use and fully customizable.
+
+## Meeting Notes Template
+
+Professional meeting notes with action items and follow-ups.
+
+```yaml
+# Template: Meeting Notes
+name: Meeting Notes
+type: document_template
+category: meetings
+
+structure:
+  - section: Header
+    fields:
+      - name: Meeting Title
+        type: text
+        required: true
+      - name: Date
+        type: date
+        auto_fill: current_date
+      - name: Time
+        type: time
+      - name: Location
+        type: select
+        options:
+          - Office - Conference Room A
+          - Office - Conference Room B
+          - Zoom
+          - Google Meet
+          - Phone
+      - name: Meeting Type
+        type: select
+        options:
+          - Weekly Sync
+          - Planning
+          - Review
+          - Brainstorm
+          - Client Meeting
+          - One-on-One
+          - All Hands
+      - name: Attendees
+        type: multi_person
+        required: true
+      - name: Facilitator
+        type: person
+      - name: Note Taker
+        type: person
+        auto_fill: current_user
+
+  - section: Agenda
+    fields:
+      - name: Agenda Items
+        type: checklist
+        items:
+          - Check-in / Updates
+          - Main Discussion Topics
+          - Decisions Needed
+          - Action Items Review
+          - Next Steps
+
+  - section: Discussion
+    fields:
+      - name: Key Points
+        type: rich_text
+        placeholder: |
+          Document main discussion points:
+          - Topic 1: [Details]
+          - Topic 2: [Details]
+          - Topic 3: [Details]
+      - name: Decisions Made
+        type: rich_text
+        placeholder: |
+          Record all decisions:
+          1. Decision: [Details]
+             Rationale: [Why this decision was made]
+             Owner: [Who is responsible]
+      - name: Questions Raised
+        type: rich_text
+        placeholder: |
+          Unanswered questions to follow up on:
+          - Q: [Question]
+            A: [Answer or "To be determined"]
+
+  - section: Action Items
+    fields:
+      - name: Actions
+        type: table
+        columns:
+          - name: Action Item
+            type: text
+          - name: Owner
+            type: person
+          - name: Due Date
+            type: date
+          - name: Priority
+            type: select
+            options:
+              - High
+              - Medium
+              - Low
+          - name: Status
+            type: select
+            options:
+              - Not Started
+              - In Progress
+              - Completed
+              - Blocked
+
+  - section: Follow-up
+    fields:
+      - name: Next Meeting
+        type: date
+      - name: Next Meeting Agenda
+        type: text
+      - name: Parking Lot
+        type: rich_text
+        placeholder: "Topics to discuss later"
+      - name: Resources & Links
+        type: rich_text
+
+content_template: |
+  # {{Meeting Title}}
+
+  **Date:** {{Date}}
+  **Time:** {{Time}}
+  **Location:** {{Location}}
+  **Type:** {{Meeting Type}}
+
+  ## Attendees
+  {{Attendees}}
+
+  **Facilitator:** {{Facilitator}}
+  **Note Taker:** {{Note Taker}}
+
+  ---
+
+  ## Agenda
+  {{Agenda Items}}
+
+  ---
+
+  ## Discussion Notes
+
+  ### Key Points
+  {{Key Points}}
+
+  ### Decisions Made
+  {{Decisions Made}}
+
+  ### Questions & Answers
+  {{Questions Raised}}
+
+  ---
+
+  ## Action Items
+
+  {{Actions}}
+
+  ---
+
+  ## Next Steps
+
+  **Next Meeting:** {{Next Meeting}}
+  **Agenda:** {{Next Meeting Agenda}}
+
+  ### Parking Lot (Future Topics)
+  {{Parking Lot}}
+
+  ### Resources
+  {{Resources & Links}}
+
+  ---
+
+  *Notes taken by {{Note Taker}} on {{Date}}*
+```
+
+### Usage Example
+
+```markdown
+# Q1 Planning Meeting
+
+**Date:** 2025-01-15
+**Time:** 10:00 AM - 11:30 AM
+**Location:** Zoom
+**Type:** Planning
+
+## Attendees
+- Sarah Johnson (Product)
+- Mike Chen (Engineering)
+- Lisa Wang (Design)
+- Tom Brown (Marketing)
+
+**Facilitator:** Sarah Johnson
+**Note Taker:** Current User
+
+---
+
+## Discussion Notes
+
+### Key Points
+- Reviewed Q4 results: exceeded revenue target by 15%
+- Identified 3 major features for Q1 roadmap
+- Discussed resource allocation across teams
+- Agreed on new sprint structure (2-week cycles)
+
+### Decisions Made
+1. **Decision:** Launch new dashboard feature in March
+   **Rationale:** Customer demand is high, engineering capacity available
+   **Owner:** Mike Chen
+
+2. **Decision:** Hire 2 additional engineers
+   **Rationale:** Support Q1 roadmap and reduce team burnout
+   **Owner:** Sarah Johnson
+
+### Action Items
+
+| Action Item | Owner | Due Date | Priority | Status |
+|------------|-------|----------|----------|---------|
+| Create technical spec for dashboard | Mike Chen | 2025-01-22 | High | Not Started |
+| Draft job descriptions | Sarah Johnson | 2025-01-18 | High | In Progress |
+| User research interviews | Lisa Wang | 2025-01-29 | Medium | Not Started |
+| Marketing campaign plan | Tom Brown | 2025-02-01 | Medium | Not Started |
+
+---
+
+## Next Steps
+
+**Next Meeting:** 2025-01-22
+**Agenda:** Review technical specs and finalize Q1 priorities
+```
+
+## Project Brief Template
+
+Comprehensive project kickoff document.
+
+```yaml
+# Template: Project Brief
+name: Project Brief
+type: document_template
+category: project_management
+
+structure:
+  - section: Overview
+    fields:
+      - name: Project Name
+        type: text
+        required: true
+      - name: Project Code
+        type: text
+        placeholder: "e.g., PROJ-001"
+      - name: Status
+        type: select
+        options:
+          - Planning
+          - Active
+          - On Hold
+          - Completed
+          - Cancelled
+        default: Planning
+      - name: Priority
+        type: select
+        options:
+          - Critical
+          - High
+          - Medium
+          - Low
+      - name: Start Date
+        type: date
+      - name: Target End Date
+        type: date
+      - name: Actual End Date
+        type: date
+
+  - section: Team
+    fields:
+      - name: Project Owner
+        type: person
+        required: true
+      - name: Project Manager
+        type: person
+      - name: Team Members
+        type: multi_person
+      - name: Stakeholders
+        type: multi_person
+      - name: Executive Sponsor
+        type: person
+
+  - section: Project Details
+    fields:
+      - name: Executive Summary
+        type: rich_text
+        placeholder: "2-3 paragraph overview of the project"
+      - name: Background
+        type: rich_text
+        placeholder: "Why is this project needed?"
+      - name: Business Case
+        type: rich_text
+        placeholder: "What problem does this solve? What value does it create?"
+      - name: Objectives
+        type: rich_text
+        placeholder: |
+          List specific, measurable objectives:
+          1. Objective 1
+          2. Objective 2
+          3. Objective 3
+      - name: Success Criteria
+        type: rich_text
+        placeholder: "How will we measure success?"
+      - name: Key Results
+        type: table
+        columns:
+          - name: Key Result
+            type: text
+          - name: Target
+            type: number
+          - name: Current
+            type: number
+          - name: Status
+            type: select
+
+  - section: Scope
+    fields:
+      - name: In Scope
+        type: rich_text
+        placeholder: "What is included in this project?"
+      - name: Out of Scope
+        type: rich_text
+        placeholder: "What is explicitly NOT included?"
+      - name: Assumptions
+        type: rich_text
+      - name: Constraints
+        type: rich_text
+      - name: Dependencies
+        type: rich_text
+
+  - section: Deliverables
+    fields:
+      - name: Deliverables List
+        type: table
+        columns:
+          - name: Deliverable
+            type: text
+          - name: Description
+            type: text
+          - name: Owner
+            type: person
+          - name: Due Date
+            type: date
+          - name: Status
+            type: select
+
+  - section: Timeline & Milestones
+    fields:
+      - name: Project Phases
+        type: rich_text
+      - name: Major Milestones
+        type: table
+        columns:
+          - name: Milestone
+            type: text
+          - name: Date
+            type: date
+          - name: Completion Criteria
+            type: text
+          - name: Status
+            type: select
+
+  - section: Budget & Resources
+    fields:
+      - name: Total Budget
+        type: number
+        format: currency
+      - name: Budget Breakdown
+        type: table
+        columns:
+          - name: Category
+            type: text
+          - name: Amount
+            type: number
+          - name: Notes
+            type: text
+      - name: Resource Requirements
+        type: rich_text
+
+  - section: Risks & Mitigation
+    fields:
+      - name: Risk Register
+        type: table
+        columns:
+          - name: Risk
+            type: text
+          - name: Probability
+            type: select
+          - name: Impact
+            type: select
+          - name: Mitigation Strategy
+            type: text
+          - name: Owner
+            type: person
+
+  - section: Communication Plan
+    fields:
+      - name: Status Update Frequency
+        type: select
+        options:
+          - Daily
+          - Weekly
+          - Bi-weekly
+          - Monthly
+      - name: Status Update Format
+        type: select
+        options:
+          - Email
+          - Slack
+          - Meeting
+          - Dashboard
+      - name: Stakeholder Communication
+        type: rich_text
+
+content_template: |
+  # {{Project Name}}
+
+  **Project Code:** {{Project Code}}
+  **Status:** {{Status}}
+  **Priority:** {{Priority}}
+
+  **Timeline:** {{Start Date}} - {{Target End Date}}
+
+  ---
+
+  ## Team
+
+  - **Project Owner:** {{Project Owner}}
+  - **Project Manager:** {{Project Manager}}
+  - **Team Members:** {{Team Members}}
+  - **Stakeholders:** {{Stakeholders}}
+  - **Executive Sponsor:** {{Executive Sponsor}}
+
+  ---
+
+  ## Executive Summary
+
+  {{Executive Summary}}
+
+  ## Background
+
+  {{Background}}
+
+  ## Business Case
+
+  {{Business Case}}
+
+  ---
+
+  ## Objectives
+
+  {{Objectives}}
+
+  ## Success Criteria
+
+  {{Success Criteria}}
+
+  ### Key Results
+
+  {{Key Results}}
+
+  ---
+
+  ## Scope
+
+  ### In Scope
+  {{In Scope}}
+
+  ### Out of Scope
+  {{Out of Scope}}
+
+  ### Assumptions
+  {{Assumptions}}
+
+  ### Constraints
+  {{Constraints}}
+
+  ### Dependencies
+  {{Dependencies}}
+
+  ---
+
+  ## Deliverables
+
+  {{Deliverables List}}
+
+  ---
+
+  ## Timeline & Milestones
+
+  ### Project Phases
+  {{Project Phases}}
+
+  ### Major Milestones
+  {{Major Milestones}}
+
+  ---
+
+  ## Budget & Resources
+
+  **Total Budget:** {{Total Budget}}
+
+  ### Budget Breakdown
+  {{Budget Breakdown}}
+
+  ### Resource Requirements
+  {{Resource Requirements}}
+
+  ---
+
+  ## Risks & Mitigation
+
+  {{Risk Register}}
+
+  ---
+
+  ## Communication Plan
+
+  - **Status Updates:** {{Status Update Frequency}} via {{Status Update Format}}
+  - **Stakeholder Communication:** {{Stakeholder Communication}}
+```
+
+## Weekly Review Template
+
+Personal or team weekly reflection and planning.
+
+```yaml
+# Template: Weekly Review
+name: Weekly Review
+type: document_template
+category: productivity
+
+structure:
+  - section: Header
+    fields:
+      - name: Week Of
+        type: date
+        required: true
+      - name: Reviewer
+        type: person
+        auto_fill: current_user
+      - name: Team
+        type: select
+        options:
+          - Personal
+          - Engineering
+          - Product
+          - Marketing
+          - Sales
+          - Design
+
+  - section: Last Week Review
+    fields:
+      - name: Accomplishments
+        type: rich_text
+        placeholder: |
+          What did we accomplish?
+          - Achievement 1
+          - Achievement 2
+          - Achievement 3
+      - name: Key Metrics
+        type: table
+        columns:
+          - name: Metric
+            type: text
+          - name: Target
+            type: number
+          - name: Actual
+            type: number
+          - name: Variance
+            type: formula
+      - name: Challenges
+        type: rich_text
+        placeholder: "What obstacles did we face?"
+      - name: Lessons Learned
+        type: rich_text
+        placeholder: "What did we learn?"
+      - name: Wins
+        type: rich_text
+        placeholder: "What should we celebrate?"
+
+  - section: This Week Planning
+    fields:
+      - name: Focus Areas
+        type: rich_text
+        placeholder: |
+          Top 3 priorities:
+          1. Priority 1
+          2. Priority 2
+          3. Priority 3
+      - name: Goals
+        type: table
+        columns:
+          - name: Goal
+            type: text
+          - name: Owner
+            type: person
+          - name: Due Date
+            type: date
+          - name: Status
+            type: select
+      - name: Scheduled Events
+        type: rich_text
+        placeholder: "Important meetings, deadlines, events"
+      - name: Blockers
+        type: rich_text
+        placeholder: "What might prevent progress?"
+
+  - section: Reflection
+    fields:
+      - name: Energy Level
+        type: rating
+        max: 5
+      - name: Team Morale
+        type: rating
+        max: 5
+      - name: Progress Toward Goals
+        type: select
+        options:
+          - Ahead of Schedule
+          - On Track
+          - Slightly Behind
+          - Significantly Behind
+      - name: Notes
+        type: rich_text
+
+content_template: |
+  # Weekly Review - Week of {{Week Of}}
+
+  **Reviewer:** {{Reviewer}}
+  **Team:** {{Team}}
+
+  ---
+
+  ## Last Week Review
+
+  ### Accomplishments
+  {{Accomplishments}}
+
+  ### Key Metrics
+  {{Key Metrics}}
+
+  ### Challenges
+  {{Challenges}}
+
+  ### Lessons Learned
+  {{Lessons Learned}}
+
+  ### Wins & Celebrations
+  {{Wins}}
+
+  ---
+
+  ## This Week Planning
+
+  ### Focus Areas
+  {{Focus Areas}}
+
+  ### Goals
+  {{Goals}}
+
+  ### Scheduled Events
+  {{Scheduled Events}}
+
+  ### Potential Blockers
+  {{Blockers}}
+
+  ---
+
+  ## Reflection
+
+  **Energy Level:** {{Energy Level}}/5
+  **Team Morale:** {{Team Morale}}/5
+  **Progress:** {{Progress Toward Goals}}
+
+  ### Notes
+  {{Notes}}
+```
+
+## Standard Operating Procedure (SOP) Template
+
+Document repeatable processes and procedures.
+
+```yaml
+# Template: Standard Operating Procedure
+name: Standard Operating Procedure (SOP)
+type: document_template
+category: documentation
+
+structure:
+  - section: Header
+    fields:
+      - name: Procedure Title
+        type: text
+        required: true
+      - name: SOP ID
+        type: text
+        placeholder: "SOP-XXX"
+      - name: Version
+        type: text
+        default: "1.0"
+      - name: Department
+        type: select
+        options:
+          - Engineering
+          - Product
+          - Sales
+          - Marketing
+          - Customer Success
+          - Operations
+          - HR
+          - Finance
+      - name: Process Owner
+        type: person
+        required: true
+      - name: Created Date
+        type: date
+        auto_fill: created_at
+      - name: Last Updated
+        type: date
+        auto_fill: updated_at
+      - name: Review Date
+        type: date
+      - name: Status
+        type: select
+        options:
+          - Draft
+          - Under Review
+          - Approved
+          - Archived
+        default: Draft
+
+  - section: Overview
+    fields:
+      - name: Purpose
+        type: rich_text
+        placeholder: "Why does this procedure exist?"
+      - name: Scope
+        type: rich_text
+        placeholder: "What does this cover? What is excluded?"
+      - name: Definitions
+        type: table
+        columns:
+          - name: Term
+            type: text
+          - name: Definition
+            type: text
+      - name: Roles & Responsibilities
+        type: table
+        columns:
+          - name: Role
+            type: text
+          - name: Responsibilities
+            type: text
+
+  - section: Prerequisites
+    fields:
+      - name: Required Tools
+        type: checklist
+      - name: Required Access
+        type: checklist
+      - name: Required Knowledge
+        type: rich_text
+      - name: Related Documents
+        type: rich_text
+
+  - section: Procedure Steps
+    fields:
+      - name: Steps
+        type: table
+        columns:
+          - name: Step
+            type: number
+          - name: Action
+            type: text
+          - name: Responsible Party
+            type: person
+          - name: Expected Outcome
+            type: text
+          - name: Notes
+            type: text
+      - name: Detailed Instructions
+        type: rich_text
+        placeholder: |
+          Provide detailed step-by-step instructions:
+
+          ## Step 1: [Title]
+          Description and details...
+
+          ## Step 2: [Title]
+          Description and details...
+
+  - section: Quality Control
+    fields:
+      - name: Checkpoints
+        type: checklist
+        placeholder: "Quality checkpoints throughout the process"
+      - name: Success Criteria
+        type: rich_text
+        placeholder: "How do you know the procedure was completed successfully?"
+      - name: Common Errors
+        type: table
+        columns:
+          - name: Error
+            type: text
+          - name: Cause
+            type: text
+          - name: Solution
+            type: text
+
+  - section: Additional Information
+    fields:
+      - name: Best Practices
+        type: rich_text
+      - name: Tips & Tricks
+        type: rich_text
+      - name: FAQs
+        type: rich_text
+      - name: Contact Information
+        type: table
+        columns:
+          - name: Role
+            type: text
+          - name: Name
+            type: person
+          - name: Contact
+            type: text
+
+  - section: Revision History
+    fields:
+      - name: Changes
+        type: table
+        columns:
+          - name: Version
+            type: text
+          - name: Date
+            type: date
+          - name: Author
+            type: person
+          - name: Changes Made
+            type: text
+
+content_template: |
+  # {{Procedure Title}}
+
+  **SOP ID:** {{SOP ID}}
+  **Version:** {{Version}}
+  **Department:** {{Department}}
+  **Process Owner:** {{Process Owner}}
+
+  **Created:** {{Created Date}}
+  **Last Updated:** {{Last Updated}}
+  **Next Review:** {{Review Date}}
+  **Status:** {{Status}}
+
+  ---
+
+  ## Purpose
+
+  {{Purpose}}
+
+  ## Scope
+
+  {{Scope}}
+
+  ## Definitions
+
+  {{Definitions}}
+
+  ## Roles & Responsibilities
+
+  {{Roles & Responsibilities}}
+
+  ---
+
+  ## Prerequisites
+
+  ### Required Tools
+  {{Required Tools}}
+
+  ### Required Access
+  {{Required Access}}
+
+  ### Required Knowledge
+  {{Required Knowledge}}
+
+  ### Related Documents
+  {{Related Documents}}
+
+  ---
+
+  ## Procedure
+
+  ### Steps Overview
+  {{Steps}}
+
+  ### Detailed Instructions
+  {{Detailed Instructions}}
+
+  ---
+
+  ## Quality Control
+
+  ### Checkpoints
+  {{Checkpoints}}
+
+  ### Success Criteria
+  {{Success Criteria}}
+
+  ### Common Errors & Solutions
+  {{Common Errors}}
+
+  ---
+
+  ## Additional Information
+
+  ### Best Practices
+  {{Best Practices}}
+
+  ### Tips & Tricks
+  {{Tips & Tricks}}
+
+  ### FAQs
+  {{FAQs}}
+
+  ### Contact Information
+  {{Contact Information}}
+
+  ---
+
+  ## Revision History
+
+  {{Changes}}
+```
+
+## One-on-One Meeting Template
+
+Structured template for manager-employee check-ins.
+
+```yaml
+# Template: One-on-One
+name: One-on-One Meeting
+type: document_template
+category: hr
+
+structure:
+  - section: Meeting Info
+    fields:
+      - name: Employee
+        type: person
+        required: true
+      - name: Manager
+        type: person
+        required: true
+      - name: Date
+        type: date
+        auto_fill: current_date
+      - name: Meeting Number
+        type: number
+        placeholder: "e.g., Weekly #15"
+
+  - section: Check-in
+    fields:
+      - name: How are you feeling?
+        type: select
+        options:
+          - Great
+          - Good
+          - Okay
+          - Not Great
+          - Struggling
+      - name: Energy Level
+        type: rating
+        max: 5
+      - name: Work-Life Balance
+        type: rating
+        max: 5
+      - name: General Updates
+        type: rich_text
+        placeholder: "What's new since we last talked?"
+
+  - section: Work Discussion
+    fields:
+      - name: Current Projects
+        type: rich_text
+        placeholder: "What are you working on?"
+      - name: Wins & Accomplishments
+        type: rich_text
+        placeholder: "What went well?"
+      - name: Challenges
+        type: rich_text
+        placeholder: "What's been difficult?"
+      - name: Blockers
+        type: rich_text
+        placeholder: "What's preventing progress?"
+      - name: Support Needed
+        type: rich_text
+        placeholder: "How can I help?"
+
+  - section: Growth & Development
+    fields:
+      - name: Learning Goals
+        type: rich_text
+        placeholder: "What do you want to learn?"
+      - name: Career Aspirations
+        type: rich_text
+        placeholder: "Where do you want to go?"
+      - name: Feedback Request
+        type: rich_text
+        placeholder: "What feedback do you want?"
+      - name: Skills to Develop
+        type: multi_select
+        options:
+          - Leadership
+          - Technical Skills
+          - Communication
+          - Project Management
+          - Mentoring
+          - Strategic Thinking
+
+  - section: Team & Culture
+    fields:
+      - name: Team Dynamics
+        type: rich_text
+        placeholder: "How's the team working together?"
+      - name: Process Improvements
+        type: rich_text
+        placeholder: "What could we do better?"
+      - name: Recognition
+        type: rich_text
+        placeholder: "Who should we recognize?"
+
+  - section: Action Items
+    fields:
+      - name: Manager Actions
+        type: table
+        columns:
+          - name: Action
+            type: text
+          - name: Due Date
+            type: date
+          - name: Status
+            type: select
+      - name: Employee Actions
+        type: table
+        columns:
+          - name: Action
+            type: text
+          - name: Due Date
+            type: date
+          - name: Status
+            type: select
+
+  - section: Next Meeting
+    fields:
+      - name: Next Meeting Date
+        type: date
+      - name: Topics for Next Time
+        type: rich_text
+      - name: Private Notes
+        type: rich_text
+        visibility: manager_only
+
+content_template: |
+  # 1:1 - {{Employee}} & {{Manager}}
+
+  **Date:** {{Date}}
+  **Meeting:** {{Meeting Number}}
+
+  ---
+
+  ## Check-in
+
+  **Mood:** {{How are you feeling?}}
+  **Energy:** {{Energy Level}}/5
+  **Work-Life Balance:** {{Work-Life Balance}}/5
+
+  ### General Updates
+  {{General Updates}}
+
+  ---
+
+  ## Work Discussion
+
+  ### Current Projects
+  {{Current Projects}}
+
+  ### Wins & Accomplishments
+  {{Wins & Accomplishments}}
+
+  ### Challenges
+  {{Challenges}}
+
+  ### Blockers
+  {{Blockers}}
+
+  ### Support Needed
+  {{Support Needed}}
+
+  ---
+
+  ## Growth & Development
+
+  ### Learning Goals
+  {{Learning Goals}}
+
+  ### Career Aspirations
+  {{Career Aspirations}}
+
+  ### Feedback Request
+  {{Feedback Request}}
+
+  ### Skills to Develop
+  {{Skills to Develop}}
+
+  ---
+
+  ## Team & Culture
+
+  ### Team Dynamics
+  {{Team Dynamics}}
+
+  ### Process Improvements
+  {{Process Improvements}}
+
+  ### Recognition
+  {{Recognition}}
+
+  ---
+
+  ## Action Items
+
+  ### Manager Actions
+  {{Manager Actions}}
+
+  ### Employee Actions
+  {{Employee Actions}}
+
+  ---
+
+  ## Next Meeting
+
+  **Date:** {{Next Meeting Date}}
+
+  ### Topics for Next Time
+  {{Topics for Next Time}}
+```
+
+## Product Requirements Document (PRD) Template
+
+Complete template for product specifications.
+
+```yaml
+# Template: Product Requirements Document
+name: Product Requirements Document (PRD)
+type: document_template
+category: product
+
+structure:
+  - section: Header
+    fields:
+      - name: Feature Name
+        type: text
+        required: true
+      - name: PRD ID
+        type: text
+      - name: Status
+        type: select
+        options:
+          - Draft
+          - Under Review
+          - Approved
+          - In Development
+          - Shipped
+      - name: Product Manager
+        type: person
+        required: true
+      - name: Engineering Lead
+        type: person
+      - name: Design Lead
+        type: person
+      - name: Created Date
+        type: date
+        auto_fill: created_at
+      - name: Target Ship Date
+        type: date
+
+  - section: Executive Summary
+    fields:
+      - name: Overview
+        type: rich_text
+        placeholder: "Brief description of the feature"
+      - name: Problem Statement
+        type: rich_text
+        placeholder: "What problem are we solving?"
+      - name: Proposed Solution
+        type: rich_text
+        placeholder: "How will we solve it?"
+      - name: Success Metrics
+        type: table
+        columns:
+          - name: Metric
+            type: text
+          - name: Current
+            type: number
+          - name: Target
+            type: number
+          - name: Timeline
+            type: text
+
+  - section: User Research
+    fields:
+      - name: Target Users
+        type: rich_text
+      - name: User Pain Points
+        type: rich_text
+      - name: User Stories
+        type: rich_text
+        placeholder: |
+          As a [user type], I want [feature] so that [benefit]
+      - name: Research Findings
+        type: rich_text
+
+  - section: Requirements
+    fields:
+      - name: Functional Requirements
+        type: table
+        columns:
+          - name: Requirement ID
+            type: text
+          - name: Description
+            type: text
+          - name: Priority
+            type: select
+          - name: Status
+            type: select
+      - name: Non-Functional Requirements
+        type: rich_text
+        placeholder: "Performance, security, scalability requirements"
+      - name: Design Requirements
+        type: rich_text
+      - name: Technical Constraints
+        type: rich_text
+
+  - section: Implementation
+    fields:
+      - name: Technical Approach
+        type: rich_text
+      - name: Architecture
+        type: rich_text
+      - name: API Specifications
+        type: rich_text
+      - name: Database Changes
+        type: rich_text
+      - name: Third-Party Integrations
+        type: rich_text
+
+  - section: Risks & Dependencies
+    fields:
+      - name: Risks
+        type: table
+        columns:
+          - name: Risk
+            type: text
+          - name: Impact
+            type: select
+          - name: Mitigation
+            type: text
+      - name: Dependencies
+        type: rich_text
+      - name: Open Questions
+        type: rich_text
+
+content_template: |
+  # PRD: {{Feature Name}}
+
+  **PRD ID:** {{PRD ID}}
+  **Status:** {{Status}}
+  **Target Ship:** {{Target Ship Date}}
+
+  **Product Manager:** {{Product Manager}}
+  **Engineering Lead:** {{Engineering Lead}}
+  **Design Lead:** {{Design Lead}}
+
+  ---
+
+  ## Executive Summary
+
+  {{Overview}}
+
+  ### Problem Statement
+  {{Problem Statement}}
+
+  ### Proposed Solution
+  {{Proposed Solution}}
+
+  ### Success Metrics
+  {{Success Metrics}}
+
+  ---
+
+  ## User Research
+
+  ### Target Users
+  {{Target Users}}
+
+  ### User Pain Points
+  {{User Pain Points}}
+
+  ### User Stories
+  {{User Stories}}
+
+  ### Research Findings
+  {{Research Findings}}
+
+  ---
+
+  ## Requirements
+
+  ### Functional Requirements
+  {{Functional Requirements}}
+
+  ### Non-Functional Requirements
+  {{Non-Functional Requirements}}
+
+  ### Design Requirements
+  {{Design Requirements}}
+
+  ### Technical Constraints
+  {{Technical Constraints}}
+
+  ---
+
+  ## Implementation
+
+  ### Technical Approach
+  {{Technical Approach}}
+
+  ### Architecture
+  {{Architecture}}
+
+  ### API Specifications
+  {{API Specifications}}
+
+  ### Database Changes
+  {{Database Changes}}
+
+  ### Third-Party Integrations
+  {{Third-Party Integrations}}
+
+  ---
+
+  ## Risks & Dependencies
+
+  ### Risks
+  {{Risks}}
+
+  ### Dependencies
+  {{Dependencies}}
+
+  ### Open Questions
+  {{Open Questions}}
+```
+
+## Quick Reference
+
+### Using Templates
+
+1. **Copy the template** to your workspace
+2. **Fill in the fields** with your specific information
+3. **Customize** to match your needs
+4. **Save** and reuse for similar documents
+
+### Template Categories
+
+- **Meetings**: 1:1s, team meetings, client meetings
+- **Projects**: Briefs, specs, status reports
+- **Processes**: SOPs, checklists, workflows
+- **Reviews**: Weekly, monthly, quarterly
+- **Documentation**: Technical docs, user guides
+
+---
+
+**See Also:**
+- [Workspace Examples](/examples/workspaces) - Complete workspace setups
+- [Workflow Examples](/examples/workflows) - End-to-end processes

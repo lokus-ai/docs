@@ -1,0 +1,580 @@
+---
+title: File Management
+description: Complete guide to file management in Lokus - create, organize, rename, delete, and manage your notes and folders with powerful features
+keywords: file management, file tree, folder navigation, file operations, rename files, delete files, context menu, file organization
+---
+
+# File Management
+
+Lokus provides a comprehensive file management system that lets you organize your notes and folders efficiently. From creating files to bulk operations, every aspect is designed for productivity and ease of use.
+
+## Overview
+
+The file management system in Lokus includes:
+
+- **Interactive File Tree**: Navigate your workspace with a hierarchical tree view
+- **Context Menus**: Right-click actions for quick file operations
+- **Drag and Drop**: Reorganize files and folders intuitively
+- **Batch Operations**: Work with multiple files simultaneously
+- **File History**: Track recently opened and edited files
+- **Quick Actions**: Keyboard shortcuts for common operations
+- **Smart Filtering**: Find files quickly with search and filters
+
+---
+
+## File Tree Navigation
+
+### Understanding the File Tree
+
+The file tree is your primary interface for navigating your workspace. It displays all your markdown files and folders in a hierarchical structure.
+
+**Key Features:**
+- **Collapsible Folders**: Click the arrow icon to expand/collapse folders
+- **File Icons**: Different icons for files, folders, and special file types
+- **Visual Indicators**:
+  - Unsaved changes marked with a dot
+  - Currently active file highlighted
+  - Modified files shown with timestamp
+- **Nested Structure**: Unlimited folder depth support
+
+**Navigation Tips:**
+```
+workspace/
+├── Projects/
+│   ├── Project A.md
+│   └── Project B.md
+├── Notes/
+│   ├── Daily Notes/
+│   │   ├── 2025-10-23.md
+│   │   └── 2025-10-22.md
+│   └── Meeting Notes.md
+└── Archive/
+    └── Old Notes.md
+```
+
+### Keyboard Navigation
+
+Navigate the file tree without your mouse:
+
+| Shortcut | Action |
+|----------|--------|
+| `↑` / `↓` | Move selection up/down |
+| `←` | Collapse folder or move to parent |
+| `→` | Expand folder |
+| `Enter` | Open selected file |
+| `Cmd+B` | Toggle sidebar visibility |
+| `Cmd+Shift+N` | Create new folder |
+
+---
+
+## Creating Files and Folders
+
+### Creating New Files
+
+There are multiple ways to create a new file in Lokus:
+
+#### Method 1: Command Palette
+```
+1. Press Cmd+K (Windows: Ctrl+K)
+2. Type "New File"
+3. Press Enter
+4. Enter filename
+```
+
+#### Method 2: Keyboard Shortcut
+```
+Press Cmd+N (Windows: Ctrl+N)
+Enter the filename when prompted
+```
+
+#### Method 3: Context Menu
+```
+1. Right-click in the file tree
+2. Select "New File"
+3. Enter filename
+```
+
+#### Method 4: Sidebar Button
+```
+Click the "+" button in the file tree header
+```
+
+**File Naming Best Practices:**
+- Use descriptive names: `Project-Plan-2025.md` instead of `doc1.md`
+- Avoid special characters: `/`, `\`, `:`, `*`, `?`, `"`, `<`, `>`, `|`
+- Use hyphens or underscores for spaces: `My-Note.md` or `My_Note.md`
+- Keep names concise but meaningful
+
+### Creating Folders
+
+Organize your notes with folders:
+
+#### Quick Folder Creation
+```
+Shortcut: Cmd+Shift+N (Windows: Ctrl+Shift+N)
+```
+
+#### Context Menu Method
+```
+1. Right-click in file tree or on a folder
+2. Select "New Folder"
+3. Enter folder name
+4. (Optional) Nested path: "Projects/2025/Q1"
+```
+
+**Folder Organization Strategies:**
+
+```markdown
+# By Project
+workspace/
+├── Project-Alpha/
+├── Project-Beta/
+└── Project-Gamma/
+
+# By Date
+workspace/
+├── 2025/
+│   ├── October/
+│   └── November/
+└── 2024/
+
+# By Type
+workspace/
+├── Meeting-Notes/
+├── Ideas/
+├── Research/
+└── Documentation/
+
+# Hybrid Approach
+workspace/
+├── Active-Projects/
+│   ├── Web-App/
+│   └── Mobile-App/
+├── Archive/
+│   └── 2024/
+└── Reference/
+    └── Resources/
+```
+
+---
+
+## File Operations
+
+### Opening Files
+
+**Multiple Ways to Open:**
+1. **Click**: Single-click in file tree
+2. **Double-click**: Double-click for immediate focus
+3. **Keyboard**: Navigate with arrows, press Enter
+4. **Quick Switcher**: `Cmd+P` to search and open
+5. **Recent Files**: Access via Command Palette
+
+**Opening Multiple Files:**
+- Files open in tabs at the top of the editor
+- Up to 20 files can be open simultaneously
+- Tabs show filename and close button
+- Active tab is highlighted
+
+### Renaming Files
+
+#### Quick Rename
+```
+1. Right-click file in tree
+2. Select "Rename"
+3. Edit name (keep .md extension)
+4. Press Enter
+```
+
+#### Keyboard Shortcut
+```
+1. Select file in tree
+2. Press F2
+3. Enter new name
+4. Press Enter
+```
+
+**Important Notes:**
+- Renaming updates all wiki links automatically
+- File references in other notes are preserved
+- Undo is available if you make a mistake
+
+### Moving Files
+
+#### Drag and Drop
+```
+1. Click and hold file
+2. Drag to target folder
+3. Release to drop
+4. Confirm if prompted
+```
+
+#### Cut and Paste
+```
+1. Right-click file → Cut (Cmd+X)
+2. Right-click target folder → Paste (Cmd+V)
+```
+
+**Batch Moving:**
+```
+1. Hold Cmd (Ctrl on Windows)
+2. Click multiple files
+3. Drag selection to target folder
+```
+
+### Deleting Files
+
+#### Safe Delete (Move to Trash)
+```
+1. Right-click file → Delete
+2. Or: Select file and press Delete/Backspace
+3. Confirm deletion
+```
+
+**What Happens When You Delete:**
+- File moved to system trash/recycle bin
+- Can be recovered from trash
+- Wiki links to deleted files show as broken
+- References remain but are inactive
+
+#### Permanent Delete
+```
+1. Delete file (moves to trash)
+2. Empty system trash to permanently delete
+```
+
+**Bulk Deletion:**
+```
+1. Select multiple files (Cmd+Click)
+2. Press Delete
+3. Confirm batch deletion
+```
+
+---
+
+## Context Menus
+
+Right-click menus provide quick access to common operations.
+
+### File Context Menu
+
+Right-click any file to see:
+
+| Action | Description | Shortcut |
+|--------|-------------|----------|
+| **Open** | Open file in editor | Enter |
+| **Open in New Tab** | Open without closing current | Cmd+Enter |
+| **Rename** | Change filename | F2 |
+| **Duplicate** | Create a copy | Cmd+D |
+| **Move to...** | Move to different folder | - |
+| **Copy Path** | Copy file path to clipboard | - |
+| **Delete** | Move to trash | Delete |
+| **Properties** | View file details | Cmd+I |
+| **Export** | Export to other formats | - |
+
+### Folder Context Menu
+
+Right-click any folder to see:
+
+| Action | Description |
+|--------|-------------|
+| **New File** | Create file in folder |
+| **New Folder** | Create subfolder |
+| **Rename** | Rename folder |
+| **Collapse All** | Collapse all subfolders |
+| **Expand All** | Expand all subfolders |
+| **Export Folder** | Export all files in folder |
+| **Delete** | Delete folder and contents |
+
+### Root Context Menu
+
+Right-click empty space in file tree:
+
+| Action | Description |
+|--------|-------------|
+| **New File** | Create file at root |
+| **New Folder** | Create folder at root |
+| **Refresh** | Reload file tree |
+| **Collapse All** | Collapse entire tree |
+| **Sort By...** | Change sort order |
+
+---
+
+## Advanced Features
+
+### File Properties
+
+View detailed information about any file:
+
+```
+Right-click file → Properties (Cmd+I)
+```
+
+**Property Panel Shows:**
+- **Filename**: Current name with extension
+- **Path**: Full path in workspace
+- **Size**: File size in KB/MB
+- **Created**: Creation date and time
+- **Modified**: Last modification date
+- **Word Count**: Total words in file
+- **Character Count**: Total characters
+- **Links**: Number of wiki links
+- **Backlinks**: Notes linking to this file
+- **Tags**: All tags in the file
+
+### Duplicate Files
+
+Create copies quickly:
+
+```
+1. Right-click file → Duplicate
+2. Copy created with " (Copy)" suffix
+3. Rename as needed
+```
+
+**Use Cases:**
+- Templates: Duplicate and modify
+- Backups: Keep version history
+- Experimentation: Try changes without risk
+
+### Batch Operations
+
+Work with multiple files at once:
+
+#### Selecting Multiple Files
+
+**Method 1: Click with Modifier**
+```
+- Cmd+Click (Ctrl+Click): Select individual files
+- Shift+Click: Select range of files
+```
+
+**Method 2: Select All**
+```
+Cmd+A (Ctrl+A) in file tree
+```
+
+#### Bulk Actions Available
+
+Once multiple files selected:
+- **Move**: Drag to folder
+- **Delete**: Remove all at once
+- **Tag**: Add tags to all files
+- **Export**: Export as batch
+- **Copy**: Copy to clipboard
+
+### File Recovery
+
+#### Recently Closed Files
+
+Reopen closed tabs:
+
+```
+Shortcut: Cmd+Shift+T (Windows: Ctrl+Shift+T)
+```
+
+**Feature Details:**
+- Remembers last 20 closed files
+- Reopens in same position
+- Preserves scroll position
+- Maintains edit history
+
+#### Deleted File Recovery
+
+Files deleted are moved to system trash:
+
+**To Recover:**
+1. Open system trash/recycle bin
+2. Locate the file
+3. Restore to original location
+4. Refresh file tree in Lokus
+
+---
+
+## File Search and Filtering
+
+### Quick File Search
+
+Find files instantly:
+
+```
+Press Cmd+P (Ctrl+P)
+Type filename or partial match
+```
+
+**Search Features:**
+- Fuzzy matching: Type "pn" to find "Project Notes.md"
+- Recent files prioritized
+- Shows file path for context
+- Navigate with arrow keys
+
+### Filter by Type
+
+Show specific file types:
+
+```
+In file tree header:
+Click filter icon → Select file type
+```
+
+**Available Filters:**
+- All files
+- Markdown only (.md)
+- Canvas files (.canvas)
+- Recently modified
+- Recently created
+- Untagged files
+
+### Sort Options
+
+Change file tree order:
+
+| Sort By | Description |
+|---------|-------------|
+| **Name (A-Z)** | Alphabetical ascending |
+| **Name (Z-A)** | Alphabetical descending |
+| **Modified (Newest)** | Recently edited first |
+| **Modified (Oldest)** | Oldest edits first |
+| **Created (Newest)** | Recently created first |
+| **Created (Oldest)** | Oldest created first |
+| **Size (Largest)** | Largest files first |
+| **Size (Smallest)** | Smallest files first |
+
+---
+
+## File Management Tips
+
+### Best Practices
+
+**1. Use Consistent Naming**
+```
+✅ Good: "2025-10-23-Meeting-Notes.md"
+❌ Bad: "notes1.md"
+```
+
+**2. Organize with Folders**
+```
+Create logical hierarchies
+Don't nest too deep (3-4 levels max)
+Use descriptive folder names
+```
+
+**3. Regular Cleanup**
+```
+Archive old files monthly
+Delete unused notes
+Consolidate related notes
+```
+
+**4. Leverage Tags**
+```
+Use tags in addition to folders
+Tags for cross-cutting concerns
+Folder for primary organization
+```
+
+### Performance Tips
+
+**Keep File Tree Fast:**
+- Don't create too many files in one folder (limit: 1000)
+- Use subfolders to organize large collections
+- Archive old content regularly
+- Close unused tabs to save memory
+
+**Optimize Search:**
+- Use specific search terms
+- Filter by file type first
+- Use recent files for frequent access
+- Create shortcuts for important files
+
+---
+
+## Keyboard Shortcuts Reference
+
+### File Operations
+
+| Shortcut | Action |
+|----------|--------|
+| `Cmd+N` | New file |
+| `Cmd+Shift+N` | New folder |
+| `Cmd+S` | Save file |
+| `Cmd+W` | Close tab |
+| `Cmd+Shift+T` | Reopen closed tab |
+| `Delete` | Delete file |
+| `F2` | Rename file |
+| `Cmd+D` | Duplicate file |
+
+### Navigation
+
+| Shortcut | Action |
+|----------|--------|
+| `Cmd+B` | Toggle sidebar |
+| `Cmd+P` | Quick switcher |
+| `Cmd+K` | Command palette |
+| `Cmd+Alt+Left` | Previous tab |
+| `Cmd+Alt+Right` | Next tab |
+| `F5` | Refresh file tree |
+
+### Selection
+
+| Shortcut | Action |
+|----------|--------|
+| `Cmd+A` | Select all |
+| `Cmd+Click` | Multi-select |
+| `Shift+Click` | Range select |
+| `Esc` | Clear selection |
+
+---
+
+## Troubleshooting
+
+### Common Issues
+
+**File Not Appearing in Tree**
+- Solution: Press F5 to refresh
+- Check if file is in workspace folder
+- Verify file has .md extension
+
+**Cannot Rename File**
+- Solution: Close file first
+- Check file isn't being edited elsewhere
+- Verify write permissions
+
+**Drag and Drop Not Working**
+- Solution: Don't drag too quickly
+- Ensure target folder is expanded
+- Try cut/paste instead
+
+**File Tree Slow**
+- Solution: Close unused folders
+- Reduce number of open tabs
+- Archive old files
+
+**Deleted File Still Shows**
+- Solution: Refresh file tree (F5)
+- Restart Lokus
+- Check trash for recovery
+
+### Getting Help
+
+If you encounter issues:
+1. Check the [Troubleshooting Guide](/docs/troubleshooting)
+2. Visit [Community Forum](https://github.com/yourusername/lokus/discussions)
+3. Report bugs on [GitHub Issues](https://github.com/yourusername/lokus/issues)
+
+---
+
+## Related Features
+
+- **[Workspace Management](/features/workspace)**: Configure your workspace
+- **[Search](/features/search)**: Advanced search capabilities
+- **[Tags](/features/folders-tags)**: Organize with tags
+- **[Export](/features/import-export)**: Export your files
+
+---
+
+## What's Next?
+
+Now that you understand file management, explore these related features:
+- **[Workspace Management](/features/workspace)**: Customize your workspace layout
+- **[Command Palette](/features/command-palette)**: Master all available commands
+- **[Keyboard Shortcuts](/features/keyboard-shortcuts)**: Learn all shortcuts
