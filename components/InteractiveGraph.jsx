@@ -265,43 +265,47 @@ export default function InteractiveGraph({ data }) {
     <div className="w-full">
       <div
         id="graph-container"
-        className="relative border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden"
+        className="relative border border-gray-200 dark:border-gray-700 rounded-lg"
         style={{
           height: dimensions.height,
           background: 'radial-gradient(circle at 50% 50%, rgba(97, 175, 239, 0.1) 0%, transparent 50%)', // Lokus-style radial gradient
-          backgroundColor: '#1e1e2e' // One Dark Pro background
+          backgroundColor: '#1e1e2e', // One Dark Pro background
+          overflow: 'hidden',
+          position: 'relative'
         }}
       >
-        <ForceGraph2D
-          ref={graphRef}
-          graphData={graphData}
-          width={dimensions.width}
-          height={dimensions.height}
-          nodeLabel="name"
-          nodeColor={getNodeColor}
-          nodeRelSize={4}
-          nodeVal={(node) => node.size || 5}
-          linkColor={getLinkColor}
-          linkWidth={getLinkWidth}
-          linkDirectionalArrowLength={6}
-          linkDirectionalArrowRelPos={1}
-          linkDirectionalArrowColor={getLinkColor}
-          linkDirectionalParticles={2}
-          linkDirectionalParticleSpeed={0.01}
-          linkDirectionalParticleWidth={2}
-          onNodeClick={handleNodeClick}
-          onNodeHover={handleNodeHover}
-          onBackgroundClick={handleBackgroundClick}
-          cooldownTicks={300}
-          warmupTicks={100}
-          d3AlphaDecay={0.015}
-          d3VelocityDecay={0.3}
-          enableNodeDrag={true}
-          enableZoomInteraction={true}
-          enablePanInteraction={true}
-          backgroundColor="transparent"
-          nodeCanvasObject={renderNode}
-        />
+        <div style={{ width: dimensions.width, height: dimensions.height, overflow: 'hidden', position: 'relative' }}>
+          <ForceGraph2D
+            ref={graphRef}
+            graphData={graphData}
+            width={dimensions.width}
+            height={dimensions.height}
+            nodeLabel="name"
+            nodeColor={getNodeColor}
+            nodeRelSize={4}
+            nodeVal={(node) => node.size || 5}
+            linkColor={getLinkColor}
+            linkWidth={getLinkWidth}
+            linkDirectionalArrowLength={6}
+            linkDirectionalArrowRelPos={1}
+            linkDirectionalArrowColor={getLinkColor}
+            linkDirectionalParticles={2}
+            linkDirectionalParticleSpeed={0.01}
+            linkDirectionalParticleWidth={2}
+            onNodeClick={handleNodeClick}
+            onNodeHover={handleNodeHover}
+            onBackgroundClick={handleBackgroundClick}
+            cooldownTicks={300}
+            warmupTicks={100}
+            d3AlphaDecay={0.015}
+            d3VelocityDecay={0.3}
+            enableNodeDrag={true}
+            enableZoomInteraction={true}
+            enablePanInteraction={true}
+            backgroundColor="transparent"
+            nodeCanvasObject={renderNode}
+          />
+        </div>
 
         {selectedNode && (
           <div className="absolute top-4 right-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-lg max-w-xs">
