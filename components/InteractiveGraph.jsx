@@ -10,9 +10,13 @@ export default function InteractiveGraph({ data }) {
   const graphRef = useRef()
   const [graphData, setGraphData] = useState(null)
   const [selectedNode, setSelectedNode] = useState(null)
+  const [hoveredNode, setHoveredNode] = useState(null)
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 })
+  const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
+    setIsMounted(true)
+
     // Update dimensions on mount and resize
     const updateDimensions = () => {
       const container = document.getElementById('graph-container')
@@ -127,36 +131,133 @@ export default function InteractiveGraph({ data }) {
     }
   }, [data])
 
+  // Lokus-style color scheme (One Dark Pro inspired)
   const getNodeColor = useCallback((node) => {
-    const colors = {
-      root: '#6366f1',
-      section: '#8b5cf6',
-      'getting-started': '#22c55e',
-      features: '#3b82f6',
-      developers: '#f59e0b',
-      advanced: '#ef4444',
-      releases: '#ec4899'
+    // Highlight selected/hovered nodes
+    if (selectedNode?.id === node.id) {
+      return '#61afef' // One Dark Pro accent (blue)
     }
-    return colors[node.group] || '#6366f1'
-  }, [])
+
+    const colors = {
+      root: '#61afef',        // Accent blue (One Dark Pro)
+      section: '#c678dd',     // Purple
+      'getting-started': '#98c379', // Green
+      features: '#61afef',    // Blue
+      developers: '#e5c07b',  // Yellow
+      advanced: '#e06c75',    // Red
+      releases: '#c678dd'     // Purple
+    }
+    return colors[node.group] || '#61afef'
+  }, [selectedNode])
 
   const handleNodeClick = useCallback((node) => {
     setSelectedNode(node)
-    // Center on node
-    if (graphRef.current) {
-      graphRef.current.centerAt(node.x, node.y, 1000)
-      graphRef.current.zoom(2, 1000)
+
+    // Navigate to the page for this node
+    const pageMap = {
+      'lokus': '/',
+      'getting-started': '/getting-started',
+      'features': '/features',
+      'developers': '/developers',
+      'advanced': '/advanced',
+      'releases': '/releases',
+      'installation': '/getting-started/installation',
+      'quick-start': '/getting-started/quick-start',
+      'workspace-setup': '/getting-started/workspace',
+      'editor': '/features/editor',
+      'wiki-links': '/features/wiki-links',
+      'graph': '/features/graph',
+      'bases': '/features/bases/overview',
+      'canvas': '/features/canvas',
+      'search': '/features/search',
+      'tasks': '/features/tasks',
+      'templates': '/features/templates',
+      'themes': '/features/themes',
+      'gmail': '/features/gmail',
+      'dev-setup': '/developers/setup',
+      'plugins': '/developers/plugins',
+      'mcp': '/developers/mcp',
+      'api': '/reference/api-overview',
+      'performance': '/advanced/performance',
+      'security': '/advanced/security',
+      'customization': '/advanced/customization'
     }
+
+    const targetPage = pageMap[node.id]
+    if (targetPage) {
+      window.location.href = targetPage
+    }
+  }, [])
+
+  const handleNodeHover = useCallback((node) => {
+    setHoveredNode(node)
   }, [])
 
   const handleBackgroundClick = useCallback(() => {
     setSelectedNode(null)
-    if (graphRef.current) {
-      graphRef.current.zoomToFit(1000, 50)
-    }
   }, [])
 
-  if (!graphData) {
+  // Custom node rendering with Lokus-style glow effects
+  const renderNode = useCallback((node, ctx, globalScale) => {
+    const size = (node.size || 5) * 0.8
+    const color = getNodeColor(node)
+    const isSelected = selectedNode?.id === node.id
+    const isHovered = hoveredNode?.id === node.id
+
+    // Draw glow effect for selected/hovered nodes
+    if (isSelected || isHovered) {
+      ctx.beginPath()
+      ctx.arc(node.x, node.y, size * 2.5, 0, 2 * Math.PI, false)
+      ctx.fillStyle = color + '30' // 30 = ~19% opacity
+      ctx.fill()
+    }
+
+    // Draw main node circle
+    ctx.beginPath()
+    ctx.arc(node.x, node.y, size, 0, 2 * Math.PI, false)
+    ctx.fillStyle = color
+    ctx.fill()
+
+    // Draw border for selected nodes
+    if (isSelected) {
+      ctx.beginPath()
+      ctx.arc(node.x, node.y, size, 0, 2 * Math.PI, false)
+      ctx.strokeStyle = '#ffffff'
+      ctx.lineWidth = 2
+      ctx.stroke()
+    }
+
+    // Draw label for selected/hovered nodes or larger nodes
+    if (isSelected || isHovered || size > 8) {
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      const opacity = isSelected || isHovered ? 1.0 : 0.8
+      ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`
+      ctx.font = `${Math.max(10, size / 2)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif`
+      ctx.fillText(node.name || node.id, node.x, node.y + size + 15)
+    }
+  }, [selectedNode, hoveredNode, getNodeColor])
+
+  // Link color with selection highlighting
+  const getLinkColor = useCallback((link) => {
+    const isSourceSelected = selectedNode?.id === link.source?.id || selectedNode?.id === link.source
+    const isTargetSelected = selectedNode?.id === link.target?.id || selectedNode?.id === link.target
+
+    if (isSourceSelected || isTargetSelected) {
+      return '#61afef80' // One Dark Pro accent with transparency
+    }
+    return '#ffffff40' // White with low opacity (Lokus style)
+  }, [selectedNode])
+
+  // Link width with selection highlighting
+  const getLinkWidth = useCallback((link) => {
+    const isSourceSelected = selectedNode?.id === link.source?.id || selectedNode?.id === link.source
+    const isTargetSelected = selectedNode?.id === link.target?.id || selectedNode?.id === link.target
+
+    return (isSourceSelected || isTargetSelected) ? 3 : 1.5
+  }, [selectedNode])
+
+  if (!isMounted || !graphData) {
     return <div className="text-center p-8">Loading graph...</div>
   }
 
@@ -164,8 +265,12 @@ export default function InteractiveGraph({ data }) {
     <div className="w-full">
       <div
         id="graph-container"
-        className="relative border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-900"
-        style={{ height: dimensions.height }}
+        className="relative border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden"
+        style={{
+          height: dimensions.height,
+          background: 'radial-gradient(circle at 50% 50%, rgba(97, 175, 239, 0.1) 0%, transparent 50%)', // Lokus-style radial gradient
+          backgroundColor: '#1e1e2e' // One Dark Pro background
+        }}
       >
         <ForceGraph2D
           ref={graphRef}
@@ -176,18 +281,26 @@ export default function InteractiveGraph({ data }) {
           nodeColor={getNodeColor}
           nodeRelSize={4}
           nodeVal={(node) => node.size || 5}
-          linkColor={() => '#6b7280'}
-          linkWidth={1.5}
+          linkColor={getLinkColor}
+          linkWidth={getLinkWidth}
+          linkDirectionalArrowLength={6}
+          linkDirectionalArrowRelPos={1}
+          linkDirectionalArrowColor={getLinkColor}
           linkDirectionalParticles={2}
+          linkDirectionalParticleSpeed={0.01}
           linkDirectionalParticleWidth={2}
           onNodeClick={handleNodeClick}
+          onNodeHover={handleNodeHover}
           onBackgroundClick={handleBackgroundClick}
-          cooldownTicks={100}
-          d3AlphaDecay={0.02}
+          cooldownTicks={300}
+          warmupTicks={100}
+          d3AlphaDecay={0.015}
           d3VelocityDecay={0.3}
           enableNodeDrag={true}
           enableZoomInteraction={true}
           enablePanInteraction={true}
+          backgroundColor="transparent"
+          nodeCanvasObject={renderNode}
         />
 
         {selectedNode && (
@@ -210,33 +323,33 @@ export default function InteractiveGraph({ data }) {
           </div>
         )}
 
-        <div className="absolute bottom-4 left-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 shadow-lg">
-          <div className="text-xs space-y-1">
+        <div className="absolute bottom-4 left-4 bg-gray-800/90 backdrop-blur-sm border border-gray-700 rounded-lg p-3 shadow-lg">
+          <div className="text-xs space-y-1.5 text-gray-200">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#6366f1' }}></div>
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#61afef' }}></div>
               <span>Root</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#22c55e' }}></div>
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#98c379' }}></div>
               <span>Getting Started</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#3b82f6' }}></div>
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#61afef' }}></div>
               <span>Features</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#f59e0b' }}></div>
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#e5c07b' }}></div>
               <span>Developers</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#ef4444' }}></div>
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#e06c75' }}></div>
               <span>Advanced</span>
             </div>
           </div>
         </div>
 
-        <div className="absolute top-4 left-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-2 shadow-lg text-xs text-gray-600 dark:text-gray-400">
-          💡 Click nodes to explore • Drag to move • Scroll to zoom
+        <div className="absolute top-4 left-4 bg-gray-800/90 backdrop-blur-sm border border-gray-700 rounded-lg p-2 shadow-lg text-xs text-gray-300">
+          Click nodes to jump to page • Drag to move • Scroll to zoom
         </div>
       </div>
     </div>

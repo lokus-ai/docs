@@ -1,0 +1,151 @@
+---
+title: Lokus Development Roadmap
+description: Official development roadmap for Lokus including upcoming features, active development, and future plans for the most powerful local-first knowledge management system.
+keywords: [lokus roadmap, future features, development plans, upcoming features, product roadmap, mobile apps, obsidian compatibility]
+---
+
+# Roadmap
+
+Building the most powerful local-first knowledge management system.
+
+For detailed release notes, see the [Changelog](/releases). Have a feature request? Visit the [GitHub Issues](https://github.com/lokus-ai/lokus/issues).
+
+---
+
+## Active
+
+Currently in active development.
+
+### Mobile Applications
+
+iOS and Android apps via Tauri Mobile with native performance. Full feature parity with desktop, touch-optimized interface, and offline-first capabilities.
+
+### Calendar Integration
+
+Calendar views for date properties, daily notes with calendar navigation, and timeline view for note chronology.
+
+### Formula Support
+
+Spreadsheet-like formulas in Bases with mathematical operations, property references, conditional logic, and auto-updating computed fields.
+
+### PDF Annotations
+
+In-app PDF viewer with highlighting, annotation tools, note-taking directly on PDFs, and extract annotations to markdown.
+
+### Web Clipper
+
+Browser extension for Chrome, Firefox, and Edge with one-click save web pages as markdown and smart content extraction.
+
+---
+
+## Planned
+
+Scheduled for future releases.
+
+### Obsidian Plugin Compatibility
+
+Run Obsidian community plugins natively with a compatibility layer for plugin APIs. Gradual migration path while maintaining zero vendor lock-in.
+
+### Multi-Vault Support
+
+Manage multiple workspaces simultaneously with cross-vault search and linking, separate themes and plugins per vault.
+
+### AI Writing Assistant
+
+Integrated AI writing tools with grammar and style suggestions, content expansion and summarization, and research assistance with citations.
+
+### Workflow Automation
+
+Custom automation scripts with trigger-based actions, batch operations on notes, and scheduled tasks and reminders.
+
+### Real-Time Collaboration
+
+Multi-user editing with presence indicators, comments and annotations, and change tracking.
+
+### End-to-End Encrypted Sync
+
+Privacy-first synchronization across devices with zero-knowledge encryption.
+
+### Publishing Platform
+
+Transform your notes into beautiful websites with one-click publishing, custom domains, and responsive themes.
+
+---
+
+## Completed
+
+Released features in v1.3 "Quantum Leap" (October 2025).
+
+### Bases System
+
+Notion-style database views with 8 property types, YAML frontmatter integration, advanced filtering with AND/OR logic, and multiple views per base.
+
+[Learn more →](/features/bases)
+
+### MCP Server
+
+Built-in Model Context Protocol server with 68+ AI tools for note management, workspace operations, and content analysis.
+
+[Learn more →](/developers/mcp)
+
+### Quantum Search
+
+100x faster search architecture processing 10,000 files in 22ms. Custom inverted index with O(1) lookup complexity.
+
+[Learn more →](/features/search)
+
+### Knowledge Graphs
+
+Interactive 2D and 3D visualization with community detection clustering and handles 10,000+ notes with sub-100ms rendering.
+
+[Learn more →](/features/graph)
+
+### Plugin System v2
+
+Sandboxed JavaScript execution with granular permission system and VS Code-inspired architecture.
+
+[Learn more →](/developers/plugins)
+
+### Cross-Platform Support
+
+Windows, macOS, and Linux with 90% smaller app size, 90% less memory usage, and 3x faster startup vs competitors.
+
+---
+
+## Performance Goals
+
+We're committed to maintaining Lokus as the fastest and most efficient note-taking application.
+
+**Search Performance:** Sub-10ms for 10,000+ notes with O(1) lookup complexity and real-time incremental indexing.
+
+**Memory Efficiency:** 90% less than Obsidian with efficient caching strategies and lazy loading for large vaults.
+
+**Startup Speed:** 3x faster than competitors with instant app launch and progressive loading.
+
+**Bundle Size:** 90% smaller than Obsidian with Rust native performance and optimized builds.
+
+---
+
+## Contributing
+
+We welcome contributions at all levels. Check out our [GitHub repository](https://github.com/lokus-ai/lokus).
+
+**Code:** Feature development, bug fixes, performance improvements, and documentation.
+
+**Community:** Report bugs and issues, suggest new features, help other users, and write tutorials.
+
+**Testing:** Beta testing new releases, performance benchmarking, and cross-platform testing.
+
+---
+
+## Resources
+
+- [GitHub Repository](https://github.com/lokus-ai/lokus) - Source code and development
+- [Issue Tracker](https://github.com/lokus-ai/lokus/issues) - Report bugs and request features
+- [Discussions](https://github.com/lokus-ai/lokus/discussions) - Community discussions
+- [Documentation](/getting-started/installation) - Getting started guides
+- [Release Notes](/releases) - Version history and changelog
+
+---
+
+*Last Updated: November 2025*

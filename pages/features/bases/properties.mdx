@@ -8,7 +8,7 @@ keywords: [lokus, bases, properties, data types, formulas, rollups, relations, m
 
 Properties are the foundation of Bases - they define the structure of your data. Lokus supports 8 property types out of the box, with advanced features like formulas, rollups, and relations coming soon.
 
-> **📚 Prerequisites:** Familiar with [Bases Overview](/features/bases/overview)? If not, start there to understand how properties integrate with YAML frontmatter.
+> **Prerequisites:** Familiar with [Bases Overview](/features/bases/overview)? If not, start there to understand how properties integrate with YAML frontmatter.
 
 ## Property Types
 
@@ -35,7 +35,7 @@ project_code: "PRJ-2024-001"
 - Codes and identifiers
 - URLs or links
 
-> **💡 Tip:** For longer content, use Long Text instead. Text properties are optimized for single-line display in table cells.
+> **Tip:** For longer content, use Long Text instead. Text properties are optimized for single-line display in table cells.
 
 ### Long Text
 
@@ -112,7 +112,7 @@ suffix: ""
 - Quantities and counts
 - Percentages and ratios
 
-> **⚠️ Warning:** Store percentages as decimals (0.75) not integers (75). The display format handles conversion automatically.
+> **Warning:** Store percentages as decimals (0.75) not integers (75). The display format handles conversion automatically.
 
 ### Checkbox
 
@@ -131,8 +131,8 @@ featured: true
 - Color when checked
 
 **Display:**
-- ✓ Checked (green)
-- ○ Unchecked (gray)
+- Yes Checked (green)
+- Unchecked (gray)
 - − Unset (light gray)
 
 **Use Cases:**
@@ -188,7 +188,7 @@ relative_display: true  # "3 days from now"
 - Timestamps
 - Scheduling
 
-> **💡 Tip:** Use relative display for better time awareness. "Due in 2 days" is more useful than "2025-10-25"!
+> **Tip:** Use relative display for better time awareness. "Due in 2 days" is more useful than "2025-10-25"!
 
 ### Select
 
@@ -237,7 +237,7 @@ allow_custom: false
 - Categories
 - Stages in a process
 
-> **💡 Tip:** Enable `allow_custom` to let users add new options on-the-fly, useful for evolving categorizations!
+> **Tip:** Enable `allow_custom` to let users add new options on-the-fly, useful for evolving categorizations!
 
 ### Multi-Select (Tags)
 
@@ -288,7 +288,7 @@ Tags appear as colored pills:
 - Topic organization
 - Feature flags
 
-> **💡 Tip:** Tags are perfect for many-to-many relationships. A project can have multiple tags, and a tag can apply to multiple projects.
+> **Tip:** Tags are perfect for many-to-many relationships. A project can have multiple tags, and a tag can apply to multiple projects.
 
 ### URL
 
@@ -340,7 +340,7 @@ owner_email: "sarah@company.com"
 
 **Display:**
 ```
-[john@example.com ✉]
+[john@example.com ]
 ```
 
 **Use Cases:**
@@ -404,7 +404,7 @@ Calculate values from other properties.
 {Price} * {Quantity}
 
 // Conditional logic
-if({Status} = "Done", "✓", "○")
+if({Status} = "Done", "Done", "Pending")
 
 // Date calculations
 dateDiff({Due Date}, now(), "days")
@@ -454,13 +454,13 @@ sum({Related Tasks.Hours})
 dateDiff({Due Date}, today(), "days")
 
 // Status emoji
-if({Completed}, "✅", if({Status} = "Doing", "⏳", "○"))
+if({Completed}, "Complete", if({Status} = "Doing", "In Progress", "Not Started"))
 
 // Full name
 concat({First Name}, " ", {Last Name})
 
 // Overdue indicator
-if(dateDiff({Due Date}, today(), "days") < 0, "⚠️ OVERDUE", "On track")
+if(dateDiff({Due Date}, today(), "days") < 0, "OVERDUE", "On track")
 ```
 
 ### Rollup Properties

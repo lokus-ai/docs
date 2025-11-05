@@ -121,18 +121,18 @@ tags:
 
 # {{date:dddd, MMMM DD, YYYY}}
 
-## 🎯 Goals
+## Goals
 - [ ]
 - [ ]
 - [ ]
 
-## 📝 Notes
+## Notes
 
 
-## 🧠 Reflections
+##  Reflections
 
 
-## 🔗 Links
+## Links
 - [[{{date:YYYY-MM-DD|Yesterday|-1d}}]]
 - [[{{date:YYYY-MM-DD|Tomorrow|+1d}}]]
 
@@ -175,7 +175,7 @@ tags:
 
 **Week of:** {{date:MMMM DD}} - {{date:MMMM DD|+6d}}
 
-## 📊 Week in Review
+## Week in Review
 
 ### Accomplishments
 -
@@ -186,7 +186,7 @@ tags:
 ### Learnings
 -
 
-## 📅 Next Week Planning
+##  Next Week Planning
 
 ### Goals
 - [ ]
@@ -198,7 +198,7 @@ tags:
 2.
 3.
 
-## 📈 Metrics
+## Metrics
 
 | Metric | Target | Actual |
 |--------|--------|--------|
@@ -224,7 +224,7 @@ tags:
 
 # {{date:MMMM YYYY}} Review
 
-## 🎯 Goals Review
+## Goals Review
 
 ### Completed
 -
@@ -235,13 +235,13 @@ tags:
 ### Not Started
 -
 
-## 📊 Statistics
+## Statistics
 
 - Notes Created:
 - Tasks Completed:
 - Projects Advanced:
 
-## 🌟 Highlights
+## Highlights
 
 ### Wins
 1.
@@ -253,7 +253,7 @@ tags:
 2.
 3.
 
-## 🔮 Next Month
+##  Next Month
 
 ### Goals
 - [ ]
@@ -447,20 +447,20 @@ async function morningRoutine() {
   // 2. Check for overdue tasks
   const overdueTasks = await getOverdueTasks();
   if (overdueTasks.length > 0) {
-    appendToNote(today, "## ⚠️ Overdue Tasks\n" +
+    appendToNote(today, "## Overdue Tasks\n" +
       overdueTasks.map(t => `- [ ] ${t.text}`).join('\n'));
   }
 
   // 3. Get today's scheduled tasks
   const scheduledTasks = await getTasksForDate(new Date());
   if (scheduledTasks.length > 0) {
-    appendToNote(today, "\n## 📅 Today's Tasks\n" +
+    appendToNote(today, "\n##  Today's Tasks\n" +
       scheduledTasks.map(t => `- [ ] ${t.text}`).join('\n'));
   }
 
   // 4. Insert motivational quote
   const quote = await getRandomQuote();
-  appendToNote(today, `\n## 💡 Today's Inspiration\n> ${quote}`);
+  appendToNote(today, `\n## Today's Inspiration\n> ${quote}`);
 
   // 5. Open key notes
   await openNote('projects/active-projects');
@@ -490,7 +490,7 @@ async function weeklyReview() {
   };
 
   // Insert statistics
-  insertIntoNote(weekNote, '## 📊 Week in Numbers',
+  insertIntoNote(weekNote, '## Week in Numbers',
     Object.entries(stats)
       .map(([key, value]) => `- ${key}: ${value}`)
       .join('\n')
@@ -498,7 +498,7 @@ async function weeklyReview() {
 
   // List completed tasks
   const completedTasks = await getCompletedTasksThisWeek();
-  insertIntoNote(weekNote, '## ✅ Completed This Week',
+  insertIntoNote(weekNote, '## Completed This Week',
     completedTasks.map(t => `- ${t.text}`).join('\n')
   );
 
@@ -772,7 +772,7 @@ app.post('/ifttt/email-to-note', async (req, res) => {
 ### Automation Guidelines
 
 ```
-✓ Do:
+Yes Do:
 - Start simple, iterate
 - Test thoroughly
 - Handle errors gracefully
@@ -780,7 +780,7 @@ app.post('/ifttt/email-to-note', async (req, res) => {
 - Document workflows
 - Version control scripts
 
-✗ Don't:
+No Don't:
 - Over-automate
 - Skip error handling
 - Ignore performance

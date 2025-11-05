@@ -1,3 +1,9 @@
+---
+title: Task Management - Kanban Boards and Task Tracking
+description: Comprehensive task management system with Kanban boards, keyboard-first workflow, batch operations, and HashMap backend for 10x faster performance. Track tasks and projects directly in your notes.
+keywords: [lokus tasks, task management, kanban board, todo list, project management, keyboard shortcuts, batch operations]
+---
+
 # Task Management
 
 **Version:** 1.3.1 | **Status:** Production Ready
@@ -70,18 +76,18 @@ Create tasks using standard markdown checkboxes:
 Add metadata to tasks:
 
 ```markdown
-- [ ] Review pull request @john #development !high 📅 2024-03-20
-- [ ] Write documentation @sarah #docs !medium 📅 2024-03-22 ⏱️ 2h
-- [ ] Deploy to production #devops !critical 📅 2024-03-25 🔁 weekly
+- [ ] Review pull request @john #development !high  2024-03-20
+- [ ] Write documentation @sarah #docs !medium  2024-03-22  2h
+- [ ] Deploy to production #devops !critical  2024-03-25  weekly
 ```
 
 **Property Types:**
 - `@user` - Assignee
 - `#tag` - Category/project
 - `!priority` - Priority level (low, medium, high, critical)
-- `📅 date` - Due date (YYYY-MM-DD)
-- `⏱️ duration` - Estimated time
-- `🔁 recurrence` - Repeat pattern
+- ` date` - Due date (YYYY-MM-DD)
+- ` duration` - Estimated time
+- ` recurrence` - Repeat pattern
 - `^block-id` - Task ID for references
 
 ### Quick Task Creation
@@ -111,10 +117,10 @@ Create reusable task templates:
 
 ```markdown
 ## Meeting Preparation Template
-- [ ] Review agenda #meeting 📅 {{date}}
-- [ ] Prepare materials #meeting 📅 {{date-1}}
-- [ ] Send invites @team #meeting 📅 {{date-2}}
-- [ ] Book conference room #logistics 📅 {{date-3}}
+- [ ] Review agenda #meeting  {{date}}
+- [ ] Prepare materials #meeting  {{date-1}}
+- [ ] Send invites @team #meeting  {{date-2}}
+- [ ] Book conference room #logistics  {{date-3}}
 ```
 
 **Template Variables:**
@@ -255,11 +261,11 @@ Set and manage due dates:
 
 **Date Formats:**
 ```markdown
-- [ ] Task 📅 2024-03-20
-- [ ] Task 📅 tomorrow
-- [ ] Task 📅 next Monday
-- [ ] Task 📅 in 3 days
-- [ ] Task 📅 Mar 20
+- [ ] Task  2024-03-20
+- [ ] Task  tomorrow
+- [ ] Task  next Monday
+- [ ] Task  in 3 days
+- [ ] Task  Mar 20
 ```
 
 **Date Picker:**
@@ -339,9 +345,9 @@ Track time spent on tasks:
 
 **Time Estimate:**
 ```markdown
-- [ ] Task ⏱️ 2h
-- [ ] Task ⏱️ 30m
-- [ ] Task ⏱️ 1d
+- [ ] Task  2h
+- [ ] Task  30m
+- [ ] Task  1d
 ```
 
 **Time Tracking:**
@@ -362,11 +368,11 @@ Repeating tasks:
 
 **Recurrence Patterns:**
 ```markdown
-- [ ] Daily standup 🔁 daily
-- [ ] Weekly review 🔁 weekly
-- [ ] Monthly report 🔁 monthly
-- [ ] Quarterly planning 🔁 quarterly
-- [ ] Custom 🔁 every 2 weeks on Monday
+- [ ] Daily standup  daily
+- [ ] Weekly review  weekly
+- [ ] Monthly report  monthly
+- [ ] Quarterly planning  quarterly
+- [ ] Custom  every 2 weeks on Monday
 ```
 
 **Recurrence Options:**
@@ -641,8 +647,8 @@ Tasks embedded in notes:
 - [ ] Team meeting at 2pm
 
 ## Project Tasks
-- [ ] Design mockups 📅 2024-03-20
-- [ ] Implement feature 📅 2024-03-22
+- [ ] Design mockups  2024-03-20
+- [ ] Implement feature  2024-03-22
 ```
 
 ### Calendar Integration
@@ -903,20 +909,20 @@ Configure in Settings > Tasks:
 # Project: Website Redesign
 
 ## Planning Phase
-- [ ] Conduct user research 📅 2024-03-25 @sarah #research
-- [ ] Create wireframes 📅 2024-03-28 @john #design
-- [ ] Review stakeholder feedback 📅 2024-03-30 #review
+- [ ] Conduct user research  2024-03-25 @sarah #research
+- [ ] Create wireframes  2024-03-28 @john #design
+- [ ] Review stakeholder feedback  2024-03-30 #review
 
 ## Design Phase
-- [ ] Design homepage 📅 2024-04-05 @john #design
+- [ ] Design homepage  2024-04-05 @john #design
   - [ ] Header design
   - [ ] Hero section
   - [ ] Footer design
-- [ ] Design inner pages 📅 2024-04-10 @john #design
+- [ ] Design inner pages  2024-04-10 @john #design
 
 ## Development Phase
-- [ ] Setup development environment 📅 2024-04-15 @mike #dev
-- [ ] Implement frontend 📅 2024-04-25 @mike #dev
+- [ ] Setup development environment  2024-04-15 @mike #dev
+- [ ] Implement frontend  2024-04-25 @mike #dev
 ```
 
 ### Productivity Tips

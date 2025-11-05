@@ -311,7 +311,7 @@ Show/hide content based on variables:
 
 ```markdown
 {{#if urgent}}
-⚠️ **URGENT TASK**
+**URGENT TASK**
 
 This requires immediate attention!
 {{/if}}
@@ -323,7 +323,7 @@ Multiple conditions:
 
 ```markdown
 {{#if priority == "high"}}
-🔴 **High Priority**
+ **High Priority**
 
 This task is critical and should be addressed immediately.
 
@@ -345,13 +345,13 @@ Inverse conditionals:
 
 ```markdown
 {{#unless completed}}
-⏳ **Status: In Progress**
+**Status: In Progress**
 
 Continue working on this task.
 {{/unless}}
 
 {{#if completed}}
-✅ **Completed**
+**Completed**
 
 Great job finishing this task!
 {{/if}}
@@ -363,13 +363,13 @@ Multiple conditions combined:
 
 ```markdown
 {{#if priority == "high" && urgent}}
-🚨 **CRITICAL PRIORITY**
+ **CRITICAL PRIORITY**
 
 Immediate action required!
 {{/if}}
 
 {{#if status == "active" || status == "in-progress"}}
-📊 **Active Status**
+**Active Status**
 
 Work in progress...
 {{/if}}
@@ -507,7 +507,7 @@ Generate repeated content:
 ## Tasks
 
 {{#repeat:number:num_tasks:How many tasks?}}
-- [ ] {{prompt:task_{{index}}}} 📅 {{date+index}}
+- [ ] {{prompt:task_{{index}}}}  {{date+index}}
 {{/repeat}}
 ```
 
@@ -708,13 +708,13 @@ deprecation_message: |
 
 **Descriptive Names:**
 ```
-✅ Good:
+Good:
 - meeting-notes-standard
 - daily-note-full
 - project-plan-agile
 - blog-post-technical
 
-❌ Avoid:
+Avoid:
 - template1
 - new-template
 - test
@@ -816,7 +816,7 @@ tags: [startup, update, weekly]
 **To:** {{prompt:recipients:Investors, Board, Team}}
 **From:** {{author}}
 
-## 📊 Key Metrics
+## Key Metrics
 
 | Metric | This Week | Last Week | Change |
 |--------|-----------|-----------|--------|
@@ -824,7 +824,7 @@ tags: [startup, update, weekly]
 | Users | {{number:users}} | {{number:last_users}} | {{script:calculateChange()}} |
 | MRR | ${{number:mrr}} | ${{number:last_mrr}} | {{script:calculateChange()}} |
 
-## 🎯 Highlights
+## Highlights
 
 **Major Wins:**
 1. {{prompt:win_1}}
@@ -835,11 +835,11 @@ tags: [startup, update, weekly]
 - {{prompt:learning_1}}
 - {{prompt:learning_2}}
 
-## 🚀 Product Updates
+## Product Updates
 
 {{multiline:product_updates}}
 
-## 📈 Growth Initiatives
+## Growth Initiatives
 
 **This Week:**
 - {{prompt:initiative_1}}
@@ -849,13 +849,13 @@ tags: [startup, update, weekly]
 - {{prompt:next_initiative_1}}
 - {{prompt:next_initiative_2}}
 
-## 🎯 Goals Progress
+## Goals Progress
 
 {{#repeat:3}}
 - [ ] {{prompt:goal_{{index}}}} ({{number:progress_{{index}}}}%)
 {{/repeat}}
 
-## 🤔 Challenges & Asks
+##  Challenges & Asks
 
 **Challenges:**
 {{multiline:challenges}}
@@ -863,13 +863,13 @@ tags: [startup, update, weekly]
 **How you can help:**
 {{multiline:asks}}
 
-## 💰 Runway
+##  Runway
 
 **Current Runway:** {{number:runway}} months
 **Burn Rate:** ${{number:burn_rate}}/month
 
 {{#if runway < 6}}
-⚠️ **Note:** Runway under 6 months. Fundraising planning needed.
+**Note:** Runway under 6 months. Fundraising planning needed.
 {{/if}}
 
 ---

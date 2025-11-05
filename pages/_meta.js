@@ -7,6 +7,7 @@ export default {
   "developers": "Developers",
   "advanced": "Advanced",
   "reference": "Reference",
+  "roadmap": "Roadmap",
   "releases": "Releases",
   "graph-demo": "Graph Demo",
   "comparison": "Comparison",

@@ -1,3 +1,9 @@
+---
+title: Plugin CLI Tool Reference
+description: Comprehensive Plugin CLI tool reference covering plugin creation, development with hot reload, building, testing, validation, packaging, and publishing to the Lokus registry.
+keywords: [lokus, plugin cli, plugin development, cli tool, plugin commands, hot reload, plugin testing, plugin publishing]
+---
+
 # Plugin CLI Tool
 
 The `lokus-plugin-cli` is a comprehensive command-line tool for developing, testing, packaging, and publishing Lokus plugins.
@@ -176,12 +182,12 @@ lokus-plugin validate --fix
 **Output:**
 
 ```
-✓ Manifest is valid
-✓ All required fields present
-✓ Permissions are valid
-✗ Missing description for command 'myPlugin.hello'
-✗ Unused permission 'network:fetch'
-⚠ Consider adding keywords for better discoverability
+Yes Manifest is valid
+Yes All required fields present
+Yes Permissions are valid
+No Missing description for command 'myPlugin.hello'
+No Unused permission 'network:fetch'
+ Consider adding keywords for better discoverability
 
 2 errors, 1 warning
 ```

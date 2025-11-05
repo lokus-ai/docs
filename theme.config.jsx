@@ -1,8 +1,21 @@
 export default {
   logo: (
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-      <img src="/logo.svg" alt="Lokus" style={{ height: '1.5rem' }} />
+      <img
+        src="/logo.svg"
+        alt="Lokus"
+        style={{ height: '1.5rem' }}
+        className="nx-logo"
+      />
       <span style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>Lokus</span>
+      <style jsx>{`
+        .nx-logo {
+          filter: brightness(0) saturate(100%);
+        }
+        :global(.dark) .nx-logo {
+          filter: brightness(0) saturate(100%) invert(1);
+        }
+      `}</style>
     </div>
   ),
   project: {

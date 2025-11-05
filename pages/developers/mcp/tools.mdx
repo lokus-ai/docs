@@ -1,3 +1,9 @@
+---
+title: MCP Tools Reference
+description: Complete MCP tools reference covering tool structure, registration, execution, input validation, error handling, and 68+ built-in tools for note management, workspace operations, and AI analysis.
+keywords: [lokus, mcp tools, model context protocol, ai tools, tool execution, tool registration, json schema validation, mcp reference]
+---
+
 # MCP Tools
 
 Tools in MCP enable AI assistants to perform actions and operations within Lokus. They provide a standardized interface for executing functions, commands, and workflows.
@@ -488,7 +494,7 @@ export default class WorkflowPlugin {
         // Create folders
         for (const folder of structure.folders) {
           await workspace.createFolder(`${projectName}/${folder}`)
-          created.push(`📁 ${folder}`)
+          created.push(` ${folder}`)
         }
 
         // Create files from templates
@@ -499,13 +505,13 @@ export default class WorkflowPlugin {
             features
           })
           await workspace.createFile(`${projectName}/${file.path}`, content)
-          created.push(`📄 ${file.path}`)
+          created.push(` ${file.path}`)
         }
 
         // Initialize features
         for (const feature of features) {
           await this.initializeFeature(projectName, feature)
-          created.push(`✨ ${feature}`)
+          created.push(` ${feature}`)
         }
 
         return {

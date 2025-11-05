@@ -1,3 +1,9 @@
+---
+title: Gmail Integration - Email Workflow Integration
+description: Secure Gmail integration with OAuth 2.0 + PKCE authentication. Import emails as notes, preserve threading, manage attachments, and search emails within Lokus with privacy-focused local processing.
+keywords: [gmail integration, email import, oauth authentication, email notes, email workflow, secure authentication, email search]
+---
+
 # Gmail Integration
 
 Lokus seamlessly integrates with Gmail, allowing you to import emails as notes, maintain threading context, and manage email-based tasks directly within your knowledge base. The integration uses OAuth 2.0 + PKCE for secure authentication and respects your privacy by processing emails locally.
@@ -10,17 +16,17 @@ The Gmail integration bridges your email workflow with your note-taking system, 
 
 ### Key Features v1.3
 
-- ✅ **OAuth 2.0 + PKCE** - Industry-standard secure authentication
-- ✅ **Secure Token Storage** - Keychain (macOS), Credential Manager (Windows)
-- ✅ **Import emails as notes** with full formatting preservation
-- ✅ **Preserve threading** and conversation context
-- ✅ **Attachment handling** with local storage and deduplication
-- ✅ **Email search** within Lokus using full-text search
-- ✅ **Two-way sync** (optional) with conflict resolution
-- ✅ **Privacy-focused** local processing, no cloud dependency
-- ✅ **Offline Queue** - Queue operations when offline, sync when back online
-- ✅ **Auto-refresh tokens** - Seamless token renewal without re-authentication
-- ✅ **Hybrid redirect** - Deep links + localhost fallback for auth
+-**OAuth 2.0 + PKCE** - Industry-standard secure authentication
+-**Secure Token Storage** - Keychain (macOS), Credential Manager (Windows)
+-**Import emails as notes** with full formatting preservation
+-**Preserve threading** and conversation context
+-**Attachment handling** with local storage and deduplication
+-**Email search** within Lokus using full-text search
+-**Two-way sync** (optional) with conflict resolution
+-**Privacy-focused** local processing, no cloud dependency
+-**Offline Queue** - Queue operations when offline, sync when back online
+-**Auto-refresh tokens** - Seamless token renewal without re-authentication
+-**Hybrid redirect** - Deep links + localhost fallback for auth
 
 ## Setup
 
@@ -424,7 +430,7 @@ Convert emails to tasks:
 
 **Example Task:**
 ```markdown
-- [ ] Review project document @john 📅 2024-03-25 !high
+- [ ] Review project document @john  2024-03-25 !high
   From: [[Email: Project Update]]
   Attachment: [[Project_Document.pdf]]
   Context: John sent the final draft for review

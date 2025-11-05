@@ -237,7 +237,7 @@ Boolean yes/no options:
 **Requires Approval:** {{checkbox:requires_approval}}
 
 {{#if urgent}}
-⚠️ **This is marked as urgent!**
+**This is marked as urgent!**
 {{/if}}
 ```
 
@@ -273,13 +273,13 @@ This content shows if variable_name is set
 **Example:**
 ```markdown
 {{#if urgent}}
-## ⚠️ URGENT TASK
+## URGENT TASK
 
 This requires immediate attention!
 {{/if}}
 
 {{#if status == "completed"}}
-✅ This project is complete!
+This project is complete!
 {{/if}}
 ```
 
@@ -291,18 +291,18 @@ Alternative content based on conditions:
 {{#if status == "active"}}
 🟢 Project is active
 {{else}}
-🔴 Project is not active
+ Project is not active
 {{/if}}
 ```
 
 **Example:**
 ```markdown
 {{#if priority == "high"}}
-⚠️ High Priority Task
+High Priority Task
 {{else if priority == "medium"}}
-📋 Medium Priority Task
+Medium Priority Task
 {{else}}
-📝 Low Priority Task
+Low Priority Task
 {{/if}}
 ```
 
@@ -319,7 +319,7 @@ This task is still pending.
 **Example:**
 ```markdown
 {{#unless approved}}
-⏳ **Waiting for approval**
+**Waiting for approval**
 
 Please review and approve this document.
 {{/unless}}
@@ -462,7 +462,7 @@ attendees: {{prompt:attendees:Enter attendee names}}
 ## Action Items
 
 {{#repeat:3}}
-- [ ] {{prompt:action_{{index}}}} @{{prompt:assignee_{{index}}}} 📅 {{date+7}}
+- [ ] {{prompt:action_{{index}}}} @{{prompt:assignee_{{index}}}}  {{date+7}}
 {{/repeat}}
 
 ## Next Meeting
@@ -483,7 +483,7 @@ priority: {{select:priority:low,medium,high}}
 # {{project_name}}
 
 {{#if priority == "high"}}
-⚠️ **HIGH PRIORITY PROJECT**
+**HIGH PRIORITY PROJECT**
 {{/if}}
 
 **Project Lead:** {{prompt:lead}}
@@ -521,7 +521,7 @@ priority: {{select:priority:low,medium,high}}
 - [ ] Documentation
 
 {{#unless budget}}
-⚠️ **Budget not specified**
+**Budget not specified**
 {{/unless}}
 ```
 
@@ -536,11 +536,11 @@ date: {{date}}
 # {{date:dddd, MMMM D, YYYY}}
 
 {{#if time < 12}}
-☀️ Good morning! Let's make today productive.
+ Good morning! Let's make today productive.
 {{else if time < 18}}
-🌤️ Good afternoon! Keep up the great work.
+ Good afternoon! Keep up the great work.
 {{else}}
-🌙 Good evening! Time to reflect on the day.
+ Good evening! Time to reflect on the day.
 {{/if}}
 
 ## Today's Focus
@@ -583,8 +583,8 @@ date: {{date}}
 
 **Examples:**
 ```markdown
-✅ Good: {{project_name}}, {{start_date}}, {{team_lead}}
-❌ Bad: {{p}}, {{d1}}, {{tl}}
+Good: {{project_name}}, {{start_date}}, {{team_lead}}
+Bad: {{p}}, {{d1}}, {{tl}}
 ```
 
 ### Required vs Optional

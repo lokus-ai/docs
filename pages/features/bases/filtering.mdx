@@ -8,7 +8,7 @@ keywords: [lokus, bases, filtering, queries, search, operators, advanced filteri
 
 Filtering is one of the most powerful features in Bases, allowing you to narrow down large datasets to exactly what you need. Lokus v1.3 supports comprehensive filtering with multiple operator types and complex query combinations.
 
-> **📚 Prerequisites:** This guide builds on [Bases Overview](/features/bases/overview) and [Properties](/features/bases/properties). Start there if you're new to Bases.
+> **Prerequisites:** This guide builds on [Bases Overview](/features/bases/overview) and [Properties](/features/bases/properties). Start there if you're new to Bases.
 
 ## Filter Types & Operators
 
@@ -55,7 +55,7 @@ title matches_regex "^PRJ-\d{4}$"
 - Pattern matching for codes/IDs
 - Text content searches
 
-> **💡 Tip:** Use `contains` for flexible searches, `equals` for exact matches. Most searches benefit from `contains`.
+> **Tip:** Use `contains` for flexible searches, `equals` for exact matches. Most searches benefit from `contains`.
 
 ### Number Operators
 
@@ -100,7 +100,7 @@ stock_quantity less_than 10
 - Quantity thresholds
 - Performance metrics
 
-> **⚠️ Warning:** `between` is inclusive on both ends. `between 10 20` includes both 10 and 20.
+> **Warning:** `between` is inclusive on both ends. `between 10 20` includes both 10 and 20.
 
 ### Date Operators
 
@@ -160,7 +160,7 @@ due_date is_empty
 - Upcoming deadlines
 - Scheduling and planning
 
-> **💡 Tip:** Relative dates update automatically! "last 7 days" always means the most recent week, no manual updates needed.
+> **Tip:** Relative dates update automatically! "last 7 days" always means the most recent week, no manual updates needed.
 
 ### Array Operators (Tags/Multi-Select)
 
@@ -197,7 +197,7 @@ categories is_not_empty
 - Tag-based organization
 - Feature flag filtering
 
-> **💡 Tip:** Use `contains_any` for broad searches (OR logic), `contains_all` for specific combinations (AND logic).
+> **Tip:** Use `contains_any` for broad searches (OR logic), `contains_all` for specific combinations (AND logic).
 
 ### Boolean (Checkbox) Operators
 
@@ -252,9 +252,9 @@ Show entries where:
 **Example:**
 ```
 Find high-priority active tasks that are assigned:
-- Status = Active ✓
-- Priority = High ✓
-- Assignee = Sarah ✓
+- Status = Active Yes
+- Priority = High Yes
+- Assignee = Sarah Yes
 Result: Included
 ```
 
@@ -278,9 +278,9 @@ Show entries where:
 **Example:**
 ```
 Find items needing attention (any of these):
-- Status = Urgent ✓
-- Priority = Normal ✗
-- Due Date = Yesterday ✓
+- Status = Urgent Yes
+- Priority = Normal No
+- Due Date = Yesterday Yes
 Result: Included (met OR condition)
 ```
 
@@ -357,7 +357,7 @@ Include if:
   Has an assignee
 ```
 
-> **💡 Tip:** Use parentheses to group conditions clearly. This makes complex queries easier to understand and maintain.
+> **Tip:** Use parentheses to group conditions clearly. This makes complex queries easier to understand and maintain.
 
 ## Creating Filters
 
@@ -452,7 +452,7 @@ Save commonly-used filter combinations:
 2. **"Copy Filter Link"**
 3. Share with team members
 
-> **💡 Tip:** Create saved filters for your most common workflows. Examples: "My Tasks", "This Sprint", "Needs Review".
+> **Tip:** Create saved filters for your most common workflows. Examples: "My Tasks", "This Sprint", "Needs Review".
 
 ## Pre-built Filters
 
@@ -556,7 +556,7 @@ Custom drag-and-drop ordering:
 3. Order persists across sessions
 4. Click **"Reset Sort"** to return to automatic
 
-> **⚠️ Warning:** Manual sort overrides automatic sorting. Use for custom prioritization, but remember to reset if you want automatic sorting later.
+> **Warning:** Manual sort overrides automatic sorting. Use for custom prioritization, but remember to reset if you want automatic sorting later.
 
 ## Grouping (Coming v1.4)
 
@@ -689,17 +689,17 @@ Show entries where:
 ### Optimize Filters for Large Datasets
 
 **Do:**
-- ✅ Use specific filters early (e.g., folder source)
-- ✅ Filter by indexed properties (status, dates)
-- ✅ Use `equals` instead of `contains` when possible
-- ✅ Limit results with pagination
-- ✅ Enable [Quantum Search](/features/bases/overview#quantum-search-integration)
+-Use specific filters early (e.g., folder source)
+-Filter by indexed properties (status, dates)
+-Use `equals` instead of `contains` when possible
+-Limit results with pagination
+-Enable [Quantum Search](/features/bases/overview#quantum-search-integration)
 
 **Don't:**
-- ❌ Use only `contains` with wildcards on large datasets
-- ❌ Create overly complex nested groups (3+ levels)
-- ❌ Use regex filters on non-indexed fields
-- ❌ Leave filters too broad (returning 1,000+ results)
+-Use only `contains` with wildcards on large datasets
+-Create overly complex nested groups (3+ levels)
+-Use regex filters on non-indexed fields
+-Leave filters too broad (returning 1,000+ results)
 
 ### Filter Execution Order
 
@@ -712,7 +712,7 @@ Filters execute in this order for best performance:
 5. **String operations** (contains, starts_with)
 6. **Complex operations** (regex, nested groups)
 
-> **💡 Tip:** Put more restrictive filters first. "status equals Active" before "title contains Project" performs better.
+> **Tip:** Put more restrictive filters first. "status equals Active" before "title contains Project" performs better.
 
 ## Troubleshooting
 

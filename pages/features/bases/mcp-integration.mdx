@@ -8,7 +8,7 @@ keywords: [lokus, bases, mcp, model context protocol, ai integration, automation
 
 Lokus Bases integrate seamlessly with the Model Context Protocol (MCP), allowing AI assistants to query, manipulate, and automate your databases programmatically. This powerful integration enables natural language database operations and intelligent automation.
 
-> **📚 Prerequisites:** Familiar with [Bases Overview](/features/bases/overview)? MCP builds on Bases functionality to provide AI access.
+> **Prerequisites:** Familiar with [Bases Overview](/features/bases/overview)? MCP builds on Bases functionality to provide AI access.
 
 ## What is MCP?
 
@@ -40,7 +40,7 @@ The MCP server starts automatically with Lokus - **no configuration needed!**
    - Look for: `MCP: Running` (green indicator)
 
 2. Or navigate to: **Preferences → MCP Server → Status**
-   - Status should show: `✓ Running on port 3000`
+   - Status should show: `Yes Running on port 3000`
 
 ### Manual Configuration (Advanced)
 
@@ -73,7 +73,7 @@ For custom setups, you can configure MCP manually:
 - `rate_limit` - Prevent abuse from excessive requests
 - `audit_log` - Log all MCP operations for security
 
-> **⚠️ Warning:** Changing the default port may require updating AI assistant configurations.
+> **Warning:** Changing the default port may require updating AI assistant configurations.
 
 ## Available MCP Tools
 
@@ -299,7 +299,7 @@ Update a property value in a note via Base.
 - Scheduled updates
 - Batch processing
 
-> **⚠️ Warning:** Property updates modify your markdown files directly. Ensure you have backups or version control!
+> **Warning:** Property updates modify your markdown files directly. Ensure you have backups or version control!
 
 ### `export_base`
 
@@ -457,7 +457,7 @@ update_base_property({
 
 **AI Response:**
 ```
-✓ Updated 12 tasks in Design project to Done status
+Yes Updated 12 tasks in Design project to Done status
 - Added completed_date to all tasks
 - All tasks now marked as complete
 
@@ -550,7 +550,7 @@ create_base_view({
 
 **AI Response:**
 ```
-✓ Created view "This Week" in Tasks base
+Yes Created view "This Week" in Tasks base
 
 View includes:
 - 15 tasks due this week
@@ -586,7 +586,7 @@ export_base({
 
 **AI Response:**
 ```
-✓ Exported 24 active projects to CSV
+Yes Exported 24 active projects to CSV
 
 File saved to: /exports/projects-2025-10-23.csv
 Size: 8.5 KB
@@ -653,7 +653,7 @@ All MCP operations are logged:
 2. Filter by operation, base, or date
 3. Export log for compliance
 
-> **💡 Tip:** Enable audit logging for security compliance and debugging. Logs help track what AI assistants are doing with your data.
+> **Tip:** Enable audit logging for security compliance and debugging. Logs help track what AI assistants are doing with your data.
 
 ## Troubleshooting
 

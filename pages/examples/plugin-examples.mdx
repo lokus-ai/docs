@@ -81,19 +81,19 @@ export default {
     // Template to use
     template: `# {{date}}
 
-## 📅 Today's Focus
+##  Today's Focus
 -
 
-## 📝 Notes
+## Notes
 
 
-## ✅ Tasks
+## Tasks
 - [ ]
 
-## 🎯 Goals
+## Goals
 -
 
-## 💭 Reflections
+##  Reflections
 
 
 ---
@@ -393,7 +393,7 @@ export default {
 
   async celebrateStreak(lokud, habitRecord, streak) {
     await lokud.notifications.send({
-      title: `🎉 ${streak}-Day Streak!`,
+      title: `${streak}-Day Streak!`,
       message: `Congratulations on your ${streak}-day streak for "${habitRecord['Habit Name']}"!`,
       priority: 'high',
       celebration: true
