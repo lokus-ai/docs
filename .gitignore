@@ -2,3 +2,7 @@ node_modules/
 .next/
 .vercel/
 out/
+
+# Environment variables
+.env.local
+.env*.local

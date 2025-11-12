@@ -10,6 +10,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@next/third-parties": "^16.0.2",
     "@react-sigma/core": "^5.0.4",
     "d3-force": "^3.0.0",
     "graphology": "^0.26.0",
