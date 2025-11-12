@@ -1,0 +1,1127 @@
+---
+title: Team Collaboration with Git Sync
+description: Master team collaboration in Lokus using Git sync. Learn workspace setup, conflict resolution, branch workflows, and best practices for productive team knowledge sharing.
+keywords: [lokus git sync, team collaboration, conflict resolution, git workflow, shared workspace, version control, team knowledge]
+---
+
+# Team Collaboration with Git Sync
+
+Learn to collaborate effectively with your team using Lokus Git Sync. This tutorial covers setting up shared workspaces, resolving conflicts, using branch workflows, and best practices for team collaboration.
+
+## What You'll Learn
+
+By the end of this tutorial, you'll be able to:
+- Set up shared workspaces with Git sync
+- Configure GitHub authentication securely
+- Handle merge conflicts effectively
+- Use branch workflows for team collaboration
+- Implement best practices for team knowledge management
+- Troubleshoot common sync issues
+- Create collaborative workflows that scale
+- Maintain workspace health with multiple contributors
+
+## Prerequisites
+
+- Completed [Building Your First Workspace](/tutorials/first-workspace) or familiar with Lokus
+- GitHub account (free or paid)
+- Basic Git understanding (commits, push, pull)
+- Team members with Lokus installed
+- 50 minutes of focused time
+
+## Time Estimate
+
+**50 minutes** - Set up complete team collaboration system
+
+---
+
+## Understanding Git Sync in Lokus
+
+Before diving in, let's understand how Lokus uses Git for collaboration.
+
+### Why Git for Knowledge Management?
+
+**Version Control:**
+- Track every change to your team's knowledge base
+- See who changed what and when
+- Revert to previous versions if needed
+- Understand knowledge evolution over time
+
+**Distributed Collaboration:**
+- Each team member has full local copy
+- Work offline, sync when connected
+- No single point of failure
+- Fast local operations
+
+**Branching:**
+- Experiment without affecting main workspace
+- Review changes before merging
+- Parallel workstreams for different projects
+- Feature branches for major additions
+
+**Conflict Resolution:**
+- Automatic merging when possible
+- Clear conflict indicators when manual resolution needed
+- No lost work - all changes preserved
+- Tools to choose best version
+
+### Lokus Git Sync Features
+
+**Automatic Sync:**
+- Background sync every 30 seconds (configurable)
+- Auto-commit with timestamps
+- Smart conflict detection
+- Visual sync status indicator
+
+**Security:**
+- GitHub Personal Access Tokens (not passwords)
+- Secure credential storage (OS keychain)
+- Encrypted token transmission
+- Revocable access
+
+**Conflict Management:**
+- Clear visual indicators for conflicts
+- In-editor conflict resolution
+- Force push/pull for recovery scenarios
+- Detailed conflict explanations
+
+**Branch Support:**
+- Create and switch branches
+- Merge branches with preview
+- Protected main branch
+- Branch-specific workflows
+
+> **Note:**
+> **Info:** Lokus Git Sync (v1.3.3+) provides a GitHub Desktop-like experience for knowledge bases. No terminal commands required!
+
+
+---
+
+## Step 1: Setting Up Your First Shared Workspace
+
+Let's create a GitHub-backed workspace for your team.
+
+### 1.1 Create GitHub Repository
+
+1. **Go to GitHub** (github.com)
+2. **Click "New Repository"**
+3. **Configure:**
+   - **Repository name:** `team-knowledge-base`
+   - **Description:** "Shared team knowledge in Lokus"
+   - **Visibility:**
+     - Private (recommended for team work)
+     - Public (if sharing openly)
+   - **Initialize:**
+     - ✓ Add README
+     - ✓ Add .gitignore (choose "Node" template)
+     - License (optional, choose MIT for openness)
+4. **Click "Create Repository"**
+
+### 1.2 Generate GitHub Personal Access Token
+
+Lokus uses tokens instead of passwords for secure authentication.
+
+**Steps:**
+
+1. **GitHub Settings** → Developer settings → Personal access tokens → Tokens (classic)
+2. **Click "Generate new token (classic)"**
+3. **Configure token:**
+   - **Note:** "Lokus Team Workspace"
+   - **Expiration:** 90 days (or longer for convenience)
+   - **Scopes:**
+     - ✓ `repo` (Full control of private repositories)
+     - ✓ `workflow` (if using GitHub Actions)
+4. **Generate token**
+5. **Copy token immediately** (won't be shown again!)
+   - Format: `ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`
+
+> **Note:**
+> **Warning:** Treat your token like a password! Store it securely. Anyone with your token can access your repositories.
+
+
+### 1.3 Configure Lokus Git Sync
+
+1. **Open Lokus Settings** (Cmd/Ctrl + ,)
+2. **Navigate to "Sync" section**
+3. **Expand "Git Configuration"**
+4. **Configure:**
+
+```yaml
+Remote URL: https://github.com/yourusername/team-knowledge-base.git
+Username: yourusername
+Token: ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Branch: main
+Author Name: Your Name
+Author Email: you@example.com
+```
+
+5. **Initialize Git** (if new workspace)
+   - Click "Initialize Git Repository"
+   - Waits for confirmation
+
+6. **Connect Remote**
+   - Click "Add Remote"
+   - Connects to GitHub
+
+7. **Initial Sync**
+   - Click "Pull Changes" to fetch README
+   - Confirms connection working
+
+**Visual Confirmation:**
+- Status bar shows sync icon ✓
+- "Synced" status indicator
+- No errors in console
+
+### 1.4 Share Repository with Team
+
+**Invite Collaborators:**
+
+1. **GitHub Repository** → Settings → Collaborators
+2. **Click "Add people"**
+3. **Enter teammate usernames or emails**
+4. **Select role:**
+   - **Write** - Can push changes (most team members)
+   - **Admin** - Can manage repo settings
+5. **Send invitations**
+
+**Team members accept and clone:**
+
+1. **Accept GitHub invitation email**
+2. **Open Lokus** → Settings → Sync
+3. **Configure same remote URL and credentials**
+4. **Pull changes** to get current workspace
+5. **Start collaborating!**
+
+---
+
+## Step 2: Daily Collaboration Workflow
+
+Learn the basic sync workflow for daily team collaboration.
+
+### 2.1 Starting Your Day
+
+**Morning Sync Routine:**
+
+1. **Pull latest changes** before starting work
+   - Status bar → Click sync icon
+   - Or right-click → "Pull Changes"
+   - Reviews what teammates added overnight
+
+2. **Check sync status**
+   - Green checkmark = All synced
+   - Yellow indicator = Changes to push
+   - Orange triangle = Conflicts need attention
+   - Red X = Sync error
+
+3. **Review recent changes**
+   - Command Palette → "Show Recent Changes"
+   - See what teammates modified
+   - Read new notes they added
+
+**Example Morning Review:**
+
+```
+Recent Changes (last 24 hours):
+
+Alice - 2 hours ago
+  + Added "Product Roadmap Q1 2026.md"
+  + Updated "Team Goals.md"
+
+Bob - 5 hours ago
+  ~ Modified "Meeting Notes 2025-11-11.md"
+
+Carol - 8 hours ago
+  + Added "Customer Interview - Acme Corp.md"
+  ~ Modified "Feature Requests.md"
+```
+
+### 2.2 Making Changes
+
+**Collaborative Editing:**
+
+**Add New Notes:**
+```markdown
+# New Feature Proposal
+Author: @yourname
+Date: 2025-11-12
+
+## Problem
+[Describe issue...]
+
+## Proposed Solution
+[Your solution...]
+
+## Discussion
+- @alice: [Alice's input]
+- @bob: [Bob's input]
+```
+
+**Update Existing Notes:**
+```markdown
+# Team Goals
+
+## Q1 2026
+- [ ] Launch new feature (@alice, @bob)
+- [ ] Improve onboarding (@carol)
+- [x] Update documentation (@yourname) - DONE 2025-11-12
+```
+
+**Best Practices:**
+- ✓ Sign contributions with @username
+- ✓ Add dates to updates
+- ✓ Use task assignments
+- ✓ Comment reasoning for changes
+- ✗ Don't delete others' work without discussion
+- ✗ Don't make massive changes without branches
+
+### 2.3 Committing and Pushing
+
+**Manual Commit:**
+
+1. **Make changes** to notes
+2. **Review changes** (Cmd/Ctrl + Shift + G shows git status)
+3. **Status bar shows** "Changes pending"
+4. **Click sync icon** or use menu:
+   - Right-click sync → "Commit & Push"
+5. **Auto-commit message:** "Auto-sync workspace - 2025-11-12 14:30"
+6. **Push to GitHub**
+7. **Status updates** to "Synced" ✓
+
+**Automatic Sync:**
+
+Settings → Sync → Auto-sync:
+```yaml
+Enable Auto-sync: ON
+Sync interval: 30 seconds
+Auto-commit: ON
+Auto-push: ON
+Commit message: "Auto-sync workspace"
+```
+
+With auto-sync:
+- Saves trigger auto-commit
+- Commits push automatically
+- Background sync every 30 seconds
+- Zero manual intervention
+
+**When to Manual vs Auto:**
+
+**Auto-sync best for:**
+- Small teams (2-5 people)
+- Frequent small changes
+- High trust environment
+- Real-time collaboration
+
+**Manual sync best for:**
+- Larger teams (5+ people)
+- Major structural changes
+- Reviewed workflows
+- Branches and PRs
+
+### 2.4 Pulling Teammates' Changes
+
+**When to Pull:**
+
+- **Start of day** - Get overnight changes
+- **Before major edits** - Avoid conflicts
+- **After teammate mentions sync** - Get their updates
+- **Sync indicator shows behind** - Fetch remote changes
+
+**Pull Process:**
+
+1. **Click sync icon** → "Pull Changes"
+2. **Or right-click** → "Pull Changes"
+3. **Lokus fetches** remote commits
+4. **Auto-merges** if no conflicts
+5. **Shows summary:**
+   ```
+   Pulled 3 commits from origin/main
+   + 2 files added
+   ~ 1 file modified
+   - 0 files deleted
+
+   Already up to date!
+   ```
+
+**If Fast-Forward:**
+- Your changes preserved
+- Teammate changes added
+- No conflicts
+
+**If Merge Required:**
+- Lokus creates merge commit
+- Auto-merges compatible changes
+- Flags conflicts for review
+
+---
+
+## Step 3: Handling Merge Conflicts
+
+Learn to resolve conflicts when team members edit the same content.
+
+### 3.1 Understanding Conflicts
+
+**When Do Conflicts Occur?**
+
+**Scenario:** Alice and Bob both edit "Team Goals.md"
+
+**Alice's Version (local):**
+```markdown
+# Team Goals
+
+## Q1 2026
+- [ ] Launch Feature X
+- [ ] Improve Documentation
+```
+
+**Bob's Version (remote, pushed first):**
+```markdown
+# Team Goals
+
+## Q1 2026
+- [ ] Launch Feature X
+- [ ] Update Onboarding
+```
+
+Both edited line 5. Git can't auto-merge.
+
+### 3.2 Detecting Conflicts
+
+**Visual Indicators:**
+
+1. **Status bar** shows orange triangle ⚠
+2. **Status text** says "X conflicts"
+3. **Notification** appears: "Merge conflicts detected"
+4. **Sync menu** highlights conflicted files
+
+**Open Sync Menu:**
+- Click sync icon → Shows conflict details
+- Lists conflicted files:
+  ```
+  ⚠️ 2 Conflicts Detected
+
+  Conflicting files:
+  - Team Goals.md
+  - Project Timeline.md
+  ```
+
+### 3.3 Resolving Conflicts Manually
+
+**Open Conflicted File:**
+
+`Team Goals.md` now contains conflict markers:
+
+```markdown
+# Team Goals
+
+## Q1 2026
+- [ ] Launch Feature X
+<<<<<<< Your Changes
+- [ ] Improve Documentation
+=======
+- [ ] Update Onboarding
+>>>>>>> Remote
+```
+
+**Conflict Markers Explained:**
+
+```
+<<<<<<< Your Changes     ← Start of your version
+- [ ] Improve Documentation  ← Your content
+=======                 ← Divider
+- [ ] Update Onboarding     ← Remote content
+>>>>>>> Remote          ← End of remote version
+```
+
+**Resolution Steps:**
+
+1. **Review both versions** - Understand changes
+2. **Decide which to keep:**
+   - Keep yours only
+   - Keep remote only
+   - Keep both (merge manually)
+   - Rewrite combining both
+3. **Edit the file:**
+
+**Option A: Keep Both**
+```markdown
+# Team Goals
+
+## Q1 2026
+- [ ] Launch Feature X
+- [ ] Improve Documentation
+- [ ] Update Onboarding
+```
+
+**Option B: Keep Yours**
+```markdown
+# Team Goals
+
+## Q1 2026
+- [ ] Launch Feature X
+- [ ] Improve Documentation
+```
+
+**Option C: Keep Remote**
+```markdown
+# Team Goals
+
+## Q1 2026
+- [ ] Launch Feature X
+- [ ] Update Onboarding
+```
+
+4. **Remove ALL conflict markers** (`<<<<<<<`, `=======`, `>>>>>>>`)
+5. **Save file**
+6. **Commit & Push:**
+   - Sync icon → "Commit & Push"
+   - Message: "Resolved conflict in Team Goals"
+   - Pushes resolution
+
+### 3.4 Using Force Push/Pull (Last Resort)
+
+**⚠️ WARNING: These commands overwrite changes. Use with caution!**
+
+**Force Push (Your Version Wins):**
+
+Use when:
+- You're certain your version is correct
+- Remote has broken/corrupted changes
+- Team agreed to discard remote
+
+```
+Sync menu → Advanced → Force Push
+Confirm: "Overwrite remote with my local changes"
+```
+
+**Result:**
+- Remote repository now matches your local
+- All remote changes since last sync are lost
+- Teammates must force pull to get your version
+
+**Force Pull (Remote Version Wins):**
+
+Use when:
+- Remote is correct, your local is wrong
+- You want to discard all local changes
+- Starting fresh from remote
+
+```
+Sync menu → Advanced → Force Pull
+Confirm: "Discard all local changes"
+```
+
+**Result:**
+- Local workspace now matches remote
+- All your local changes since last sync are lost
+- Your workspace is clean copy of remote
+
+**Best Practices:**
+
+✓ **Coordinate with team** before force operations
+✓ **Backup locally** before force pull
+✓ **Use sparingly** - Last resort only
+✗ **Never force push to main** without team consensus
+✗ **Don't force operations during active work**
+
+---
+
+## Step 4: Branch Workflows for Teams
+
+Use branches for organized collaboration.
+
+### 4.1 Why Use Branches?
+
+**Benefits:**
+
+**Isolation:**
+- Experiment without affecting main workspace
+- Test ideas safely
+- Multiple parallel workstreams
+
+**Review:**
+- Changes reviewed before merging to main
+- Team approval workflow
+- Quality control
+
+**Organization:**
+- Feature branches for specific work
+- Topic branches for discussions
+- Personal branches for exploration
+
+### 4.2 Creating and Using Branches
+
+**Create Feature Branch:**
+
+1. **Current branch:** `main`
+2. **Command Palette** → "Create Branch"
+3. **Branch name:** `feature/customer-success-docs`
+4. **Lokus creates** and switches to new branch
+5. **Status bar** shows: `feature/customer-success-docs`
+
+**Make Changes on Branch:**
+
+```markdown
+# Customer Success Documentation
+
+## Onboarding Process
+[Write new content...]
+
+## Common Issues
+[Document solutions...]
+```
+
+**Commit to Branch:**
+- Changes only affect feature branch
+- Main branch unchanged
+- Push to remote branch
+
+**Switch Between Branches:**
+
+```
+Command Palette → "Switch Branch"
+Select: main
+Status bar updates: main
+```
+
+Notes change to main branch version!
+
+### 4.3 Branch Workflow Patterns
+
+**Pattern 1: Feature Branches**
+
+**Use case:** Adding major new content
+
+```
+main
+  ↓
+feature/product-docs (Alice works here)
+  ↓
+Review → Merge to main
+```
+
+**Process:**
+1. Alice creates `feature/product-docs`
+2. Alice writes documentation
+3. Alice pushes branch to GitHub
+4. Team reviews on GitHub
+5. Alice merges to main via GitHub PR
+6. Alice deletes feature branch
+
+**Pattern 2: Personal Branches**
+
+**Use case:** Individual work areas
+
+```
+main
+  ├─ alice/research (Alice's notes)
+  ├─ bob/experiments (Bob's ideas)
+  └─ carol/projects (Carol's projects)
+```
+
+**Process:**
+- Each person has permanent personal branch
+- Periodically merge relevant content to main
+- Main stays clean, personal branches are playgrounds
+
+**Pattern 3: Topic Branches**
+
+**Use case:** Collaborative editing of specific topics
+
+```
+main
+  ↓
+topic/q1-planning (Team collaborates)
+  ↓
+All discuss → Merge when finalized
+```
+
+**Process:**
+1. Create topic branch for discussion
+2. Multiple team members push to same branch
+3. Discuss and iterate
+4. Merge to main when consensus reached
+
+### 4.4 Merging Branches
+
+**GitHub Pull Request (Recommended):**
+
+1. **Push branch** to GitHub
+2. **Create PR** on GitHub
+   - base: `main`
+   - compare: `feature/your-branch`
+3. **Add reviewers** (team members)
+4. **Reviewers comment** and approve
+5. **Merge PR** on GitHub
+6. **Pull main** in Lokus to get merged changes
+7. **Delete branch** (optional)
+
+**Direct Merge in Lokus:**
+
+1. **Switch to main:** `Switch Branch → main`
+2. **Command Palette** → "Merge Branch"
+3. **Select branch:** `feature/customer-docs`
+4. **Preview changes** in merge dialog
+5. **Confirm merge**
+6. **Resolve conflicts** if any
+7. **Push to remote**
+
+---
+
+## Step 5: Team Collaboration Best Practices
+
+Ensure smooth collaboration with these practices.
+
+### 5.1 Communication Protocols
+
+**Before Editing Shared Notes:**
+
+```markdown
+# Team Goals
+
+**EDITING: @alice (2025-11-12 14:30)**
+Working on Q1 goals section...
+
+## Q1 2026
+[Alice's work in progress...]
+```
+
+**After Editing:**
+```markdown
+# Team Goals
+
+**LAST UPDATED: @alice (2025-11-12 15:00)**
+
+## Q1 2026
+[Completed content...]
+```
+
+**Use Note Metadata:**
+
+```yaml
+---
+owner: alice
+last_editor: alice
+edit_date: 2025-11-12
+status: draft
+review_needed: true
+reviewers: [bob, carol]
+---
+```
+
+**Team Agreement Template:**
+
+`Team/Collaboration Guidelines.md`:
+```markdown
+# Collaboration Guidelines
+
+## Sync Frequency
+- Pull at start of each work session
+- Push after completing a task
+- Check status indicator before major edits
+
+## Conflict Resolution
+- Prefer merging over overwriting
+- Discuss conflicts in Slack/Teams before force operations
+- Tag relevant person if unsure: @owner
+
+## Branch Usage
+- Feature branches for major additions
+- Topic branches for collaborative discussions
+- Merge to main after team review
+
+## Note Ownership
+- Add owner to frontmatter
+- Tag edits with @username
+- Request review before major changes to others' notes
+
+## Communication
+- Announce major workspace changes in team chat
+- Use comments in notes for discussions
+- Weekly sync meeting to review workspace health
+
+## File Organization
+- Follow agreed folder structure (see [[Workspace Structure]])
+- Use consistent naming conventions
+- Don't move others' files without asking
+
+## Emergency Contacts
+- Workspace admin: @alice
+- Sync issues: @bob
+- Conflict resolution: @carol
+```
+
+### 5.2 Workspace Organization for Teams
+
+**Folder Structure:**
+
+```
+Team Workspace/
+├── Shared/                  # Team-wide resources
+│   ├── Goals.md
+│   ├── Processes.md
+│   └── Guidelines.md
+├── Projects/               # Active projects
+│   ├── Project-Alpha/
+│   │   ├── Overview.md (@alice)
+│   │   ├── Tasks.md (shared)
+│   │   └── Notes.md (shared)
+│   └── Project-Beta/
+├── People/                 # Personal folders
+│   ├── Alice/
+│   ├── Bob/
+│   └── Carol/
+├── Meetings/              # Meeting notes
+│   ├── Standup-2025-11-12.md
+│   ├── Planning-2025-11-10.md
+│   └── Retrospective-2025-11-01.md
+├── Resources/             # Reference materials
+│   ├── Company-Info.md
+│   ├── Tools.md
+│   └── Learning.md
+├── Archive/               # Completed/old content
+│   └── 2024/
+└── Templates/             # Shared templates
+    ├── Meeting-Notes.md
+    ├── Project-Brief.md
+    └── Decision-Log.md
+```
+
+**Guidelines:**
+
+- **Shared/** - Team-edited, high sync traffic
+- **People/** - Personal, low conflicts
+- **Projects/** - Designated owners, medium sync
+- **Meetings/** - Sequential, time-based, low conflicts
+- **Archive/** - Read-only, no edits after archiving
+
+### 5.3 Preventing Conflicts
+
+**Strategy 1: Designated Editors**
+
+```yaml
+# Project Alpha Overview.md
+---
+primary_editor: alice
+contributors: [bob, carol]
+edit_protocol: "Contact @alice before major changes"
+---
+```
+
+**Strategy 2: Time-Based Editing**
+
+```markdown
+# Shared Document Schedule
+
+Monday: @alice can edit 9am-12pm
+Tuesday: @bob can edit 9am-12pm
+Wednesday: @carol can edit 9am-12pm
+Thursday: Open editing (sync frequently)
+Friday: Review only (no edits)
+```
+
+**Strategy 3: Section Ownership**
+
+```markdown
+# Team Handbook
+
+## Engineering (Owner: @alice)
+[Alice's section - others add comments only]
+
+## Design (Owner: @bob)
+[Bob's section]
+
+## Product (Owner: @carol)
+[Carol's section]
+
+## Discussion (Shared)
+[Anyone can edit]
+```
+
+**Strategy 4: Locking Notes**
+
+```yaml
+---
+locked: true
+locked_by: alice
+locked_until: 2025-11-12 15:00
+reason: "Major restructure in progress"
+---
+```
+
+### 5.4 Monitoring Workspace Health
+
+**Daily Checks:**
+
+Command Palette → "Workspace Health"
+
+Shows:
+```
+Workspace Health Report
+=======================
+
+Sync Status: ✓ Healthy
+Last Sync: 2 minutes ago
+Pending Changes: 0
+Conflicts: 0
+
+Recent Activity:
+- 15 commits today
+- 3 active editors
+- 8 files modified
+
+Warnings:
+- None
+
+Recommendations:
+- All clear! Keep it up.
+```
+
+**Weekly Maintenance:**
+
+1. **Archive completed work**
+   ```
+   Projects/Completed/ → Archive/2025-11/
+   ```
+
+2. **Clean up stale branches**
+   ```
+   git branch -d old-feature-branch
+   ```
+
+3. **Review large files**
+   ```
+   Settings → Storage → Show Large Files
+   Consider external storage for 10MB+ files
+   ```
+
+4. **Audit permissions**
+   ```
+   GitHub → Settings → Collaborators
+   Remove former team members
+   ```
+
+---
+
+## Step 6: Troubleshooting Common Issues
+
+Solve frequent collaboration problems.
+
+### 6.1 Authentication Failures
+
+**Symptom:** "Authentication failed" when pushing/pulling
+
+**Solutions:**
+
+1. **Token expired**
+   - Generate new GitHub token
+   - Update in Settings → Sync → Token
+
+2. **Wrong token**
+   - Verify token has `repo` scope
+   - Ensure copying full token (starts with `ghp_`)
+
+3. **Username mismatch**
+   - Username must match GitHub username exactly
+   - Case-sensitive
+
+**Test authentication:**
+```
+Settings → Sync → Test Connection
+```
+
+### 6.2 Persistent Conflicts
+
+**Symptom:** Same file shows conflicts repeatedly
+
+**Solutions:**
+
+1. **Coordinate with team member**
+   - Chat: "Hey @alice, let's resolve Team Goals.md conflict together"
+   - Screen share to resolve together
+
+2. **One person force push**
+   - Agree on whose version to keep
+   - That person force pushes
+   - Other person force pulls
+
+3. **Create new file**
+   - Rename conflicted file: `Team Goals - OLD.md`
+   - Create new clean: `Team Goals.md`
+   - Merge content manually
+
+### 6.3 Large File Issues
+
+**Symptom:** Slow pushes/pulls, repository bloated
+
+**Solutions:**
+
+1. **Identify large files**
+   ```
+   Settings → Storage → Show Large Files
+   ```
+
+2. **Move to external storage**
+   - Use cloud storage (Dropbox, Drive) for videos/images
+   - Link in notes instead of committing
+
+3. **Use Git LFS** (Large File Storage)
+   - For files > 10MB that must be versioned
+   - Requires repository configuration
+
+4. **Clean up history** (advanced)
+   - Use BFG Repo-Cleaner to purge large files
+   - Coordinate with entire team
+
+### 6.4 Diverged Branches
+
+**Symptom:** "Your branch has diverged from origin/main"
+
+**Cause:** Local and remote have incompatible histories
+
+**Solution:**
+
+**Option 1: Merge** (preserves all changes)
+```
+Pull with merge commit
+Resolve conflicts
+Push merged result
+```
+
+**Option 2: Rebase** (clean linear history)
+```
+Git rebase origin/main
+Resolve conflicts as they appear
+Force push (if safe)
+```
+
+**Option 3: Reset** (discard local, use remote)
+```
+Force Pull
+Local changes lost, remote becomes local
+```
+
+---
+
+## Practice Exercise
+
+**Goal:** Set up real team collaboration
+
+**Task:** Work with a teammate to:
+
+1. **One person:**
+   - Create GitHub repository
+   - Configure Lokus sync
+   - Create initial structure
+   - Invite teammate
+
+2. **Other person:**
+   - Accept invitation
+   - Clone via Lokus sync
+   - Add a note
+   - Push changes
+
+3. **Both simultaneously:**
+   - Edit the same note differently
+   - Try to push
+   - Resolve conflict together
+
+4. **First person:**
+   - Create feature branch
+   - Add content on branch
+   - Push branch
+   - Create GitHub PR
+
+5. **Second person:**
+   - Review PR on GitHub
+   - Approve and merge
+   - Pull merged changes in Lokus
+
+**Bonus:** Set up auto-sync and test it with rapid back-and-forth edits.
+
+---
+
+## Troubleshooting
+
+### Not Seeing Teammate's Changes
+
+**Solution:**
+- Click sync icon → Pull Changes
+- Verify teammate pushed (ask them)
+- Check branch (same branch?)
+- Confirm remote URL matches
+
+### Push Rejected
+
+**Solution:**
+- Pull first to merge remote changes
+- Resolve any conflicts
+- Then push
+- Never force push without team OK
+
+### Missing Sync Icon
+
+**Solution:**
+- Settings → Sync → Enable Git Sync
+- Verify Git initialized
+- Check remote configured
+- Restart Lokus
+
+### Slow Syncs
+
+**Solution:**
+- Repository too large (move big files out)
+- Many files changed (batch edits, sync less often)
+- Network slow (check connection)
+- Background processes (close other apps)
+
+---
+
+## Next Steps
+
+### This Week
+- Set up GitHub repository for team
+- Configure sync on all team members' computers
+- Create collaboration guidelines document
+- Practice resolving conflicts in test notes
+
+### This Month
+- Establish branch workflow for major projects
+- Build shared template library
+- Set up automated workflows (GitHub Actions)
+- Train team on best practices
+
+### Continue Learning
+
+- **Related Tutorial:** [Project Management](/tutorials/project-management) - Team project workflows
+- **Related Tutorial:** [Advanced Search](/tutorials/advanced-search) - Finding in team workspaces
+- **Resource:** [Git Sync Documentation](/features/git-sync)
+- **Community:** [Team Collaboration Forum](https://community.lokus.io/teams)
+
+---
+
+## Summary
+
+In this tutorial, you learned:
+
+- Setting up shared workspaces with GitHub and Lokus
+- Configuring secure authentication with Personal Access Tokens
+- Daily collaboration workflows with push/pull
+- Detecting and resolving merge conflicts effectively
+- Using branches for organized team work
+- Best practices for preventing conflicts
+- Troubleshooting common sync issues
+- Monitoring workspace health with multiple contributors
+
+You now have the skills to collaborate effectively with your team using Lokus Git Sync, ensuring everyone stays in sync while avoiding chaos and conflicts.
+
+---
+
+**Resources:**
+- [Git Sync Documentation](/features/git-sync)
+- [GitHub Personal Access Tokens Guide](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
+- [Branch Workflow Examples](/examples/git-workflows)
+- [Team Collaboration Forum](https://community.lokus.io/teams)
+
+**Estimated Completion Time:** 50 minutes
+**Difficulty:** Intermediate
+**Last Updated:** November 2025

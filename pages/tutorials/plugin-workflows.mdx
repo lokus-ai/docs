@@ -1,0 +1,1122 @@
+---
+title: Building Productivity Workflows with Plugins
+description: Master Lokus plugins to create powerful automation workflows. Learn to install, use, and combine plugins for maximum productivity.
+keywords: [lokus plugins, workflow automation, plugin installation, productivity, automation, plugin combinations]
+---
+
+# Building Productivity Workflows with Plugins
+
+Learn how to leverage Lokus plugins to create powerful productivity workflows. This tutorial covers plugin installation, usage, and combining multiple plugins for advanced automation.
+
+## What You'll Learn
+
+By the end of this tutorial, you'll be able to:
+- Discover and install plugins from the marketplace
+- Configure plugins for your specific needs
+- Create custom automation workflows with plugins
+- Combine multiple plugins for complex workflows
+- Troubleshoot common plugin issues
+- Build productivity systems that scale
+- Use MCP-enabled plugins with AI assistants
+- Optimize plugin performance
+
+## Prerequisites
+
+- Completed [Building Your First Workspace](/tutorials/first-workspace) or familiar with Lokus basics
+- Understanding of your productivity needs
+- 45 minutes of focused time
+
+## Time Estimate
+
+**45 minutes** - Build a complete plugin-powered workflow
+
+---
+
+## Understanding Lokus Plugins
+
+Before diving in, let's understand what makes Lokus plugins powerful.
+
+### What Are Plugins?
+
+Lokus plugins extend functionality without modifying the core application. They can:
+
+- **Automate repetitive tasks** - Save time on common operations
+- **Add new features** - Extend Lokus capabilities
+- **Integrate services** - Connect to external tools and APIs
+- **Customize workflow** - Adapt Lokus to your specific needs
+- **Process data** - Transform and analyze your notes
+- **Enhance UI** - Add custom views and panels
+
+### Plugin Types
+
+**UI Plugins:**
+- Add custom views, panels, and buttons
+- Examples: Calendar views, Kanban boards, mind maps
+
+**Data Provider Plugins:**
+- Fetch data from external sources
+- Examples: Weather data, stock prices, RSS feeds
+
+**Automation Plugins:**
+- Create automated workflows and triggers
+- Examples: Auto-tagging, scheduled exports, backups
+
+**Editor Plugins:**
+- Extend markdown editor capabilities
+- Examples: Custom syntax highlighting, auto-complete
+
+**Integration Plugins:**
+- Connect Lokus to external services
+- Examples: Cloud sync, API integrations, webhooks
+
+**MCP Plugins:**
+- Expose tools to AI assistants via Model Context Protocol
+- Examples: AI-powered search, intelligent summaries
+
+> **Note:**
+> **Info:** Lokus v1.3.1+ includes a plugin system with VS Code-level extensibility. The Plugin Marketplace makes discovery and installation seamless.
+
+
+---
+
+## Step 1: Setting Up Your Plugin Environment
+
+Let's prepare Lokus for plugin usage.
+
+### 1.1 Enable Community Plugins
+
+1. Open **Settings** (Cmd/Ctrl + ,)
+2. Navigate to **Plugins** section
+3. Toggle **"Enable Community Plugins"** to ON
+4. Read and accept the security notice
+
+> **Note:**
+> **Warning:** Community plugins run JavaScript code. Only install plugins from trusted developers. Review permissions before enabling.
+
+
+### 1.2 Access the Plugin Marketplace
+
+1. Click **"Browse Marketplace"** in Settings → Plugins
+2. Or use Command Palette: "Open Plugin Marketplace"
+
+The marketplace shows:
+- **Featured** - Curated high-quality plugins
+- **Popular** - Most downloaded plugins
+- **New** - Recently published plugins
+- **Updated** - Recently updated plugins
+- **Categories** - Organized by function
+
+### 1.3 Understanding Plugin Information
+
+Each plugin listing shows:
+
+**Basic Info:**
+- Name and description
+- Author and version
+- Download count and rating
+- Last updated date
+
+**Detailed Info:**
+- Permissions required
+- Dependencies
+- Size and performance impact
+- Compatibility (Lokus version)
+- Documentation link
+- Source code (GitHub)
+
+**Safety Indicators:**
+- ✓ **Verified** - Reviewed by Lokus team
+- ⭐ **Featured** - High quality, well-maintained
+- 🔒 **Minimal Permissions** - Limited access
+- 📈 **Popular** - Many active users
+
+---
+
+## Step 2: Installing Essential Productivity Plugins
+
+Let's install a core set of productivity plugins.
+
+### 2.1 Task Management: Advanced Tasks
+
+**What it does:** Enhanced task management with priorities, due dates, and recurring tasks.
+
+**Installation:**
+1. Search for "Advanced Tasks" in marketplace
+2. Click **"Install"**
+3. Click **"Enable"** after installation
+
+**Configuration:**
+1. Go to Settings → Advanced Tasks
+2. Configure:
+   - **Default priority:** Medium
+   - **Date format:** YYYY-MM-DD
+   - **Show in sidebar:** ON
+   - **Recurring task syntax:** Enabled
+
+**Key Features:**
+- `- [ ] Task name @today` - Due today
+- `- [ ] Task name @high` - High priority
+- `- [ ] Task name @repeat(daily)` - Recurring daily
+- `- [ ] Task name @context(work)` - Context tags
+- Kanban-style task board view
+- Calendar integration
+
+**Example Usage:**
+```markdown
+# My Tasks
+
+## Work
+- [ ] Review code PR @today @high
+- [ ] Update documentation @tomorrow @medium
+- [ ] Team meeting notes @repeat(weekly:monday)
+
+## Personal
+- [ ] Grocery shopping @weekend @context(errands)
+- [ ] Workout @repeat(daily) @context(health)
+```
+
+### 2.2 Note Templates: Smart Templates
+
+**What it does:** Create and insert note templates with dynamic variables.
+
+**Installation:**
+1. Search for "Smart Templates"
+2. Install and enable
+
+**Configuration:**
+1. Settings → Smart Templates
+2. Set template folder: `Templates/`
+3. Enable auto-suggestions: ON
+4. Configure variables:
+   - `{{date}}` - Current date
+   - `{{time}}` - Current time
+   - `{{title}}` - Note title
+   - `{{workspace}}` - Workspace name
+
+**Create Your First Template:**
+
+Create `Templates/Meeting Notes.md`:
+```markdown
+---
+template: meeting-notes
+---
+
+# {{title}}
+
+**Date:** {{date}}
+**Time:** {{time}}
+**Attendees:**
+
+## Agenda
+
+1.
+
+## Discussion Notes
+
+
+
+## Action Items
+
+- [ ]
+
+## Follow-up
+
+Next meeting:
+```
+
+**Usage:**
+1. Create new note
+2. Command Palette: "Insert Template"
+3. Select "Meeting Notes"
+4. Variables auto-populate
+
+### 2.3 Productivity: Daily Notes Pro
+
+**What it does:** Enhanced daily notes with templates, navigation, and streaks.
+
+**Installation:**
+1. Search for "Daily Notes Pro"
+2. Install and enable
+
+**Configuration:**
+1. Settings → Daily Notes Pro
+2. Configure:
+   - **Daily notes folder:** `Journal/`
+   - **Date format:** YYYY-MM-DD
+   - **Template:** `Templates/Daily Note.md`
+   - **Auto-open at startup:** ON
+   - **Show streak counter:** ON
+
+**Create Daily Note Template:**
+
+Create `Templates/Daily Note.md`:
+```markdown
+---
+date: {{date}}
+day: {{dayofweek}}
+---
+
+# {{date}} - {{dayofweek}}
+
+## 🎯 Top 3 Goals
+1.
+2.
+3.
+
+## ✅ Completed Tasks
+- [ ]
+
+## 📝 Notes
+
+
+## 💡 Insights
+
+
+## 🔗 Related
+- [[Previous Day|{{yesterday}}]]
+- [[Next Day|{{tomorrow}}]]
+
+---
+**Streak:** {{streak}} days
+```
+
+**Features:**
+- **Quick navigation:** Prev/Next day buttons
+- **Calendar view:** Visual month overview
+- **Streak tracking:** Motivating consistency
+- **Search in journal:** Find past entries
+- **Export journal:** PDF or markdown
+
+### 2.4 Knowledge Management: Link Explorer
+
+**What it does:** Visualize and analyze note connections.
+
+**Installation:**
+1. Search for "Link Explorer"
+2. Install and enable
+
+**Features:**
+- **Backlink panel:** See all notes linking here
+- **Forward links:** See all links from this note
+- **Orphan detection:** Find unlinked notes
+- **Link suggestions:** AI-powered related notes
+- **Graph visualization:** Interactive network view
+
+**Usage:**
+1. Click **Link Explorer** icon in sidebar
+2. View connections for current note
+3. Click links to navigate
+4. Use "Suggest Links" for AI recommendations
+
+### 2.5 Automation: Auto Organizer
+
+**What it does:** Automatically organize notes based on rules.
+
+**Installation:**
+1. Search for "Auto Organizer"
+2. Install and enable
+
+**Configuration:**
+
+Create organization rules in Settings → Auto Organizer:
+
+**Rule 1: Auto-tag by content**
+```yaml
+name: "Tag work notes"
+trigger: content_contains
+patterns: ["meeting", "project", "deadline"]
+action: add_tags
+tags: ["work"]
+```
+
+**Rule 2: Auto-move by tag**
+```yaml
+name: "Move work notes to folder"
+trigger: has_tag
+tag: "work"
+action: move_to_folder
+folder: "Work/"
+```
+
+**Rule 3: Auto-archive old tasks**
+```yaml
+name: "Archive completed tasks"
+trigger: tag_and_age
+tag: "done"
+days_old: 30
+action: move_to_folder
+folder: "Archive/"
+```
+
+---
+
+## Step 3: Creating Workflow Combinations
+
+Now let's combine plugins into powerful workflows.
+
+### 3.1 The Daily Productivity Workflow
+
+**Goal:** Start each day organized and focused.
+
+**Plugins Used:**
+- Daily Notes Pro
+- Advanced Tasks
+- Smart Templates
+- Link Explorer
+
+**Setup:**
+
+1. **Morning Routine Template:**
+
+Create `Templates/Morning Routine.md`:
+```markdown
+# Morning Routine - {{date}}
+
+## ☀️ Daily Review
+- [[Yesterday|{{yesterday}}]] - What did I accomplish?
+- [[Goals]] - What are my priorities?
+
+## 📋 Today's Plan
+
+### Top 3 Goals
+1. {{goal1}}
+2. {{goal2}}
+3. {{goal3}}
+
+### Tasks from Yesterday
+{{yesterday_incomplete_tasks}}
+
+### Scheduled Tasks
+- [ ] @9am: Morning standup @work
+- [ ] @2pm: Code review @high @work
+- [ ] @4pm: Plan tomorrow
+
+### Time Blocks
+| Time | Activity |
+|------|----------|
+| 9-11am | Deep work |
+| 11am-12pm | Meetings |
+| 1-3pm | Deep work |
+| 3-4pm | Admin |
+| 4-5pm | Planning |
+
+## 🧠 Focus
+Today's focus area:
+
+---
+**Energy Level:** [1-10]
+**Mood:**
+```
+
+2. **Automation Rule:**
+
+Settings → Auto Organizer:
+```yaml
+name: "Create daily note at 6am"
+trigger: scheduled
+time: "06:00"
+action: create_from_template
+template: "Morning Routine"
+folder: "Journal/"
+```
+
+3. **Task Integration:**
+
+Settings → Advanced Tasks:
+```yaml
+auto_pull_tasks: true
+sources:
+  - "Projects/**/*.md"
+  - "Work/**/*.md"
+show_in_daily: true
+```
+
+**Workflow:**
+1. Lokus opens, daily note auto-created
+2. Review yesterday's note via [[Previous Day]] link
+3. Incomplete tasks auto-populate from yesterday
+4. Use Link Explorer to find related project notes
+5. Plan day with time blocks
+6. Update task priorities as needed
+
+### 3.2 The Research & Writing Workflow
+
+**Goal:** Efficiently research and write content.
+
+**Plugins Used:**
+- Link Explorer
+- Smart Templates
+- Auto Organizer
+- Word Count Stats (from previous tutorial)
+
+**Setup:**
+
+1. **Research Note Template:**
+
+Create `Templates/Research Note.md`:
+```markdown
+---
+type: research
+source: {{source_url}}
+author: {{author}}
+date_accessed: {{date}}
+tags: [research, {{topic}}]
+---
+
+# {{title}}
+
+**Source:** [{{source_title}}]({{source_url}})
+**Author:** {{author}}
+**Date:** {{date}}
+
+## Summary
+
+[Brief 2-3 sentence summary]
+
+## Key Points
+
+1.
+2.
+3.
+
+## Quotes
+
+> "[Quote 1]" (p. X)
+
+> "[Quote 2]" (p. Y)
+
+## My Thoughts
+
+
+
+## Connections
+
+Related to:
+- [[]]
+- [[]]
+
+Contradicts:
+- [[]]
+
+## Next Actions
+
+- [ ] Follow up on {{topic}}
+- [ ] Check cited sources
+
+---
+**Tags:** #research #{{topic}}
+```
+
+2. **Writing Project Template:**
+
+Create `Templates/Writing Project.md`:
+```markdown
+---
+type: writing_project
+status: draft
+word_count_goal: 2000
+deadline: {{deadline}}
+---
+
+# {{title}}
+
+**Status:** 📝 Draft
+**Goal:** {{word_count_goal}} words
+**Deadline:** {{deadline}}
+**Current Count:** {{current_word_count}}
+
+## Outline
+
+### Introduction
+[Hook, thesis, overview]
+
+### Body
+#### Point 1
+Sources: [[]], [[]]
+
+#### Point 2
+Sources: [[]], [[]]
+
+#### Point 3
+Sources: [[]], [[]]
+
+### Conclusion
+[Summary, implications, call to action]
+
+## Research Sources
+
+{{backlinks}}
+
+## Draft
+
+
+
+## Revision Notes
+
+- [ ] Fact-check all claims
+- [ ] Improve transitions
+- [ ] Strengthen conclusion
+
+---
+**Progress:** {{progress_percentage}}%
+```
+
+3. **Automation Rules:**
+
+```yaml
+# Auto-tag research notes
+name: "Tag research notes"
+trigger: frontmatter_has
+field: type
+value: research
+action: add_to_folder
+folder: "Research/"
+
+# Track writing progress
+name: "Update writing stats"
+trigger: file_modified
+file_type: writing_project
+action: update_frontmatter
+field: current_word_count
+value: "{{word_count}}"
+```
+
+**Workflow:**
+1. Find source → Create research note from template
+2. Extract key points and quotes
+3. Use Link Explorer to find related research
+4. Start writing project from template
+5. Link research notes into writing project
+6. Auto-organization moves files to proper folders
+7. Word count updates automatically
+8. Link Explorer shows all connected research
+
+### 3.3 The Project Management Workflow
+
+**Goal:** Track projects from inception to completion.
+
+**Plugins Used:**
+- Advanced Tasks
+- Daily Notes Pro
+- Link Explorer
+- Smart Templates
+- Kanban Board (if available)
+
+**Setup:**
+
+1. **Project Template:**
+
+Create `Templates/Project.md`:
+```markdown
+---
+type: project
+status: active
+priority: medium
+start_date: {{date}}
+due_date: {{due_date}}
+team: []
+---
+
+# {{project_name}}
+
+**Status:** 🟡 Active
+**Priority:** Medium
+**Owner:** {{owner}}
+**Team:** {{team_members}}
+**Timeline:** {{start_date}} → {{due_date}}
+
+## 📋 Overview
+
+### Goals
+1.
+2.
+3.
+
+### Success Criteria
+- [ ]
+- [ ]
+- [ ]
+
+## 📊 Project Phases
+
+### Phase 1: Planning
+**Timeline:** Week 1-2
+- [ ] Define requirements @owner
+- [ ] Create timeline @owner
+- [ ] Assign tasks @owner
+
+### Phase 2: Execution
+**Timeline:** Week 3-8
+- [ ] Development @team
+- [ ] Testing @team
+- [ ] Documentation @team
+
+### Phase 3: Launch
+**Timeline:** Week 9-10
+- [ ] Final testing @team
+- [ ] Deploy @owner
+- [ ] Monitor @team
+
+## 📝 Meeting Notes
+
+- [[{{project_name}} - Kickoff Meeting]]
+- [[{{project_name}} - Weekly Sync]]
+
+## 📎 Resources
+
+- [[Project Plan]]
+- [[Technical Specs]]
+- [[Design Mockups]]
+
+## 🔍 Related Projects
+
+{{links:type=project}}
+
+## 📈 Progress
+
+**Completion:** {{progress}}%
+
+Last updated: {{date}}
+```
+
+2. **Weekly Review Template:**
+
+Create `Templates/Weekly Review.md`:
+```markdown
+# Weekly Review - Week {{week_number}} {{year}}
+
+**Period:** {{week_start}} → {{week_end}}
+
+## 🎯 Goals Review
+
+| Goal | Status | Notes |
+|------|--------|-------|
+| {{goal1}} | {{status1}} | |
+| {{goal2}} | {{status2}} | |
+| {{goal3}} | {{status3}} | |
+
+## ✅ Completed This Week
+
+{{completed_tasks:week}}
+
+## 🚧 In Progress
+
+{{active_tasks}}
+
+## 📊 Project Status
+
+{{projects_summary}}
+
+## 💡 Insights & Learnings
+
+
+
+## 📅 Next Week Plan
+
+### Top 3 Priorities
+1.
+2.
+3.
+
+### Key Tasks
+- [ ] @high
+- [ ] @medium
+- [ ] @medium
+
+---
+**Previous:** [[Week {{prev_week}}]]
+**Next:** [[Week {{next_week}}]]
+```
+
+3. **Task Dashboard:**
+
+Settings → Advanced Tasks → Views:
+```yaml
+# Create custom view: Project Dashboard
+name: "Project Dashboard"
+filters:
+  - tag: project
+  - status: active
+sort: priority
+group_by: project_name
+show_progress: true
+```
+
+**Workflow:**
+1. Create project from template
+2. Break down into tasks with `@owner` tags
+3. Link tasks to daily notes
+4. Use Kanban board for visual tracking
+5. Daily standup reviews tasks for today
+6. Weekly review template auto-generates progress
+7. Link Explorer shows project dependencies
+
+---
+
+## Step 4: Advanced Plugin Combinations
+
+Let's explore sophisticated multi-plugin workflows.
+
+### 4.1 The Content Creation Pipeline
+
+**Plugins:** Smart Templates + Auto Organizer + Link Explorer + Word Count
+
+**Use Case:** Blog post from idea to publication
+
+**Workflow:**
+
+1. **Idea Capture** (Template: Quick Idea)
+   ```markdown
+   # {{title}}
+   Date: {{date}}
+   Type: Blog idea
+
+   ## The Idea
+   [One paragraph description]
+
+   ## Why It Matters
+   [Target audience + value]
+
+   ## Next Steps
+   - [ ] Research @research
+   - [ ] Outline @writing
+   ```
+
+2. **Auto-organization** moves to `Ideas/` folder
+
+3. **Research Phase** (Auto-creates research notes)
+   - Link Explorer finds related content
+   - Research notes link back to idea
+
+4. **Writing Phase** (Template: Blog Post)
+   - Word Count tracks progress
+   - Link Explorer shows research sources
+   - Auto-saves drafts to `Drafts/`
+
+5. **Review Phase** (Checklist template)
+   - Grammar check
+   - Link validation
+   - Image optimization
+
+6. **Publication** (Auto-moves to `Published/`)
+
+### 4.2 The Learning & Knowledge System
+
+**Plugins:** Link Explorer + Daily Notes + Smart Templates
+
+**Use Case:** Building a personal knowledge graph
+
+**Workflow:**
+
+1. **Capture** - Quick notes in daily note
+2. **Process** - Convert to permanent notes with template
+3. **Connect** - Link Explorer suggests related notes
+4. **Review** - Weekly review template surfaces old notes
+5. **Synthesize** - Create index notes linking themes
+
+**Example Permanent Note Template:**
+```markdown
+---
+type: permanent_note
+topic: {{topic}}
+created: {{date}}
+---
+
+# {{concept_name}}
+
+## Definition
+
+[In your own words]
+
+## Key Ideas
+
+-
+-
+-
+
+## Examples
+
+
+## Connections
+
+**Related concepts:**
+{{link_suggestions:same_topic}}
+
+**Builds upon:**
+- [[]]
+
+**Leads to:**
+- [[]]
+
+**Contradicts:**
+- [[]]
+
+## Sources
+
+{{backlinks:type=source}}
+
+## My Understanding
+
+[Your synthesis and thoughts]
+
+---
+**Last reviewed:** {{date}}
+```
+
+### 4.3 The Team Collaboration Workflow
+
+**Plugins:** Advanced Tasks + Auto Organizer + Link Explorer
+
+**Use Case:** Coordinating team projects
+
+**Workflow:**
+
+1. **Shared Project Note** (Template: Team Project)
+   ```markdown
+   # {{project_name}}
+
+   ## Team
+   - @alice (Lead)
+   - @bob (Dev)
+   - @carol (Design)
+
+   ## Tasks
+   - [ ] Setup environment @bob @today
+   - [ ] Create mockups @carol @this-week
+   - [ ] Review architecture @alice @high
+
+   ## Decisions Log
+   {{date}}: Decided to use React for frontend (@alice)
+
+   ## Meeting Notes
+   - [[Team Sync - {{date}}]]
+   ```
+
+2. **Personal Task View** (Auto-filter)
+   - Advanced Tasks filters by `@yourname`
+   - Shows only your assignments
+
+3. **Daily Standups** (Template auto-generates)
+   ```markdown
+   # Standup - {{date}}
+
+   ## @alice
+   - ✅ Completed design review
+   - 🚧 Working on API integration
+   - 🚫 Blocked: Need staging environment
+
+   ## @bob
+   {{auto_generate:from=Advanced Tasks}}
+
+   ## @carol
+   {{auto_generate:from=Advanced Tasks}}
+   ```
+
+4. **Dependency Tracking** (Link Explorer)
+   - See which tasks block others
+   - Visualize project graph
+
+---
+
+## Step 5: Plugin Performance Optimization
+
+Ensure plugins don't slow down Lokus.
+
+### 5.1 Monitor Plugin Performance
+
+1. Open **Command Palette** (Cmd/Ctrl + P)
+2. Type "Show Plugin Performance"
+3. View metrics:
+   - Load time
+   - Memory usage
+   - CPU usage
+   - Event listeners
+
+**Red flags:**
+- Load time > 500ms
+- Memory usage > 50MB
+- High CPU during idle
+
+### 5.2 Optimize Plugin Usage
+
+**Disable Unused Plugins:**
+- Settings → Plugins
+- Disable plugins you don't actively use
+- Keep < 10 plugins enabled for best performance
+
+**Configure Refresh Intervals:**
+- Settings → [Plugin Name] → Refresh Interval
+- Increase intervals for non-critical plugins
+- Disable auto-refresh for static content
+
+**Use Lazy Loading:**
+- Settings → Plugins → Advanced
+- Enable "Lazy load plugins"
+- Plugins load only when needed
+
+**Clear Plugin Caches:**
+- Settings → Plugins → Advanced
+- Click "Clear All Plugin Caches"
+- Do this monthly for best performance
+
+### 5.3 Troubleshooting Plugin Issues
+
+**Plugin won't enable:**
+1. Check Lokus version compatibility
+2. Look for dependency conflicts
+3. Review console for errors (Cmd/Ctrl + Shift + I)
+
+**Plugin causing crashes:**
+1. Disable via Safe Mode (Hold Shift during startup)
+2. Report issue to plugin developer
+3. Wait for update or find alternative
+
+**Conflicts between plugins:**
+1. Disable plugins one by one
+2. Identify which combination causes issue
+3. Check plugin documentation for known conflicts
+
+---
+
+## Best Practices
+
+### Do's
+
+**✓ Start minimal** - Install plugins one at a time
+
+**✓ Read documentation** - Understand capabilities fully
+
+**✓ Configure carefully** - Set up properly before using
+
+**✓ Review permissions** - Know what plugins access
+
+**✓ Keep plugins updated** - Updates include fixes and features
+
+**✓ Backup before experimenting** - Test new plugins safely
+
+**✓ Use plugin presets** - Save configurations for workflows
+
+### Don'ts
+
+**✗ Install everything** - Only install what you need
+
+**✗ Ignore performance** - Monitor plugin impact
+
+**✗ Skip updates** - Old versions have bugs and security issues
+
+**✗ Trust blindly** - Review code and permissions
+
+**✗ Overcomplicate** - Start simple, add complexity gradually
+
+**✗ Ignore conflicts** - Resolve plugin conflicts promptly
+
+---
+
+## Practice Exercise
+
+**Goal:** Build your own productivity workflow
+
+**Task:** Create a morning routine workflow that:
+1. Opens today's daily note
+2. Shows incomplete tasks from yesterday
+3. Displays your top 3 goals
+4. Creates a time-blocked schedule
+5. Links to active projects
+
+**Steps:**
+1. Install required plugins (Daily Notes Pro, Advanced Tasks)
+2. Create morning routine template
+3. Set up automation rule for 6am creation
+4. Test the workflow for 3 days
+5. Refine based on what works
+
+**Bonus:** Add Link Explorer to suggest related notes based on your goals.
+
+---
+
+## Troubleshooting
+
+### Plugin Not Showing Up After Install
+
+**Solution:**
+- Reload Lokus (Cmd/Ctrl + R)
+- Check Settings → Plugins → Enabled plugins
+- Verify compatibility with your Lokus version
+- Check console for errors
+
+### Template Variables Not Working
+
+**Solution:**
+- Ensure Smart Templates plugin is enabled
+- Check variable syntax: `{{variable_name}}`
+- Review plugin settings for variable definitions
+- Some variables require specific frontmatter
+
+### Automation Rules Not Triggering
+
+**Solution:**
+- Verify Auto Organizer is running (status in settings)
+- Check rule syntax and conditions
+- Ensure trigger conditions are met
+- Review logs in Settings → Auto Organizer → Logs
+
+### Performance Degradation
+
+**Solution:**
+- Disable plugins one by one to identify culprit
+- Clear plugin caches
+- Reduce refresh intervals
+- Consider alternative lighter plugins
+
+---
+
+## Next Steps
+
+### This Week
+- Install 3-5 essential plugins for your workflow
+- Create templates for common tasks
+- Set up one automation rule
+- Test workflow for productivity gains
+
+### This Month
+- Experiment with plugin combinations
+- Build 2-3 custom workflows
+- Optimize plugin performance
+- Share workflows with community
+
+### Continue Learning
+
+- **Related Tutorial:** [Plugin Development](/tutorials/plugin-development) - Build your own
+- **Related Tutorial:** [Advanced Search](/tutorials/advanced-search) - Power user techniques
+- **Resource:** [Plugin API Documentation](/reference/plugin-api)
+- **Community:** [Plugin Showcase Forum](https://community.lokus.io/plugins)
+
+---
+
+## Summary
+
+In this tutorial, you learned:
+
+- How to discover and install plugins from the marketplace
+- Configuring plugins for your specific workflow needs
+- Creating powerful automation with plugin combinations
+- Building three complete workflows (daily productivity, research & writing, project management)
+- Advanced multi-plugin combinations for complex use cases
+- Optimizing plugin performance for speed
+- Troubleshooting common plugin issues
+- Best practices for sustainable plugin usage
+
+You now have the skills to build custom productivity workflows using Lokus plugins. The plugin ecosystem is constantly growing - explore the marketplace regularly for new tools that can enhance your workflow.
+
+---
+
+**Resources:**
+- [Plugin Marketplace](https://plugins.lokus.io)
+- [Plugin Documentation](/developers/plugins/overview)
+- [Community Plugin Examples](/examples/plugin-examples)
+- [Plugin Development Guide](/tutorials/plugin-development)
+- [Plugin API Reference](/reference/plugin-api)
+
+**Estimated Completion Time:** 45 minutes
+**Difficulty:** Intermediate
+**Last Updated:** November 2025

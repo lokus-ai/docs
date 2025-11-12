@@ -1,18 +1,18 @@
 ---
 title: Graph Visualization - Interactive 2D/3D Knowledge Graphs
-description: Interactive graph visualization with 2D and 3D views, force-directed layout, WebGL rendering, clustering algorithms, and performance optimization for 10,000+ nodes. Visualize your knowledge structure.
-keywords: [knowledge graph, graph visualization, network diagram, 2D graph, 3D graph, force-directed layout, node clustering, sigma.js]
+description: Interactive graph visualization with 2D and 3D views, force-directed layout, WebGL rendering, clustering algorithms, plugin extensibility, and performance optimization for 10,000+ nodes. Visualize your knowledge structure.
+keywords: [knowledge graph, graph visualization, network diagram, 2D graph, 3D graph, force-directed layout, node clustering, sigma.js, plugins]
 ---
 
 # Graph Visualization
 
-**Version:** 1.3.1 | **Status:** Production Ready
+**Version:** 1.3.3 | **Status:** Production Ready
 
 The graph visualization in Lokus transforms your notes and their connections into an interactive network diagram, providing a visual representation of your knowledge structure. The graph helps you discover patterns, identify clusters, and navigate your notes in ways traditional folders and search cannot.
 
-## What's New in v1.3
+## What's New in v1.3.3
 
-Version 1.3 brings major performance and visualization improvements to the graph system:
+Version 1.3.3 brings major performance improvements, plugin extensibility, and enhanced visualization to the graph system:
 
 - **High-Performance Physics Engine** - Force-directed layout using D3-force with quadtree acceleration, handling 1000+ nodes smoothly at 60fps
 - **WebGL Rendering** - Hardware-accelerated graphics for massive graphs (10,000+ nodes with WebGL, 5,000+ in 3D)
@@ -24,6 +24,11 @@ Version 1.3 brings major performance and visualization improvements to the graph
 - **Enhanced Export Options** - Export to PNG (1x-4x resolution), SVG (vector), and JSON formats with customizable options
 - **Improved Node Interactions** - Hover previews, multi-select with keyboard, drag-to-reposition with physics feedback
 - **Performance Monitoring** - Real-time FPS counter, adaptive quality settings, and optimization recommendations
+- **Plugin Integration** - Extend graph with custom layouts, filters, and analysis tools
+  - Custom layout algorithms
+  - Node/edge styling plugins
+  - Graph analysis tools
+  - Export format extensions
 
 ## Overview
 
@@ -760,6 +765,172 @@ cluster:"Research"
 ```
 
 See [Search System](/features/search)
+
+## Plugin Extensions
+
+Lokus v1.3.3 introduces plugin support for graph visualization, allowing developers to extend graph functionality with custom layouts, styling, and analysis tools.
+
+### Custom Layout Algorithms
+
+Plugins can register custom graph layout algorithms:
+
+```javascript
+export function activate(context) {
+  context.graph.registerLayout({
+    id: 'timeline-layout',
+    name: 'Timeline Layout',
+    description: 'Arrange nodes by creation date',
+
+    compute: (graph, options) => {
+      const nodes = graph.nodes();
+      const sorted = nodes.sort((a, b) =>
+        new Date(a.created) - new Date(b.created)
+      );
+
+      sorted.forEach((node, index) => {
+        graph.setNodeAttribute(node, 'x', index * 100);
+        graph.setNodeAttribute(node, 'y', 0);
+      });
+    },
+
+    options: {
+      spacing: { type: 'number', default: 100 },
+      direction: { type: 'select', options: ['horizontal', 'vertical'] }
+    }
+  });
+}
+```
+
+### Node and Edge Styling
+
+Apply custom styling rules via plugins:
+
+```javascript
+// Custom node coloring by properties
+context.graph.registerNodeStyle({
+  id: 'priority-colors',
+  name: 'Color by Priority',
+
+  apply: (node, attributes) => {
+    const priority = attributes.priority || 'low';
+    const colors = {
+      high: '#ef4444',
+      medium: '#f59e0b',
+      low: '#10b981'
+    };
+
+    return {
+      color: colors[priority],
+      size: priority === 'high' ? 15 : 10
+    };
+  }
+});
+
+// Custom edge styling
+context.graph.registerEdgeStyle({
+  id: 'connection-strength',
+  name: 'Connection Strength',
+
+  apply: (edge, attributes) => {
+    const strength = attributes.weight || 1;
+    return {
+      size: strength * 2,
+      color: `rgba(99, 102, 241, ${strength / 10})`
+    };
+  }
+});
+```
+
+### Graph Analysis Tools
+
+Add custom analysis and metrics:
+
+```javascript
+export function activate(context) {
+  // Register custom command
+  context.commands.registerCommand('graphPlugin.findInfluencers', async () => {
+    const graph = context.graph.getGraph();
+    const pagerank = calculatePageRank(graph);
+
+    const influencers = Object.entries(pagerank)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10);
+
+    context.graph.highlightNodes(influencers.map(([id]) => id));
+    context.window.showInformationMessage(`Found ${influencers.length} key influencer nodes`);
+  });
+
+  // Add to context menu
+  context.graph.registerContextMenuItem({
+    id: 'find-influencers',
+    label: 'Find Influencer Nodes',
+    command: 'graphPlugin.findInfluencers'
+  });
+}
+
+function calculatePageRank(graph) {
+  // PageRank implementation
+  // ...
+  return rankings;
+}
+```
+
+### Export Format Extensions
+
+Add custom export formats:
+
+```javascript
+context.graph.registerExportFormat({
+  id: 'gephi-export',
+  name: 'Gephi (.gexf)',
+  extension: '.gexf',
+
+  export: async (graph, options) => {
+    const gexf = convertToGEXF(graph);
+    return {
+      content: gexf,
+      mimeType: 'application/gexf+xml'
+    };
+  }
+});
+```
+
+### Popular Graph Plugins
+
+**Community Plugins:**
+- **Graph Analytics Pro** - Advanced metrics (betweenness, eigenvector centrality, clustering coefficient)
+- **Timeline Layout** - Chronological node arrangement with date-based filtering
+- **Semantic Clustering** - AI-powered content similarity clustering
+- **Graph Export Suite** - Export to Gephi, Cytoscape, NetworkX, D3.js
+- **Path Finder** - Find all paths between nodes with visualization
+- **Community Detection** - Multiple clustering algorithms (Louvain, Leiden, Infomap)
+
+**Plugin Permissions:**
+Graph plugins require:
+- `graph:read` - Read graph structure and node data
+- `graph:layout` - Register custom layout algorithms
+- `graph:style` - Apply custom styling rules
+- `graph:export` - Add export formats
+- `graph:analysis` - Perform graph analysis
+
+### Plugin API Overview
+
+**Available APIs:**
+- `context.graph.getGraph()` - Access graph data structure
+- `context.graph.registerLayout()` - Add custom layouts
+- `context.graph.registerNodeStyle()` - Custom node appearance
+- `context.graph.registerEdgeStyle()` - Custom edge appearance
+- `context.graph.registerExportFormat()` - Export formats
+- `context.graph.highlightNodes()` - Highlight specific nodes
+- `context.graph.filterNodes()` - Apply filters
+- `context.graph.onGraphUpdate()` - Listen to graph changes
+
+### Learn More
+
+- [Plugin System Overview](/features/plugin-system) - Complete plugin architecture
+- [Graph Plugin Development](/developers/graph-plugins) - Build graph extensions
+- [Plugin API Reference](/api/plugins) - Detailed API documentation
+- [Plugin Marketplace](/marketplace?category=graph) - Browse graph plugins
 
 ## Best Practices
 

@@ -53,7 +53,7 @@ interface QuantumSuperpositionIndex {
   hashIndex: Map<string, QuantumState>
 
   // Semantic embedding index - similarity search
-  embeddingIndex: VectorIndex&lt;768> // 768-dim embeddings
+  embeddingIndex: VectorIndex<768> // 768-dim embeddings
 
   // Temporal index - time-based queries
   temporalIndex: TimeSeriesIndex
@@ -575,7 +575,7 @@ await indexer.configure({
 - Real-time results
 
 **Not needed for:**
-- Small workspaces (&lt;1,000 files)
+- Small workspaces (`<1,000` files)
 - Rare searches
 - Simple exact matches
 - Memory-constrained systems

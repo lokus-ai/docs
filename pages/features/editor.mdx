@@ -1,19 +1,19 @@
 ---
 title: "Rich Text Editor - Complete Guide to TipTap 3.4"
-description: "Master Lokus's powerful TipTap 3.4-based rich text editor with 100+ programming languages, KaTeX math equations, wiki links, smart paste, callouts, section folding, slash commands, split pane editing, and advanced markdown. Complete keyboard shortcuts, extension reference, performance optimization guide, and real-world usage examples."
-keywords: "rich text editor, tiptap 3.4, markdown editor, wysiwyg editor, code editor with syntax highlighting, math equations, katex latex, wiki links, obsidian-style notes, code blocks, slash commands, keyboard shortcuts, smart paste, callouts, admonitions, section folding, live preview, reading mode, split pane editor, markdown compiler, text formatting, knowledge management, note taking"
+description: "Master Lokus's powerful TipTap 3.4-based rich text editor with 100+ programming languages, KaTeX math equations, wiki links, smart paste, callouts, section folding, slash commands, split pane editing, plugin integration, and advanced markdown. Complete keyboard shortcuts, extension reference, performance optimization guide, and real-world usage examples."
+keywords: "rich text editor, tiptap 3.4, markdown editor, wysiwyg editor, code editor with syntax highlighting, math equations, katex latex, wiki links, obsidian-style notes, code blocks, slash commands, keyboard shortcuts, smart paste, callouts, admonitions, section folding, live preview, reading mode, split pane editor, markdown compiler, text formatting, knowledge management, note taking, plugins"
 author: "Lokus Documentation Team"
-lastUpdated: "2025-01-23"
-version: "1.3.1"
+lastUpdated: "2025-11-12"
+version: "1.3.3"
 category: "features"
-tags: ["editor", "tiptap", "markdown", "keyboard-shortcuts", "extensions", "wysiwyg", "code-highlighting", "latex", "performance"]
+tags: ["editor", "tiptap", "markdown", "keyboard-shortcuts", "extensions", "wysiwyg", "code-highlighting", "latex", "performance", "plugins"]
 ---
 
 # Rich Text Editor - Complete Guide
 
 Lokus features a **powerful rich text editor** built on **TipTap 3.4**, providing an intuitive writing experience for both technical and non-technical users. The editor seamlessly combines the simplicity of Markdown with the power of a modern WYSIWYG editor, supporting everything from basic text formatting to advanced features like math equations, code syntax highlighting, and interactive components.
 
-**Version:** 1.3.1 | **Status:** Production Ready | **Extensions:** 25+ | **TipTap:** 3.4 | **Built with:** React
+**Version:** 1.3.3 | **Status:** Production Ready | **Extensions:** 25+ | **TipTap:** 3.4 | **Built with:** React
 
 ## Why This Editor?
 
@@ -25,16 +25,25 @@ Lokus features a **powerful rich text editor** built on **TipTap 3.4**, providin
 - **Connected**: Wiki-style linking with autocomplete
 - **Smart**: Intelligent paste detection and format conversion
 
-## What's New in v1.3
+## What's New in v1.3.3
 
--**Enhanced Smart Paste** - Better HTML → Markdown conversion, preserves formatting
--**Improved Autocomplete** - Faster WikiLinks and tag suggestions with fuzzy matching
--**100+ Languages** - Syntax highlighting for all major programming languages
--**Enhanced Tables** - Column resize, better cell editing, Excel paste support
--**Split Pane Editing** - Work on two notes simultaneously with Cmd/Ctrl + \
--**Markdown Customization** - Customize WikiLink styles, heading sizes, code themes
--**Image Improvements** - Better paste handling, auto-compression, lazy loading
--**Performance** - 40% faster initial load, smooth scrolling for large documents
+### Editor Enhancements
+- **Enhanced Smart Paste** - Better HTML → Markdown conversion, preserves formatting
+- **Improved Autocomplete** - Faster WikiLinks and tag suggestions with fuzzy matching
+- **100+ Languages** - Syntax highlighting for all major programming languages
+- **Enhanced Tables** - Column resize, better cell editing, Excel paste support
+- **Split Pane Editing** - Work on two notes simultaneously with Cmd/Ctrl + \
+- **Markdown Customization** - Customize WikiLink styles, heading sizes, code themes
+- **Image Improvements** - Better paste handling, auto-compression, lazy loading
+- **Performance** - 40% faster initial load, smooth scrolling for large documents
+
+### Plugin System Integration
+- **Plugin API** - Extend editor with custom extensions and commands
+- **Editor Extension Points** - Plugins can register custom TipTap extensions
+- **Command Registration** - Add custom slash commands via plugins
+- **Content Providers** - Plugins can provide content and snippets
+- **Editor Event Hooks** - Subscribe to editor events from plugins
+- **Hot Reloading** - Live plugin updates during development
 
 ## Keyboard Shortcuts
 
@@ -1180,6 +1189,122 @@ editorAPI.registerExtension(MyExtension);
 
 See the [Developer Guide](/developers) for complete extension development documentation.
 
+## Plugin Integration
+
+Lokus v1.3.3 introduces a comprehensive plugin system that allows developers to extend the editor with custom functionality, similar to VS Code's extensibility model.
+
+### Editor Plugin Capabilities
+
+**Custom Extensions:**
+Plugins can register custom TipTap extensions to add new editor features:
+```javascript
+// Example: Custom extension via plugin
+export function activate(context) {
+  const customExtension = Extension.create({
+    name: 'myCustomFeature',
+    addCommands() {
+      return {
+        insertCustomBlock: () => ({ commands }) => {
+          commands.insertContent('<div class="custom-block">Content</div>');
+          return true;
+        }
+      };
+    }
+  });
+
+  context.editor.registerExtension(customExtension);
+}
+```
+
+**Slash Command Registration:**
+Add custom commands to the slash command menu:
+```javascript
+context.editor.registerSlashCommand({
+  title: 'Insert Custom Block',
+  description: 'Adds a custom content block',
+  command: 'myPlugin.insertCustomBlock',
+  category: 'blocks'
+});
+```
+
+**Content Manipulation:**
+Plugins can read, modify, and insert content:
+```javascript
+// Get editor content
+const content = context.editor.getContent();
+
+// Insert text at cursor
+context.editor.insertText('Custom text from plugin');
+
+// Replace selection
+context.editor.replaceSelection('New content');
+
+// Access TipTap editor instance
+const editor = context.editor.getInstance();
+```
+
+**Event Subscriptions:**
+Listen to editor events:
+```javascript
+// Content changes
+context.editor.onDidChangeContent((event) => {
+  console.log('Content changed:', event);
+});
+
+// Selection changes
+context.editor.onDidChangeSelection((selection) => {
+  console.log('Selection:', selection);
+});
+
+// Document saved
+context.editor.onDidSave((filePath) => {
+  console.log('Document saved:', filePath);
+});
+```
+
+### Use Cases for Editor Plugins
+
+**Formatting Enhancements:**
+- Custom text transformations
+- Advanced find and replace
+- Batch formatting operations
+- Template expansion
+
+**Content Generation:**
+- AI-powered writing assistance
+- Code snippet insertion
+- Boilerplate generation
+- Dynamic content from APIs
+
+**Analysis Tools:**
+- Word count and readability
+- Grammar and spell checking
+- Citation management
+- Content validation
+
+**Integration Features:**
+- External service integration
+- Custom data providers
+- Real-time collaboration features
+- Version control integration
+
+### Security Considerations
+
+All editor plugins run in a sandboxed environment with:
+- Limited DOM access
+- Permission-based API access
+- Content Security Policy enforcement
+- Resource usage monitoring
+
+Plugins must declare `editor:modify` permission in their manifest to modify editor content.
+
+### Learn More
+
+- [Plugin System Overview](/features/plugin-system) - Complete plugin architecture
+- [Plugin Development Guide](/developers/plugins) - Build your own plugins
+- [Plugin API Reference](/api/plugins) - Detailed API documentation
+- [Plugin Marketplace](/marketplace) - Discover community plugins
+
 ## Performance Optimization
 
 Lokus is optimized for handling large documents with thousands of lines. Here's what makes it fast:
@@ -1484,7 +1609,7 @@ Structure for project management:
 
 ## Goals
 - [ ] Improve user retention by 25%
-- [ ] Reduce load time to &lt;2s
+- [ ] Reduce load time to `<2s`
 - [ ] Achieve 4.5+ app store rating
 
 ## Timeline
@@ -1638,6 +1763,6 @@ Ready to become a Lokus power user?
 
 ---
 
-**Last Updated:** January 23, 2025 | **Editor Version:** 1.3.1 | **TipTap Version:** 3.4
+**Last Updated:** November 12, 2025 | **Editor Version:** 1.3.3 | **TipTap Version:** 3.4
 
 *This documentation is actively maintained. Found an error or want to contribute? Edit this page on GitHub.*

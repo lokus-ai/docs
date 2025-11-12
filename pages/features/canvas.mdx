@@ -1,18 +1,18 @@
 ---
 title: Canvas & Whiteboard - Infinite Visual Workspace
-description: Infinite digital whiteboard powered by TLDraw for visual thinking, diagram creation, and spatial note organization. Features auto-save, version history, drawing tools, and note integration.
-keywords: [lokus canvas, whiteboard, visual thinking, diagrams, tldraw, infinite canvas, drawing tools, visual organization]
+description: Infinite digital whiteboard powered by TLDraw for visual thinking, diagram creation, and spatial note organization. Features auto-save, version history, drawing tools, plugin integration, and note integration.
+keywords: [lokus canvas, whiteboard, visual thinking, diagrams, tldraw, infinite canvas, drawing tools, visual organization, plugins]
 ---
 
 # Canvas & Whiteboard
 
-**Version:** 1.3.1 | **Status:** Production Ready
+**Version:** 1.3.3 | **Status:** Production Ready
 
 The Canvas feature in Lokus provides an infinite digital whiteboard where you can visually organize ideas, create diagrams, and arrange notes spatially. Built on TLDraw, the canvas combines freeform drawing with structured note-taking, enabling visual thinking alongside traditional text-based workflows.
 
-## What's New in v1.3
+## What's New in v1.3.3
 
-Version 1.3 brings critical reliability improvements and powerful new drawing capabilities:
+Version 1.3.3 brings critical reliability improvements, plugin integration, and powerful new drawing capabilities:
 
 - **Reliability Improvements** - Rock-solid canvas experience:
   - Robust save/load system with atomic writes and error recovery
@@ -43,6 +43,11 @@ Version 1.3 brings critical reliability improvements and powerful new drawing ca
   - PNG export at 1x, 2x, or 4x resolution with transparency options
   - SVG export for scalable vector graphics
   - PDF export with multi-page support and embedded fonts
+- **Plugin Integration** - Extend canvas functionality:
+  - Custom shape libraries via plugins
+  - Export format plugins
+  - Layout algorithm plugins
+  - Third-party tool integrations
 
 ## Overview
 
@@ -703,20 +708,62 @@ canvas.connect('shape-1', 'shape-2', {
 
 ### Plugins
 
-Extend canvas functionality:
+Extend canvas functionality with the Lokus plugin system (v1.3.3+):
 
 **Plugin Types:**
-- Custom tools
-- Shape libraries
-- Export formats
-- Layout algorithms
-- Data integrations
+- **Custom Tools** - Add new drawing and selection tools
+- **Shape Libraries** - Professional shape collections (flowcharts, UML, icons)
+- **Export Formats** - Additional export formats (Figma, Sketch, Miro)
+- **Layout Algorithms** - Auto-layout and smart positioning
+- **Data Integrations** - Connect to external data sources
 
-**Example Plugins:**
-- Flowchart validator
-- Architecture diagram templates
-- UML diagram support
-- Chart generators
+**Plugin API Example:**
+```javascript
+export function activate(context) {
+  // Register custom shape
+  context.canvas.registerShape({
+    id: 'custom-cloud',
+    name: 'Cloud Shape',
+    icon: 'cloud',
+    create: (x, y) => ({
+      type: 'geo',
+      x, y,
+      props: { geo: 'cloud', w: 200, h: 100 }
+    })
+  });
+
+  // Add export format
+  context.canvas.registerExportFormat({
+    name: 'Figma',
+    extension: '.fig',
+    export: async (canvas) => {
+      // Export logic
+      return figmaData;
+    }
+  });
+}
+```
+
+**Popular Canvas Plugins:**
+- **Flowchart Pro** - Professional flowchart shapes with auto-routing
+- **Architecture Designer** - AWS, Azure, GCP icon libraries
+- **UML Suite** - Complete UML diagram support
+- **Chart Generator** - Generate charts from data
+- **Miro Sync** - Import/export Miro boards
+- **Excalidraw Import** - Convert Excalidraw files
+
+**Plugin Permissions:**
+Canvas plugins require these permissions:
+- `canvas:shapes` - Register custom shapes
+- `canvas:tools` - Add drawing tools
+- `canvas:export` - Add export formats
+- `canvas:data` - Access canvas data
+
+### Learn More About Plugins
+
+- [Plugin System Overview](/features/plugin-system) - Complete plugin architecture
+- [Canvas Plugin Development](/developers/canvas-plugins) - Build canvas extensions
+- [Plugin Marketplace](/marketplace?category=canvas) - Browse canvas plugins
 
 ## Use Cases
 

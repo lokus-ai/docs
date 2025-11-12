@@ -1,0 +1,909 @@
+---
+title: Contributing to Lokus
+description: Complete guide for contributing to Lokus including setup instructions, coding standards, PR process, testing requirements, and community guidelines for effective collaboration.
+keywords: [lokus, contributing, development, pull request, coding standards, testing, git workflow, community]
+---
+
+# Contributing to Lokus
+
+Thank you for your interest in contributing to Lokus! We're building the next generation of knowledge management tools, and we welcome contributions from everyone—whether you're fixing bugs, adding features, improving documentation, or helping with community support.
+
+## Quick Links
+
+- [Code of Conduct](https://github.com/lokus-ai/lokus/blob/main/CODE_OF_CONDUCT.md)
+- [GitHub Issues](https://github.com/lokus-ai/lokus/issues)
+- [GitHub Discussions](https://github.com/lokus-ai/lokus/discussions)
+- [Discord Community](https://discord.gg/lokus)
+
+## Ways to Contribute
+
+### Code Contributions
+
+**Bug Fixes**
+- Fix reported bugs
+- Add test cases for bugs
+- Improve error handling
+- [View open bug reports](https://github.com/lokus-ai/lokus/labels/bug)
+
+**New Features**
+- Implement requested features
+- Add new plugins
+- Extend existing functionality
+- [View feature requests](https://github.com/lokus-ai/lokus/labels/enhancement)
+
+**Performance Improvements**
+- Optimize slow operations
+- Reduce memory usage
+- Improve startup time
+- Enhance search performance
+
+### Non-Code Contributions
+
+**Documentation**
+- Improve existing docs
+- Write tutorials
+- Add examples
+- Fix typos and clarify content
+- Translate documentation
+
+**Design**
+- Create UI mockups
+- Design themes
+- Improve UX flows
+- Create icons and assets
+
+**Testing**
+- Report bugs
+- Test on different platforms
+- Write test cases
+- Improve test coverage
+
+**Community**
+- Answer questions
+- Help new contributors
+- Write blog posts
+- Create video tutorials
+- Share your workflows
+
+## Getting Started
+
+### Prerequisites
+
+Before you begin, ensure you have:
+
+1. **Git** installed
+2. **Node.js 18+** and npm
+3. **Rust** toolchain (latest stable)
+4. **Platform-specific dependencies** (see below)
+
+For detailed setup instructions, see [Developer Setup](/developers/setup).
+
+### Quick Setup
+
+```bash
+# Fork the repository on GitHub first
+
+# Clone your fork
+git clone https://github.com/YOUR_USERNAME/lokus.git
+cd lokus
+
+# Add upstream remote
+git remote add upstream https://github.com/lokus-ai/lokus.git
+
+# Install dependencies
+npm install
+
+# Run development server
+npm run tauri dev
+```
+
+### Dev Container Setup (Recommended)
+
+The easiest way to get started is using our Dev Container:
+
+1. Install Docker Desktop
+2. Install VS Code + Dev Containers extension
+3. Clone the repository
+4. Open in VS Code
+5. Click "Reopen in Container"
+
+Everything will be automatically configured!
+
+## Development Workflow
+
+### 1. Find Something to Work On
+
+**Good First Issues**
+If you're new to the project, look for issues labeled [`good first issue`](https://github.com/lokus-ai/lokus/labels/good%20first%20issue).
+
+**Help Wanted**
+Check issues labeled [`help wanted`](https://github.com/lokus-ai/lokus/labels/help%20wanted) for high-priority items.
+
+**Feature Requests**
+Browse [feature requests](https://github.com/lokus-ai/lokus/discussions/categories/feature-requests) to find ideas.
+
+### 2. Create an Issue (if needed)
+
+Before starting work, create or comment on an issue to:
+- Avoid duplicate work
+- Get feedback on your approach
+- Ensure the change will be accepted
+
+For large features, consider opening an RFC (Request for Comments) in [GitHub Discussions](https://github.com/lokus-ai/lokus/discussions).
+
+### 3. Create a Branch
+
+```bash
+# Update your main branch
+git checkout main
+git pull upstream main
+
+# Create a feature branch
+git checkout -b feature/your-feature-name
+
+# Or for bug fixes
+git checkout -b fix/issue-123-bug-description
+```
+
+**Branch Naming Conventions:**
+- `feature/` - New features
+- `fix/` - Bug fixes
+- `docs/` - Documentation changes
+- `refactor/` - Code refactoring
+- `perf/` - Performance improvements
+- `test/` - Test additions or fixes
+- `chore/` - Build, CI, or tooling changes
+
+### 4. Make Your Changes
+
+Follow our [coding standards](#coding-standards) and write tests for your changes.
+
+**Frontend Changes:**
+```bash
+# Start dev server (auto-reloads)
+npm run tauri dev
+
+# Run tests in watch mode
+npm run test:watch
+```
+
+**Backend Changes:**
+```bash
+# Format Rust code
+cd src-tauri
+cargo fmt
+
+# Run Clippy (linter)
+cargo clippy
+
+# Run Rust tests
+cargo test
+```
+
+### 5. Commit Your Changes
+
+Follow [Conventional Commits](https://www.conventionalcommits.org/) format:
+
+```bash
+git add .
+git commit -m "feat: add wiki link autocomplete"
+git commit -m "fix: resolve math rendering in tables"
+git commit -m "docs: update installation guide"
+```
+
+**Commit Message Format:**
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+**Types:**
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation changes
+- `style`: Code style changes (formatting, etc.)
+- `refactor`: Code refactoring
+- `perf`: Performance improvements
+- `test`: Test changes
+- `chore`: Build, CI, or tooling changes
+
+**Examples:**
+```bash
+feat(editor): add slash command for templates
+fix(search): handle special characters in queries
+docs(contributing): add section on commit messages
+perf(graph): optimize node rendering for large graphs
+test(editor): add tests for wiki link parsing
+```
+
+### 6. Push Your Changes
+
+```bash
+# Push to your fork
+git push origin feature/your-feature-name
+```
+
+### 7. Create a Pull Request
+
+1. Go to [github.com/lokus-ai/lokus](https://github.com/lokus-ai/lokus)
+2. Click "New Pull Request"
+3. Select your branch
+4. Fill out the PR template
+5. Submit the PR
+
+## Coding Standards
+
+### TypeScript/JavaScript
+
+**Style Guidelines**
+- Use ES6+ features
+- Prefer functional components with hooks
+- Use TypeScript types where possible
+- Follow existing code patterns
+
+**Naming Conventions**
+```javascript
+// Files
+ComponentName.jsx        // React components
+utilityName.js          // Utilities
+use-hook-name.js        // Custom hooks
+
+// Code
+const variableName = ... // camelCase for variables
+function functionName()  // camelCase for functions
+class ClassName          // PascalCase for classes
+const CONSTANT_NAME      // SCREAMING_SNAKE_CASE for constants
+```
+
+**React Patterns**
+```javascript
+import React, { useState, useEffect, useCallback } from 'react';
+
+const MyComponent = ({ prop1, prop2 }) => {
+  // 1. Hooks
+  const [state, setState] = useState(null);
+
+  // 2. Effects
+  useEffect(() => {
+    // Effect logic
+    return () => {
+      // Cleanup
+    };
+  }, [dependencies]);
+
+  // 3. Callbacks
+  const handleClick = useCallback(() => {
+    // Handler logic
+  }, [dependencies]);
+
+  // 4. Render
+  return (
+    <div className="my-component">
+      {/* JSX content */}
+    </div>
+  );
+};
+
+export default MyComponent;
+```
+
+**Async/Await**
+```javascript
+// Good
+async function fetchData() {
+  try {
+    const response = await fetch('/api/data');
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Failed to fetch data:', error);
+    throw error;
+  }
+}
+
+// Avoid
+function fetchData() {
+  return fetch('/api/data')
+    .then(response => response.json())
+    .then(data => data)
+    .catch(error => {
+      console.error('Failed to fetch data:', error);
+      throw error;
+    });
+}
+```
+
+### Rust
+
+**Style Guidelines**
+- Follow Rust conventions (`cargo fmt`)
+- Use Clippy for linting (`cargo clippy`)
+- Write idiomatic Rust
+- Document public APIs
+
+**Naming Conventions**
+```rust
+// Files
+my_module.rs            // snake_case
+
+// Code
+let variable_name       // snake_case for variables
+fn function_name()      // snake_case for functions
+struct StructName       // PascalCase for types
+const CONSTANT_NAME     // SCREAMING_SNAKE_CASE for constants
+```
+
+**Error Handling**
+```rust
+use anyhow::{Result, Context};
+
+// Good - use Result for error propagation
+fn read_file(path: &str) -> Result<String> {
+    let content = std::fs::read_to_string(path)
+        .context("Failed to read file")?;
+    Ok(content)
+}
+
+// Avoid - unwrap in production code
+fn read_file_bad(path: &str) -> String {
+    std::fs::read_to_string(path).unwrap()
+}
+```
+
+**Async Code**
+```rust
+use tokio::fs;
+
+#[tauri::command]
+async fn read_note(path: String) -> Result<String, String> {
+    let content = fs::read_to_string(&path)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    Ok(content)
+}
+```
+
+### CSS/Styling
+
+**Tailwind CSS**
+```jsx
+// Good - use Tailwind utilities
+<div className="flex items-center justify-between p-4 bg-card rounded-lg">
+  <span className="text-lg font-semibold">Title</span>
+</div>
+
+// Use cn() for conditional classes
+import { cn } from '@/lib/utils';
+
+<div className={cn(
+  "base-classes",
+  isActive && "active-classes",
+  isDisabled && "disabled-classes"
+)}>
+```
+
+**Custom CSS**
+```css
+/* Use CSS custom properties for theming */
+.my-component {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  border: 1px solid hsl(var(--border));
+}
+
+/* Follow BEM for custom classes */
+.block {}
+.block__element {}
+.block--modifier {}
+```
+
+## Testing
+
+### Writing Tests
+
+**Unit Tests (Vitest)**
+```javascript
+import { describe, it, expect, beforeEach } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import MyComponent from './MyComponent';
+
+describe('MyComponent', () => {
+  it('renders correctly', () => {
+    render(<MyComponent />);
+    expect(screen.getByRole('button')).toBeInTheDocument();
+  });
+
+  it('handles click events', async () => {
+    const handleClick = vi.fn();
+    render(<MyComponent onClick={handleClick} />);
+
+    await fireEvent.click(screen.getByRole('button'));
+    expect(handleClick).toHaveBeenCalledOnce();
+  });
+});
+```
+
+**E2E Tests (Playwright)**
+```javascript
+import { test, expect } from '@playwright/test';
+
+test('create and save note', async ({ page }) => {
+  await page.goto('/');
+
+  // Create new note
+  await page.click('[data-testid="new-note"]');
+
+  // Type content
+  const editor = page.locator('.editor');
+  await editor.fill('# My Note\n\nThis is a test note.');
+
+  // Save
+  await page.keyboard.press('Mod+S');
+
+  // Verify saved
+  await expect(page.locator('.status-bar')).toContainText('Saved');
+});
+```
+
+**Rust Tests**
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_frontmatter() {
+        let content = "---\ntitle: Test\n---\nContent";
+        let result = parse_frontmatter(content);
+
+        assert!(result.is_ok());
+        let (frontmatter, body) = result.unwrap();
+        assert_eq!(frontmatter.get("title"), Some(&"Test".to_string()));
+        assert_eq!(body, "Content");
+    }
+
+    #[tokio::test]
+    async fn test_async_function() {
+        let result = async_function().await;
+        assert!(result.is_ok());
+    }
+}
+```
+
+### Running Tests
+
+```bash
+# Unit tests
+npm test                    # Run once
+npm run test:watch          # Watch mode
+npm run test:coverage       # With coverage
+
+# E2E tests
+npm run test:e2e           # Headless
+npm run test:e2e:headed    # With browser
+npm run test:e2e:ui        # Interactive UI
+
+# Rust tests
+cd src-tauri
+cargo test
+cargo test -- --nocapture  # Show output
+```
+
+### Test Coverage
+
+Aim for:
+- **80%+ coverage** for new features
+- **100% coverage** for utility functions
+- **E2E tests** for critical user paths
+
+## Pull Request Process
+
+### Before Submitting
+
+Checklist:
+- [ ] Code follows our style guidelines
+- [ ] Tests pass locally
+- [ ] New tests added for new functionality
+- [ ] Documentation updated (if needed)
+- [ ] Commit messages follow conventions
+- [ ] Branch is up to date with main
+- [ ] No merge conflicts
+
+```bash
+# Update your branch
+git fetch upstream
+git rebase upstream/main
+
+# Run all checks
+npm test
+npm run test:e2e
+cd src-tauri && cargo test && cargo clippy
+```
+
+### PR Template
+
+Our PR template will ask you to provide:
+
+**Description**
+- What changes were made?
+- Why were these changes necessary?
+- What issue does this address?
+
+**Type of Change**
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Breaking change
+- [ ] Documentation update
+- [ ] Performance improvement
+
+**Testing**
+- How were changes tested?
+- What platforms were tested?
+- Screenshots (for UI changes)
+
+**Checklist**
+- [ ] Self-reviewed code
+- [ ] Tests pass
+- [ ] Documentation updated
+- [ ] No breaking changes (or clearly documented)
+
+### Review Process
+
+1. **Automated Checks**: CI/CD runs tests and builds
+2. **Code Review**: Maintainers review code quality
+3. **Discussion**: Address feedback and questions
+4. **Approval**: At least one maintainer approval required
+5. **Merge**: Squash and merge to main
+
+**Response Time**
+- Initial response: 1-3 days
+- Full review: 3-7 days
+- Complex PRs may take longer
+
+**Addressing Feedback**
+```bash
+# Make requested changes
+git add .
+git commit -m "fix: address review feedback"
+git push origin feature/your-feature-name
+
+# For fixup commits
+git commit --fixup=<commit-hash>
+git rebase -i --autosquash upstream/main
+```
+
+### After Merge
+
+- Your PR branch will be automatically deleted
+- Changes will be included in the next release
+- You'll be added to contributors list
+- Consider helping review other PRs!
+
+## Documentation
+
+### Writing Documentation
+
+**MDX Files**
+```mdx
+---
+title: Page Title
+description: Brief description for SEO
+keywords: [keyword1, keyword2, keyword3]
+---
+
+# Page Title
+
+Brief introduction paragraph.
+
+## Section
+
+Content with examples...
+```
+
+**Code Examples**
+````mdx
+Use triple backticks for code blocks:
+
+```javascript
+// Example code
+const greeting = "Hello, World!";
+console.log(greeting);
+```
+````
+
+**Links**
+```mdx
+- Internal: [Page Title](/path/to/page)
+- External: [Example](https://example.com)
+- Anchor: [Section](#section-id)
+```
+
+### Documentation Types
+
+**User Documentation**
+- Getting started guides
+- Feature explanations
+- Tutorials and workflows
+- Troubleshooting
+
+**Developer Documentation**
+- Architecture overviews
+- API references
+- Plugin development guides
+- Contributing guidelines
+
+## Community Guidelines
+
+### Code of Conduct
+
+We follow a [Code of Conduct](https://github.com/lokus-ai/lokus/blob/main/CODE_OF_CONDUCT.md) based on the Contributor Covenant. Key points:
+
+**Be Respectful**
+- Use welcoming and inclusive language
+- Respect differing viewpoints
+- Accept constructive criticism gracefully
+
+**Be Collaborative**
+- Help others learn and grow
+- Share knowledge freely
+- Credit others' work
+
+**Be Professional**
+- Focus on what's best for the project
+- Maintain professionalism in discussions
+- Handle disagreements constructively
+
+### Communication Channels
+
+**GitHub Issues**
+- Bug reports
+- Feature requests
+- Task tracking
+
+**GitHub Discussions**
+- General questions
+- Ideas and RFC
+- Show and tell
+- Announcements
+
+**Discord**
+- Real-time chat
+- Community support
+- Off-topic discussions
+
+**Email**
+- Security issues: security@lokusmd.com
+- Private matters: team@lokusmd.com
+
+### Getting Help
+
+**Stuck on something?**
+1. Check existing documentation
+2. Search GitHub issues
+3. Ask in Discord #development channel
+4. Create a discussion on GitHub
+
+**Found a bug?**
+1. Search existing issues
+2. Create a new issue with details
+3. Provide reproduction steps
+4. Include system information
+
+## Advanced Topics
+
+### Working with Git
+
+**Keeping Your Fork Up to Date**
+```bash
+# Add upstream remote (once)
+git remote add upstream https://github.com/lokus-ai/lokus.git
+
+# Update your fork
+git fetch upstream
+git checkout main
+git merge upstream/main
+git push origin main
+```
+
+**Interactive Rebase**
+```bash
+# Clean up commits before PR
+git rebase -i upstream/main
+
+# Commands in rebase:
+# pick - keep commit
+# reword - edit message
+# squash - combine with previous
+# drop - remove commit
+```
+
+**Resolving Conflicts**
+```bash
+# Update branch
+git fetch upstream
+git rebase upstream/main
+
+# Resolve conflicts in files
+# Then continue rebase
+git add .
+git rebase --continue
+
+# Force push (only to your branch!)
+git push origin feature/your-feature-name --force-with-lease
+```
+
+### Building Plugins
+
+See our comprehensive [Plugin Development Guide](/developers/plugins/getting-started) for:
+- Plugin structure
+- API documentation
+- Examples and templates
+- Publishing process
+
+### Performance Optimization
+
+**Profiling**
+```bash
+# React Profiler
+# Use React DevTools Profiler tab
+
+# Rust Profiling
+cargo install flamegraph
+cargo flamegraph --bin lokus
+```
+
+**Benchmarking**
+```javascript
+// Vitest benchmarks
+import { bench, describe } from 'vitest';
+
+describe('performance', () => {
+  bench('function to test', () => {
+    // Code to benchmark
+  });
+});
+```
+
+### Cross-Platform Testing
+
+**Local Testing**
+```bash
+# macOS
+npm run build:macos
+
+# Windows (on Windows)
+npm run build:windows
+
+# Linux
+npm run build:linux
+```
+
+**GitHub Actions**
+- All PRs run on Windows, macOS, and Linux
+- Automated testing and building
+- Results show in PR checks
+
+## Release Process
+
+### Versioning
+
+We follow [Semantic Versioning](https://semver.org/):
+- **MAJOR** (1.0.0): Breaking changes
+- **MINOR** (0.1.0): New features (backwards compatible)
+- **PATCH** (0.0.1): Bug fixes
+
+### Release Cycle
+
+1. **Development**: Changes merged to main
+2. **Version Bump**: Update version numbers
+3. **Changelog**: Update CHANGELOG.md
+4. **Tag**: Create git tag
+5. **Build**: Automated builds for all platforms
+6. **Release**: GitHub release with artifacts
+7. **Announcement**: Community announcement
+
+**Release Schedule**
+- Major releases: Quarterly
+- Minor releases: Monthly
+- Patch releases: As needed
+
+## Recognition
+
+Contributors are recognized through:
+
+**README**
+- All contributors listed
+- Significant contributions highlighted
+
+**Release Notes**
+- Feature contributions credited
+- Bug fixes acknowledged
+
+**All Contributors Bot**
+- Automatically recognizes contributions
+- Includes code, docs, design, etc.
+
+## FAQ
+
+### How do I become a maintainer?
+
+Maintainers are chosen based on:
+- Consistent high-quality contributions
+- Community involvement
+- Code review participation
+- Technical expertise
+
+### Can I work on multiple issues?
+
+Yes, but please:
+- Finish existing PRs first
+- Don't hoard issues
+- Communicate your progress
+
+### What if my PR isn't merged?
+
+Not all PRs are merged. Reasons include:
+- Doesn't fit project direction
+- Implementation concerns
+- Duplicate functionality
+- Needs significant changes
+
+We'll provide feedback and work with you to improve PRs when possible.
+
+### How do I report security issues?
+
+**DO NOT** create public issues for security vulnerabilities.
+
+Email security@lokusmd.com with:
+- Description of the vulnerability
+- Steps to reproduce
+- Potential impact
+- Suggested fix (if any)
+
+### Can I use AI tools (like Copilot)?
+
+Yes, AI tools are welcome for:
+- Code completion
+- Boilerplate generation
+- Documentation writing
+
+But ensure you:
+- Understand the generated code
+- Test thoroughly
+- Follow our standards
+- Own the contribution
+
+## Resources
+
+### Documentation
+- [Architecture Overview](/developers/architecture)
+- [Development Setup](/developers/setup)
+- [Plugin Development](/developers/plugins)
+- [MCP Integration](/developers/mcp)
+- [API Reference](/reference/api-overview)
+
+### External Resources
+- [Tauri Documentation](https://tauri.app/v2/guides/)
+- [React Documentation](https://react.dev/)
+- [TipTap Documentation](https://tiptap.dev/)
+- [Rust Book](https://doc.rust-lang.org/book/)
+
+### Community
+- [GitHub Discussions](https://github.com/lokus-ai/lokus/discussions)
+- [Discord](https://discord.gg/lokus)
+- [Blog](https://lokusmd.com/blog)
+- [Twitter](https://twitter.com/lokus_ai)
+
+## Thank You!
+
+Your contributions make Lokus better for everyone. Whether you're fixing a typo or implementing a major feature, every contribution is valued.
+
+**Happy contributing! 🚀**
+
+---
+
+Questions? Join our [Discord](https://discord.gg/lokus) or start a [Discussion](https://github.com/lokus-ai/lokus/discussions).

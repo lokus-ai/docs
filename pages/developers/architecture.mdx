@@ -1,110 +1,172 @@
 ---
-title: Lokus Architecture Overview
-description: Comprehensive overview of Lokus architecture covering frontend React layer, Tauri backend, TipTap editor, plugin system, MCP server, data flow, and performance optimizations.
-keywords: [lokus, architecture, tauri, react, tiptap, prosemirror, plugin system, mcp server, system design]
+title: Architecture Overview
+description: Deep dive into Lokus architecture including system design, tech stack, data flow, performance optimizations, security architecture, and extension points for building powerful features and plugins.
+keywords: [lokus, architecture, system design, tauri, react, tiptap, rust, plugin system, mcp server, performance, security]
 ---
 
 # Architecture
 
-Understanding the Lokus architecture helps you contribute effectively and build powerful plugins.
+Understanding Lokus's architecture helps you contribute effectively, build powerful plugins, and extend the platform. This guide covers the system design, data flow, and key architectural decisions.
 
-## High-Level Overview
+## Overview
 
-Lokus uses a hybrid desktop application architecture combining web technologies with native performance.
+Lokus is a hybrid desktop application combining modern web technologies with native performance through Tauri. The architecture is designed for local-first operation, extensibility, and blazing-fast performance.
+
+### Design Principles
+
+1. **Local-First**: All data stored locally, offline-capable by default
+2. **Performance**: Rust backend for intensive operations, optimized React frontend
+3. **Extensibility**: Plugin system with sandboxed execution
+4. **Security**: Defense in depth with multiple security layers
+5. **Developer Experience**: Clear APIs, comprehensive docs, easy debugging
+
+## System Architecture
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    Lokus Application                     │
-├─────────────────────────────────────────────────────────┤
-│                                                          │
-│  ┌────────────────────────────────────────────────┐    │
-│  │         Frontend Layer (React/Vite)             │    │
-│  │  ┌──────────────────────────────────────────┐  │    │
-│  │  │  UI Components & Views                   │  │    │
-│  │  │  - Workspace, Editor, Canvas, Graph      │  │    │
-│  │  └──────────────────────────────────────────┘  │    │
-│  │  ┌──────────────────────────────────────────┐  │    │
-│  │  │  TipTap Editor System                    │  │    │
-│  │  │  - Extensions, Nodes, Marks              │  │    │
-│  │  └──────────────────────────────────────────┘  │    │
-│  │  ┌──────────────────────────────────────────┐  │    │
-│  │  │  Core Systems                            │  │    │
-│  │  │  - Plugin Manager, Theme, Config, Auth   │  │    │
-│  │  └──────────────────────────────────────────┘  │    │
-│  └────────────────────────────────────────────────┘    │
-│                         ↕                               │
-│              Tauri IPC Bridge (JSON)                    │
-│                         ↕                               │
-│  ┌────────────────────────────────────────────────┐    │
-│  │       Backend Layer (Rust/Tauri 2.0)           │    │
-│  │  ┌──────────────────────────────────────────┐  │    │
-│  │  │  Core Services                           │  │    │
-│  │  │  - File System, Search, Tasks            │  │    │
-│  │  └──────────────────────────────────────────┘  │    │
-│  │  ┌──────────────────────────────────────────┐  │    │
-│  │  │  Security & Auth                         │  │    │
-│  │  │  - OAuth, Encryption, Secure Storage     │  │    │
-│  │  └──────────────────────────────────────────┘  │    │
-│  │  ┌──────────────────────────────────────────┐  │    │
-│  │  │  Integrations                            │  │    │
-│  │  │  - Gmail, Plugin Backend, MCP Server     │  │    │
-│  │  └──────────────────────────────────────────┘  │    │
-│  └────────────────────────────────────────────────┘    │
-│                         ↕                               │
-│                 Operating System                        │
-│         (Windows, macOS, Linux APIs)                    │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                     Lokus Application                        │
+│                                                              │
+│  ┌────────────────────────────────────────────────────┐    │
+│  │             Frontend Layer (React 19)               │    │
+│  │  ┌──────────────────────────────────────────────┐  │    │
+│  │  │  UI Layer                                    │  │    │
+│  │  │  - Workspace, Canvas, Graph, Preferences     │  │    │
+│  │  │  - Bases (Database Views)                    │  │    │
+│  │  │  - Settings, Command Palette                 │  │    │
+│  │  └──────────────────────────────────────────────┘  │    │
+│  │  ┌──────────────────────────────────────────────┐  │    │
+│  │  │  Editor System (TipTap 3.4)                  │  │    │
+│  │  │  - ProseMirror Core                          │  │    │
+│  │  │  - Custom Extensions (WikiLink, Math, etc.)  │  │    │
+│  │  │  - Input Rules & Commands                    │  │    │
+│  │  └──────────────────────────────────────────────┘  │    │
+│  │  ┌──────────────────────────────────────────────┐  │    │
+│  │  │  Core Systems                                │  │    │
+│  │  │  - Plugin Manager, Theme Engine              │  │    │
+│  │  │  - Config, Auth, Clipboard                   │  │    │
+│  │  │  - Search UI, Graph Rendering                │  │    │
+│  │  └──────────────────────────────────────────────┘  │    │
+│  │  ┌──────────────────────────────────────────────┐  │    │
+│  │  │  State Management                            │  │    │
+│  │  │  - React Context (Theme, Workspace, Editor)  │  │    │
+│  │  │  - Local State (Hooks, Component State)      │  │    │
+│  │  └──────────────────────────────────────────────┘  │    │
+│  └────────────────────────────────────────────────────┘    │
+│                           ⬍                                 │
+│                  Tauri IPC Bridge (JSON-RPC)                │
+│                           ⬍                                 │
+│  ┌────────────────────────────────────────────────────┐    │
+│  │        Backend Layer (Rust/Tauri 2.0)              │    │
+│  │  ┌──────────────────────────────────────────────┐  │    │
+│  │  │  Core Services                               │  │    │
+│  │  │  - File System (I/O, Watching)               │  │    │
+│  │  │  - Search Engine (Regex, Indexing)           │  │    │
+│  │  │  - Task Management                           │  │    │
+│  │  └──────────────────────────────────────────────┘  │    │
+│  │  ┌──────────────────────────────────────────────┐  │    │
+│  │  │  Security & Auth                             │  │    │
+│  │  │  - OAuth2/PKCE (Gmail)                       │  │    │
+│  │  │  - Token Management (Keyring)                │  │    │
+│  │  │  - Encryption (AES-GCM)                      │  │    │
+│  │  │  - Secure Storage                            │  │    │
+│  │  └──────────────────────────────────────────────┘  │    │
+│  │  ┌──────────────────────────────────────────────┐  │    │
+│  │  │  Plugin Backend                              │  │    │
+│  │  │  - Plugin Validation & Verification          │  │    │
+│  │  │  - Permission Enforcement                    │  │    │
+│  │  │  - Resource Isolation & Limits               │  │    │
+│  │  │  - Sandbox Management                        │  │    │
+│  │  └──────────────────────────────────────────────┘  │    │
+│  │  ┌──────────────────────────────────────────────┐  │    │
+│  │  │  Integrations                                │  │    │
+│  │  │  - MCP Server (stdio/WebSocket)              │  │    │
+│  │  │  - Gmail Integration                         │  │    │
+│  │  │  - PDF/OCR Processing                        │  │    │
+│  │  │  - Multimedia Library                        │  │    │
+│  │  └──────────────────────────────────────────────┘  │    │
+│  └────────────────────────────────────────────────────┘    │
+│                           ⬍                                 │
+│                    Operating System                         │
+│              (File System, Network, Keychain)               │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ## Technology Stack
 
-### Frontend
+### Frontend Technologies
 
 **React 19**
-- Modern React with hooks and concurrent features
-- Component-based architecture
-- Context API for state management
+- Latest React with concurrent features
+- Hooks-based architecture
+- Context API for global state
+- Suspense for data fetching
+- React.memo for optimization
 
-**TipTap 3.4.x**
-- ProseMirror-based rich text editor
-- Extensible with custom nodes and marks
-- Real-time collaborative editing ready
+**TipTap 3.4.x** (Editor)
+- Built on ProseMirror
+- Extensible node/mark system
+- Real-time collaboration ready
+- Custom extensions for Lokus features
 
-**Vite 7.0.4**
-- Fast development server with HMR
+**Vite 7.0** (Build Tool)
+- Lightning-fast HMR (Hot Module Replacement)
+- ESM-first architecture
 - Optimized production builds
-- ES modules support
+- Plugin ecosystem
 
-**Tailwind CSS 3.4.13**
+**Tailwind CSS 3.4**
 - Utility-first CSS framework
-- Custom design system
+- Custom design tokens
 - Dark mode support
+- JIT compiler
 
 **Key Libraries**
-- Sigma.js, Three.js (graph visualization)
-- TLDraw (canvas/whiteboard)
-- KaTeX (math rendering)
-- Lucide React (icons)
+```json
+{
+  "visualization": ["three.js", "sigma.js", "react-force-graph"],
+  "canvas": ["tldraw 3.15"],
+  "math": ["katex 0.16"],
+  "search": ["minisearch 7.2"],
+  "state": ["zustand (planned)"],
+  "testing": ["vitest 3.2", "playwright 1.55"]
+}
+```
 
-### Backend
+### Backend Technologies
 
 **Tauri 2.0**
 - Cross-platform desktop framework
-- Rust-based with web frontend
-- Smaller bundle size than Electron
+- Rust core + web frontend
+- ~10MB bundle vs ~100MB Electron
 - Better security model
+- Direct OS API access
 
-**Rust (Stable)**
-- Memory-safe systems programming
-- High performance
-- Async runtime with Tokio
+**Rust (Stable Edition 2021)**
+- Memory safety without garbage collection
+- Zero-cost abstractions
+- Fearless concurrency
+- Rich type system
 
 **Key Crates**
-- serde (serialization)
-- reqwest (HTTP client)
-- tokio (async runtime)
-- aes-gcm (encryption)
-- walkdir (file traversal)
+```toml
+[core]
+tokio = "1.0"          # Async runtime
+serde = "1.0"          # Serialization
+reqwest = "0.12"       # HTTP client
+walkdir = "2.0"        # File traversal
+regex = "1.0"          # Pattern matching
+
+[security]
+aes-gcm = "0.10"       # Encryption
+argon2 = "0.5"         # Key derivation
+oauth2 = "4.4"         # OAuth flows
+keyring = "3.6"        # Secure storage
+
+[integrations]
+lettre = "0.11"        # Email (Gmail)
+pdf-extract = "0.7"    # PDF processing
+image = "0.24"         # Image processing
+```
 
 ## Core Components
 
@@ -112,95 +174,213 @@ Lokus uses a hybrid desktop application architecture combining web technologies 
 
 **Location:** `src/editor/`
 
-The editor is built on TipTap (ProseMirror) with custom extensions.
+The editor is built on TipTap (ProseMirror) with custom extensions for Lokus-specific features.
 
-**Architecture:**
+#### Architecture
+
 ```
-Editor Component
-├── TipTap Instance
-│   ├── Core Extensions (Bold, Italic, etc.)
-│   ├── Custom Extensions
-│   │   ├── WikiLink.js
-│   │   ├── Math.js
-│   │   ├── SmartTask.js
-│   │   └── Template.js
-│   └── Input Rules & Keyboard Shortcuts
-├── Toolbar Components
-├── Bubble Menu
-└── Slash Command Menu
+TipTap Editor Instance
+├── Core Extensions
+│   ├── Starter Kit (Bold, Italic, Heading, etc.)
+│   ├── Code Block (Lowlight syntax highlighting)
+│   ├── Table (Resizable columns)
+│   ├── Image (Lazy loading)
+│   └── Task List (Checkbox support)
+├── Custom Extensions
+│   ├── WikiLink.js - Bidirectional linking with autocomplete
+│   ├── Math.js - KaTeX inline and block equations
+│   ├── SmartTask.js - Enhanced task management
+│   ├── Template.js - Template variable expansion
+│   └── SlashCommand.js - Command palette integration
+├── Input Rules
+│   ├── Markdown shortcuts (**, __, ~~, etc.)
+│   ├── Smart quotes and dashes
+│   └── Auto-linking
+└── Commands & Shortcuts
+    ├── Editor commands (format, insert, etc.)
+    ├── Keyboard shortcuts
+    └── Context menu integration
 ```
 
-**Extension Types:**
-- **Nodes**: Block-level content (headings, paragraphs, code blocks)
-- **Marks**: Inline formatting (bold, italic, links)
-- **Extensions**: General functionality (history, drophandling)
+#### Extension Types
 
-**Key Files:**
-- `src/editor/components/Editor.jsx` - Main editor component
-- `src/editor/extensions/` - Custom extensions
-- `src/editor/lib/` - Editor utilities
+**Nodes** (Block-level content)
+- Paragraphs, headings, code blocks
+- Tables, images, horizontal rules
+- Custom: WikiLink blocks, Math blocks
+
+**Marks** (Inline formatting)
+- Bold, italic, underline, strikethrough
+- Links, code, highlights
+- Custom: Superscript, subscript
+
+**Extensions** (General functionality)
+- History (undo/redo)
+- Placeholder text
+- Drop handling
+- Paste handling
+
+#### Key Files
+```
+src/editor/
+├── components/
+│   ├── Editor.jsx           # Main editor component
+│   ├── Toolbar.jsx          # Formatting toolbar
+│   ├── BubbleMenu.jsx       # Context menu
+│   └── SlashMenu.jsx        # Command palette
+├── extensions/
+│   ├── wiki-link.jsx        # Wiki linking
+│   ├── math.jsx             # Math equations
+│   ├── smart-task.jsx       # Task management
+│   └── slash-command.jsx    # Slash commands
+└── lib/
+    ├── markdown.js          # Markdown conversion
+    ├── paste-handler.js     # Smart paste
+    └── suggestions.js       # Autocomplete
+```
 
 ### 2. Plugin System
 
 **Location:** `src/plugins/`, `src-tauri/src/plugins.rs`
 
-VS Code-inspired plugin architecture with sandboxed execution.
+VS Code-inspired plugin architecture with sandboxed JavaScript execution.
 
-**Architecture:**
+#### Architecture
+
 ```
-Plugin Manager (JS)
+Plugin Manager (Frontend)
 ├── Plugin Loader
-│   └── Sandboxed Execution Environment
-├── Plugin API
-│   ├── Editor API
-│   ├── UI API
-│   ├── Filesystem API
-│   ├── Commands API
-│   ├── Network API
-│   ├── Clipboard API
-│   ├── Notifications API
-│   └── Data API
+│   ├── Manifest Validation
+│   ├── Dependency Resolution
+│   └── Sandboxed Execution (isolated-vm)
+├── Plugin API (LokusPluginAPI)
+│   ├── Editor API - Read/write editor content
+│   ├── UI API - Create panels, dialogs, notifications
+│   ├── Filesystem API - File operations (sandboxed)
+│   ├── Commands API - Register commands
+│   ├── Network API - HTTP requests (CORS-aware)
+│   ├── Clipboard API - Copy/paste operations
+│   ├── Notifications API - Show notifications
+│   └── Data API - Access workspace data
 ├── Plugin Registry
-│   ├── Search & Discovery
+│   ├── Plugin Discovery & Search
+│   ├── Version Management
 │   ├── Ratings & Reviews
-│   └── Download Tracking
+│   └── Download & Install
 └── Plugin Backend (Rust)
-    ├── Plugin Validation
-    ├── Permission Enforcement
-    └── Resource Isolation
+    ├── Manifest Parsing & Validation
+    ├── Permission System
+    ├── Resource Limits (CPU, memory)
+    ├── File Access Control
+    └── Network Policies
 ```
 
-**Security Model:**
-- Sandboxed JavaScript execution
-- Granular permission system
-- API access control
-- Resource limits (CPU, memory)
-- Plugin isolation
+#### Security Model
 
-**Key Files:**
-- `src/plugins/PluginManager.js` - Core plugin orchestration
-- `src/plugins/api/LokusPluginAPI.js` - Public API
-- `src-tauri/src/plugins.rs` - Backend validation
+**Sandboxing**
+- JavaScript execution in isolated VM
+- No direct access to Node.js APIs
+- No access to file system without permission
+- Limited network access
+
+**Permission System**
+```json
+{
+  "permissions": [
+    "editor:read",        // Read editor content
+    "editor:write",       // Modify editor content
+    "fs:read",           // Read files (workspace only)
+    "fs:write",          // Write files (workspace only)
+    "network:request",   // Make HTTP requests
+    "ui:create",         // Create UI elements
+    "commands:register", // Register commands
+    "clipboard:read",    // Read clipboard
+    "clipboard:write",   // Write clipboard
+    "notifications:show" // Show notifications
+  ]
+}
+```
+
+**Resource Isolation**
+- CPU time limits per plugin
+- Memory limits (heap size)
+- Concurrent operation limits
+- Request rate limiting
+
+#### Plugin Lifecycle
+
+```
+Plugin Installation
+    ↓
+Manifest Validation
+    ↓
+Permission Request → User Approval
+    ↓
+Dependency Installation
+    ↓
+Plugin Activation
+    ↓
+Plugin Running ←→ Hot Reload (Dev Mode)
+    ↓
+Plugin Deactivation
+    ↓
+Cleanup
+```
+
+#### Key Files
+```
+src/plugins/
+├── PluginManager.js         # Core orchestration
+├── api/
+│   └── LokusPluginAPI.js    # Public API surface
+├── sandbox/
+│   └── isolated-vm.js       # Sandbox implementation
+└── registry/
+    └── PluginRegistry.js    # Plugin discovery
+
+src-tauri/src/
+└── plugins.rs               # Backend validation
+```
 
 ### 3. MCP Server
 
 **Location:** `src/mcp-server/`, `src-tauri/src/mcp.rs`
 
-Model Context Protocol implementation for AI integration.
+Model Context Protocol server for AI integration with 68+ tools.
 
-**Architecture:**
+#### Architecture
+
 ```
 MCP Server
-├── Stdio Transport (Primary)
-├── WebSocket Transport (Legacy)
-├── HTTP REST Transport (Archived)
-├── Tools Registry
-│   ├── Note Tools
-│   ├── Workspace Tools
-│   ├── File Tools
-│   ├── Search Tools
-│   ├── Editor Tools
-│   └── AI Tools
+├── Transport Layer
+│   ├── stdio (Primary) - Standard I/O communication
+│   ├── WebSocket (Legacy) - WebSocket connections
+│   └── HTTP REST (Archived) - RESTful endpoints
+├── Tools Registry (68+ tools)
+│   ├── Note Tools (11)
+│   │   ├── create_note, read_note, update_note
+│   │   ├── delete_note, list_notes, search_notes
+│   │   └── get_note_metadata, add_tags, etc.
+│   ├── Workspace Tools (12)
+│   │   ├── list_files, get_workspace_stats
+│   │   ├── bulk_operations, folder_management
+│   │   └── workspace_config, backup, restore
+│   ├── Search Tools (16)
+│   │   ├── full_text_search, regex_search
+│   │   ├── semantic_search, tag_search
+│   │   └── advanced_filters, search_in_path
+│   ├── File Tools (6)
+│   │   ├── move_file, rename_file, copy_file
+│   │   ├── delete_file, get_file_info
+│   │   └── batch_file_operations
+│   ├── Editor Tools (10)
+│   │   ├── format_markdown, validate_syntax
+│   │   ├── insert_template, apply_refactoring
+│   │   └── extract_toc, generate_summary
+│   └── AI Tools (10)
+│       ├── analyze_content, suggest_tags
+│       ├── generate_title, find_similar
+│       └── summarize, extract_entities
 ├── Resources Registry
 │   ├── Note Resources
 │   ├── Workspace Resources
@@ -210,362 +390,1237 @@ MCP Server
     └── Template Prompts
 ```
 
-**Protocol:** JSON-RPC 2.0 over stdio/WebSocket/HTTP
+#### Communication Protocol
 
-**Key Files:**
-- `src/mcp-server/stdio-server.js` - Main server (stdio)
-- `src/mcp-server/tools/` - Tool implementations
-- `src-tauri/src/mcp.rs` - Process management
+**JSON-RPC 2.0** over stdio/WebSocket/HTTP
+
+```javascript
+// Request
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "create_note",
+    "arguments": {
+      "title": "My Note",
+      "content": "Note content"
+    }
+  }
+}
+
+// Response
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "path": "/notes/my-note.md",
+    "created": true
+  }
+}
+```
+
+#### Key Files
+```
+src/mcp-server/
+├── stdio-server.js          # Main server (stdio transport)
+├── tools/
+│   ├── note-tools.js        # Note operations
+│   ├── workspace-tools.js   # Workspace operations
+│   ├── search-tools.js      # Search operations
+│   └── ai-tools.js          # AI-powered tools
+└── resources/
+    └── note-resources.js    # Resource providers
+
+src-tauri/src/
+├── mcp.rs                   # Process management
+├── mcp_setup.rs             # Server initialization
+└── mcp_embedded.rs          # Bundled server
+```
 
 ### 4. File System
 
-**Location:** `src-tauri/src/` (various modules)
+**Location:** `src-tauri/src/main.rs`, `src-tauri/src/handlers/`
 
-All file operations go through the Rust backend for security.
+All file operations go through the Rust backend for security and performance.
 
-**Architecture:**
+#### Architecture
+
 ```
 Frontend Request
     ↓
-Tauri IPC
+Tauri IPC (invoke)
     ↓
-Path Validation (Rust)
+Path Validation & Sanitization
     ↓
-Permission Check
+Workspace Boundary Check
     ↓
-File Operation
+Permission Verification
     ↓
-Response
+File Operation (Async with Tokio)
+    ↓
+Error Handling
+    ↓
+Response to Frontend
 ```
 
-**Security Measures:**
-- Path traversal prevention
-- Workspace boundary enforcement
-- File type validation
-- Size limits
-- Read-only mode support
+#### Security Measures
 
-**Key Operations:**
-- `read_file_content` - Read file with validation
-- `write_file_content` - Write with atomic operations
-- `read_workspace_files` - List directory contents
-- `reveal_in_finder` - OS integration
+**Path Validation**
+```rust
+fn validate_path(path: &str, workspace: &str) -> Result<PathBuf, Error> {
+    let absolute = fs::canonicalize(path)?;
+    let workspace = fs::canonicalize(workspace)?;
+
+    // Prevent directory traversal
+    if !absolute.starts_with(&workspace) {
+        return Err(Error::PathTraversal);
+    }
+
+    Ok(absolute)
+}
+```
+
+**File Type Validation**
+- Markdown files (.md)
+- Images (.png, .jpg, .gif, .svg, .webp)
+- PDFs (.pdf)
+- JSON configuration (.json)
+- Block potentially dangerous files (.exe, .dll, .sh)
+
+**Size Limits**
+- Single file read: 100MB
+- Single file write: 100MB
+- Batch operations: 1000 files
+- Image uploads: 25MB
+
+#### Key Operations
+
+```rust
+// Core file operations
+read_file_content(path: String) -> Result<String>
+write_file_content(path: String, content: String) -> Result<()>
+read_workspace_files(workspace: String) -> Result<Vec<FileInfo>>
+delete_file(path: String) -> Result<()>
+move_file(from: String, to: String) -> Result<()>
+copy_file(from: String, to: String) -> Result<()>
+
+// OS integration
+reveal_in_finder(path: String) -> Result<()>
+open_external(path: String) -> Result<()>
+
+// Watching
+watch_workspace(path: String) -> Result<()>
+unwatch_workspace() -> Result<()>
+```
 
 ### 5. Search Engine
 
 **Location:** `src-tauri/src/search.rs`
 
-Rust-based full-text search for performance.
+High-performance full-text search powered by Rust.
 
-**Architecture:**
+#### Architecture
+
 ```
 Search Query (Frontend)
     ↓
-Query Parsing
+Query Parsing (Rust)
     ↓
-Regex Compilation
+Regex Compilation (cached)
     ↓
-Parallel File Traversal (Rust)
+Parallel File Traversal (WalkDir + Rayon)
     ↓
-Pattern Matching
+Pattern Matching (per file)
     ↓
-Result Ranking
+Context Extraction (lines before/after)
     ↓
-Highlighted Results
+Result Ranking & Scoring
+    ↓
+XSS-Safe Highlighting
+    ↓
+Streaming Results to Frontend
 ```
 
-**Features:**
-- Parallel search across multiple files
-- Regex support
-- Context lines
-- File type filtering
-- XSS-safe highlighting
+#### Features
 
-**Key Optimizations:**
-- WalkDir for efficient traversal
-- Parallel iterator (Rayon)
-- Result streaming
-- Memory-efficient processing
+**Query Types**
+- Full-text search (case-sensitive/insensitive)
+- Regex patterns
+- Multiple search terms (AND/OR)
+- Exclude patterns (NOT)
+- File path filters
+- Tag filters
+- Date range filters
+
+**Optimizations**
+```rust
+// Parallel search across files
+use rayon::prelude::*;
+
+files.par_iter()
+    .filter_map(|file| search_file(file, &query))
+    .collect()
+
+// Regex caching
+lazy_static! {
+    static ref REGEX_CACHE: Mutex<LruCache<String, Regex>> =
+        Mutex::new(LruCache::new(100));
+}
+
+// Early termination
+if results.len() >= max_results {
+    break;
+}
+```
+
+**Result Format**
+```javascript
+{
+  "path": "/notes/my-note.md",
+  "matches": [
+    {
+      "line": 42,
+      "text": "This is the matched line",
+      "highlighted": "This is the <mark>matched</mark> line",
+      "context": {
+        "before": ["line 41"],
+        "after": ["line 43"]
+      }
+    }
+  ],
+  "score": 0.95
+}
+```
+
+#### Key Files
+```
+src-tauri/src/
+├── search.rs               # Core search logic
+└── search.test.rs          # Search tests
+```
 
 ### 6. Theme System
 
 **Location:** `src/core/theme/`, `src-tauri/src/theme.rs`
 
-Dynamic theming with CSS custom properties.
+Dynamic theming with CSS custom properties and live preview.
 
-**Architecture:**
+#### Architecture
+
 ```
 Theme Definition (JSON)
     ↓
-Theme Validation
+Schema Validation (Zod)
     ↓
 CSS Variable Generation
     ↓
-Style Injection
+Style Injection (document.documentElement)
+    ↓
+Editor Theme Application
+    ↓
+Syntax Highlighting Update
+    ↓
+Graph Colors Update
     ↓
 Live Preview
 ```
 
-**Theme Structure:**
-```javascript
-{
+#### Theme Structure
+
+```typescript
+interface Theme {
+  id: string;
+  name: string;
+  type: 'light' | 'dark';
+  author?: string;
+  version?: string;
+
   colors: {
-    background: "#fff",
-    foreground: "#000",
-    // ... 15+ color tokens
-  },
+    // Core colors
+    background: string;
+    foreground: string;
+    primary: string;
+    secondary: string;
+    accent: string;
+
+    // UI colors (15+ tokens)
+    border: string;
+    input: string;
+    card: string;
+    popover: string;
+    muted: string;
+    // ... more
+  };
+
   taskColors: {
-    todo: "#3b82f6",
-    completed: "#10b981",
-    // ... 7 status colors
-  },
+    todo: string;
+    inProgress: string;
+    completed: string;
+    cancelled: string;
+    blocked: string;
+    review: string;
+    backlog: string;
+  };
+
   syntax: {
-    // Syntax highlighting colors
-  }
+    comment: string;
+    keyword: string;
+    string: string;
+    number: string;
+    function: string;
+    // ... more
+  };
+
+  graph?: {
+    node: string;
+    edge: string;
+    highlight: string;
+    cluster: string[];
+  };
 }
 ```
 
-**Key Files:**
-- `src/core/theme/manager.js` - Theme management
-- `src-tauri/src/theme.rs` - Theme persistence
+#### CSS Variables
 
-### 7. Authentication
+```css
+:root {
+  /* Core colors */
+  --background: 0 0% 100%;
+  --foreground: 0 0% 3.9%;
+  --primary: 0 0% 9%;
+  --primary-foreground: 0 0% 98%;
+
+  /* Component colors */
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 3.9%;
+  --border: 0 0% 89.8%;
+
+  /* Task colors */
+  --task-todo: 217 91% 60%;
+  --task-completed: 142 76% 36%;
+
+  /* Syntax colors */
+  --syntax-comment: 0 0% 50%;
+  --syntax-keyword: 262 90% 50%;
+}
+```
+
+#### Key Files
+```
+src/core/theme/
+├── manager.js              # Theme management
+├── themes/                 # Built-in themes
+│   ├── light.json
+│   ├── dark.json
+│   └── nord.json
+└── schema.js               # Theme validation
+
+src-tauri/src/
+└── theme.rs                # Theme persistence
+```
+
+### 7. Authentication System
 
 **Location:** `src-tauri/src/auth.rs`
 
 OAuth2 implementation with secure token storage.
 
-**Flow:**
+#### OAuth Flow
+
 ```
-1. User initiates OAuth
+1. User initiates OAuth (Gmail integration)
     ↓
-2. Open browser with auth URL
+2. Generate PKCE challenge (SHA-256)
     ↓
-3. User authorizes
+3. Open browser with authorization URL
     ↓
-4. Callback to localhost server
+4. User authenticates with provider
     ↓
-5. Exchange code for tokens
+5. Provider redirects to localhost callback
     ↓
-6. Store in system keychain
+6. Start temporary HTTP server (localhost:3000)
     ↓
-7. Return to app
+7. Receive authorization code
+    ↓
+8. Exchange code for tokens (access + refresh)
+    ↓
+9. Store tokens in system keychain (encrypted)
+    ↓
+10. Return success to application
 ```
 
-**Security:**
-- PKCE flow support
-- State parameter validation
-- Token refresh automation
-- Secure storage (OS keychain)
-- Token encryption
+#### Security Features
 
-**Supported Providers:**
-- Google (Gmail integration)
-- Extensible for more providers
+**PKCE (Proof Key for Code Exchange)**
+```rust
+// Generate code verifier (random 128 bytes)
+let verifier = PkceCodeVerifier::new(generate_random_string(128));
+
+// Generate code challenge (SHA-256 hash)
+let challenge = PkceCodeChallenge::from_code_verifier_sha256(&verifier);
+
+// Include in authorization URL
+let auth_url = client
+    .authorize_url(|| CsrfToken::new(state.clone()))
+    .set_pkce_challenge(challenge)
+    .url();
+```
+
+**Token Storage**
+```rust
+use keyring::Entry;
+
+// Store in system keychain
+let entry = Entry::new("lokus", "gmail_access_token")?;
+entry.set_password(&token)?;
+
+// Retrieve from keychain
+let token = entry.get_password()?;
+```
+
+**Token Encryption**
+```rust
+use aes_gcm::{Aes256Gcm, Key, Nonce};
+use argon2::Argon2;
+
+// Derive key from machine ID
+let machine_id = get_machine_id()?;
+let key = derive_key(&machine_id)?;
+
+// Encrypt token
+let cipher = Aes256Gcm::new(&key);
+let encrypted = cipher.encrypt(&nonce, token.as_bytes())?;
+```
+
+**Token Refresh**
+```rust
+// Automatic token refresh before expiry
+async fn refresh_token(refresh_token: &str) -> Result<TokenResponse> {
+    let client = create_oauth_client();
+    let token = client
+        .exchange_refresh_token(&RefreshToken::new(refresh_token.to_string()))
+        .request_async(async_http_client)
+        .await?;
+
+    store_tokens(&token).await?;
+    Ok(token)
+}
+```
+
+#### Key Files
+```
+src-tauri/src/
+├── auth.rs                 # OAuth implementation
+├── oauth_server.rs         # Callback server
+└── secure_storage.rs       # Token storage
+```
 
 ## Data Flow
 
 ### User Action Flow
 
 ```
-User Interaction (UI)
+User clicks "Save" button
     ↓
-React Component
+React Event Handler
     ↓
-Event Handler
+Component updates local state
     ↓
-Context/Hook
+useEditor hook
     ↓
-Tauri Command Invocation
+Tauri invoke("write_file_content", { path, content })
     ↓
-Rust Backend
+IPC serialization (JSON)
     ↓
-File System / Database / Network
+Rust command handler
     ↓
-Response
+Path validation & permission check
     ↓
-State Update
+Async file write (Tokio)
     ↓
-Component Re-render
+File system
+    ↓
+Success/Error response
+    ↓
+IPC deserialization
+    ↓
+Promise resolution
+    ↓
+UI update (success notification)
 ```
 
 ### Plugin Execution Flow
 
 ```
-Plugin Trigger
+User invokes plugin command
     ↓
-Plugin Manager
+Command Palette
     ↓
-Permission Check
+Plugin Manager.executeCommand()
     ↓
-Sandbox Environment
+Permission check (can plugin run command?)
     ↓
-Plugin Code Execution
+Create sandbox environment
     ↓
-API Call
+Load plugin code into isolated-vm
     ↓
-Permission Validation
+Execute plugin function
     ↓
-Core System
+Plugin calls API (e.g., api.editor.getContent())
     ↓
-Result
+API boundary check (permission granted?)
     ↓
-Plugin Callback
+Core system (Editor)
+    ↓
+Return result to sandbox
+    ↓
+Plugin processes result
+    ↓
+Plugin completes
+    ↓
+Cleanup sandbox
+```
+
+### Search Flow
+
+```
+User types in search box
+    ↓
+Debounced input (300ms)
+    ↓
+Search component state update
+    ↓
+Tauri invoke("search_workspace", { query, options })
+    ↓
+Rust search handler
+    ↓
+Parse query (regex, filters, etc.)
+    ↓
+Compile regex (with caching)
+    ↓
+Parallel file traversal (WalkDir + Rayon)
+    ↓
+For each file:
+    ├── Read file content
+    ├── Apply regex match
+    ├── Extract context lines
+    └── Calculate relevance score
+    ↓
+Sort results by score
+    ↓
+Highlight matches (XSS-safe)
+    ↓
+Return results (stream for large result sets)
+    ↓
+Frontend receives results
+    ↓
+Update UI with results
+    ↓
+User clicks result → Open note
 ```
 
 ## State Management
 
 ### Frontend State
 
-**React Context API**
-- ThemeContext - Theme state
-- WorkspaceContext - Current workspace
-- EditorContext - Editor state
-- FolderScopeContext - Folder filtering
+**React Context**
+```javascript
+// Global state contexts
+ThemeContext         // Current theme, theme settings
+WorkspaceContext     // Current workspace path, files
+EditorContext        // Editor instance, current note
+FolderScopeContext   // Current folder scope for filtering
+PluginContext        // Loaded plugins, plugin state
+```
 
-**Local State**
-- Component state with useState
-- Effects with useEffect
-- Refs with useRef
+**Component State**
+```javascript
+// Local component state
+useState             // Simple state
+useReducer          // Complex state with actions
+useRef              // Mutable refs, DOM refs
+useMemo             // Computed values
+useCallback         // Memoized callbacks
+```
 
 **Persistent State**
-- localStorage - UI preferences
-- Tauri Store - App settings
-- File system - User data
+```javascript
+// Frontend persistence
+localStorage        // UI preferences, recent files
+sessionStorage      // Temporary session data
+
+// Backend persistence (via Tauri)
+Tauri Store         // App settings (.settings.dat)
+File system         // User notes, configurations
+Keychain            // Credentials (OAuth tokens)
+```
 
 ### Backend State
 
-**In-Memory**
-- Plugin registry
-- Active sessions
-- Cache layers
+**In-Memory State (Rust)**
+```rust
+// Singleton state with lazy_static
+lazy_static! {
+    static ref PLUGIN_REGISTRY: Mutex<PluginRegistry> =
+        Mutex::new(PluginRegistry::new());
 
-**Persistent**
-- `.settings.dat` - Tauri Store
-- Config files - JSON
-- System keychain - Credentials
+    static ref SEARCH_CACHE: Mutex<LruCache<String, SearchResults>> =
+        Mutex::new(LruCache::new(100));
 
-## Performance Optimizations
+    static ref FILE_WATCHER: Mutex<Option<FileWatcher>> =
+        Mutex::new(None);
+}
+```
 
-### Frontend
+**Persistent State**
+```
+~/.lokus/
+├── settings.dat           # Tauri Store (binary)
+├── config.json            # App configuration
+├── themes/                # Custom themes
+├── plugins/               # Installed plugins
+└── cache/                 # Search index, etc.
+```
 
-**React Optimizations**
-- Lazy loading with React.lazy
-- Memoization with useMemo
-- Callback memoization with useCallback
-- Component memoization with React.memo
+**System Keychain**
+```
+macOS: Keychain Access
+Windows: Windows Credential Manager
+Linux: Secret Service API (gnome-keyring, kwallet)
+```
 
-**Editor Optimizations**
-- Debounced save operations
-- Lazy loading for large documents
-- Virtual scrolling for long content
-- Web Workers for heavy computation
+## Performance Architecture
+
+### Frontend Optimizations
+
+**React Performance**
+```javascript
+// Code splitting
+const Canvas = lazy(() => import('./views/Canvas'));
+const Graph = lazy(() => import('./views/Graph'));
+
+// Component memoization
+export default React.memo(ExpensiveComponent);
+
+// Callback memoization
+const handleClick = useCallback(() => {
+  // Handler logic
+}, [dependencies]);
+
+// Value memoization
+const expensiveValue = useMemo(() => {
+  return computeExpensiveValue(data);
+}, [data]);
+```
+
+**Editor Performance**
+```javascript
+// Debounced saves
+const debouncedSave = useMemo(
+  () => debounce((content) => saveFile(content), 1000),
+  []
+);
+
+// Virtual scrolling for long documents
+import { useVirtualizer } from '@tanstack/react-virtual';
+
+// Lazy loading
+const lazyLoadImages = () => {
+  const images = document.querySelectorAll('img[data-src]');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const img = entry.target;
+        img.src = img.dataset.src;
+        observer.unobserve(img);
+      }
+    });
+  });
+
+  images.forEach(img => observer.observe(img));
+};
+```
 
 **Build Optimizations**
-- Code splitting
-- Tree shaking
-- Minification
-- Compression
+```javascript
+// vite.config.js
+export default {
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor': ['react', 'react-dom'],
+          'editor': ['@tiptap/react', '@tiptap/starter-kit'],
+          'graph': ['three', 'sigma', 'graphology']
+        }
+      }
+    },
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true
+      }
+    }
+  }
+};
+```
 
-### Backend
+### Backend Optimizations
 
-**Rust Optimizations**
-- Zero-cost abstractions
-- Async I/O with Tokio
-- Parallel processing with Rayon
-- Memory pooling
+**Async I/O**
+```rust
+use tokio::fs;
+use tokio::io::AsyncReadExt;
 
-**File System**
-- Cached file tree
-- Debounced file watching
-- Efficient path operations
+#[tauri::command]
+async fn read_file_content(path: String) -> Result<String, Error> {
+    let mut file = fs::File::open(path).await?;
+    let mut contents = String::new();
+    file.read_to_string(&mut contents).await?;
+    Ok(contents)
+}
+```
 
-**Search**
-- Parallel file traversal
-- Optimized regex compilation
-- Result streaming
-- Index caching
+**Parallel Processing**
+```rust
+use rayon::prelude::*;
+
+// Parallel file search
+let results: Vec<SearchResult> = files
+    .par_iter()
+    .filter_map(|file| search_file(file, &query))
+    .collect();
+```
+
+**Caching**
+```rust
+use lru::LruCache;
+use std::sync::Mutex;
+
+lazy_static! {
+    static ref REGEX_CACHE: Mutex<LruCache<String, Regex>> =
+        Mutex::new(LruCache::new(100));
+}
+
+fn get_cached_regex(pattern: &str) -> Result<Regex, Error> {
+    let mut cache = REGEX_CACHE.lock().unwrap();
+
+    if let Some(regex) = cache.get(pattern) {
+        return Ok(regex.clone());
+    }
+
+    let regex = Regex::new(pattern)?;
+    cache.put(pattern.to_string(), regex.clone());
+    Ok(regex)
+}
+```
+
+**Memory Optimization**
+```rust
+// Stream large files instead of loading into memory
+use tokio::io::BufReader;
+
+async fn process_large_file(path: &str) -> Result<(), Error> {
+    let file = fs::File::open(path).await?;
+    let reader = BufReader::new(file);
+    let mut lines = reader.lines();
+
+    while let Some(line) = lines.next_line().await? {
+        process_line(&line)?;
+    }
+
+    Ok(())
+}
+```
 
 ## Security Architecture
 
 ### Defense in Depth
 
-1. **Input Validation** - All inputs validated
-2. **Path Validation** - No directory traversal
-3. **Permission System** - Granular access control
-4. **Sandboxing** - Plugin isolation
-5. **Encryption** - Data at rest and in transit
-6. **Secure Storage** - OS keychain integration
+**Layer 1: Input Validation**
+```rust
+fn validate_input(input: &str) -> Result<String, Error> {
+    // Length check
+    if input.len() > MAX_INPUT_LENGTH {
+        return Err(Error::InputTooLong);
+    }
+
+    // Character whitelist
+    if !input.chars().all(|c| c.is_alphanumeric() || c == '-' || c == '_') {
+        return Err(Error::InvalidCharacters);
+    }
+
+    // SQL injection prevention (if using SQL)
+    // XSS prevention (HTML encoding)
+
+    Ok(input.to_string())
+}
+```
+
+**Layer 2: Path Validation**
+```rust
+fn validate_path(path: &str, workspace: &str) -> Result<PathBuf, Error> {
+    // Resolve to absolute path
+    let absolute = fs::canonicalize(path)?;
+    let workspace = fs::canonicalize(workspace)?;
+
+    // Prevent directory traversal
+    if !absolute.starts_with(&workspace) {
+        return Err(Error::PathTraversal);
+    }
+
+    // Prevent symlink attacks
+    if absolute.is_symlink() {
+        let target = fs::read_link(&absolute)?;
+        if !target.starts_with(&workspace) {
+            return Err(Error::SymlinkAttack);
+        }
+    }
+
+    Ok(absolute)
+}
+```
+
+**Layer 3: Permission System**
+```javascript
+class PluginPermissionManager {
+  checkPermission(pluginId, permission) {
+    const plugin = this.registry.get(pluginId);
+
+    if (!plugin.manifest.permissions.includes(permission)) {
+      throw new PermissionError(
+        `Plugin ${pluginId} does not have permission: ${permission}`
+      );
+    }
+
+    return true;
+  }
+}
+```
+
+**Layer 4: Sandboxing**
+```javascript
+import ivm from 'isolated-vm';
+
+class PluginSandbox {
+  async execute(code, api) {
+    const isolate = new ivm.Isolate({ memoryLimit: 128 }); // 128MB limit
+    const context = await isolate.createContext();
+
+    // Expose limited API
+    await context.global.set('api', new ivm.ExternalCopy(api).copyInto());
+
+    // No access to Node.js APIs
+    // No access to file system
+    // No access to network (except through API)
+
+    const script = await isolate.compileScript(code);
+    return await script.run(context, { timeout: 5000 }); // 5s timeout
+  }
+}
+```
+
+**Layer 5: Encryption**
+```rust
+use aes_gcm::{Aes256Gcm, Key, Nonce};
+use aes_gcm::aead::{Aead, NewAead};
+
+fn encrypt_data(data: &[u8], key: &[u8]) -> Result<Vec<u8>, Error> {
+    let key = Key::from_slice(key);
+    let cipher = Aes256Gcm::new(key);
+
+    let nonce = Nonce::from_slice(generate_nonce()?);
+    let ciphertext = cipher.encrypt(nonce, data)
+        .map_err(|e| Error::EncryptionFailed(e))?;
+
+    Ok(ciphertext)
+}
+```
+
+**Layer 6: Secure Storage**
+```rust
+use keyring::Entry;
+
+fn store_secret(service: &str, username: &str, secret: &str) -> Result<(), Error> {
+    let entry = Entry::new(service, username)?;
+    entry.set_password(secret)?;
+    Ok(())
+}
+```
 
 ### Content Security Policy
 
-```
-default-src 'self';
-script-src 'self' 'unsafe-inline' 'unsafe-eval';
-style-src 'self' 'unsafe-inline';
-img-src 'self' data: https: blob:;
-connect-src 'self' https: wss:;
-```
-
-## Testing Strategy
-
-### Unit Tests
-- Vitest for JavaScript/React
-- Cargo test for Rust
-- Component tests with Testing Library
-
-### Integration Tests
-- API integration tests
-- Plugin system tests
-- File system tests
-
-### E2E Tests
-- Playwright for end-to-end workflows
-- Cross-platform testing
-- UI interaction testing
-
-## Build Pipeline
-
-### Development
-```
-npm run tauri dev
-    ↓
-Vite Dev Server (HMR)
-    ↓
-Rust Debug Build
-    ↓
-Launch Application
-```
-
-### Production
-```
-npm run build:platform
-    ↓
-Vite Production Build
-    ↓
-Rust Release Build (Optimized)
-    ↓
-Code Signing
-    ↓
-Package Creation (MSI/DMG/AppImage)
-    ↓
-Artifact Upload
+```html
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' 'unsafe-inline' 'unsafe-eval';
+  style-src 'self' 'unsafe-inline';
+  img-src 'self' data: https: blob:;
+  font-src 'self' data:;
+  connect-src 'self' https: wss:;
+  media-src 'self' blob:;
+  object-src 'none';
+  frame-ancestors 'none';
+  base-uri 'self';
+  form-action 'self';
+">
 ```
 
 ## Extension Points
 
-Areas designed for customization:
+Areas designed for customization and extension:
 
-1. **Editor Extensions** - Custom TipTap nodes/marks
-2. **Plugins** - Full plugin API
-3. **Themes** - Custom color schemes
-4. **Templates** - Reusable note structures
-5. **MCP Tools** - Custom AI tools
-6. **Data Providers** - External data integration
+### 1. Editor Extensions
+
+Create custom TipTap nodes, marks, or extensions:
+
+```javascript
+import { Node } from '@tiptap/core';
+
+const CustomNode = Node.create({
+  name: 'customNode',
+
+  addOptions() {
+    return {
+      // Options
+    };
+  },
+
+  parseHTML() {
+    return [{ tag: 'custom-node' }];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return ['custom-node', HTMLAttributes, 0];
+  },
+
+  addCommands() {
+    return {
+      insertCustomNode: () => ({ commands }) => {
+        return commands.insertContent({
+          type: this.name,
+          attrs: {}
+        });
+      }
+    };
+  }
+});
+```
+
+### 2. Plugins
+
+Full plugin API with sandboxed execution:
+
+```javascript
+class MyPlugin {
+  async activate(context) {
+    // Register commands
+    context.subscriptions.push(
+      context.api.commands.register({
+        id: 'myPlugin.doSomething',
+        handler: () => this.doSomething()
+      })
+    );
+
+    // Create UI panels
+    context.api.ui.registerPanel({
+      id: 'myPanel',
+      title: 'My Panel',
+      icon: 'star',
+      render: () => this.renderPanel()
+    });
+  }
+
+  async deactivate() {
+    // Cleanup
+  }
+}
+```
+
+### 3. Themes
+
+Custom color schemes:
+
+```json
+{
+  "id": "my-theme",
+  "name": "My Custom Theme",
+  "type": "dark",
+  "colors": {
+    "background": "#1e1e1e",
+    "foreground": "#d4d4d4",
+    "primary": "#0078d4"
+  },
+  "syntax": {
+    "comment": "#6a9955",
+    "keyword": "#569cd6"
+  }
+}
+```
+
+### 4. Templates
+
+Reusable note structures with variables:
+
+```markdown
+---
+name: Meeting Notes
+category: Work
+---
+# Meeting: {{title}}
+
+Date: {{date:YYYY-MM-DD}}
+Attendees: {{cursor}}
+
+## Agenda
+
+## Notes
+
+## Action Items
+- [ ]
+```
+
+### 5. MCP Tools
+
+Custom AI tools:
+
+```javascript
+{
+  name: "analyze_sentiment",
+  description: "Analyze sentiment of note content",
+  inputSchema: {
+    type: "object",
+    properties: {
+      notePath: { type: "string" }
+    },
+    required: ["notePath"]
+  },
+  handler: async (params) => {
+    const content = await readNote(params.notePath);
+    const sentiment = analyzeSentiment(content);
+    return { sentiment };
+  }
+}
+```
+
+### 6. Data Providers
+
+External data integration:
+
+```javascript
+class JiraDataProvider {
+  async fetchIssues(filter) {
+    const issues = await this.api.get('/issues', { params: filter });
+    return issues.map(issue => ({
+      id: issue.key,
+      title: issue.fields.summary,
+      status: issue.fields.status.name
+    }));
+  }
+}
+```
+
+## Build System
+
+### Development Build
+
+```bash
+npm run tauri dev
+    ↓
+1. Start Vite dev server (port 1420)
+   - Hot Module Replacement (HMR)
+   - Source maps enabled
+   - React Fast Refresh
+    ↓
+2. Cargo build (debug mode)
+   - Incremental compilation
+   - Fast build times (~10s after initial)
+    ↓
+3. Launch Tauri application
+   - WebView loads localhost:1420
+   - Rust backend connects
+   - DevTools enabled
+```
+
+### Production Build
+
+```bash
+npm run build:platform
+    ↓
+1. Vite production build
+   - Code splitting
+   - Tree shaking
+   - Minification (Terser)
+   - Asset optimization
+   - Source maps (optional)
+    ↓
+2. Cargo build --release
+   - Full optimizations (opt-level=3)
+   - LTO (Link Time Optimization)
+   - Strip debug symbols
+   - ~5-10 min build time
+    ↓
+3. Code signing (if configured)
+   - macOS: codesign + notarization
+   - Windows: Authenticode signing
+    ↓
+4. Package creation
+   - macOS: DMG, APP bundle
+   - Windows: MSI, NSIS installer, portable ZIP
+   - Linux: AppImage, DEB, RPM
+    ↓
+5. Artifact upload
+   - GitHub Releases
+   - Update server (if configured)
+```
+
+### Build Configuration
+
+**Vite** (`vite.config.js`)
+```javascript
+export default {
+  build: {
+    target: 'esnext',
+    minify: 'terser',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          editor: ['@tiptap/react', '@tiptap/starter-kit'],
+          graph: ['three', 'sigma', 'graphology']
+        }
+      }
+    }
+  },
+  server: {
+    port: 1420,
+    strictPort: true
+  }
+};
+```
+
+**Cargo** (`Cargo.toml`)
+```toml
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"
+```
+
+**Tauri** (`tauri.conf.json`)
+```json
+{
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
+    "devPath": "http://localhost:1420",
+    "distDir": "../dist"
+  },
+  "bundle": {
+    "identifier": "com.lokus.app",
+    "icon": ["icons/icon.png"],
+    "targets": ["dmg", "msi", "appimage"],
+    "macOS": {
+      "minimumSystemVersion": "10.15"
+    },
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256"
+    }
+  }
+}
+```
+
+## Testing Strategy
+
+### Unit Tests (Vitest)
+
+```javascript
+// Component tests
+import { render, screen } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
+
+describe('Editor', () => {
+  it('renders editor', () => {
+    render(<Editor />);
+    expect(screen.getByRole('textbox')).toBeInTheDocument();
+  });
+});
+
+// Utility tests
+describe('markdown', () => {
+  it('converts markdown to HTML', () => {
+    const html = markdownToHtml('# Heading');
+    expect(html).toBe('<h1>Heading</h1>');
+  });
+});
+```
+
+### Integration Tests
+
+```javascript
+// API integration tests
+describe('File API', () => {
+  it('reads and writes files', async () => {
+    await invoke('write_file_content', {
+      path: '/test.md',
+      content: 'Test'
+    });
+
+    const content = await invoke('read_file_content', {
+      path: '/test.md'
+    });
+
+    expect(content).toBe('Test');
+  });
+});
+```
+
+### E2E Tests (Playwright)
+
+```javascript
+import { test, expect } from '@playwright/test';
+
+test('create and edit note', async ({ page }) => {
+  await page.goto('/');
+
+  // Create note
+  await page.click('[data-testid="new-note"]');
+  await page.fill('.editor', '# My Note\n\nContent');
+
+  // Save
+  await page.keyboard.press('Mod+S');
+
+  // Verify saved
+  await expect(page.locator('.status')).toHaveText('Saved');
+});
+```
 
 ## Next Steps
 
-- Explore [Plugin Development](/developers/plugins)
-- Learn about [MCP Integration](/developers/mcp)
-- Check [Core API](/developers/api)
-- Read [Contributing Guidelines](/developers/contributing)
+Now that you understand the architecture:
+
+1. **Explore specific subsystems:**
+   - [Plugin Development](/developers/plugins/getting-started)
+   - [MCP Integration](/developers/mcp/overview)
+   - [API Reference](/reference/api-overview)
+
+2. **Start contributing:**
+   - [Contributing Guide](/developers/contributing)
+   - [Development Setup](/developers/setup)
+
+3. **Build extensions:**
+   - [Editor Extensions](/developers/plugins/editor-plugins)
+   - [UI Plugins](/developers/plugins/ui-plugins)
+   - [Data Providers](/developers/plugins/data-providers)
+
+## Resources
+
+- **Code:** [GitHub Repository](https://github.com/lokus-ai/lokus)
+- **Discussions:** [GitHub Discussions](https://github.com/lokus-ai/lokus/discussions)
+- **Discord:** Join our community
+- **Blog:** [Technical deep dives](https://lokusmd.com/blog)

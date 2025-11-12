@@ -8,6 +8,8 @@ export default {
   "tasks": "Task Management & Kanban",
   "bases": "Bases (Database Views)",
   "templates": "Templates",
+  "plugins": "Plugin System",
+  "multimedia-library": "Multimedia Library (Experimental)",
   "gmail": "Gmail Integration",
   "themes": "Themes & Customization",
   "file-management": "File Management",

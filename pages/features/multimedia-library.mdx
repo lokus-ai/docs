@@ -1,0 +1,521 @@
+---
+title: "Multimedia Library - OCR & PDF Processing (Experimental)"
+description: "Extract text from images with OCR, process PDFs, and manage your media files with Lokus's experimental multimedia library. Features automatic thumbnail generation, metadata extraction, content search, and support for images, PDFs, videos, and audio files."
+keywords: "multimedia library, ocr, text extraction, tesseract, pdf processing, image analysis, metadata extraction, thumbnail generation, media gallery, content search, document processing, image to text, pdf to text, experimental features"
+author: "Lokus Documentation Team"
+lastUpdated: "2025-01-23"
+version: "1.0.0-experimental"
+category: "features"
+tags: ["multimedia", "ocr", "pdf", "media", "experimental", "images", "documents"]
+---
+
+import { Callout } from 'nextra/components'
+
+# Multimedia Library - OCR & PDF Processing
+
+**Version:** 1.0.0-experimental | **Status:** Experimental | **Platform:** Cross-platform
+
+<Callout type="warning" emoji="⚠️">
+**Experimental Feature**: The multimedia library is currently in experimental status. Features and APIs may change in future releases. Some functionality requires additional setup (Tesseract for OCR).
+</Callout>
+
+The Multimedia Library provides powerful tools for working with images, PDFs, videos, and audio files in your knowledge base. Extract text from images using OCR, process PDF documents, generate thumbnails automatically, and search through your media content.
+
+## Overview
+
+The multimedia library enables you to:
+
+- **Extract text from images** using OCR (Optical Character Recognition)
+- **Process PDF documents** with text extraction, metadata, and structure analysis
+- **Organize media files** with automatic thumbnail generation
+- **Search media content** by extracted text and metadata
+- **Manage different file types** including images, PDFs, videos, and audio
+- **Analyze metadata** including dimensions, file size, and creation dates
+
+## Supported Media Types
+
+### Images
+Supported formats: PNG, JPG, JPEG, GIF, WebP, SVG, BMP
+
+- **OCR text extraction** from any image containing text
+- **Automatic thumbnail generation** (256x256px by default)
+- **Dimension extraction** (width and height)
+- **EXIF metadata** support (coming soon)
+- **Hash-based deduplication** to identify duplicate images
+
+### PDFs
+Full PDF document processing capabilities:
+
+- **Text extraction** from all pages
+- **Metadata extraction** (title, author, subject, creator, dates)
+- **Structure parsing** (headings, paragraphs, lists, tables)
+- **Page-by-page content** analysis
+- **Embedded link extraction**
+- **Citation detection** (references, footnotes, endnotes)
+- **Image extraction** from PDF documents (coming soon)
+
+### Videos
+Supported formats: MP4, AVI, MKV, MOV, WebM
+
+- **File metadata** (size, creation date, modification date)
+- **Classification and organization**
+- **Thumbnail generation** (coming soon)
+
+### Audio
+Supported formats: MP3, WAV, OGG, M4A, FLAC
+
+- **File metadata** (size, creation date, modification date)
+- **Audio transcription** (coming soon)
+
+## OCR Features
+
+### Text Extraction from Images
+
+The OCR engine uses Tesseract to extract text from images with high accuracy.
+
+#### Basic Usage
+
+1. Right-click on any image in your workspace
+2. Select "Extract Text (OCR)" from the context menu
+3. The extracted text will be displayed and can be:
+   - Copied to clipboard
+   - Inserted into a note
+   - Saved for later reference
+
+#### OCR Configuration
+
+Customize OCR settings for better results:
+
+**Language Selection**
+- Default: English (`eng`)
+- Multi-language support (requires language packs)
+- Check available languages: Settings → Multimedia → OCR Languages
+
+**Page Segmentation Mode (PSM)**
+- `3` - Fully automatic page segmentation (default)
+- `6` - Assume a single uniform block of text
+- `11` - Sparse text - find as much text as possible
+
+**OCR Engine Mode (OEM)**
+- `3` - Default (LSTM neural net mode)
+- `1` - Legacy engine
+- `2` - LSTM + Legacy
+
+**Confidence Threshold**
+- Minimum confidence level: 0.6 (60%)
+- Adjust to filter low-quality extractions
+
+<Callout type="info" emoji="💡">
+**Tip**: For best OCR results, use high-resolution images with clear, well-lit text. Avoid images with heavy compression artifacts or handwritten text (unless using specialized language packs).
+</Callout>
+
+### Batch Processing
+
+Process multiple images at once:
+
+1. Select multiple images in the file browser
+2. Right-click and choose "Batch Extract Text (OCR)"
+3. View extraction progress and results
+4. Export all extracted text to a single note or separate files
+
+## PDF Processing
+
+### Content Extraction
+
+Extract comprehensive information from PDF documents:
+
+**Text Content**
+- Full document text extraction
+- Page-by-page content separation
+- Preserves text layout and formatting
+
+**Document Structure**
+- Headings and section hierarchy
+- Paragraphs with indentation detection
+- Bullet and numbered lists
+- Tables with row/column structure
+- Citations and references
+
+**Metadata**
+- Title, author, subject, keywords
+- Creator and producer applications
+- Creation and modification dates
+- Page count and file size
+
+### Using PDF Features
+
+1. **Open PDF in Lokus**: Drag and drop or use File → Open
+2. **Extract Text**: Right-click → Extract PDF Text
+3. **View Metadata**: Right-click → View PDF Metadata
+4. **Process Full Content**: Right-click → Process PDF Document
+
+The extracted content can be:
+- Saved as a new note
+- Referenced in existing notes
+- Searched using the global search
+- Linked via wiki links
+
+<Callout type="info" emoji="📚">
+**Use Case**: Import research papers and extract text for note-taking. Link extracted content to your notes using wiki links to maintain connections between sources and your insights.
+</Callout>
+
+## Media Gallery & Organization
+
+### Automatic Thumbnail Generation
+
+Thumbnails are automatically generated for images:
+
+- **Size**: 256x256 pixels (configurable)
+- **Format**: JPEG for optimal size
+- **Storage**: `.lokus/thumbnails/` directory
+- **Caching**: Reuses existing thumbnails based on file hash
+- **Performance**: Generated on-demand, not during workspace scan
+
+### Workspace Media Scan
+
+Scan your entire workspace for media files:
+
+1. Open Command Palette (Cmd/Ctrl + P)
+2. Type "Scan Media Files"
+3. View all discovered images, PDFs, videos, and audio files
+4. Results sorted by modification date (newest first)
+
+The scan process:
+- Recursively searches all directories
+- Skips hidden directories and `.lokus` folder
+- Identifies files by extension and MIME type
+- Extracts basic metadata
+- Creates searchable index
+
+### File Hash & Deduplication
+
+Each media file gets a SHA256 hash for:
+- **Duplicate detection** - identify identical files
+- **Cache management** - reuse thumbnails and extracted content
+- **Performance optimization** - skip re-processing unchanged files
+
+Hash calculation is cached based on file modification time for efficiency.
+
+## Search & Discovery
+
+### Search in Media Content
+
+Search through extracted text from images and PDFs:
+
+1. Use the global search (Cmd/Ctrl + F)
+2. Enable "Search in Media Content" filter
+3. Results show matching text with file reference
+4. Click to open the source file
+
+### Filter by Media Type
+
+Filter search results by specific media types:
+- Images only
+- PDFs only
+- Videos only
+- Audio only
+- All media files
+
+### Metadata Search
+
+Search by file metadata:
+- File name
+- File size range
+- Creation date range
+- Modification date
+- Dimensions (for images)
+
+## Setup & Installation
+
+### Prerequisites
+
+For full multimedia library functionality, install:
+
+#### Tesseract OCR (Required for OCR features)
+
+**macOS** (using Homebrew):
+```bash
+brew install tesseract
+```
+
+**macOS** (using MacPorts):
+```bash
+sudo port install tesseract
+```
+
+**Ubuntu/Debian**:
+```bash
+sudo apt-get update
+sudo apt-get install tesseract-ocr
+```
+
+**Windows**:
+1. Download installer from [Tesseract GitHub](https://github.com/UB-Mannheim/tesseract/wiki)
+2. Run installer and follow prompts
+3. Add Tesseract to PATH during installation
+
+**Verify Installation**:
+```bash
+tesseract --version
+```
+
+#### Additional Language Packs (Optional)
+
+Install additional languages for OCR:
+
+**macOS**:
+```bash
+brew install tesseract-lang
+```
+
+**Ubuntu/Debian**:
+```bash
+sudo apt-get install tesseract-ocr-[lang]
+# Examples:
+# tesseract-ocr-fra (French)
+# tesseract-ocr-deu (German)
+# tesseract-ocr-spa (Spanish)
+```
+
+**Windows**:
+Language packs are included in the Tesseract installer.
+
+### Checking Feature Availability
+
+Verify OCR is available:
+1. Open Settings → Multimedia
+2. Check "OCR Status" indicator
+3. If unavailable, follow installation instructions above
+4. Restart Lokus after installing Tesseract
+
+View available OCR languages:
+- Settings → Multimedia → OCR Languages
+- Lists all installed language packs
+
+## Platform-Specific Notes
+
+### macOS
+
+**Tesseract Locations**:
+- Homebrew (Intel): `/usr/local/bin/tesseract`
+- Homebrew (Apple Silicon): `/opt/homebrew/bin/tesseract`
+- MacPorts: `/opt/local/bin/tesseract`
+
+**Permissions**:
+- Grant Lokus "Full Disk Access" in System Preferences → Security & Privacy for workspace scanning
+
+### Windows
+
+**Tesseract Locations**:
+- Default: `C:\Program Files\Tesseract-OCR\tesseract.exe`
+- Alternative: `C:\Program Files (x86)\Tesseract-OCR\tesseract.exe`
+
+**PATH Configuration**:
+Ensure Tesseract directory is in your system PATH variable.
+
+### Linux
+
+**Tesseract Locations**:
+- Default: `/usr/bin/tesseract`
+- Alternative: `/usr/local/bin/tesseract`
+
+**Dependencies**:
+Most distributions include required image processing libraries. If you encounter errors, install:
+```bash
+sudo apt-get install libleptonica-dev
+```
+
+## Practical Examples
+
+### Example 1: Research Paper Processing
+
+Import and process academic papers:
+
+1. Drag PDF into workspace
+2. Right-click → Process PDF Document
+3. Create a new note for your research
+4. Link to extracted content: `[[paper_content]]`
+5. Add your notes and insights
+6. Search across all paper content later
+
+### Example 2: Screenshot Organization
+
+Organize and extract text from screenshots:
+
+1. Save screenshots to workspace
+2. Automatic thumbnail generation
+3. Use OCR to extract visible text
+4. Create notes referencing screenshot content
+5. Search by extracted text later
+
+### Example 3: Receipt and Invoice Management
+
+Process receipts and invoices:
+
+1. Scan or photograph receipts
+2. Import images to workspace
+3. Use OCR to extract text (dates, amounts, vendors)
+4. Create expense tracking notes
+5. Link receipts to expense entries
+6. Search by vendor name or date
+
+### Example 4: Book and Article Annotation
+
+Extract text from book pages or articles:
+
+1. Photograph or scan pages
+2. Extract text with OCR
+3. Create notes with extracted quotes
+4. Add your annotations and thoughts
+5. Link quotes to topics in your knowledge base
+6. Build a searchable quote library
+
+## Performance Optimization
+
+### Thumbnail Caching
+
+Thumbnails are cached to improve performance:
+- Generated once per image
+- Stored in `.lokus/thumbnails/`
+- Reused based on file hash
+- Automatically regenerated if source changes
+
+### Hash Caching
+
+File hashes are cached in memory:
+- Recalculated only when file modification time changes
+- Significantly faster than rehashing on every operation
+- Cache persists during Lokus session
+
+### Batch Processing
+
+For multiple files:
+- Use batch operations instead of processing individually
+- Processes run in parallel when possible
+- Progress indicators show status
+
+<Callout type="info" emoji="⚡">
+**Performance Tip**: Large PDF processing can take time. Use batch operations overnight or during breaks. OCR typically processes 1-2 seconds per image depending on complexity.
+</Callout>
+
+## Limitations & Known Issues
+
+### Current Limitations
+
+**OCR Limitations**:
+- Accuracy varies with image quality
+- Handwriting recognition is limited (requires specialized models)
+- Complex layouts may not preserve structure perfectly
+- Default English language only (additional languages require setup)
+
+**PDF Processing Limitations**:
+- Image extraction from PDFs is not yet implemented
+- Complex table structures may not parse correctly
+- Scanned PDFs require OCR (not automatic)
+- Some PDF security features may block processing
+
+**Performance Considerations**:
+- Large batch operations can be CPU-intensive
+- Video and audio transcription not yet available
+- Very large PDF files (100+ MB) may process slowly
+
+### Known Issues
+
+- **Issue**: OCR may fail on very low-resolution images (< 300 DPI)
+  - **Workaround**: Use higher resolution images or upscale before processing
+
+- **Issue**: Some PDF metadata may not extract correctly
+  - **Workaround**: Check PDF properties in external viewer for comparison
+
+- **Issue**: Thumbnail generation may timeout on very large images (> 50 MB)
+  - **Workaround**: Resize images before importing or increase timeout in settings
+
+### Experimental Status
+
+This feature is marked as experimental because:
+- APIs may change in future versions
+- Additional dependencies (Tesseract) required
+- Performance optimization ongoing
+- Feature set still expanding
+
+<Callout type="warning" emoji="⚠️">
+**Backup Recommendation**: While the multimedia library is safe to use, we recommend backing up your workspace regularly, especially when processing large batches of files.
+</Callout>
+
+## Troubleshooting
+
+### OCR Not Working
+
+**Problem**: OCR extraction fails or feature unavailable
+
+**Solutions**:
+1. Verify Tesseract installation: `tesseract --version`
+2. Check Tesseract is in system PATH
+3. Restart Lokus after installing Tesseract
+4. Check Settings → Multimedia → OCR Status
+5. Try a simple test image first
+
+### PDF Extraction Issues
+
+**Problem**: PDF text extraction returns empty or garbled text
+
+**Solutions**:
+1. Verify PDF is not password-protected
+2. Check if PDF is scanned image (requires OCR, not automatic extraction)
+3. Try opening PDF in external viewer to verify content
+4. Some PDFs may have text as images - use OCR instead
+
+### Slow Performance
+
+**Problem**: Media processing is very slow
+
+**Solutions**:
+1. Reduce batch size (process fewer files at once)
+2. Close other applications to free resources
+3. Check available disk space in `.lokus/thumbnails/`
+4. Clear thumbnail cache if it grows too large
+5. Use lower resolution images when possible
+
+### Thumbnails Not Appearing
+
+**Problem**: Image thumbnails don't generate
+
+**Solutions**:
+1. Check `.lokus/thumbnails/` directory exists and is writable
+2. Verify image format is supported
+3. Try regenerating thumbnail manually
+4. Check image file is not corrupted
+5. Ensure sufficient disk space available
+
+## Future Enhancements
+
+Planned features for future releases:
+
+- **Video thumbnail generation** from first frame or specific timestamp
+- **Audio transcription** using speech-to-text
+- **EXIF data extraction** for detailed image metadata
+- **Advanced PDF features**: forms, annotations, embedded files
+- **AI-powered image analysis**: object detection, scene recognition
+- **Automatic OCR** for scanned PDFs
+- **Media organization views**: timeline, map, tags
+- **Advanced search**: similarity search, reverse image search
+
+## Related Features
+
+- [Rich Text Editor](/features/editor) - Embed media in your notes
+- [Search & Discovery](/features/search) - Search through media content
+- [File Management](/features/file-management) - Organize media files
+- [Workspace](/features/workspace) - Configure multimedia settings
+
+---
+
+**Questions or Issues?**
+
+If you encounter problems with the multimedia library:
+1. Check [Troubleshooting](#troubleshooting) section above
+2. Verify your [Setup & Installation](#setup--installation)
+3. Report issues on [GitHub Issues](https://github.com/lokus/lokus/issues)
+4. Join our community for support
+
+*Last Updated: January 23, 2025*
+*Experimental Feature - Feedback Welcome!*

@@ -1,0 +1,792 @@
+---
+title: "Plugin System - Extend Lokus with Powerful Plugins"
+description: "Complete guide to the Lokus Plugin System: discover and install plugins from the marketplace, manage plugin permissions, understand plugin types, troubleshoot issues, and customize your knowledge management experience with VS Code-level extensibility."
+keywords: "lokus plugins, plugin marketplace, plugin installation, plugin management, plugin permissions, plugin security, editor extensions, theme plugins, ui plugins, workspace plugins, mcp plugins, plugin updates, plugin troubleshooting, extensibility, customization, productivity plugins, editor plugins, tool plugins"
+author: "Lokus Documentation Team"
+lastUpdated: "2025-01-23"
+version: "1.3.1"
+category: "features"
+tags: ["plugins", "extensibility", "marketplace", "customization", "productivity", "security"]
+---
+
+# Plugin System
+
+Extend Lokus with powerful plugins that add new features, customize your workflow, and integrate with external tools. The Lokus Plugin System provides **VS Code-level extensibility** with a secure, user-friendly marketplace and comprehensive management tools.
+
+**Version:** 1.3.1 | **Status:** Production Ready | **Plugin Types:** 6+ | **Marketplace:** Integrated
+
+## What Are Plugins?
+
+Plugins are **extensions** that add new functionality to Lokus without modifying the core application. They run in a secure sandbox and can:
+
+- Add new editor features (syntax highlighting, formatting, special blocks)
+- Create custom themes and styling options
+- Integrate with external tools (APIs, databases, cloud services)
+- Enhance the UI with new panels, buttons, and commands
+- Automate workflows and repetitive tasks
+- Connect AI assistants through MCP (Model Context Protocol)
+
+### Why Use Plugins?
+
+**Customization:**
+- Tailor Lokus to your specific workflow
+- Add features that matter to you
+- Remove what you don't need
+
+**Productivity:**
+- Automate repetitive tasks
+- Integrate with tools you already use
+- Create custom workflows
+
+**Community:**
+- Access hundreds of community-created plugins
+- Share your own plugins with others
+- Benefit from collective innovation
+
+**Safety:**
+- Sandboxed execution prevents system damage
+- Permission-based security model
+- Regular security audits
+
+## Plugin Types
+
+Lokus supports six types of plugins, each designed for specific use cases:
+
+### 1. Editor Plugins
+
+Extend the rich text editor with new functionality:
+
+**Examples:**
+- **Advanced Tables** - Enhanced table editing with formulas and CSV import
+- **Diagram Maker** - Create flowcharts and diagrams inline
+- **Code Snippets** - Programmable snippet expansion
+- **Grammar Check** - Real-time grammar and style checking
+- **Vim Mode** - Vim key bindings for the editor
+
+**Use cases:**
+- Custom syntax highlighting
+- Special content blocks (timelines, charts, maps)
+- Text transformations and formatting
+- Collaborative editing features
+
+### 2. UI Plugins
+
+Add custom interface components and panels:
+
+**Examples:**
+- **Calendar View** - Visual calendar for daily notes
+- **File Explorer Plus** - Enhanced file navigation
+- **Quick Capture** - Floating note capture window
+- **Dashboard** - Customizable homepage with widgets
+- **Sidebar Panels** - Custom panels for specialized views
+
+**Use cases:**
+- Custom sidebars and panels
+- New toolbar buttons and menus
+- Status bar indicators
+- Modal dialogs and forms
+
+### 3. Theme Plugins
+
+Create and share custom themes:
+
+**Examples:**
+- **Material Theme Pack** - Material Design color schemes
+- **Dracula Extended** - Popular dark theme with variants
+- **Seasonal Themes** - Themes that change with seasons
+- **High Contrast Pack** - Accessibility-focused themes
+- **Syntax Theme Studio** - Custom code highlighting themes
+
+**Use cases:**
+- Custom color schemes
+- Syntax highlighting themes
+- Font and typography customization
+- UI element styling
+
+### 4. Tool Plugins
+
+Add utilities and productivity tools:
+
+**Examples:**
+- **PDF Exporter** - Export notes to beautifully formatted PDFs
+- **Spaced Repetition** - Flashcard and memory system
+- **Word Counter Pro** - Advanced text statistics
+- **Link Checker** - Validate internal and external links
+- **Backup Manager** - Automated backup and sync
+
+**Use cases:**
+- File conversion and export
+- Text analysis and statistics
+- Backup and synchronization
+- Batch operations on notes
+
+### 5. MCP Plugins
+
+Integrate AI assistants through Model Context Protocol:
+
+**Examples:**
+- **AI Writing Assistant** - Context-aware writing suggestions
+- **Smart Summarizer** - Automatic note summarization
+- **Research Helper** - AI-powered research and citation
+- **Code Assistant** - Programming help within notes
+- **Translation Plugin** - Multi-language translation
+
+**Use cases:**
+- AI-powered content generation
+- Intelligent search and recommendations
+- Automated tagging and organization
+- Context-aware assistance
+
+### 6. Workspace Plugins
+
+Enhance file and project management:
+
+**Examples:**
+- **Project Templates** - Pre-configured workspace structures
+- **Git Integration** - Version control for notes
+- **File Organizer** - Auto-organize based on rules
+- **Advanced Search** - Enhanced search capabilities
+- **Cross-Reference** - Automatic link discovery
+
+**Use cases:**
+- Advanced file organization
+- Version control integration
+- Workspace automation
+- Cross-note analysis
+
+## Installing Plugins
+
+### From the Marketplace
+
+The easiest way to install plugins is through the integrated marketplace:
+
+**Step 1: Open the Plugin Marketplace**
+```
+Settings → Plugins → Browse Marketplace
+or
+Cmd/Ctrl + Shift + P → "Browse Plugin Marketplace"
+```
+
+**Step 2: Discover Plugins**
+- **Browse Categories** - Filter by Editor, Themes, Tools, etc.
+- **Search** - Use the search bar to find specific plugins
+- **Featured** - Check out curated, high-quality plugins
+- **Trending** - See what's popular in the community
+
+**Step 3: Review Plugin Details**
+
+Before installing, review:
+- **Description** - What the plugin does
+- **Permissions** - What access it requires (see [Security](#security--permissions))
+- **Ratings & Reviews** - User feedback and ratings
+- **Version History** - Recent updates and changes
+- **Dependencies** - Other plugins it requires
+- **Screenshots** - Visual demonstration of features
+
+**Step 4: Install**
+
+1. Click the "Install" button
+2. Review the permission request dialog
+3. Accept permissions to continue
+4. Wait for installation to complete
+5. Plugin is automatically enabled
+
+**Step 5: Configure (Optional)**
+
+Many plugins offer configuration options:
+```
+Settings → Plugins → Installed → [Plugin Name] → Settings
+```
+
+### Manual Installation
+
+Install plugins from downloaded files or local development:
+
+**Method 1: From File**
+
+1. **Download Plugin** - Get the `.lokus-plugin` file
+2. **Open Command Palette** - `Cmd/Ctrl + Shift + P`
+3. **Run Command** - Type "Install Plugin from File"
+4. **Select File** - Choose the `.lokus-plugin` file
+5. **Review Permissions** - Accept to continue
+6. **Installation Complete** - Plugin appears in installed list
+
+**Method 2: From Folder (Development)**
+
+For testing plugins during development:
+
+1. **Open Command Palette** - `Cmd/Ctrl + Shift + P`
+2. **Run Command** - "Install Plugin from Folder"
+3. **Select Folder** - Choose plugin directory
+4. **Development Mode** - Plugin installed with hot reloading
+
+**Installing Dependencies:**
+
+Some plugins require other plugins. Lokus automatically:
+- Detects missing dependencies
+- Prompts to install them
+- Handles installation order correctly
+
+## Managing Plugins
+
+### Viewing Installed Plugins
+
+Access your plugin library:
+
+```
+Settings → Plugins → Installed
+or
+Cmd/Ctrl + Shift + P → "Show Installed Plugins"
+```
+
+**Plugin List Shows:**
+- Plugin name and version
+- Enable/disable toggle
+- Settings button
+- Update indicator
+- Uninstall option
+
+### Enabling and Disabling
+
+**Toggle Individual Plugins:**
+
+1. Go to Settings → Plugins → Installed
+2. Find the plugin in the list
+3. Use the toggle switch to enable/disable
+4. Changes take effect immediately (no restart needed)
+
+**Disable All Plugins (Safe Mode):**
+
+If you experience issues:
+```
+Hold Shift while launching Lokus
+or
+Command Palette → "Launch in Safe Mode"
+```
+
+This disables all plugins temporarily, useful for troubleshooting.
+
+### Updating Plugins
+
+**Automatic Updates:**
+
+By default, Lokus checks for updates daily:
+- Updates badge appears on the Plugins button
+- Click to see available updates
+- Click "Update All" or update individually
+- Updates are installed in the background
+
+**Manual Update Check:**
+
+Force a check for updates:
+```
+Settings → Plugins → Check for Updates
+or
+Cmd/Ctrl + Shift + P → "Check for Plugin Updates"
+```
+
+**Update Settings:**
+
+Configure update behavior:
+```
+Settings → Plugins → Update Settings
+
+Options:
+- Automatic updates: On/Off
+- Check frequency: Daily/Weekly/Manual
+- Pre-release versions: On/Off
+- Auto-restart after update: On/Off
+```
+
+### Uninstalling Plugins
+
+**Remove Unwanted Plugins:**
+
+1. Go to Settings → Plugins → Installed
+2. Find the plugin to uninstall
+3. Click the "..." menu button
+4. Select "Uninstall"
+5. Confirm the action
+6. Plugin is removed immediately
+
+**Clean Uninstall:**
+
+To remove plugin data and settings:
+1. Enable "Remove plugin data" in confirmation dialog
+2. Confirm uninstall
+3. All plugin files and settings are deleted
+
+**Note:** Some plugins may leave configuration files for easy reinstallation. Check plugin documentation for details.
+
+### Plugin Settings
+
+**Access Plugin Settings:**
+
+**Method 1: Settings Panel**
+```
+Settings → Plugins → Installed → [Plugin] → Settings
+```
+
+**Method 2: Command Palette**
+```
+Cmd/Ctrl + Shift + P → "Plugin: [Plugin Name] Settings"
+```
+
+**Method 3: Context Menu**
+```
+Right-click plugin in installed list → Settings
+```
+
+**Common Settings:**
+
+Most plugins offer:
+- **Enable/Disable** - Toggle plugin on/off
+- **Keyboard Shortcuts** - Customize shortcuts
+- **Appearance** - Visual customization
+- **Behavior** - Feature configuration
+- **Advanced** - Developer options
+
+## Security & Permissions
+
+Lokus takes plugin security seriously with a comprehensive security model.
+
+### Sandboxed Execution
+
+**All plugins run in a secure sandbox:**
+
+- **Isolated Environment** - Plugins cannot access each other
+- **Limited System Access** - Restricted to declared permissions
+- **API-Only Access** - No direct system calls
+- **Resource Monitoring** - CPU and memory usage tracked
+- **Automatic Termination** - Misbehaving plugins are stopped
+
+### Permission System
+
+Plugins must request specific permissions, which you approve during installation.
+
+**Common Permissions:**
+
+| Permission | Description | Risk Level |
+|-----------|-------------|------------|
+| `filesystem:read` | Read files from workspace | Low |
+| `filesystem:write` | Write/modify files | Medium |
+| `network:request` | Make HTTP requests | Medium |
+| `ui:commands` | Add UI commands | Low |
+| `ui:menus` | Modify menus | Low |
+| `editor:modify` | Change editor content | Medium |
+| `settings:read` | Read app settings | Low |
+| `settings:write` | Modify app settings | Medium |
+| `clipboard:read` | Read clipboard | Low |
+| `clipboard:write` | Write to clipboard | Low |
+
+**Understanding Risk Levels:**
+
+- **Low** - Minimal risk, standard functionality
+- **Medium** - Can modify data, review carefully
+- **High** - System-level access, only trusted plugins
+
+### Reviewing Permissions
+
+**Before Installation:**
+
+1. Read the permission list carefully
+2. Understand what each permission allows
+3. Consider if the plugin needs those permissions
+4. Check reviews for security concerns
+
+**Permission Dialog Shows:**
+- Permission name and description
+- Why the plugin needs it
+- What it can access
+- Risk level indicator
+
+**Red Flags:**
+- Excessive permissions for simple functionality
+- Network access for offline-only features
+- File write access for read-only plugins
+- Unclear permission justifications
+
+### Revoking Permissions
+
+**After Installation:**
+
+You can revoke permissions without uninstalling:
+
+1. Go to Settings → Plugins → Installed
+2. Select the plugin
+3. Click "Permissions"
+4. Toggle off unwanted permissions
+5. Plugin functionality may be limited
+
+**Note:** Some plugins may not work correctly with revoked permissions. Check plugin documentation.
+
+### Security Best Practices
+
+**For Users:**
+
+1. **Install from Marketplace** - Verified and reviewed
+2. **Check Ratings** - High ratings indicate trust
+3. **Read Reviews** - Learn from other users' experiences
+4. **Review Permissions** - Understand what you're granting
+5. **Update Regularly** - Get security patches
+6. **Report Issues** - Help maintain marketplace quality
+
+**Warning Signs:**
+
+- Unverified publisher
+- No reviews or very low ratings
+- Excessive permissions
+- Poor documentation
+- Abandoned (no recent updates)
+
+### Reporting Security Issues
+
+If you discover a security issue:
+
+1. **Do Not Use the Plugin** - Disable immediately
+2. **Report to Lokus** - Use "Report Security Issue" in plugin menu
+3. **Notify Community** - Leave a review warning others
+4. **Provide Details** - Include reproduction steps
+
+## Troubleshooting
+
+### Plugin Not Loading
+
+**Symptoms:**
+- Plugin appears installed but doesn't work
+- No error message
+- Plugin commands not available
+
+**Solutions:**
+
+1. **Restart Lokus** - Sometimes needed for activation
+2. **Check Compatibility** - Verify Lokus version matches plugin requirements
+3. **Review Console** - Open Developer Console (Cmd/Ctrl + Shift + I) for errors
+4. **Reinstall Plugin** - Uninstall and reinstall
+5. **Check Dependencies** - Ensure required plugins are installed
+
+### Permission Errors
+
+**Symptoms:**
+- Error message about missing permissions
+- Plugin features not working
+- "Access denied" errors
+
+**Solutions:**
+
+1. **Review Permissions** - Check plugin permissions in settings
+2. **Grant Required Access** - Re-enable revoked permissions
+3. **Reinstall** - Uninstall and reinstall to reset permissions
+4. **Check Sandbox** - Ensure sandboxing is enabled in Lokus settings
+
+### Performance Issues
+
+**Symptoms:**
+- Lokus running slowly
+- High CPU or memory usage
+- Lag when typing
+
+**Solutions:**
+
+1. **Identify Culprit** - Disable plugins one by one to find the issue
+2. **Check Resource Usage** - Settings → Plugins → Performance Monitor
+3. **Update Plugin** - Newer versions may fix performance issues
+4. **Report Issue** - Contact plugin author
+5. **Safe Mode** - Launch in safe mode to verify plugins are the cause
+
+### Plugin Conflicts
+
+**Symptoms:**
+- Two plugins not working together
+- Unexpected behavior after installing a plugin
+- Features disappearing
+
+**Solutions:**
+
+1. **Disable One Plugin** - Test each plugin individually
+2. **Check Documentation** - Some plugins list known conflicts
+3. **Contact Authors** - Report the conflict
+4. **Choose Alternative** - Find a different plugin
+
+### Update Failures
+
+**Symptoms:**
+- Update gets stuck
+- Error during update
+- Plugin breaks after update
+
+**Solutions:**
+
+1. **Retry Update** - Sometimes network issues cause failures
+2. **Manual Update** - Uninstall and reinstall latest version
+3. **Rollback** - Restore previous version from backup
+4. **Check Changelog** - Look for breaking changes
+5. **Report Bug** - Contact plugin author
+
+### Getting Help
+
+**Support Resources:**
+
+1. **Plugin Documentation** - Check the plugin's README and docs
+2. **Lokus Community** - Ask in the community forums
+3. **Plugin Author** - Contact through marketplace listing
+4. **GitHub Issues** - Report bugs on plugin's repository
+5. **Lokus Support** - Contact Lokus support for marketplace issues
+
+**When Reporting Issues:**
+
+Include:
+- Plugin name and version
+- Lokus version and platform
+- Steps to reproduce
+- Error messages or screenshots
+- Console logs (if applicable)
+
+## Finding the Right Plugins
+
+### Recommended Starter Plugins
+
+New to plugins? Try these popular, safe options:
+
+**Productivity:**
+- **Quick Capture** - Fast note creation from anywhere
+- **Daily Note Helper** - Enhanced daily notes with templates
+- **Link Previewer** - Rich previews for external links
+
+**Editor Enhancements:**
+- **Advanced Tables** - Better table editing
+- **Code Block Plus** - Enhanced code blocks with more features
+- **Math Extensions** - Additional math equation features
+
+**Visual:**
+- **Theme Pack: Basics** - Collection of popular themes
+- **Icon Pack** - Beautiful file and folder icons
+- **Custom Fonts** - Additional font options
+
+**Tools:**
+- **Export Pro** - Export to multiple formats
+- **Backup Buddy** - Automated backups
+- **Stats Dashboard** - Writing statistics and insights
+
+### Plugin Categories in Marketplace
+
+**Browse by Category:**
+
+- **Editor** - Text editing enhancements
+- **Themes** - Visual customization
+- **Productivity** - Workflow and automation
+- **Tools** - Utilities and helpers
+- **Integration** - External service connections
+- **AI & MCP** - AI-powered features
+- **Organization** - File and note management
+- **Export** - Format conversion and export
+- **Development** - Developer tools
+- **Fun** - Entertainment and creative plugins
+
+### Plugin Discovery Tips
+
+**Find Hidden Gems:**
+
+1. **Sort by Rating** - High-quality plugins float to top
+2. **Check "Updated Recently"** - Active maintenance is important
+3. **Read "Featured"** - Curated by Lokus team
+4. **Explore Similar** - "Users also installed" suggestions
+5. **Search by Use Case** - Describe what you want to do
+
+**Example Searches:**
+- "pdf export"
+- "calendar view"
+- "git integration"
+- "grammar check"
+- "dark theme"
+
+## Plugin Development
+
+Want to create your own plugin? Lokus provides comprehensive tools for developers.
+
+**Developer Resources:**
+
+- **[Plugin Development Guide](/developer/plugin-development)** - Complete development tutorial
+- **[Plugin API Reference](/api/plugins)** - API documentation
+- **[Plugin SDK](/developer/plugin-sdk)** - Development toolkit
+- **[Example Plugins](https://github.com/lokusai/example-plugins)** - Sample code
+- **[Publishing Guide](/developer/publishing-plugins)** - Marketplace submission
+
+**Quick Start:**
+
+```bash
+# Install Lokus Plugin CLI
+npm install -g @lokus/plugin-cli
+
+# Create new plugin
+lokus-plugin create my-plugin
+
+# Start development
+cd my-plugin
+lokus-plugin dev
+
+# Package for distribution
+lokus-plugin package
+```
+
+**Why Build Plugins?**
+
+- Solve your own workflow problems
+- Share with the community
+- Learn about Lokus architecture
+- Contribute to the ecosystem
+- Monetize your work (coming soon)
+
+## Advanced Features
+
+### Plugin Collections
+
+**Create Custom Collections:**
+
+Group related plugins for easy management:
+
+1. Go to Settings → Plugins → Collections
+2. Click "New Collection"
+3. Name your collection (e.g., "Writing Tools", "Development Setup")
+4. Add plugins to the collection
+5. Enable/disable entire collections at once
+
+**Use Cases:**
+- Different setups for different projects
+- Work vs. personal plugin sets
+- Testing new plugins without affecting main setup
+
+### Plugin Profiles
+
+**Switch Between Configurations:**
+
+Different plugin sets for different contexts:
+
+1. Settings → Plugins → Profiles
+2. Create profiles (e.g., "Writing", "Coding", "Research")
+3. Configure plugins for each profile
+4. Quick-switch from status bar
+
+**Example Profiles:**
+
+**Writing Profile:**
+- Grammar check plugin
+- Distraction-free theme
+- Word count tools
+- Focus mode plugin
+
+**Development Profile:**
+- Code snippet plugins
+- Git integration
+- Developer theme
+- API documentation viewer
+
+### Plugin Keyboard Shortcuts
+
+**Customize Shortcuts:**
+
+Assign keyboard shortcuts to plugin commands:
+
+1. Settings → Keyboard Shortcuts
+2. Search for plugin command
+3. Click to edit shortcut
+4. Press new key combination
+5. Save changes
+
+**Tips:**
+- Use Cmd/Ctrl + Alt for plugin shortcuts
+- Avoid conflicts with built-in shortcuts
+- Document your custom shortcuts
+
+## FAQ
+
+### General Questions
+
+**Q: Are plugins safe to use?**
+A: Yes. All marketplace plugins undergo security review, and the sandbox system prevents malicious behavior. Always review permissions before installing.
+
+**Q: Do plugins slow down Lokus?**
+A: Well-designed plugins have minimal impact. Monitor performance in Settings → Plugins → Performance Monitor.
+
+**Q: Can I use plugins offline?**
+A: Yes. Once installed, most plugins work offline. Some features requiring network access may be unavailable.
+
+**Q: Are plugins free?**
+A: Currently, all marketplace plugins are free. Paid plugins may be introduced in the future.
+
+**Q: How many plugins can I install?**
+A: No hard limit, but performance may degrade with many active plugins (50+). Use collections and profiles to manage large plugin libraries.
+
+### Installation Questions
+
+**Q: Why can't I install a plugin?**
+A: Check compatibility requirements, ensure you have the latest Lokus version, and verify internet connection for marketplace downloads.
+
+**Q: Can I install plugins on mobile?**
+A: Mobile plugin support is limited. Check plugin documentation for mobile compatibility.
+
+**Q: Do I need to restart after installing?**
+A: Usually no. Most plugins activate immediately, but some may require a restart.
+
+### Security Questions
+
+**Q: Can plugins access my files?**
+A: Only with `filesystem:read` or `filesystem:write` permissions, and only within your workspace folder.
+
+**Q: Can plugins send data externally?**
+A: Only with `network:request` permission. Review what data plugins access before granting network permission.
+
+**Q: How do I know a plugin is safe?**
+A: Check marketplace verification, reviews, ratings, and permission requests. Avoid plugins with poor ratings or excessive permissions.
+
+### Troubleshooting Questions
+
+**Q: Plugin stopped working after Lokus update. Why?**
+A: Check for plugin updates. The plugin may need updating for Lokus compatibility.
+
+**Q: How do I reset a plugin to default settings?**
+A: Go to plugin settings → Advanced → Reset to Defaults.
+
+**Q: Can I downgrade a plugin version?**
+A: Yes. In plugin settings → Version History → Install Previous Version.
+
+## Related Features
+
+**Complementary Features:**
+
+- **[Templates](/features/templates)** - Create reusable note templates
+- **[Automation](/features/automation)** - Automate workflows without plugins
+- **[Command Palette](/features/command-palette)** - Access plugin commands quickly
+- **[Settings](/features/settings)** - Configure Lokus and plugins
+- **[Themes](/features/themes)** - Visual customization
+
+## Resources
+
+**User Resources:**
+- [Marketplace](https://marketplace.lokus.ai) - Browse all plugins
+- [Community Forums](https://community.lokus.ai) - Discuss plugins
+- [Plugin Showcase](https://lokus.ai/plugins/showcase) - Featured plugins
+
+**Developer Resources:**
+- [Plugin Development Guide](/developer/plugin-development) - Build plugins
+- [API Reference](/api/plugins) - Complete API docs
+- [SDK Documentation](/developer/plugin-sdk) - Development tools
+- [Example Plugins](https://github.com/lokusai/example-plugins) - Sample code
+- [Publishing Guide](/developer/publishing-plugins) - Submit to marketplace
+
+**Support:**
+- [Help Center](https://help.lokus.ai/plugins) - Plugin help articles
+- [Contact Support](https://lokus.ai/support) - Get assistance
+- [Report Issue](https://github.com/lokusai/lokus/issues) - Bug reports
+
+---
+
+**Ready to Extend Lokus?**
+
+Start exploring the marketplace and discover how plugins can transform your workflow. From simple productivity boosts to powerful integrations, there's a plugin for every need.
+
+```
+Settings → Plugins → Browse Marketplace
+```
+
+*Last Updated: January 2025 | Plugin System Version: 1.3.1*

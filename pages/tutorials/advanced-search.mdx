@@ -172,7 +172,7 @@ Finds notes in specific folder
 ```
 created:2024-01-15
 created:>2024-01-01
-created:&lt;2024-02-01
+created:<2024-02-01
 ```
 
 **Date modified:**
@@ -233,7 +233,7 @@ Finds words in specific order
 **Greater than/less than:**
 ```
 wordcount:>1000
-wordcount:&lt;500
+wordcount:<500
 wordcount:500..2000
 ```
 
@@ -458,7 +458,7 @@ Name: Unlinked Notes
 Query: is:orphan AND created:>7days
 
 Name: High Priority Tasks
-Query: tag:todo AND priority:high AND due:&lt;7days
+Query: tag:todo AND priority:high AND due:<7days
 
 Name: Long Form Content
 Query: wordcount:>2000 AND tag:writing
@@ -598,7 +598,7 @@ created:[2023-01-01 TO 2023-12-31]
 **Relative dates:**
 ```
 modified:>30days      # Modified in last 30 days
-created:&lt;90days       # Created more than 90 days ago
+created:<90days       # Created more than 90 days ago
 ```
 
 ---
@@ -789,7 +789,7 @@ sort: wordcount desc
 **Goal:** Find stale project notes to archive
 
 ```
-tag:project AND status:active AND modified:&lt;90days
+tag:project AND status:active AND modified:<90days
 sort: modified asc
 ```
 

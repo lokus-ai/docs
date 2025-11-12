@@ -1,0 +1,3538 @@
+---
+title: Tauri Backend API Reference
+description: Complete Tauri backend API reference for Lokus covering 100+ commands across workspace, file system, version history, search, tasks, kanban, themes, plugins, git sync, authentication, multimedia, and MCP integration.
+keywords: [lokus, tauri api, backend api, rust commands, workspace api, file system api, search api, task api, plugin api, mcp api]
+---
+
+# Tauri Backend API Reference
+
+Complete reference for all Tauri backend commands in Lokus. These commands form the bridge between the React frontend and Rust backend, providing secure access to file system, database operations, and native platform features.
+
+## Overview
+
+Lokus provides **100+ Tauri commands** organized into 12 major categories:
+
+| Category | Commands | Purpose |
+|----------|----------|---------|
+| [Workspace](#workspace-commands) | 11 | Workspace management and sessions |
+| [File System](#file-system-commands) | 10 | File and directory operations |
+| [Version History](#version-history-commands) | 5 | File versioning and restoration |
+| [Search](#search-commands) | 3 | Full-text search across workspace |
+| [Task Management](#task-management-commands) | 9 | Task creation and tracking |
+| [Kanban](#kanban-commands) | 10 | Kanban board operations |
+| [Theme System](#theme-commands) | 7 | Theme management and customization |
+| [Plugin System](#plugin-commands) | 12 | Plugin lifecycle and management |
+| [Git Sync](#git-sync-commands) | 8 | Git integration for sync |
+| [Authentication](#authentication-commands) | 7 | OAuth and user authentication |
+| [Multimedia](#multimedia-commands) | 10 | Media processing and OCR |
+| [MCP Integration](#mcp-commands) | 6 | Model Context Protocol server |
+
+**All commands are async** and return `Promise<T>` or `Promise<Result<T, string>>` in TypeScript.
+
+---
+
+## Usage Pattern
+
+### From React/TypeScript
+
+```typescript
+import { invoke } from '@tauri-apps/api/core'
+
+// Basic invocation
+const result = await invoke<string>('command_name', {
+  param1: 'value',
+  param2: 123
+})
+
+// With error handling
+try {
+  const files = await invoke<FileEntry[]>('read_workspace_files', {
+    workspacePath: '/path/to/workspace'
+  })
+} catch (error) {
+  console.error('Command failed:', error)
+}
+```
+
+### TypeScript Type Definitions
+
+```typescript
+// Core types used across commands
+interface FileEntry {
+  name: string
+  path: string
+  is_directory: boolean
+  size: number
+  created?: number
+  modified?: number
+  children?: FileEntry[]
+}
+
+interface SessionState {
+  open_tabs: string[]
+  expanded_folders: string[]
+}
+
+interface WorkspaceItem {
+  path: string
+  name: string
+}
+```
+
+---
+
+## Workspace Commands
+
+Commands for workspace initialization, validation, and session management.
+
+### save_last_workspace
+
+Save the last opened workspace path for auto-loading on app launch.
+
+```rust
+#[tauri::command]
+fn save_last_workspace(app: AppHandle, path: String)
+```
+
+**Parameters:**
+- `app: AppHandle` - Tauri app handle (managed automatically)
+- `path: String` - Absolute path to workspace directory
+
+**Returns:** `void`
+
+**Storage:** Saves to `.settings.dat` Tauri store
+
+**Example:**
+
+```typescript
+await invoke('save_last_workspace', {
+  path: '/Users/john/Documents/MyWorkspace'
+})
+```
+
+---
+
+### clear_last_workspace
+
+Clear the saved workspace path from settings.
+
+```rust
+#[tauri::command]
+fn clear_last_workspace(app: AppHandle)
+```
+
+**Parameters:**
+- `app: AppHandle` - Tauri app handle
+
+**Returns:** `void`
+
+**Example:**
+
+```typescript
+await invoke('clear_last_workspace')
+```
+
+---
+
+### validate_workspace_path
+
+Validate if a path is a valid Lokus workspace or can be initialized as one.
+
+```rust
+#[tauri::command]
+fn validate_workspace_path(path: String) -> bool
+```
+
+**Parameters:**
+- `path: String` - Path to validate
+
+**Returns:** `bool` - `true` if valid workspace or can be initialized
+
+**Validation checks:**
+1. Path exists and is a directory
+2. Path is readable
+3. Either contains `.lokus` folder or can create one (write permissions)
+
+**Example:**
+
+```typescript
+const isValid = await invoke<boolean>('validate_workspace_path', {
+  path: '/Users/john/NewWorkspace'
+})
+
+if (isValid) {
+  // Initialize workspace
+}
+```
+
+---
+
+### get_validated_workspace_path
+
+Get the last saved workspace path if it's still valid.
+
+```rust
+#[tauri::command]
+fn get_validated_workspace_path(app: AppHandle) -> Option<String>
+```
+
+**Parameters:**
+- `app: AppHandle` - Tauri app handle
+
+**Returns:** `Option<String>` - Validated workspace path or `null`
+
+**Behavior:**
+- Retrieves last workspace from settings
+- Validates path still exists and is accessible
+- Auto-clears invalid paths from settings
+
+**Example:**
+
+```typescript
+const workspacePath = await invoke<string | null>('get_validated_workspace_path')
+
+if (workspacePath) {
+  // Load workspace
+} else {
+  // Show launcher
+}
+```
+
+---
+
+### clear_all_workspace_data
+
+Clear all workspace-related data including sessions and settings (development mode).
+
+```rust
+#[tauri::command]
+fn clear_all_workspace_data(app: AppHandle)
+```
+
+**Parameters:**
+- `app: AppHandle` - Tauri app handle
+
+**Returns:** `void`
+
+**Clears:**
+- Last workspace path
+- All session states (open tabs, expanded folders)
+
+**Example:**
+
+```typescript
+// Development reset
+await invoke('clear_all_workspace_data')
+```
+
+---
+
+### is_development_mode
+
+Check if app is running in development mode.
+
+```rust
+#[tauri::command]
+fn is_development_mode() -> bool
+```
+
+**Returns:** `bool` - `true` if `debug_assertions` enabled
+
+**Example:**
+
+```typescript
+const isDev = await invoke<boolean>('is_development_mode')
+
+if (isDev) {
+  console.log('Running in development mode')
+}
+```
+
+---
+
+### force_launcher_mode
+
+Force the app to show launcher by clearing all workspace data.
+
+```rust
+#[tauri::command]
+fn force_launcher_mode(app: AppHandle) -> bool
+```
+
+**Parameters:**
+- `app: AppHandle` - Tauri app handle
+
+**Returns:** `bool` - Always `true`
+
+**Example:**
+
+```typescript
+await invoke('force_launcher_mode')
+// App will show launcher on next start
+```
+
+---
+
+### save_session_state
+
+Save current workspace session state (open tabs, expanded folders).
+
+```rust
+#[tauri::command]
+fn save_session_state(
+  app: AppHandle,
+  workspace_path: String,
+  open_tabs: Vec<String>,
+  expanded_folders: Vec<String>
+)
+```
+
+**Parameters:**
+- `app: AppHandle` - Tauri app handle
+- `workspace_path: String` - Workspace path (used as key hash)
+- `open_tabs: Vec<String>` - Array of open file paths
+- `expanded_folders: Vec<String>` - Array of expanded folder paths
+
+**Returns:** `void`
+
+**Storage:** Per-workspace using hashed path as key
+
+**Example:**
+
+```typescript
+await invoke('save_session_state', {
+  workspacePath: '/path/to/workspace',
+  openTabs: ['/path/to/file1.md', '/path/to/file2.md'],
+  expandedFolders: ['/path/to/folder1', '/path/to/folder2']
+})
+```
+
+---
+
+### load_session_state
+
+Load saved session state for a workspace.
+
+```rust
+#[tauri::command]
+fn load_session_state(
+  app: AppHandle,
+  workspace_path: String
+) -> Option<SessionState>
+```
+
+**Parameters:**
+- `app: AppHandle` - Tauri app handle
+- `workspace_path: String` - Workspace path
+
+**Returns:** `Option<SessionState>` - Session data or `null`
+
+**Example:**
+
+```typescript
+interface SessionState {
+  open_tabs: string[]
+  expanded_folders: string[]
+}
+
+const session = await invoke<SessionState | null>('load_session_state', {
+  workspacePath: '/path/to/workspace'
+})
+
+if (session) {
+  // Restore open tabs and folders
+}
+```
+
+---
+
+### get_all_workspaces
+
+Get list of all known workspaces.
+
+```rust
+#[tauri::command]
+fn get_all_workspaces(app: AppHandle) -> Vec<WorkspaceItem>
+```
+
+**Parameters:**
+- `app: AppHandle` - Tauri app handle
+
+**Returns:** `Vec<WorkspaceItem>` - Array of workspace items
+
+**Note:** Currently returns only the last workspace. Full workspace history tracking is planned.
+
+**Example:**
+
+```typescript
+interface WorkspaceItem {
+  path: string
+  name: string
+}
+
+const workspaces = await invoke<WorkspaceItem[]>('get_all_workspaces')
+
+workspaces.forEach(ws => {
+  console.log(`${ws.name}: ${ws.path}`)
+})
+```
+
+---
+
+### open_workspace_window
+
+Open a new workspace window (multi-window support).
+
+```rust
+#[tauri::command]
+fn open_workspace_window(app: AppHandle, workspace_path: String)
+```
+
+**Parameters:**
+- `app: AppHandle` - Tauri app handle
+- `workspace_path: String` - Path to workspace
+
+**Returns:** `void`
+
+**Behavior:**
+- Creates new webview window
+- Loads workspace UI
+- Initializes workspace context
+
+**Example:**
+
+```typescript
+await invoke('open_workspace_window', {
+  workspacePath: '/path/to/workspace'
+})
+```
+
+---
+
+### open_preferences_window
+
+Open preferences/settings window.
+
+```rust
+#[tauri::command]
+fn open_preferences_window(app: AppHandle)
+```
+
+**Example:**
+
+```typescript
+await invoke('open_preferences_window')
+```
+
+---
+
+## File System Commands
+
+Secure file operations with path validation and workspace boundaries.
+
+### read_workspace_files
+
+Recursively read all files and folders in a workspace.
+
+```rust
+#[tauri::command]
+pub fn read_workspace_files(workspace_path: String) -> Result<Vec<FileEntry>, String>
+```
+
+**Parameters:**
+- `workspace_path: String` - Absolute path to workspace root
+
+**Returns:** `Result<Vec<FileEntry>, String>` - File tree or error
+
+**Features:**
+- Recursive directory traversal (max depth: 10)
+- Excludes: `.lokus`, `node_modules`, `.git`, `.DS_Store`
+- Skips symbolic links (prevents infinite loops)
+- Includes file metadata (size, created, modified)
+- Sorted: directories first, then alphabetically
+
+**Example:**
+
+```typescript
+interface FileEntry {
+  name: string
+  path: string
+  is_directory: boolean
+  size: number
+  created?: number
+  modified?: number
+  children?: FileEntry[]
+}
+
+const files = await invoke<FileEntry[]>('read_workspace_files', {
+  workspacePath: '/path/to/workspace'
+})
+
+console.log(`Found ${files.length} top-level items`)
+```
+
+---
+
+### read_file_content
+
+Read text content from a file.
+
+```rust
+#[tauri::command]
+pub fn read_file_content(path: String) -> Result<String, String>
+```
+
+**Parameters:**
+- `path: String` - Absolute file path
+
+**Returns:** `Result<String, String>` - File content or error
+
+**Example:**
+
+```typescript
+const content = await invoke<string>('read_file_content', {
+  path: '/path/to/file.md'
+})
+
+console.log(content)
+```
+
+---
+
+### write_file_content
+
+Write text content to a file (creates or overwrites).
+
+```rust
+#[tauri::command]
+pub fn write_file_content(path: String, content: String) -> Result<(), String>
+```
+
+**Parameters:**
+- `path: String` - Absolute file path
+- `content: String` - Content to write
+
+**Returns:** `Result<(), String>` - Success or error
+
+**Note:** Does NOT automatically create version history. Use `save_file_version_manual` separately if needed.
+
+**Example:**
+
+```typescript
+await invoke('write_file_content', {
+  path: '/path/to/file.md',
+  content: '# New Content\n\nHello world!'
+})
+```
+
+---
+
+### save_file_version_manual
+
+Manually save a file version to version history.
+
+```rust
+#[tauri::command]
+pub fn save_file_version_manual(path: String, content: String) -> Result<(), String>
+```
+
+**Parameters:**
+- `path: String` - Absolute file path
+- `content: String` - Content to version
+
+**Returns:** `Result<(), String>` - Success or error
+
+**Storage:** `.lokus/backups/{filename}/{timestamp}.md.gz`
+
+**Example:**
+
+```typescript
+// Save file and create version
+await invoke('write_file_content', { path, content })
+await invoke('save_file_version_manual', { path, content })
+```
+
+---
+
+### create_file_in_workspace
+
+Create a new empty file in the workspace.
+
+```rust
+#[tauri::command]
+pub fn create_file_in_workspace(
+  workspace_path: String,
+  name: String
+) -> Result<String, String>
+```
+
+**Parameters:**
+- `workspace_path: String` - Workspace root path
+- `name: String` - File name (can include subdirectory path)
+
+**Returns:** `Result<String, String>` - Full file path or error
+
+**Example:**
+
+```typescript
+const newFilePath = await invoke<string>('create_file_in_workspace', {
+  workspacePath: '/path/to/workspace',
+  name: 'notes/meeting.md'
+})
+
+console.log('Created:', newFilePath)
+```
+
+---
+
+### create_folder_in_workspace
+
+Create a new folder in the workspace.
+
+```rust
+#[tauri::command]
+pub fn create_folder_in_workspace(
+  workspace_path: String,
+  name: String
+) -> Result<(), String>
+```
+
+**Parameters:**
+- `workspace_path: String` - Workspace root path
+- `name: String` - Folder name
+
+**Returns:** `Result<(), String>` - Success or error
+
+**Example:**
+
+```typescript
+await invoke('create_folder_in_workspace', {
+  workspacePath: '/path/to/workspace',
+  name: 'projects'
+})
+```
+
+---
+
+### rename_file
+
+Rename a file or folder.
+
+```rust
+#[tauri::command]
+pub fn rename_file(path: String, new_name: String) -> Result<String, String>
+```
+
+**Parameters:**
+- `path: String` - Current path
+- `new_name: String` - New name (not full path)
+
+**Returns:** `Result<String, String>` - New full path or error
+
+**Validation:**
+- Source must exist
+- New name cannot be empty
+- Destination cannot already exist
+
+**Example:**
+
+```typescript
+const newPath = await invoke<string>('rename_file', {
+  path: '/path/to/old-name.md',
+  newName: 'new-name.md'
+})
+```
+
+---
+
+### move_file
+
+Move a file or folder to a different directory.
+
+```rust
+#[tauri::command]
+pub fn move_file(
+  source_path: String,
+  destination_dir: String
+) -> Result<(), String>
+```
+
+**Parameters:**
+- `source_path: String` - Source file/folder path
+- `destination_dir: String` - Destination directory path
+
+**Returns:** `Result<(), String>` - Success or error
+
+**Validation:**
+- Destination cannot have file with same name
+- Preserves original filename
+
+**Example:**
+
+```typescript
+await invoke('move_file', {
+  sourcePath: '/workspace/file.md',
+  destinationDir: '/workspace/archive'
+})
+```
+
+---
+
+### delete_file
+
+Delete a file or folder (recursive for folders).
+
+```rust
+#[tauri::command]
+pub fn delete_file(path: String) -> Result<(), String>
+```
+
+**Parameters:**
+- `path: String` - Path to delete
+
+**Returns:** `Result<(), String>` - Success or error
+
+**Warning:** Permanent deletion, no trash/recycle bin.
+
+**Example:**
+
+```typescript
+await invoke('delete_file', {
+  path: '/path/to/file.md'
+})
+```
+
+---
+
+### reveal_in_finder
+
+Open file/folder in system file manager (Finder/Explorer).
+
+```rust
+#[tauri::command]
+pub fn reveal_in_finder(path: String) -> Result<(), String>
+```
+
+**Parameters:**
+- `path: String` - Path to reveal
+
+**Returns:** `Result<(), String>` - Success or error
+
+**Platform support:** macOS, Windows, Linux
+
+**Example:**
+
+```typescript
+await invoke('reveal_in_finder', {
+  path: '/path/to/file.md'
+})
+```
+
+---
+
+### open_terminal
+
+Open system terminal at specified path.
+
+```rust
+#[tauri::command]
+pub fn open_terminal(path: String) -> Result<(), String>
+```
+
+**Parameters:**
+- `path: String` - Directory path
+
+**Returns:** `Result<(), String>` - Success or error
+
+**Platform support:** macOS (Terminal.app), Windows (cmd), Linux (default terminal)
+
+**Example:**
+
+```typescript
+await invoke('open_terminal', {
+  path: '/path/to/workspace'
+})
+```
+
+---
+
+## Version History Commands
+
+File versioning, restoration, and diff operations.
+
+### save_version
+
+Save a file version with optional action label.
+
+```rust
+#[tauri::command]
+pub fn save_version(
+  workspace_path: String,
+  file_path: String,
+  content: String,
+  action: Option<String>
+) -> Result<FileVersion, String>
+```
+
+**Parameters:**
+- `workspace_path: String` - Workspace root
+- `file_path: String` - Relative file path from workspace
+- `content: String` - Content to version
+- `action: Option<String>` - Action label (e.g., "auto_save", "manual_save")
+
+**Returns:** `Result<FileVersion, String>` - Version info or error
+
+**Storage:**
+- Location: `.lokus/backups/{filename}/{timestamp}.md.gz`
+- Compression: gzip
+- Metadata: `metadata.json` in backup directory
+
+**Example:**
+
+```typescript
+interface FileVersion {
+  timestamp: string
+  size: number
+  lines: number
+  action: string
+  preview: string
+}
+
+const version = await invoke<FileVersion>('save_version', {
+  workspacePath: '/path/to/workspace',
+  filePath: 'notes/meeting.md',
+  content: '# Meeting Notes\n...',
+  action: 'manual_save'
+})
+```
+
+---
+
+### get_file_versions
+
+Get all versions for a file.
+
+```rust
+#[tauri::command]
+pub fn get_file_versions(
+  workspace_path: String,
+  file_path: String
+) -> Result<Vec<FileVersion>, String>
+```
+
+**Parameters:**
+- `workspace_path: String` - Workspace root
+- `file_path: String` - Relative file path
+
+**Returns:** `Result<Vec<FileVersion>, String>` - Sorted versions (newest first)
+
+**Example:**
+
+```typescript
+const versions = await invoke<FileVersion[]>('get_file_versions', {
+  workspacePath: '/path/to/workspace',
+  filePath: 'notes/meeting.md'
+})
+
+console.log(`Found ${versions.length} versions`)
+```
+
+---
+
+### get_version_content
+
+Get content of a specific version.
+
+```rust
+#[tauri::command]
+pub fn get_version_content(
+  workspace_path: String,
+  file_path: String,
+  timestamp: String
+) -> Result<String, String>
+```
+
+**Parameters:**
+- `workspace_path: String` - Workspace root
+- `file_path: String` - Relative file path
+- `timestamp: String` - Version timestamp
+
+**Returns:** `Result<String, String>` - Decompressed content or error
+
+**Example:**
+
+```typescript
+const content = await invoke<string>('get_version_content', {
+  workspacePath: '/path/to/workspace',
+  filePath: 'notes/meeting.md',
+  timestamp: '2025-01-15T10-30-00.123'
+})
+```
+
+---
+
+### get_diff
+
+Get line-by-line diff between two versions.
+
+```rust
+#[tauri::command]
+pub fn get_diff(
+  workspace_path: String,
+  file_path: String,
+  old_timestamp: String,
+  new_timestamp: String
+) -> Result<Vec<DiffLine>, String>
+```
+
+**Parameters:**
+- `workspace_path: String` - Workspace root
+- `file_path: String` - Relative file path
+- `old_timestamp: String` - Older version timestamp
+- `new_timestamp: String` - Newer version timestamp
+
+**Returns:** `Result<Vec<DiffLine>, String>` - Line-by-line diff
+
+**Example:**
+
+```typescript
+interface DiffLine {
+  line_number_old?: number
+  line_number_new?: number
+  content: string
+  change_type: 'add' | 'delete' | 'unchanged'
+}
+
+const diff = await invoke<DiffLine[]>('get_diff', {
+  workspacePath: '/path/to/workspace',
+  filePath: 'notes/meeting.md',
+  oldTimestamp: '2025-01-15T10-00-00.123',
+  newTimestamp: '2025-01-15T10-30-00.456'
+})
+```
+
+---
+
+### restore_version
+
+Restore a file to a specific version.
+
+```rust
+#[tauri::command]
+pub fn restore_version(
+  workspace_path: String,
+  file_path: String,
+  timestamp: String
+) -> Result<(), String>
+```
+
+**Parameters:**
+- `workspace_path: String` - Workspace root
+- `file_path: String` - Relative file path
+- `timestamp: String` - Version timestamp to restore
+
+**Returns:** `Result<(), String>` - Success or error
+
+**Behavior:**
+- Creates new version of current content before restoring
+- Restores selected version to active file
+
+**Example:**
+
+```typescript
+await invoke('restore_version', {
+  workspacePath: '/path/to/workspace',
+  filePath: 'notes/meeting.md',
+  timestamp: '2025-01-15T10-00-00.123'
+})
+```
+
+---
+
+### cleanup_old_versions
+
+Clean up old versions based on retention policy.
+
+```rust
+#[tauri::command]
+pub fn cleanup_old_versions(
+  workspace_path: String,
+  file_path: String,
+  max_versions: Option<usize>,
+  retention_days: Option<i64>
+) -> Result<usize, String>
+```
+
+**Parameters:**
+- `workspace_path: String` - Workspace root
+- `file_path: String` - Relative file path
+- `max_versions: Option<usize>` - Max versions to keep (default: 50)
+- `retention_days: Option<i64>` - Keep versions for N days (default: 30)
+
+**Returns:** `Result<usize, String>` - Number of versions deleted
+
+**Example:**
+
+```typescript
+const deleted = await invoke<number>('cleanup_old_versions', {
+  workspacePath: '/path/to/workspace',
+  filePath: 'notes/meeting.md',
+  maxVersions: 20,
+  retentionDays: 7
+})
+
+console.log(`Deleted ${deleted} old versions`)
+```
+
+---
+
+## Search Commands
+
+Full-text search across workspace files with regex support.
+
+### search_in_files
+
+Search for text across multiple files in workspace.
+
+```rust
+#[tauri::command]
+pub async fn search_in_files(
+  query: String,
+  workspace_path: Option<String>,
+  options: Option<SearchOptions>
+) -> Result<Vec<SearchResult>, String>
+```
+
+**Parameters:**
+- `query: String` - Search query
+- `workspace_path: Option<String>` - Workspace path (default: current directory)
+- `options: Option<SearchOptions>` - Search options
+
+**SearchOptions:**
+
+```typescript
+interface SearchOptions {
+  caseSensitive?: boolean      // Default: false
+  wholeWord?: boolean           // Default: false
+  regex?: boolean               // Default: false
+  fileTypes?: string[]          // Default: ['md', 'txt']
+  maxResults?: number           // Default: 100
+  contextLines?: number         // Default: 2
+}
+```
+
+**Returns:** `Result<Vec<SearchResult>, String>`
+
+**SearchResult:**
+
+```typescript
+interface SearchResult {
+  file: string              // Absolute file path
+  fileName: string          // File name only
+  matches: SearchMatch[]    // Match details
+  matchCount: number        // Total matches in file
+}
+
+interface SearchMatch {
+  line: number              // Line number (1-indexed)
+  column: number            // Column number (0-indexed)
+  text: string              // Full line text
+  match: string             // Matched text
+  context: ContextLine[]    // Surrounding lines
+}
+
+interface ContextLine {
+  lineNumber: number
+  text: string
+  isMatch: boolean          // true for match line
+}
+```
+
+**Performance:**
+- Parallel file traversal
+- Compiled regex patterns
+- Skips: `target/`, `node_modules/`, `.git/`, `dist/`, `build/`, `.cache/`
+- Max depth: 10
+
+**Example:**
+
+```typescript
+const results = await invoke<SearchResult[]>('search_in_files', {
+  query: 'TODO',
+  workspacePath: '/path/to/workspace',
+  options: {
+    caseSensitive: false,
+    fileTypes: ['md', 'txt', 'js'],
+    maxResults: 50,
+    contextLines: 2
+  }
+})
+
+results.forEach(result => {
+  console.log(`${result.fileName}: ${result.matchCount} matches`)
+  result.matches.forEach(match => {
+    console.log(`  Line ${match.line}: ${match.text}`)
+  })
+})
+```
+
+---
+
+### search_in_file
+
+Search within a single file.
+
+```rust
+#[tauri::command]
+pub fn search_in_file(
+  file_path: String,
+  query: String,
+  options: Option<SearchOptions>
+) -> Result<Vec<SearchMatch>, String>
+```
+
+**Parameters:**
+- `file_path: String` - File to search
+- `query: String` - Search query
+- `options: Option<SearchOptions>` - Search options
+
+**Returns:** `Result<Vec<SearchMatch>, String>` - Matches in file
+
+**Example:**
+
+```typescript
+const matches = await invoke<SearchMatch[]>('search_in_file', {
+  filePath: '/path/to/file.md',
+  query: 'important',
+  options: { caseSensitive: false }
+})
+```
+
+---
+
+### build_search_index
+
+Build search index for faster searching (future feature).
+
+```rust
+#[tauri::command]
+pub fn build_search_index(workspace_path: String) -> Result<(), String>
+```
+
+**Status:** Planned feature for performance optimization
+
+**Parameters:**
+- `workspace_path: String` - Workspace to index
+
+**Returns:** `Result<(), String>` - Success or error
+
+---
+
+## Task Management Commands
+
+Task creation, tracking, and linking to notes/kanban.
+
+### create_task
+
+Create a new task.
+
+```rust
+#[tauri::command]
+pub fn create_task(
+  app: AppHandle,
+  title: String,
+  description: Option<String>,
+  note_path: Option<String>,
+  note_position: Option<i32>,
+  tags: Vec<String>
+) -> Result<Task, String>
+```
+
+**Parameters:**
+- `app: AppHandle` - Tauri app handle
+- `title: String` - Task title
+- `description: Option<String>` - Task description
+- `note_path: Option<String>` - Link to note file
+- `note_position: Option<i32>` - Position in note
+- `tags: Vec<String>` - Task tags
+
+**Returns:** `Result<Task, String>` - Created task
+
+**Task:**
+
+```typescript
+interface Task {
+  id: string
+  title: string
+  description?: string
+  status: TaskStatus
+  priority: number
+  created_at: number
+  updated_at: number
+  note_path?: string
+  note_position?: number
+  tags: string[]
+  kanban_board?: string
+  kanban_column?: string
+  kanban_card_id?: string
+}
+
+type TaskStatus =
+  | 'todo'
+  | 'in-progress'
+  | 'urgent'
+  | 'needs-info'
+  | 'completed'
+  | 'cancelled'
+  | 'delegated'
+```
+
+**Example:**
+
+```typescript
+const task = await invoke<Task>('create_task', {
+  title: 'Review documentation',
+  description: 'Check all API examples',
+  notePath: '/workspace/notes/project.md',
+  notePosition: 42,
+  tags: ['documentation', 'review']
+})
+```
+
+---
+
+### get_all_tasks
+
+Get all tasks.
+
+```rust
+#[tauri::command]
+pub fn get_all_tasks(app: AppHandle) -> Result<Vec<Task>, String>
+```
+
+**Returns:** `Result<Vec<Task>, String>` - All tasks
+
+**Example:**
+
+```typescript
+const tasks = await invoke<Task[]>('get_all_tasks')
+console.log(`Total tasks: ${tasks.length}`)
+```
+
+---
+
+### get_task
+
+Get a specific task by ID.
+
+```rust
+#[tauri::command]
+pub fn get_task(app: AppHandle, task_id: String) -> Result<Task, String>
+```
+
+**Parameters:**
+- `task_id: String` - Task ID
+
+**Returns:** `Result<Task, String>` - Task or error
+
+**Example:**
+
+```typescript
+const task = await invoke<Task>('get_task', {
+  taskId: 'abc123'
+})
+```
+
+---
+
+### update_task
+
+Update a task.
+
+```rust
+#[tauri::command]
+pub fn update_task(app: AppHandle, task: Task) -> Result<(), String>
+```
+
+**Parameters:**
+- `task: Task` - Updated task object
+
+**Returns:** `Result<(), String>` - Success or error
+
+**Example:**
+
+```typescript
+task.status = 'completed'
+await invoke('update_task', { task })
+```
+
+---
+
+### delete_task
+
+Delete a task.
+
+```rust
+#[tauri::command]
+pub fn delete_task(app: AppHandle, task_id: String) -> Result<(), String>
+```
+
+**Parameters:**
+- `task_id: String` - Task ID
+
+**Returns:** `Result<(), String>` - Success or error
+
+**Example:**
+
+```typescript
+await invoke('delete_task', { taskId: 'abc123' })
+```
+
+---
+
+### get_tasks_by_status
+
+Get tasks filtered by status.
+
+```rust
+#[tauri::command]
+pub fn get_tasks_by_status(
+  app: AppHandle,
+  status: TaskStatus
+) -> Result<Vec<Task>, String>
+```
+
+**Parameters:**
+- `status: TaskStatus` - Task status to filter
+
+**Returns:** `Result<Vec<Task>, String>` - Filtered tasks
+
+**Example:**
+
+```typescript
+const todoTasks = await invoke<Task[]>('get_tasks_by_status', {
+  status: 'todo'
+})
+```
+
+---
+
+### get_tasks_by_note
+
+Get tasks linked to a specific note.
+
+```rust
+#[tauri::command]
+pub fn get_tasks_by_note(
+  app: AppHandle,
+  note_path: String
+) -> Result<Vec<Task>, String>
+```
+
+**Parameters:**
+- `note_path: String` - Note file path
+
+**Returns:** `Result<Vec<Task>, String>` - Linked tasks
+
+**Example:**
+
+```typescript
+const tasks = await invoke<Task[]>('get_tasks_by_note', {
+  notePath: '/workspace/notes/project.md'
+})
+```
+
+---
+
+### bulk_update_task_status
+
+Update status for multiple tasks at once.
+
+```rust
+#[tauri::command]
+pub fn bulk_update_task_status(
+  app: AppHandle,
+  task_ids: Vec<String>,
+  status: TaskStatus
+) -> Result<(), String>
+```
+
+**Parameters:**
+- `task_ids: Vec<String>` - Array of task IDs
+- `status: TaskStatus` - New status
+
+**Returns:** `Result<(), String>` - Success or error
+
+**Example:**
+
+```typescript
+await invoke('bulk_update_task_status', {
+  taskIds: ['id1', 'id2', 'id3'],
+  status: 'completed'
+})
+```
+
+---
+
+### extract_tasks_from_content
+
+Extract task checkboxes from markdown content.
+
+```rust
+#[tauri::command]
+pub fn extract_tasks_from_content(
+  app: AppHandle,
+  content: String,
+  note_path: String
+) -> Result<Vec<Task>, String>
+```
+
+**Parameters:**
+- `content: String` - Markdown content
+- `note_path: String` - Source note path
+
+**Returns:** `Result<Vec<Task>, String>` - Extracted tasks
+
+**Markdown patterns recognized:**
+- `- [ ] Task title`
+- `- [x] Completed task`
+
+**Example:**
+
+```typescript
+const markdown = `
+- [ ] Review code
+- [x] Write tests
+- [ ] Deploy
+`
+
+const tasks = await invoke<Task[]>('extract_tasks_from_content', {
+  content: markdown,
+  notePath: '/workspace/todo.md'
+})
+```
+
+---
+
+### link_task_to_kanban
+
+Link a task to a kanban board.
+
+```rust
+#[tauri::command]
+pub fn link_task_to_kanban(
+  app: AppHandle,
+  task_id: String,
+  board_path: String,
+  column_id: String,
+  card_id: String
+) -> Result<(), String>
+```
+
+**Parameters:**
+- `task_id: String` - Task ID
+- `board_path: String` - Kanban board file path
+- `column_id: String` - Column ID in board
+- `card_id: String` - Card ID in column
+
+**Returns:** `Result<(), String>` - Success or error
+
+**Example:**
+
+```typescript
+await invoke('link_task_to_kanban', {
+  taskId: 'task123',
+  boardPath: '/workspace/project.kanban',
+  columnId: 'in-progress',
+  cardId: 'card456'
+})
+```
+
+---
+
+## Kanban Commands
+
+Kanban board operations for visual task management.
+
+### list_kanban_boards
+
+List all kanban boards in workspace.
+
+```rust
+#[tauri::command]
+pub fn list_kanban_boards(workspace_path: String) -> Result<Vec<BoardInfo>, String>
+```
+
+**Parameters:**
+- `workspace_path: String` - Workspace path
+
+**Returns:** `Result<Vec<BoardInfo>, String>` - Board list
+
+**BoardInfo:**
+
+```typescript
+interface BoardInfo {
+  name: string
+  path: string
+  card_count: number
+  column_count: number
+  modified: string
+}
+```
+
+**Example:**
+
+```typescript
+const boards = await invoke<BoardInfo[]>('list_kanban_boards', {
+  workspacePath: '/path/to/workspace'
+})
+```
+
+---
+
+### create_kanban_board
+
+Create a new kanban board.
+
+```rust
+#[tauri::command]
+pub fn create_kanban_board(
+  workspace_path: String,
+  name: String,
+  columns: Vec<String>
+) -> Result<String, String>
+```
+
+**Parameters:**
+- `workspace_path: String` - Workspace path
+- `name: String` - Board name
+- `columns: Vec<String>` - Column names
+
+**Returns:** `Result<String, String>` - Board file path
+
+**Storage:** `.kanban` files in workspace root
+
+**Example:**
+
+```typescript
+const boardPath = await invoke<string>('create_kanban_board', {
+  workspacePath: '/workspace',
+  name: 'Project Tasks',
+  columns: ['To Do', 'In Progress', 'Review', 'Done']
+})
+```
+
+---
+
+### open_kanban_board
+
+Load a kanban board.
+
+```rust
+#[tauri::command]
+pub fn open_kanban_board(board_path: String) -> Result<KanbanBoard, String>
+```
+
+**Parameters:**
+- `board_path: String` - Board file path
+
+**Returns:** `Result<KanbanBoard, String>` - Board data
+
+**KanbanBoard:**
+
+```typescript
+interface KanbanBoard {
+  version: string
+  name: string
+  columns: Record<string, KanbanColumn>
+  settings: BoardSettings
+  metadata: BoardMetadata
+}
+
+interface KanbanColumn {
+  name: string
+  order: number
+  cards: KanbanCard[]
+}
+
+interface KanbanCard {
+  id: string
+  title: string
+  description?: string
+  tags: string[]
+  assignee?: string
+  priority: string
+  due_date?: string
+  linked_notes: string[]
+  checklist: ChecklistItem[]
+  created: string
+  modified: string
+}
+```
+
+**Example:**
+
+```typescript
+const board = await invoke<KanbanBoard>('open_kanban_board', {
+  boardPath: '/workspace/project.kanban'
+})
+```
+
+---
+
+### save_kanban_board
+
+Save kanban board changes.
+
+```rust
+#[tauri::command]
+pub fn save_kanban_board(
+  board_path: String,
+  board: KanbanBoard
+) -> Result<(), String>
+```
+
+**Parameters:**
+- `board_path: String` - Board file path
+- `board: KanbanBoard` - Board data
+
+**Returns:** `Result<(), String>` - Success or error
+
+**Example:**
+
+```typescript
+await invoke('save_kanban_board', {
+  boardPath: '/workspace/project.kanban',
+  board: updatedBoard
+})
+```
+
+---
+
+### delete_kanban_board
+
+Delete a kanban board.
+
+```rust
+#[tauri::command]
+pub fn delete_kanban_board(board_path: String) -> Result<(), String>
+```
+
+**Parameters:**
+- `board_path: String` - Board file path
+
+**Returns:** `Result<(), String>` - Success or error
+
+**Example:**
+
+```typescript
+await invoke('delete_kanban_board', {
+  boardPath: '/workspace/old-project.kanban'
+})
+```
+
+---
+
+### rename_kanban_board
+
+Rename a kanban board.
+
+```rust
+#[tauri::command]
+pub fn rename_kanban_board(
+  board_path: String,
+  new_name: String
+) -> Result<String, String>
+```
+
+**Parameters:**
+- `board_path: String` - Current board path
+- `new_name: String` - New board name
+
+**Returns:** `Result<String, String>` - New board path
+
+**Example:**
+
+```typescript
+const newPath = await invoke<string>('rename_kanban_board', {
+  boardPath: '/workspace/project.kanban',
+  newName: 'Q1 Project Tasks'
+})
+```
+
+---
+
+### add_card_to_board
+
+Add a card to a kanban board column.
+
+```rust
+#[tauri::command]
+pub fn add_card_to_board(
+  board_path: String,
+  column_id: String,
+  card: KanbanCard
+) -> Result<(), String>
+```
+
+**Parameters:**
+- `board_path: String` - Board file path
+- `column_id: String` - Target column ID
+- `card: KanbanCard` - Card to add
+
+**Returns:** `Result<(), String>` - Success or error
+
+**Example:**
+
+```typescript
+const newCard: KanbanCard = {
+  id: crypto.randomUUID(),
+  title: 'Implement feature X',
+  priority: 'high',
+  tags: ['feature', 'backend'],
+  created: new Date().toISOString(),
+  modified: new Date().toISOString(),
+  // ... other fields
+}
+
+await invoke('add_card_to_board', {
+  boardPath: '/workspace/project.kanban',
+  columnId: 'todo',
+  card: newCard
+})
+```
+
+---
+
+### move_card_between_columns
+
+Move a card from one column to another.
+
+```rust
+#[tauri::command]
+pub fn move_card_between_columns(
+  board_path: String,
+  card_id: String,
+  from_column: String,
+  to_column: String
+) -> Result<(), String>
+```
+
+**Parameters:**
+- `board_path: String` - Board file path
+- `card_id: String` - Card ID to move
+- `from_column: String` - Source column ID
+- `to_column: String` - Destination column ID
+
+**Returns:** `Result<(), String>` - Success or error
+
+**Example:**
+
+```typescript
+await invoke('move_card_between_columns', {
+  boardPath: '/workspace/project.kanban',
+  cardId: 'card123',
+  fromColumn: 'todo',
+  toColumn: 'in-progress'
+})
+```
+
+---
+
+### update_card_in_board
+
+Update a card in a kanban board.
+
+```rust
+#[tauri::command]
+pub fn update_card_in_board(
+  board_path: String,
+  column_id: String,
+  card: KanbanCard
+) -> Result<(), String>
+```
+
+**Parameters:**
+- `board_path: String` - Board file path
+- `column_id: String` - Column containing card
+- `card: KanbanCard` - Updated card data
+
+**Returns:** `Result<(), String>` - Success or error
+
+**Example:**
+
+```typescript
+card.title = 'Updated title'
+card.modified = new Date().toISOString()
+
+await invoke('update_card_in_board', {
+  boardPath: '/workspace/project.kanban',
+  columnId: 'in-progress',
+  card
+})
+```
+
+---
+
+### delete_card_from_board
+
+Delete a card from a kanban board.
+
+```rust
+#[tauri::command]
+pub fn delete_card_from_board(
+  board_path: String,
+  column_id: String,
+  card_id: String
+) -> Result<(), String>
+```
+
+**Parameters:**
+- `board_path: String` - Board file path
+- `column_id: String` - Column containing card
+- `card_id: String` - Card ID to delete
+
+**Returns:** `Result<(), String>` - Success or error
+
+**Example:**
+
+```typescript
+await invoke('delete_card_from_board', {
+  boardPath: '/workspace/project.kanban',
+  columnId: 'done',
+  cardId: 'card123'
+})
+```
+
+---
+
+## Theme Commands
+
+Theme management, import/export, and customization.
+
+### theme_broadcast
+
+Broadcast theme changes to all windows.
+
+```rust
+#[tauri::command]
+pub fn theme_broadcast(app: AppHandle, payload: ThemePayload)
+```
+
+**Parameters:**
+- `app: AppHandle` - Tauri app handle
+- `payload: ThemePayload` - Theme data
+
+**ThemePayload:**
+
+```typescript
+interface ThemePayload {
+  tokens?: Record<string, string>  // CSS vars: {"--bg": "15 23 42"}
+  mode?: 'light' | 'dark' | 'system'
+  accent?: string                  // Preset or "r g b"
+  scope?: 'global' | 'window'
+}
+```
+
+**Example:**
+
+```typescript
+await invoke('theme_broadcast', {
+  payload: {
+    mode: 'dark',
+    accent: '59 130 246', // Blue
+    scope: 'global'
+  }
+})
+```
+
+---
+
+### import_theme_file
+
+Import a theme from file.
+
+```rust
+#[tauri::command]
+pub fn import_theme_file(theme_file_path: String) -> Result<ThemeManifest, String>
+```
+
+**Parameters:**
+- `theme_file_path: String` - Path to theme JSON file
+
+**Returns:** `Result<ThemeManifest, String>` - Imported theme
+
+**ThemeManifest:**
+
+```typescript
+interface ThemeManifest {
+  name: string
+  tokens: Record<string, string>
+  author?: string
+  description?: string
+  version?: string
+}
+```
+
+**Example:**
+
+```typescript
+const theme = await invoke<ThemeManifest>('import_theme_file', {
+  themeFilePath: '/path/to/custom-theme.json'
+})
+
+console.log(`Imported: ${theme.name}`)
+```
+
+---
+
+### validate_theme_file
+
+Validate a theme file without importing.
+
+```rust
+#[tauri::command]
+pub fn validate_theme_file(
+  theme_file_path: String
+) -> Result<ThemeValidationResult, String>
+```
+
+**Parameters:**
+- `theme_file_path: String` - Path to theme file
+
+**Returns:** `Result<ThemeValidationResult, String>` - Validation result
+
+**ThemeValidationResult:**
+
+```typescript
+interface ThemeValidationResult {
+  valid: boolean
+  errors: string[]
+  warnings: string[]
+  manifest?: ThemeManifest
+}
+```
+
+**Required tokens:**
+- `--bg`, `--text`, `--panel`, `--border`, `--muted`, `--accent`, `--accent-fg`
+
+**Recommended tokens:**
+- Task colors: `--task-todo`, `--task-progress`, `--task-urgent`, etc.
+- Semantic colors: `--danger`, `--success`, `--warning`, `--info`
+
+**Example:**
+
+```typescript
+const result = await invoke<ThemeValidationResult>('validate_theme_file', {
+  themeFilePath: '/path/to/theme.json'
+})
+
+if (result.valid) {
+  console.log('Theme is valid')
+} else {
+  console.error('Errors:', result.errors)
+}
+```
+
+---
+
+### export_theme
+
+Export current theme to file.
+
+```rust
+#[tauri::command]
+pub fn export_theme(
+  theme: ThemeManifest,
+  export_path: String
+) -> Result<(), String>
+```
+
+**Parameters:**
+- `theme: ThemeManifest` - Theme to export
+- `export_path: String` - Destination file path
+
+**Returns:** `Result<(), String>` - Success or error
+
+**Example:**
+
+```typescript
+await invoke('export_theme', {
+  theme: currentTheme,
+  exportPath: '/exports/my-theme.json'
+})
+```
+
+---
+
+### delete_custom_theme
+
+Delete a custom theme.
+
+```rust
+#[tauri::command]
+pub fn delete_custom_theme(theme_name: String) -> Result<(), String>
+```
+
+**Parameters:**
+- `theme_name: String` - Theme name to delete
+
+**Returns:** `Result<(), String>` - Success or error
+
+**Location:** `~/.lokus/themes/`
+
+**Example:**
+
+```typescript
+await invoke('delete_custom_theme', {
+  themeName: 'My Custom Theme'
+})
+```
+
+---
+
+### list_custom_themes
+
+List all installed custom themes.
+
+```rust
+#[tauri::command]
+pub fn list_custom_themes() -> Result<Vec<ThemeManifest>, String>
+```
+
+**Returns:** `Result<Vec<ThemeManifest>, String>` - Custom themes
+
+**Example:**
+
+```typescript
+const themes = await invoke<ThemeManifest[]>('list_custom_themes')
+
+themes.forEach(theme => {
+  console.log(`${theme.name} by ${theme.author}`)
+})
+```
+
+---
+
+### get_theme_tokens
+
+Get current theme tokens as CSS variables.
+
+```rust
+#[tauri::command]
+pub fn get_theme_tokens() -> Result<HashMap<String, String>, String>
+```
+
+**Returns:** `Result<HashMap<String, String>, String>` - Theme tokens
+
+**Example:**
+
+```typescript
+const tokens = await invoke<Record<string, string>>('get_theme_tokens')
+
+console.log('Background:', tokens['--bg'])
+console.log('Text:', tokens['--text'])
+```
+
+---
+
+## Plugin Commands
+
+Plugin lifecycle management, permissions, and settings.
+
+### list_plugins
+
+List all installed plugins.
+
+```rust
+#[tauri::command]
+pub fn list_plugins(app: AppHandle) -> Result<Vec<PluginInfo>, String>
+```
+
+**Parameters:**
+- `app: AppHandle` - Tauri app handle
+
+**Returns:** `Result<Vec<PluginInfo>, String>` - Plugin list
+
+**PluginInfo:**
+
+```typescript
+interface PluginInfo {
+  manifest: PluginManifest
+  path: string
+  enabled: boolean
+  installed_at: string
+  size: number
+}
+
+interface PluginManifest {
+  name: string
+  version: string
+  description: string
+  author: string
+  main: string
+  permissions: string[]
+  dependencies?: Record<string, string>
+  keywords?: string[]
+  repository?: string
+  homepage?: string
+  license?: string
+}
+```
+
+**Example:**
+
+```typescript
+const plugins = await invoke<PluginInfo[]>('list_plugins')
+
+plugins.forEach(plugin => {
+  console.log(`${plugin.manifest.name} v${plugin.manifest.version}`)
+  console.log(`  Enabled: ${plugin.enabled}`)
+})
+```
+
+---
+
+### install_plugin
+
+Install a plugin from ZIP archive.
+
+```rust
+#[tauri::command]
+pub fn install_plugin(
+  app: AppHandle,
+  plugin_path: String
+) -> Result<InstallResult, String>
+```
+
+**Parameters:**
+- `app: AppHandle` - Tauri app handle
+- `plugin_path: String` - Path to plugin ZIP file
+
+**Returns:** `Result<InstallResult, String>` - Installation result
+
+**InstallResult:**
+
+```typescript
+interface InstallResult {
+  success: boolean
+  message: string
+  plugin_name?: string
+  error?: string
+  warnings: string[]
+  installation_log?: InstallationLog
+}
+```
+
+**Validation:**
+- ZIP structure
+- manifest.json presence and validity
+- Version compatibility
+- Duplicate detection
+
+**Example:**
+
+```typescript
+const result = await invoke<InstallResult>('install_plugin', {
+  pluginPath: '/downloads/my-plugin.zip'
+})
+
+if (result.success) {
+  console.log(`Installed: ${result.plugin_name}`)
+} else {
+  console.error(`Failed: ${result.error}`)
+}
+```
+
+---
+
+### uninstall_plugin
+
+Uninstall a plugin.
+
+```rust
+#[tauri::command]
+pub fn uninstall_plugin(
+  app: AppHandle,
+  plugin_name: String
+) -> Result<(), String>
+```
+
+**Parameters:**
+- `app: AppHandle` - Tauri app handle
+- `plugin_name: String` - Plugin name
+
+**Returns:** `Result<(), String>` - Success or error
+
+**Cleanup:**
+- Plugin directory
+- Settings
+- Permissions
+
+**Example:**
+
+```typescript
+await invoke('uninstall_plugin', {
+  pluginName: 'my-plugin'
+})
+```
+
+---
+
+### get_plugin_info
+
+Get detailed info about a plugin.
+
+```rust
+#[tauri::command]
+pub fn get_plugin_info(
+  app: AppHandle,
+  plugin_name: String
+) -> Result<PluginInfo, String>
+```
+
+**Parameters:**
+- `plugin_name: String` - Plugin name
+
+**Returns:** `Result<PluginInfo, String>` - Plugin details
+
+**Example:**
+
+```typescript
+const info = await invoke<PluginInfo>('get_plugin_info', {
+  pluginName: 'my-plugin'
+})
+
+console.log(`Size: ${info.size} bytes`)
+console.log(`Permissions: ${info.manifest.permissions.join(', ')}`)
+```
+
+---
+
+### validate_plugin_manifest
+
+Validate a plugin manifest without installing.
+
+```rust
+#[tauri::command]
+pub fn validate_plugin_manifest(
+  manifest: PluginManifest
+) -> Result<ValidationResult, String>
+```
+
+**Parameters:**
+- `manifest: PluginManifest` - Manifest to validate
+
+**Returns:** `Result<ValidationResult, String>` - Validation result
+
+**Example:**
+
+```typescript
+const result = await invoke<ValidationResult>('validate_plugin_manifest', {
+  manifest: pluginManifest
+})
+
+if (!result.valid) {
+  console.error('Validation errors:', result.errors)
+}
+```
+
+---
+
+### enable_plugin
+
+Enable a plugin.
+
+```rust
+#[tauri::command]
+pub fn enable_plugin(
+  app: AppHandle,
+  plugin_name: String
+) -> Result<(), String>
+```
+
+**Parameters:**
+- `plugin_name: String` - Plugin name
+
+**Returns:** `Result<(), String>` - Success or error
+
+**Example:**
+
+```typescript
+await invoke('enable_plugin', {
+  pluginName: 'my-plugin'
+})
+```
+
+---
+
+### disable_plugin
+
+Disable a plugin.
+
+```rust
+#[tauri::command]
+pub fn disable_plugin(
+  app: AppHandle,
+  plugin_name: String
+) -> Result<(), String>
+```
+
+**Parameters:**
+- `plugin_name: String` - Plugin name
+
+**Returns:** `Result<(), String>` - Success or error
+
+**Example:**
+
+```typescript
+await invoke('disable_plugin', {
+  pluginName: 'my-plugin'
+})
+```
+
+---
+
+### get_enabled_plugins
+
+Get list of enabled plugin names.
+
+```rust
+#[tauri::command]
+pub fn get_enabled_plugins(app: AppHandle) -> Result<Vec<String>, String>
+```
+
+**Returns:** `Result<Vec<String>, String>` - Enabled plugin names
+
+**Example:**
+
+```typescript
+const enabled = await invoke<string[]>('get_enabled_plugins')
+console.log(`${enabled.length} plugins enabled`)
+```
+
+---
+
+### set_plugin_permission
+
+Set permission for a plugin.
+
+```rust
+#[tauri::command]
+pub fn set_plugin_permission(
+  app: AppHandle,
+  plugin_name: String,
+  permission: String,
+  granted: bool
+) -> Result<(), String>
+```
+
+**Parameters:**
+- `plugin_name: String` - Plugin name
+- `permission: String` - Permission ID (e.g., "filesystem:read")
+- `granted: bool` - Grant or revoke
+
+**Returns:** `Result<(), String>` - Success or error
+
+**Example:**
+
+```typescript
+await invoke('set_plugin_permission', {
+  pluginName: 'my-plugin',
+  permission: 'filesystem:write',
+  granted: true
+})
+```
+
+---
+
+### get_plugin_permissions
+
+Get all permissions for a plugin.
+
+```rust
+#[tauri::command]
+pub fn get_plugin_permissions(
+  app: AppHandle,
+  plugin_name: String
+) -> Result<Vec<String>, String>
+```
+
+**Parameters:**
+- `plugin_name: String` - Plugin name
+
+**Returns:** `Result<Vec<String>, String>` - Granted permissions
+
+**Example:**
+
+```typescript
+const permissions = await invoke<string[]>('get_plugin_permissions', {
+  pluginName: 'my-plugin'
+})
+
+console.log('Permissions:', permissions.join(', '))
+```
+
+---
+
+### set_plugin_setting
+
+Set a plugin setting.
+
+```rust
+#[tauri::command]
+pub fn set_plugin_setting(
+  app: AppHandle,
+  plugin_name: String,
+  key: String,
+  value: JsonValue
+) -> Result<(), String>
+```
+
+**Parameters:**
+- `plugin_name: String` - Plugin name
+- `key: String` - Setting key
+- `value: JsonValue` - Setting value (any JSON type)
+
+**Returns:** `Result<(), String>` - Success or error
+
+**Example:**
+
+```typescript
+await invoke('set_plugin_setting', {
+  pluginName: 'my-plugin',
+  key: 'apiKey',
+  value: 'abc123xyz'
+})
+```
+
+---
+
+### get_plugin_setting
+
+Get a plugin setting.
+
+```rust
+#[tauri::command]
+pub fn get_plugin_setting(
+  app: AppHandle,
+  plugin_name: String,
+  key: String
+) -> Result<Option<JsonValue>, String>
+```
+
+**Parameters:**
+- `plugin_name: String` - Plugin name
+- `key: String` - Setting key
+
+**Returns:** `Result<Option<JsonValue>, String>` - Setting value or null
+
+**Example:**
+
+```typescript
+const apiKey = await invoke<string | null>('get_plugin_setting', {
+  pluginName: 'my-plugin',
+  key: 'apiKey'
+})
+```
+
+---
+
+## Git Sync Commands
+
+Git operations for workspace synchronization.
+
+### git_init
+
+Initialize Git repository in workspace.
+
+```rust
+#[tauri::command]
+pub fn git_init(workspace_path: String) -> Result<(), String>
+```
+
+**Parameters:**
+- `workspace_path: String` - Workspace path
+
+**Returns:** `Result<(), String>` - Success or error
+
+**Example:**
+
+```typescript
+await invoke('git_init', {
+  workspacePath: '/path/to/workspace'
+})
+```
+
+---
+
+### git_add_remote
+
+Add a Git remote.
+
+```rust
+#[tauri::command]
+pub fn git_add_remote(
+  workspace_path: String,
+  name: String,
+  url: String
+) -> Result<(), String>
+```
+
+**Parameters:**
+- `workspace_path: String` - Workspace path
+- `name: String` - Remote name (usually "origin")
+- `url: String` - Remote URL
+
+**Returns:** `Result<(), String>` - Success or error
+
+**Example:**
+
+```typescript
+await invoke('git_add_remote', {
+  workspacePath: '/path/to/workspace',
+  name: 'origin',
+  url: 'https://github.com/user/repo.git'
+})
+```
+
+---
+
+### git_commit
+
+Create a Git commit.
+
+```rust
+#[tauri::command]
+pub fn git_commit(
+  workspace_path: String,
+  message: String
+) -> Result<(), String>
+```
+
+**Parameters:**
+- `workspace_path: String` - Workspace path
+- `message: String` - Commit message
+
+**Returns:** `Result<(), String>` - Success or error
+
+**Note:** Automatically stages all changes before committing.
+
+**Example:**
+
+```typescript
+await invoke('git_commit', {
+  workspacePath: '/path/to/workspace',
+  message: 'Update documentation'
+})
+```
+
+---
+
+### git_push
+
+Push commits to remote.
+
+```rust
+#[tauri::command]
+pub async fn git_push(
+  workspace_path: String,
+  remote: String,
+  branch: String
+) -> Result<(), String>
+```
+
+**Parameters:**
+- `workspace_path: String` - Workspace path
+- `remote: String` - Remote name
+- `branch: String` - Branch name
+
+**Returns:** `Result<(), String>` - Success or error
+
+**Example:**
+
+```typescript
+await invoke('git_push', {
+  workspacePath: '/path/to/workspace',
+  remote: 'origin',
+  branch: 'main'
+})
+```
+
+---
+
+### git_pull
+
+Pull changes from remote.
+
+```rust
+#[tauri::command]
+pub async fn git_pull(
+  workspace_path: String,
+  remote: String,
+  branch: String
+) -> Result<(), String>
+```
+
+**Parameters:**
+- `workspace_path: String` - Workspace path
+- `remote: String` - Remote name
+- `branch: String` - Branch name
+
+**Returns:** `Result<(), String>` - Success or error
+
+**Example:**
+
+```typescript
+await invoke('git_pull', {
+  workspacePath: '/path/to/workspace',
+  remote: 'origin',
+  branch: 'main'
+})
+```
+
+---
+
+### git_status
+
+Get Git status.
+
+```rust
+#[tauri::command]
+pub fn git_status(workspace_path: String) -> Result<GitStatus, String>
+```
+
+**Parameters:**
+- `workspace_path: String` - Workspace path
+
+**Returns:** `Result<GitStatus, String>` - Repository status
+
+**GitStatus:**
+
+```typescript
+interface GitStatus {
+  branch: string
+  modified: string[]
+  added: string[]
+  deleted: string[]
+  untracked: string[]
+  ahead: number
+  behind: number
+}
+```
+
+**Example:**
+
+```typescript
+const status = await invoke<GitStatus>('git_status', {
+  workspacePath: '/path/to/workspace'
+})
+
+console.log(`On branch: ${status.branch}`)
+console.log(`Modified files: ${status.modified.length}`)
+```
+
+---
+
+### git_get_current_branch
+
+Get current Git branch name.
+
+```rust
+#[tauri::command]
+pub fn git_get_current_branch(workspace_path: String) -> Result<String, String>
+```
+
+**Parameters:**
+- `workspace_path: String` - Workspace path
+
+**Returns:** `Result<String, String>` - Branch name
+
+**Example:**
+
+```typescript
+const branch = await invoke<string>('git_get_current_branch', {
+  workspacePath: '/path/to/workspace'
+})
+
+console.log(`Current branch: ${branch}`)
+```
+
+---
+
+### detect_conflicts
+
+Detect merge conflicts in workspace.
+
+```rust
+#[tauri::command]
+pub fn detect_conflicts(workspace_path: String) -> Result<Vec<String>, String>
+```
+
+**Parameters:**
+- `workspace_path: String` - Workspace path
+
+**Returns:** `Result<Vec<String>, String>` - List of conflicted files
+
+**Example:**
+
+```typescript
+const conflicts = await invoke<string[]>('detect_conflicts', {
+  workspacePath: '/path/to/workspace'
+})
+
+if (conflicts.length > 0) {
+  console.log('Conflicts in:', conflicts)
+}
+```
+
+---
+
+## Authentication Commands
+
+OAuth2 authentication and user management.
+
+### initiate_oauth_flow
+
+Start OAuth authentication flow.
+
+```rust
+#[tauri::command]
+pub async fn initiate_oauth_flow(
+  provider: String,
+  state: State<SharedAuthState>
+) -> Result<String, String>
+```
+
+**Parameters:**
+- `provider: String` - OAuth provider (e.g., "google")
+- `state: State<SharedAuthState>` - Auth state (managed)
+
+**Returns:** `Result<String, String>` - Authorization URL
+
+**Flow:**
+1. Generates PKCE challenge/verifier
+2. Starts localhost callback server
+3. Returns authorization URL
+4. User authorizes in browser
+5. Redirects to localhost
+6. Exchanges code for tokens
+
+**Example:**
+
+```typescript
+const authUrl = await invoke<string>('initiate_oauth_flow', {
+  provider: 'google'
+})
+
+// Open in browser
+window.open(authUrl, '_blank')
+```
+
+---
+
+### handle_oauth_callback
+
+Handle OAuth callback (internal).
+
+```rust
+#[tauri::command]
+pub async fn handle_oauth_callback(
+  code: String,
+  state_param: String,
+  auth_state: State<SharedAuthState>
+) -> Result<AuthToken, String>
+```
+
+**Note:** Usually handled automatically by localhost server.
+
+---
+
+### is_authenticated
+
+Check if user is authenticated.
+
+```rust
+#[tauri::command]
+pub async fn is_authenticated(provider: String) -> Result<bool, String>
+```
+
+**Parameters:**
+- `provider: String` - OAuth provider
+
+**Returns:** `Result<bool, String>` - Authentication status
+
+**Example:**
+
+```typescript
+const isAuthed = await invoke<boolean>('is_authenticated', {
+  provider: 'google'
+})
+
+if (isAuthed) {
+  // Load user data
+}
+```
+
+---
+
+### get_auth_token
+
+Get stored auth token.
+
+```rust
+#[tauri::command]
+pub async fn get_auth_token(provider: String) -> Result<Option<AuthToken>, String>
+```
+
+**Parameters:**
+- `provider: String` - OAuth provider
+
+**Returns:** `Result<Option<AuthToken>, String>` - Token or null
+
+**AuthToken:**
+
+```typescript
+interface AuthToken {
+  access_token: string
+  refresh_token?: string
+  expires_at?: number
+  user_id?: string
+  token_type: string
+}
+```
+
+**Example:**
+
+```typescript
+const token = await invoke<AuthToken | null>('get_auth_token', {
+  provider: 'google'
+})
+
+if (token) {
+  // Use token.access_token for API calls
+}
+```
+
+---
+
+### get_user_profile
+
+Get authenticated user profile.
+
+```rust
+#[tauri::command]
+pub async fn get_user_profile(provider: String) -> Result<UserProfile, String>
+```
+
+**Parameters:**
+- `provider: String` - OAuth provider
+
+**Returns:** `Result<UserProfile, String>` - User profile
+
+**UserProfile:**
+
+```typescript
+interface UserProfile {
+  id: string
+  email: string
+  name: string
+  avatar_url?: string
+}
+```
+
+**Example:**
+
+```typescript
+const profile = await invoke<UserProfile>('get_user_profile', {
+  provider: 'google'
+})
+
+console.log(`Hello, ${profile.name}!`)
+```
+
+---
+
+### refresh_auth_token
+
+Refresh an expired auth token.
+
+```rust
+#[tauri::command]
+pub async fn refresh_auth_token(
+  provider: String
+) -> Result<AuthToken, String>
+```
+
+**Parameters:**
+- `provider: String` - OAuth provider
+
+**Returns:** `Result<AuthToken, String>` - New token
+
+**Example:**
+
+```typescript
+const newToken = await invoke<AuthToken>('refresh_auth_token', {
+  provider: 'google'
+})
+```
+
+---
+
+### logout
+
+Log out and clear auth tokens.
+
+```rust
+#[tauri::command]
+pub async fn logout(provider: String) -> Result<(), String>
+```
+
+**Parameters:**
+- `provider: String` - OAuth provider
+
+**Returns:** `Result<(), String>` - Success or error
+
+**Example:**
+
+```typescript
+await invoke('logout', { provider: 'google' })
+```
+
+---
+
+## Multimedia Commands
+
+Media processing, OCR, and PDF operations.
+
+### classify_media
+
+Classify media file type.
+
+```rust
+#[tauri::command]
+pub fn classify_media(file_path: String) -> Result<MediaType, String>
+```
+
+**Parameters:**
+- `file_path: String` - File path
+
+**Returns:** `Result<MediaType, String>` - Media type
+
+**MediaType:**
+
+```typescript
+type MediaType = 'image' | 'pdf' | 'video' | 'audio' | 'markdown' | 'unknown'
+```
+
+**Example:**
+
+```typescript
+const type = await invoke<MediaType>('classify_media', {
+  filePath: '/path/to/file.jpg'
+})
+
+console.log('Type:', type) // 'image'
+```
+
+---
+
+### extract_metadata
+
+Extract metadata from media file.
+
+```rust
+#[tauri::command]
+pub fn extract_metadata(file_path: String) -> Result<FileMetadata, String>
+```
+
+**Parameters:**
+- `file_path: String` - File path
+
+**Returns:** `Result<FileMetadata, String>` - File metadata
+
+**FileMetadata:**
+
+```typescript
+interface FileMetadata {
+  file_name: string
+  file_size: number
+  mime_type: string
+  created_at: string
+  modified_at: string
+  dimensions?: {
+    width: number
+    height: number
+  }
+  exif_data?: Record<string, string>
+}
+```
+
+**Example:**
+
+```typescript
+const metadata = await invoke<FileMetadata>('extract_metadata', {
+  filePath: '/path/to/photo.jpg'
+})
+
+console.log(`${metadata.dimensions.width}x${metadata.dimensions.height}`)
+```
+
+---
+
+### process_media_file
+
+Process media file (OCR for images, text for PDFs).
+
+```rust
+#[tauri::command]
+pub async fn process_media_file(
+  file_path: String
+) -> Result<MultimediaFile, String>
+```
+
+**Parameters:**
+- `file_path: String` - File path
+
+**Returns:** `Result<MultimediaFile, String>` - Processed media
+
+**MultimediaFile:**
+
+```typescript
+interface MultimediaFile {
+  id: string
+  file_path: string
+  media_type: MediaType
+  metadata: FileMetadata
+  extracted_content?: ExtractedContent
+  thumbnail_path?: string
+  hash: string
+}
+
+interface ExtractedContent {
+  text: string
+  extraction_method: 'ocr' | 'pdf_extract' | 'manual' | 'audio_transcript'
+  confidence: number
+  extracted_at: string
+  language?: string
+}
+```
+
+**Example:**
+
+```typescript
+const media = await invoke<MultimediaFile>('process_media_file', {
+  filePath: '/path/to/document.pdf'
+})
+
+if (media.extracted_content) {
+  console.log('Extracted text:', media.extracted_content.text)
+}
+```
+
+---
+
+### generate_thumbnail
+
+Generate thumbnail for image/video.
+
+```rust
+#[tauri::command]
+pub fn generate_thumbnail(
+  file_path: String,
+  width: u32,
+  height: u32
+) -> Result<String, String>
+```
+
+**Parameters:**
+- `file_path: String` - Source file
+- `width: u32` - Thumbnail width
+- `height: u32` - Thumbnail height
+
+**Returns:** `Result<String, String>` - Thumbnail path
+
+**Example:**
+
+```typescript
+const thumbPath = await invoke<string>('generate_thumbnail', {
+  filePath: '/path/to/image.jpg',
+  width: 200,
+  height: 200
+})
+```
+
+---
+
+### batch_process_media
+
+Process multiple media files in parallel.
+
+```rust
+#[tauri::command]
+pub async fn batch_process_media(
+  file_paths: Vec<String>
+) -> Result<Vec<MultimediaFile>, String>
+```
+
+**Parameters:**
+- `file_paths: Vec<String>` - Array of file paths
+
+**Returns:** `Result<Vec<MultimediaFile>, String>` - Processed files
+
+**Example:**
+
+```typescript
+const files = await invoke<MultimediaFile[]>('batch_process_media', {
+  filePaths: ['/path/1.jpg', '/path/2.pdf', '/path/3.png']
+})
+
+console.log(`Processed ${files.length} files`)
+```
+
+---
+
+### scan_workspace_media
+
+Scan workspace for media files.
+
+```rust
+#[tauri::command]
+pub fn scan_workspace_media(
+  workspace_path: String
+) -> Result<Vec<String>, String>
+```
+
+**Parameters:**
+- `workspace_path: String` - Workspace path
+
+**Returns:** `Result<Vec<String>, String>` - Media file paths
+
+**Scans for:** Images, PDFs, videos, audio files
+
+**Example:**
+
+```typescript
+const mediaFiles = await invoke<string[]>('scan_workspace_media', {
+  workspacePath: '/path/to/workspace'
+})
+
+console.log(`Found ${mediaFiles.length} media files`)
+```
+
+---
+
+### ocr_process_image
+
+Perform OCR on an image (experimental).
+
+```rust
+#[tauri::command]
+pub async fn ocr_process_image(
+  image_path: String,
+  language: Option<String>
+) -> Result<ExtractedContent, String>
+```
+
+**Parameters:**
+- `image_path: String` - Image file path
+- `language: Option<String>` - OCR language (default: "eng")
+
+**Returns:** `Result<ExtractedContent, String>` - Extracted text
+
+**Note:** Requires Tesseract OCR installed on system.
+
+**Example:**
+
+```typescript
+const content = await invoke<ExtractedContent>('ocr_process_image', {
+  imagePath: '/path/to/scan.jpg',
+  language: 'eng'
+})
+
+console.log('Text:', content.text)
+console.log('Confidence:', content.confidence)
+```
+
+---
+
+### extract_pdf_content
+
+Extract text content from PDF.
+
+```rust
+#[tauri::command]
+pub fn extract_pdf_content(pdf_path: String) -> Result<ExtractedContent, String>
+```
+
+**Parameters:**
+- `pdf_path: String` - PDF file path
+
+**Returns:** `Result<ExtractedContent, String>` - Extracted text
+
+**Example:**
+
+```typescript
+const content = await invoke<ExtractedContent>('extract_pdf_content', {
+  pdfPath: '/path/to/document.pdf'
+})
+
+console.log('Pages:', content.text.split('\n\n').length)
+```
+
+---
+
+### extract_pdf_metadata
+
+Extract PDF metadata (title, author, etc.).
+
+```rust
+#[tauri::command]
+pub fn extract_pdf_metadata(
+  pdf_path: String
+) -> Result<HashMap<String, String>, String>
+```
+
+**Parameters:**
+- `pdf_path: String` - PDF file path
+
+**Returns:** `Result<HashMap<String, String>, String>` - PDF metadata
+
+**Example:**
+
+```typescript
+const metadata = await invoke<Record<string, string>>('extract_pdf_metadata', {
+  pdfPath: '/path/to/document.pdf'
+})
+
+console.log('Title:', metadata.title)
+console.log('Author:', metadata.author)
+```
+
+---
+
+## MCP Commands
+
+Model Context Protocol server management.
+
+### mcp_start
+
+Start MCP server.
+
+```rust
+#[tauri::command]
+pub fn mcp_start(
+  manager: State<MCPServerManager>,
+  port: Option<u16>
+) -> Result<MCPServerStatus, String>
+```
+
+**Parameters:**
+- `manager: State<MCPServerManager>` - Server manager (managed)
+- `port: Option<u16>` - Port number (default: 3456)
+
+**Returns:** `Result<MCPServerStatus, String>` - Server status
+
+**MCPServerStatus:**
+
+```typescript
+interface MCPServerStatus {
+  is_running: boolean
+  port: number
+  pid?: number
+  url?: string
+  last_error?: string
+}
+```
+
+**Example:**
+
+```typescript
+const status = await invoke<MCPServerStatus>('mcp_start', {
+  port: 3456
+})
+
+console.log(`MCP server running on port ${status.port}`)
+```
+
+---
+
+### mcp_stop
+
+Stop MCP server.
+
+```rust
+#[tauri::command]
+pub fn mcp_stop(
+  manager: State<MCPServerManager>
+) -> Result<MCPServerStatus, String>
+```
+
+**Returns:** `Result<MCPServerStatus, String>` - Server status
+
+**Example:**
+
+```typescript
+await invoke('mcp_stop')
+```
+
+---
+
+### mcp_status
+
+Get MCP server status.
+
+```rust
+#[tauri::command]
+pub fn mcp_status(
+  manager: State<MCPServerManager>
+) -> Result<MCPServerStatus, String>
+```
+
+**Returns:** `Result<MCPServerStatus, String>` - Server status
+
+**Example:**
+
+```typescript
+const status = await invoke<MCPServerStatus>('mcp_status')
+
+if (status.is_running) {
+  console.log('MCP server is running')
+}
+```
+
+---
+
+### mcp_restart
+
+Restart MCP server.
+
+```rust
+#[tauri::command]
+pub fn mcp_restart(
+  manager: State<MCPServerManager>,
+  port: Option<u16>
+) -> Result<MCPServerStatus, String>
+```
+
+**Parameters:**
+- `port: Option<u16>` - Port number
+
+**Returns:** `Result<MCPServerStatus, String>` - Server status
+
+**Example:**
+
+```typescript
+const status = await invoke<MCPServerStatus>('mcp_restart')
+```
+
+---
+
+### mcp_health_check
+
+Check MCP server health.
+
+```rust
+#[tauri::command]
+pub async fn mcp_health_check(
+  manager: State<MCPServerManager>
+) -> Result<bool, String>
+```
+
+**Returns:** `Result<bool, String>` - Health status
+
+**Example:**
+
+```typescript
+const healthy = await invoke<boolean>('mcp_health_check')
+
+if (!healthy) {
+  console.warn('MCP server is unhealthy')
+}
+```
+
+---
+
+### setup_mcp_integration
+
+Set up MCP integration (first launch).
+
+```rust
+#[tauri::command]
+pub async fn setup_mcp_integration() -> Result<(), String>
+```
+
+**Returns:** `Result<(), String>` - Success or error
+
+**Setup steps:**
+1. Creates `~/.lokus/mcp-server/` directory
+2. Copies MCP server files
+3. Installs dependencies
+4. Configures auto-start
+
+**Example:**
+
+```typescript
+await invoke('setup_mcp_integration')
+```
+
+---
+
+## Platform Integration
+
+### Platform Files
+
+```rust
+// Get platform information
+#[tauri::command]
+pub fn get_platform_information() -> PlatformInfo
+
+// Check platform feature support
+#[tauri::command]
+pub fn check_platform_feature_support(feature: String) -> bool
+
+// Get platform capabilities
+#[tauri::command]
+pub fn get_platform_capabilities() -> PlatformCapabilities
+```
+
+### Clipboard
+
+```rust
+// Basic clipboard
+#[tauri::command]
+pub fn clipboard_write_text(text: String) -> Result<(), String>
+
+#[tauri::command]
+pub fn clipboard_read_text() -> Result<String, String>
+
+#[tauri::command]
+pub fn clipboard_write_html(html: String) -> Result<(), String>
+
+#[tauri::command]
+pub fn clipboard_read_html() -> Result<String, String>
+
+// Enhanced platform clipboard
+#[tauri::command]
+pub fn clipboard_write_text_enhanced(text: String) -> Result<(), String>
+
+#[tauri::command]
+pub fn clipboard_get_content_info() -> Result<ClipboardContentInfo, String>
+```
+
+---
+
+## Error Handling
+
+All commands return `Result<T, String>` types. In TypeScript:
+
+```typescript
+try {
+  const result = await invoke<ReturnType>('command_name', { params })
+  // Success
+} catch (error) {
+  // error is a string describing the error
+  console.error('Command failed:', error)
+}
+```
+
+**Common error patterns:**
+
+```typescript
+// File not found
+"File or folder '/path' does not exist"
+
+// Permission denied
+"Failed to read file: permission denied"
+
+// Invalid parameter
+"Path validation failed: path doesn't exist"
+
+// State error
+"Task with id abc123 not found"
+```
+
+---
+
+## Security Considerations
+
+### Path Validation
+
+All file paths are validated to prevent directory traversal:
+
+```rust
+// ✅ Valid
+"/workspace/notes/file.md"
+
+// ❌ Invalid
+"/workspace/../../../etc/passwd"
+```
+
+### Workspace Boundaries
+
+File operations are restricted to workspace directories. Commands validate paths stay within workspace.
+
+### Permission System
+
+Plugins require explicit permissions:
+
+```typescript
+{
+  "permissions": [
+    "filesystem:read",
+    "filesystem:write",
+    "network:request",
+    "clipboard:read"
+  ]
+}
+```
+
+### Secure Storage
+
+Sensitive data (tokens, credentials) stored in OS keychain:
+
+- **macOS**: Keychain
+- **Windows**: Credential Manager
+- **Linux**: Secret Service API
+
+---
+
+## Performance Notes
+
+### File Operations
+
+- **Large files**: Read/write operations are synchronous (block UI)
+- **Directory traversal**: Limited to depth 10
+- **Exclusions**: Auto-skips `node_modules/`, `.git/`, etc.
+
+### Search Operations
+
+- **Parallel**: Uses Rust's Rayon for parallel file search
+- **Streaming**: Results streamed as found (doesn't wait for all)
+- **Compiled regex**: Patterns compiled once per search
+
+### Version History
+
+- **Compression**: gzip compression for version storage
+- **Caching**: File hash caching prevents redundant calculations
+- **Cleanup**: Auto-cleanup based on retention policy
+
+### Multimedia
+
+- **Async processing**: Media operations are async (non-blocking)
+- **Batch operations**: Optimized for parallel processing
+- **Thumbnail caching**: Generated thumbnails cached on disk
+
+---
+
+## Related Documentation
+
+- [Architecture Overview](/developers/architecture) - System design and components
+- [Plugin API](/developers/plugins/api) - Frontend plugin API
+- [MCP Integration](/developers/mcp/overview) - Model Context Protocol
+- [Building Features](/developers/setup) - Development setup
+
+---
+
+**Last Updated:** January 2025
+**Version:** Lokus 2.0 (Tauri 2.0)

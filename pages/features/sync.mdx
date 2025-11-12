@@ -1,0 +1,1170 @@
+---
+title: Git Sync - Free Cross-Device Synchronization
+description: Sync your Lokus workspace across all your devices for free using Git. Complete guide to setup, configuration, conflict resolution, and best practices for multi-device workflows.
+keywords: git sync, cross-device sync, github sync, gitlab, backup, version control, conflict resolution, multi-device, cloud sync, free sync
+---
+
+import { Steps, Callout } from 'nextra/components'
+
+# Git Sync - Free Cross-Device Synchronization
+
+Lokus Git Sync enables you to synchronize your workspace across unlimited devices completely free using Git providers like GitHub, GitLab, or Bitbucket. Your notes stay private, secure, and under your control.
+
+## Overview
+
+Git Sync provides:
+
+- **100% Free**: No subscription fees, unlimited devices and storage (within Git provider limits)
+- **Universal Compatibility**: Works with GitHub, GitLab, Bitbucket, and any Git remote
+- **Automatic Syncing**: Changes commit and sync automatically
+- **Conflict Resolution**: Intelligent merge strategies with manual override options
+- **Privacy First**: Your data stays encrypted in transit, you control access
+- **Version History**: Full Git history for every change
+- **Offline Support**: Work offline, sync when connected
+- **Multi-Platform**: Sync between Windows, macOS, and Linux
+
+---
+
+## How Git Sync Works
+
+### The Basics
+
+Git Sync uses Git version control to synchronize your workspace:
+
+1. **Local Changes**: As you edit notes, Lokus tracks changes
+2. **Auto-Commit**: Changes are automatically committed to your local Git repository
+3. **Push**: Commits are pushed to your remote repository (GitHub, GitLab, etc.)
+4. **Pull**: Other devices pull changes from the remote to stay in sync
+5. **Merge**: If changes conflict, Lokus helps resolve them
+
+### Sync Status Indicator
+
+The sync status indicator appears in the bottom-right of your workspace:
+
+| Icon | Status | Meaning |
+|------|--------|---------|
+| ☁️ Cloud (Blue) | Synced | All changes are synchronized |
+| 🔄 Spinning | Syncing | Currently pushing or pulling changes |
+| ⚡ Branch (Yellow) | Changes Pending | You have uncommitted local changes |
+| ⚠️ Warning (Orange) | Conflicts | Merge conflicts need resolution |
+| ❌ Error (Red) | Error | Sync failed, check error message |
+| ☁️ Cloud (Gray) | Not Configured | Git sync not set up yet |
+
+**Click the status** to commit and push changes.
+**Right-click the status** to open the sync menu with more options.
+
+---
+
+## Initial Setup
+
+<Steps>
+
+### Create a Private Repository
+
+First, create a private Git repository to store your notes.
+
+**GitHub:**
+1. Go to [github.com/new](https://github.com/new)
+2. Enter a repository name (e.g., `lokus-notes`)
+3. Set visibility to **Private** (important for privacy!)
+4. Don't initialize with README, .gitignore, or license
+5. Click **Create repository**
+6. Copy the repository URL (e.g., `https://github.com/yourusername/lokus-notes.git`)
+
+**GitLab:**
+1. Go to [gitlab.com/projects/new](https://gitlab.com/projects/new)
+2. Enter a project name
+3. Set visibility to **Private**
+4. Create project
+5. Copy the repository URL
+
+**Bitbucket:**
+1. Go to [bitbucket.org/repo/create](https://bitbucket.org/repo/create)
+2. Enter a repository name
+3. Set to **Private**
+4. Create repository
+5. Copy the clone URL (HTTPS)
+
+<Callout type="warning">
+**Always use a private repository** to keep your notes secure. Never use a public repository unless you intend to share your notes publicly.
+</Callout>
+
+### Create a Personal Access Token
+
+Git providers require a token for authentication instead of your password.
+
+**GitHub (Recommended):**
+1. Go to [github.com/settings/tokens](https://github.com/settings/tokens)
+2. Click **Generate new token** → **Generate new token (classic)**
+3. Name: `Lokus Sync`
+4. Expiration: Choose duration (90 days or custom)
+5. Select scopes:
+   - ✅ `repo` (Full control of private repositories)
+6. Click **Generate token**
+7. **Copy the token immediately** (you won't see it again!)
+8. Store it securely (you'll need it for setup)
+
+![GitHub Token Creation](/placeholder.svg)
+
+**GitLab:**
+1. Go to [gitlab.com/-/profile/personal_access_tokens](https://gitlab.com/-/profile/personal_access_tokens)
+2. Token name: `Lokus Sync`
+3. Expiration: Set date
+4. Scopes: `write_repository`, `read_repository`
+5. Create token and copy it
+
+**Bitbucket:**
+1. Go to Settings → Personal Settings → App passwords
+2. Create app password
+3. Label: `Lokus Sync`
+4. Permissions: `Repositories: Read`, `Repositories: Write`
+5. Create and copy the password
+
+<Callout type="info">
+**Token Security**: Treat tokens like passwords. Never share them or commit them to code. If a token is compromised, revoke it immediately in your Git provider settings.
+</Callout>
+
+### Configure Git Sync in Lokus
+
+Now configure sync in your Lokus workspace.
+
+1. Open your workspace in Lokus
+2. Go to **Settings** → **Sync** (Cmd+, then Sync tab)
+3. You'll see the setup screen
+
+**Fill in the configuration:**
+
+- **Remote URL**: Paste your repository URL
+  - Example: `https://github.com/yourusername/lokus-notes.git`
+  - Must end with `.git`
+
+- **Username**: Your Git provider username
+  - GitHub: Your GitHub username (not email)
+  - GitLab: Your GitLab username
+  - Bitbucket: Your Bitbucket username
+
+- **Personal Access Token**: Paste the token you created
+  - This is stored securely and encrypted locally
+  - Never exposed to external services
+
+- **Branch**: The branch to sync (default: `main`)
+  - Most repositories use `main` or `master`
+  - Lokus auto-detects this if Git is already initialized
+
+![Lokus Sync Configuration](/placeholder.svg)
+
+<Callout type="info">
+**Auto-Save**: Your sync settings are automatically saved as you type. You'll see a "Saving..." indicator briefly appear.
+</Callout>
+
+### Initialize Git and Connect Remote
+
+After entering your credentials, initialize Git in your workspace.
+
+**Expand "Git Configuration"** section and click:
+
+1. **Initialize Git** button
+   - Creates a local Git repository in your workspace
+   - Makes an initial commit
+   - Shows "✅ Git repository initialized"
+
+2. **Connect Remote Repository** button
+   - Links your workspace to the remote repository
+   - Verifies credentials
+   - Shows "✅ Remote added successfully"
+
+If you see any errors, check:
+- Repository URL is correct and ends with `.git`
+- Token has correct permissions
+- Internet connection is working
+
+<Callout type="success">
+**Success!** You're now ready to sync. The status indicator should show a blue cloud ☁️.
+</Callout>
+
+### First Sync
+
+Perform your first sync to upload your workspace.
+
+**Option 1: Automatic (Recommended)**
+- Make a change to any note
+- The status indicator turns yellow (changes pending)
+- Click the status indicator
+- Lokus commits and pushes your workspace
+
+**Option 2: Manual**
+- Right-click the sync status indicator
+- Select **Commit & Push**
+- Your workspace is uploaded to the remote
+
+On your first push, you may see a progress indicator for a few seconds as all files upload.
+
+![First Sync in Progress](/placeholder.svg)
+
+</Steps>
+
+---
+
+## Setting Up Additional Devices
+
+<Steps>
+
+### Install Lokus on Second Device
+
+Download and install Lokus on your other device(s) from [lokus.app](https://lokus.app).
+
+### Create Empty Workspace Folder
+
+On the new device:
+1. Create an **empty folder** where you want your notes
+2. Example: `Documents/Lokus-Sync/` or `~/Notes/`
+3. Don't add any files to this folder
+
+### Open Workspace and Configure Sync
+
+1. Open Lokus and select the empty folder as your workspace
+2. Go to **Settings** → **Sync**
+3. Enter the **same credentials** as your first device:
+   - Remote URL (same repository)
+   - Username (same username)
+   - Token (generate a new token or reuse existing)
+   - Branch (same branch, usually `main`)
+
+### Initialize Git
+
+1. Click **Initialize Git** (creates local repository)
+2. Click **Connect Remote** (links to your repository)
+
+### Pull Your Notes
+
+1. Right-click the sync status indicator
+2. Select **Pull Changes**
+3. Lokus downloads all your notes from the remote
+4. Wait for sync to complete
+
+<Callout type="success">
+**Done!** Your second device now has a complete copy of your workspace and will stay in sync automatically.
+</Callout>
+
+</Steps>
+
+---
+
+## Daily Usage
+
+### Automatic Syncing
+
+Lokus handles most syncing automatically:
+
+**When you make changes:**
+1. Edit your notes normally
+2. Status indicator shows "Changes pending" (yellow)
+3. Click the indicator or wait for auto-sync (if enabled)
+4. Changes commit and push automatically
+
+**When pulling changes:**
+1. Lokus periodically checks for remote changes
+2. Or: Right-click status → **Pull Changes**
+3. New changes merge automatically
+4. You see updated content instantly
+
+### Manual Sync Operations
+
+**Commit & Push** (Upload your changes)
+```
+Right-click status → Commit & Push
+Or: Click status when changes are pending
+```
+
+**Pull** (Download remote changes)
+```
+Right-click status → Pull Changes
+Shortcut: Cmd+Shift+P (Windows: Ctrl+Shift+P)
+```
+
+**Check Status** (View sync state)
+```
+Right-click status → Check Status
+Shows: Changes, ahead/behind counts, conflicts
+```
+
+### Sync Status Details
+
+Right-click the status indicator and expand the status section to see:
+
+- **Status**: Current sync health (Healthy, Pending, Conflicts, Error)
+- **Last synced**: Time since last successful sync
+- **Branch**: Active Git branch
+- **Changes**: Whether you have uncommitted changes
+- **Ahead**: Commits not yet pushed to remote
+- **Behind**: Commits on remote not yet pulled
+
+---
+
+## Conflict Resolution
+
+### What Are Conflicts?
+
+Conflicts occur when the same file is modified on multiple devices in incompatible ways.
+
+**Example:**
+1. Device A: Changes line 5 of `note.md` to "Version A"
+2. Device B: Changes line 5 of `note.md` to "Version B"
+3. Device B pushes first
+4. Device A tries to push → **Conflict!**
+
+### Automatic Conflict Resolution
+
+Lokus automatically resolves technical file conflicts:
+
+**Auto-Resolved (Keep Local):**
+- `.lokus/` folder (app configuration)
+- `.DS_Store` (macOS metadata)
+- `.vscode/`, `.idea/` (editor settings)
+
+**Auto-Resolved (Keep Remote):**
+- `package-lock.json`, `yarn.lock` (lock files)
+
+These conflicts never require manual intervention.
+
+### Manual Conflict Resolution
+
+When your note content conflicts, Lokus helps you resolve it.
+
+**Conflict Indicators:**
+- ⚠️ Orange warning icon in status
+- Conflict counter shows number of files
+- Right-click status to see affected files
+
+**Resolution Process:**
+
+<Steps>
+
+### Identify Conflicted Files
+
+Right-click the sync status indicator. The conflict section shows:
+- Number of conflicts
+- List of conflicted file paths
+- Visual explanation of conflict markers
+
+![Conflict Resolution UI](/placeholder.svg)
+
+### Open Conflicted Files
+
+Lokus adds conflict markers to show both versions:
+
+```markdown
+<<<<<<< Your Changes (Local)
+This is your local version of the text.
+You wrote this on your current device.
+=======
+This is the remote version of the text.
+Someone else (or you on another device) wrote this.
+>>>>>>> Remote
+```
+
+**Understanding markers:**
+- `<<<<<<< Your Changes`: Start of your local changes
+- `=======`: Separator between versions
+- `>>>>>>> Remote`: End of remote changes
+
+### Edit to Keep Desired Content
+
+Open the file in Lokus editor and manually resolve:
+
+**Option 1: Keep Your Changes**
+```markdown
+This is your local version of the text.
+You wrote this on your current device.
+```
+(Delete conflict markers and remote content)
+
+**Option 2: Keep Remote Changes**
+```markdown
+This is the remote version of the text.
+Someone else (or you on another device) wrote this.
+```
+(Delete conflict markers and your local content)
+
+**Option 3: Merge Both**
+```markdown
+This is your local version of the text.
+You wrote this on your current device.
+
+This is the remote version of the text.
+Someone else (or you on another device) wrote this.
+```
+(Keep both versions, remove markers)
+
+**Option 4: Write New Content**
+```markdown
+This is a completely new version that combines
+the best ideas from both versions.
+```
+(Replace everything with new content)
+
+<Callout type="warning">
+**Important**: You must remove ALL conflict markers (`<<<<<<<`, `=======`, `>>>>>>>`) or the file won't render correctly.
+</Callout>
+
+### Save and Commit
+
+1. Save the file (Cmd+S / Ctrl+S)
+2. Click the sync status indicator
+3. Select **Commit & Push**
+4. Your resolved changes push to remote
+5. Conflict resolved! ✅
+
+</Steps>
+
+### Force Resolution (Advanced)
+
+For situations where you want to discard all changes on one side:
+
+**Force Push (Keep Local, Discard Remote)**
+```
+Right-click status → Advanced → Keep My Local Changes
+⚠️ Warning: Overwrites ALL remote changes
+```
+
+Use when:
+- You know remote changes are outdated
+- You want to reset remote to match your device
+- You're certain local version is correct
+
+**Force Pull (Keep Remote, Discard Local)**
+```
+Right-click status → Advanced → Use Remote Changes
+⚠️ Warning: Discards ALL local changes
+```
+
+Use when:
+- Your local changes are mistakes
+- You want to reset to remote version
+- Another device has the correct version
+
+<Callout type="error">
+**Destructive Operations**: Force push/pull cannot be undone easily. Always make sure you have backups before using these options.
+</Callout>
+
+---
+
+## Authentication & Security
+
+### How Tokens Are Stored
+
+Lokus stores your Git credentials securely:
+
+**Storage Location:**
+- macOS: System Keychain
+- Windows: Windows Credential Manager
+- Linux: System keyring (libsecret)
+
+**Encryption:**
+- Tokens encrypted at rest
+- Only accessible to Lokus app
+- Never sent to third parties
+- Only used for Git operations
+
+### Token Expiration
+
+Personal access tokens expire based on your settings:
+
+**When a token expires:**
+1. Sync status shows "Auth failed" (orange login icon)
+2. Hover to see: "Your session has expired or authentication failed"
+3. Click status or right-click → Re-authenticate
+
+**Renewing token:**
+1. Go to your Git provider's token settings
+2. Regenerate or create new token (same scopes)
+3. Go to Lokus **Settings** → **Sync**
+4. Paste the new token
+5. Sync resumes automatically
+
+<Callout type="info">
+**Best Practice**: Set token expiration to 90 days or more to avoid frequent renewal. Shorter expiration is more secure but requires more maintenance.
+</Callout>
+
+### Token Permissions
+
+Tokens must have these permissions:
+
+**GitHub:**
+- `repo` (Full control of private repositories)
+  - Includes: `repo:status`, `repo_deployment`, `public_repo`, `repo:invite`
+
+**GitLab:**
+- `write_repository` (Read and write to repository)
+- `read_repository` (Read repository data)
+
+**Bitbucket:**
+- `Repositories: Read`
+- `Repositories: Write`
+
+**Minimal permissions** are recommended for security.
+
+### Repository Privacy
+
+**Always use private repositories** for your notes:
+
+- ✅ **Private**: Only you (and collaborators) can access
+- ❌ **Public**: Anyone on the internet can read your notes
+
+**To check repository privacy:**
+- GitHub: Go to repository → Settings → Danger Zone → Change visibility
+- GitLab: Go to project → Settings → General → Visibility
+- Bitbucket: Go to repository → Settings → Repository details → Access level
+
+### Two-Factor Authentication (2FA)
+
+If your Git provider has 2FA enabled:
+
+**GitHub:**
+- Personal access tokens work with 2FA
+- No additional setup needed
+- Token bypasses 2FA for Git operations
+
+**GitLab:**
+- Personal access tokens work with 2FA
+- No code required for sync
+
+**Bitbucket:**
+- Use App Passwords (not regular password)
+- App passwords work with 2FA
+
+<Callout type="success">
+**Recommended**: Enable 2FA on your Git provider account for maximum security. Lokus sync works seamlessly with 2FA using tokens.
+</Callout>
+
+---
+
+## Branch Management
+
+### Understanding Branches
+
+Branches let you organize different versions of your workspace.
+
+**Common use cases:**
+- `main` - Your primary workspace
+- `work` - Work-related notes
+- `personal` - Personal notes
+- `archive` - Old notes
+
+### Default Branch
+
+Most repositories use `main` as the default branch:
+
+- **Modern repositories**: `main`
+- **Older repositories**: `master`
+
+Lokus auto-detects your default branch during setup.
+
+### Switching Branches
+
+To sync with a different branch:
+
+1. Go to **Settings** → **Sync**
+2. Expand **Git Configuration**
+3. Change **Branch** field to branch name
+4. Click **Connect Remote** again
+5. Right-click status → **Pull Changes**
+
+Your workspace updates to the new branch's content.
+
+### Creating New Branches
+
+You can create branches using Git commands:
+
+```bash
+# In your workspace folder
+cd /path/to/workspace
+git checkout -b new-branch
+git push -u origin new-branch
+```
+
+Then switch to the branch in Lokus settings.
+
+<Callout type="info">
+**Most users don't need branches**. The default `main` branch works great for single-user synchronization across devices.
+</Callout>
+
+---
+
+## Platform-Specific Setup
+
+### macOS
+
+**Requirements:**
+- macOS 11 (Big Sur) or later
+- Git pre-installed (comes with Xcode Command Line Tools)
+
+**Verify Git:**
+```bash
+git --version
+# Should show: git version 2.x.x
+```
+
+**Token Storage:**
+- Stored in macOS Keychain
+- Encrypted by system
+- Access controlled by macOS permissions
+
+**Workspace Location:**
+- Recommended: `~/Documents/Lokus/`
+- iCloud Drive: `~/Library/Mobile Documents/com~apple~CloudDocs/Lokus/`
+  - Note: Combining Git sync with iCloud can cause conflicts
+
+### Windows
+
+**Requirements:**
+- Windows 10 or Windows 11
+- Git for Windows installed
+
+**Install Git:**
+1. Download from [git-scm.com](https://git-scm.com/download/win)
+2. Run installer
+3. Use default settings
+4. Restart Lokus after installation
+
+**Verify Git:**
+```cmd
+git --version
+```
+
+**Token Storage:**
+- Stored in Windows Credential Manager
+- Encrypted by system
+- View: Control Panel → Credential Manager → Windows Credentials
+
+**Workspace Location:**
+- Recommended: `C:\Users\YourName\Documents\Lokus\`
+- OneDrive: Works but may cause conflicts with Git sync
+
+<Callout type="warning">
+**Windows Defender**: May scan files during sync operations, slightly slowing performance. This is normal and safe.
+</Callout>
+
+### Linux
+
+**Requirements:**
+- Git installed
+- libsecret (for secure token storage)
+
+**Install Git:**
+```bash
+# Ubuntu/Debian
+sudo apt install git libsecret-1-0
+
+# Fedora
+sudo dnf install git libsecret
+
+# Arch
+sudo pacman -S git libsecret
+```
+
+**Verify Git:**
+```bash
+git --version
+```
+
+**Token Storage:**
+- Stored in system keyring (GNOME Keyring, KWallet, etc.)
+- Requires `libsecret`
+
+**Workspace Location:**
+- Recommended: `~/Documents/Lokus/` or `~/Notes/`
+- Avoid: Mounted network drives (poor Git performance)
+
+---
+
+## Best Practices for Multi-Device Usage
+
+### Work-Edit-Sync Pattern
+
+Follow this pattern for seamless multi-device workflows:
+
+**On each device:**
+1. **Pull first**: Always pull before editing
+2. **Edit**: Make your changes
+3. **Push**: Commit and push when done
+
+**Example:**
+```
+Morning (Laptop):
+  1. Open Lokus
+  2. Right-click status → Pull Changes
+  3. Make edits throughout the day
+  4. Before closing → Click status to push
+
+Afternoon (Phone - hypothetical):
+  1. Open Lokus
+  2. Pull changes (sees morning edits)
+  3. Add quick notes
+  4. Push changes
+
+Evening (Desktop):
+  1. Open Lokus
+  2. Pull changes (sees phone notes)
+  3. Continue editing
+  4. Push when done
+```
+
+### Minimize Conflicts
+
+**Tips to avoid conflicts:**
+
+1. **Pull frequently**: Pull before each work session
+2. **Push often**: Push after finishing editing
+3. **One device at a time**: Don't edit same note simultaneously
+4. **Designate primary device**: Do major edits on one device
+5. **Use separate notes**: Create device-specific notes if needed
+
+### File Organization
+
+**Sync-friendly structure:**
+```
+workspace/
+├── Daily/           # Daily notes (rarely conflict)
+├── Projects/        # Project notes
+│   ├── Project-A/   # Separate folders reduce conflicts
+│   └── Project-B/
+├── Reference/       # Read-only references (never conflict)
+└── _Archive/        # Old notes
+```
+
+### Handling Long Offline Periods
+
+If you work offline for extended periods:
+
+**Before going offline:**
+1. Pull latest changes
+2. Work normally offline
+3. All changes saved locally
+
+**When back online:**
+1. Pull first (may show conflicts if others pushed)
+2. Resolve any conflicts
+3. Push your changes
+
+<Callout type="info">
+**Git stores full history locally**, so you never lose work even when offline for days or weeks.
+</Callout>
+
+### Performance Optimization
+
+**Keep sync fast:**
+
+1. **Avoid large files**: Git performs poorly with files >50MB
+   - Store images elsewhere (cloud storage, local folder)
+   - Link to them instead of embedding
+
+2. **Use .gitignore**: Exclude non-essential files
+   ```
+   # .gitignore in workspace root
+   .DS_Store
+   .lokus/cache/
+   *.tmp
+   ```
+
+3. **Limit binary files**: Markdown, plain text sync best
+   - PDFs, images, videos slow down sync
+   - Consider external storage for media
+
+4. **Regular commits**: Small, frequent commits sync faster than large batches
+
+---
+
+## Troubleshooting
+
+### Common Issues
+
+#### "Authentication Failed" Error
+
+**Symptoms:**
+- Orange login icon in status
+- Error: "Your session has expired or authentication failed"
+
+**Solutions:**
+1. **Check token expiration**:
+   - Go to Git provider → Token settings
+   - Check if token expired
+   - Generate new token if needed
+
+2. **Verify token permissions**:
+   - GitHub: Must have `repo` scope
+   - Check token has write access
+
+3. **Re-enter credentials**:
+   - Settings → Sync
+   - Re-enter username and token
+   - Try syncing again
+
+#### "Network Connection Failed" Error
+
+**Symptoms:**
+- Red error icon
+- Error: "Network connection failed"
+
+**Solutions:**
+1. **Check internet connection**:
+   - Test browsing a website
+   - Try: `ping github.com`
+
+2. **Check repository URL**:
+   - Must be HTTPS (not SSH)
+   - Format: `https://github.com/user/repo.git`
+
+3. **Firewall/VPN**:
+   - Check if firewall blocks Git
+   - Try disconnecting VPN
+
+4. **Git provider status**:
+   - Check status.github.com
+   - GitLab status page
+   - May be temporary outage
+
+#### "Git Not Initialized" Error
+
+**Symptoms:**
+- Error: "Git not initialized in workspace"
+
+**Solutions:**
+1. Go to **Settings** → **Sync**
+2. Expand **Git Configuration**
+3. Click **Initialize Git**
+4. Then click **Connect Remote**
+5. Try syncing again
+
+#### Push/Pull Takes Forever
+
+**Symptoms:**
+- Sync stuck on "Pushing..." or "Pulling..."
+- No progress for minutes
+
+**Solutions:**
+1. **Check file sizes**:
+   - Large files (>50MB) slow down sync
+   - Remove or use Git LFS
+
+2. **Check commit count**:
+   - First sync of large workspace takes time
+   - Subsequent syncs much faster
+
+3. **Check network speed**:
+   - Run speed test
+   - Slow upload speed affects push
+
+4. **Repository size**:
+   - Large repositories (>1GB) sync slowly
+   - Consider archiving old notes
+
+#### Conflicts Won't Resolve
+
+**Symptoms:**
+- Resolved conflicts but status still shows warning
+- Can't commit after resolving
+
+**Solutions:**
+1. **Check for remaining markers**:
+   - Search workspace for `<<<<<<<`
+   - Ensure all markers removed
+
+2. **Force resolution**:
+   - Right-click status → Advanced
+   - Choose Keep Local or Keep Remote
+   - Confirm operation
+
+3. **Manual Git commands** (Advanced):
+   ```bash
+   cd /path/to/workspace
+   git status  # See conflicted files
+   # Edit files to resolve
+   git add .
+   git commit -m "Resolve conflicts"
+   ```
+
+#### "Remote Does Not Match" Error
+
+**Symptoms:**
+- Error: "src refspec does not match any existing object"
+
+**Solutions:**
+1. **Verify remote URL**:
+   - Settings → Sync
+   - Check URL is correct
+   - Must end with `.git`
+
+2. **Recreate remote connection**:
+   - Settings → Sync → Git Configuration
+   - Click **Connect Remote** again
+
+3. **Check branch name**:
+   - Verify branch exists on remote
+   - Common: `main` vs `master`
+
+### Advanced Troubleshooting
+
+#### View Git Logs
+
+To diagnose complex issues, check Git logs:
+
+**macOS/Linux:**
+```bash
+cd /path/to/workspace
+git log --oneline -10     # Last 10 commits
+git status                # Current status
+git remote -v             # Verify remote
+```
+
+**Windows:**
+```cmd
+cd C:\path\to\workspace
+git log --oneline -10
+git status
+git remote -v
+```
+
+#### Reset to Remote State
+
+If local repository is corrupted:
+
+<Callout type="error">
+**Warning**: This discards ALL local changes! Backup first.
+</Callout>
+
+```bash
+cd /path/to/workspace
+git fetch origin
+git reset --hard origin/main
+```
+
+Then in Lokus:
+- Right-click status → Check Status
+- Should show "Synced"
+
+#### Reinitialize Sync
+
+If all else fails, reinitialize Git sync:
+
+<Callout type="error">
+**Backup first!** Copy workspace folder before proceeding.
+</Callout>
+
+1. Backup workspace folder
+2. Settings → Sync → Git Configuration
+3. Click **Reset Configuration** (clears all settings)
+4. Delete `.git` folder in workspace
+5. Follow setup instructions again
+6. Pull changes from remote
+
+---
+
+## FAQ
+
+### Does Git Sync replace backups?
+
+**No**. Git sync is for synchronization, not backups.
+
+**Why not a backup?**
+- Deleting a file syncs the deletion across devices
+- Force operations can overwrite data
+- Repository corruption affects all devices
+
+**Recommended backup strategy:**
+1. **Git sync**: Real-time synchronization
+2. **Time Machine/Windows Backup**: Local backups
+3. **Cloud backup**: Separate backup service (Backblaze, etc.)
+4. **Export archives**: Periodic exports to ZIP/external drive
+
+### Can multiple people sync to the same workspace?
+
+**Yes**, but with caveats:
+
+**Works well for:**
+- Collaboration on shared notes
+- Team knowledge bases
+- Project documentation
+
+**Challenges:**
+- Frequent conflicts if editing simultaneously
+- Need coordination on who edits what
+- All users need access to repository
+
+**Better alternatives for collaboration:**
+- Separate branches per person
+- Designated note owners
+- Communication about who's editing
+
+### What happens if I delete a note on one device?
+
+The deletion syncs to all devices:
+
+1. Delete note on Device A
+2. Commit & push
+3. Device B pulls changes
+4. Note deleted on Device B
+
+**Recovery:**
+- Git preserves history
+- Can restore from previous commits
+- Use Git commands: `git log`, `git checkout`
+
+### Does Git Sync work with large files?
+
+**Limited support:**
+
+- Text files: Excellent (Markdown, code, etc.)
+- Small images (`<1MB`): Okay
+- Large files (>50MB): Very slow
+- Videos/Audio: Not recommended
+
+**For large files:**
+- Use Git LFS (Large File Storage)
+- Or: Store in cloud (Dropbox, etc.) and link in notes
+- Or: Keep in separate non-synced folder
+
+### Can I use SSH instead of HTTPS?
+
+**Not currently supported.**
+
+Lokus Git Sync requires HTTPS URLs with personal access tokens.
+
+**Why HTTPS?**
+- Simpler authentication (tokens vs SSH keys)
+- Works across all platforms without setup
+- Easier for non-technical users
+
+**Workaround:**
+- Use Git command line with SSH manually
+- Then use Lokus for editing only
+
+### What's the difference between Git Sync and cloud sync (Dropbox, etc.)?
+
+| Feature | Git Sync | Cloud Sync (Dropbox, etc.) |
+|---------|----------|----------------------------|
+| Cost | Free | Paid (usually) |
+| Privacy | Full control | Provider has access |
+| Conflict Resolution | Intelligent merging | File duplication |
+| Version History | Complete Git history | Limited versions |
+| Offline Access | Full | Depends on provider |
+| Setup Complexity | Medium | Easy |
+| Collaboration | Built-in (Git) | Limited |
+
+**Best of both worlds:**
+- Use Git Sync for version control and collaboration
+- Store Git repository in cloud folder for extra backup
+
+### How do I stop syncing?
+
+To disable Git Sync:
+
+1. Settings → Sync
+2. Expand **Git Configuration**
+3. Click **Reset Configuration**
+4. Removes remote connection
+5. Workspace becomes local-only
+
+Your files remain unchanged. You can reconfigure sync later.
+
+To completely remove Git:
+1. Close Lokus
+2. Delete `.git` folder in workspace
+3. Workspace is now a plain folder
+
+---
+
+## Security Considerations
+
+### Data Privacy
+
+**What's private:**
+- Your notes content (encrypted in transit via HTTPS)
+- Repository access (private repository)
+- Token (stored encrypted locally)
+
+**What's potentially visible:**
+- Commit messages (visible in Git history)
+- File names (visible in Git history)
+- Commit timestamps (visible in Git history)
+
+**Best practices:**
+- Use private repositories
+- Avoid sensitive data in commit messages
+- Use descriptive but not revealing file names
+
+### Token Security
+
+**Protect your token:**
+- Never share tokens
+- Never commit tokens to code
+- Revoke tokens if compromised
+- Use minimum required permissions
+- Set reasonable expiration dates
+
+**Revoke token if:**
+- Device is lost or stolen
+- Token accidentally exposed
+- You stop using Lokus
+- Suspicious activity detected
+
+**To revoke:**
+- GitHub: Settings → Developer settings → Tokens → Delete
+- GitLab: Preferences → Access Tokens → Revoke
+- Bitbucket: Settings → App passwords → Delete
+
+### Repository Access
+
+**Who can access:**
+- You (repository owner)
+- Collaborators you explicitly add
+- No one else (if private)
+
+**Check access:**
+- GitHub: Repository → Settings → Collaborators
+- GitLab: Project → Members
+- Bitbucket: Repository → Settings → User and group access
+
+**Remove access:**
+- Remove collaborators you no longer trust
+- Regenerate token if shared accidentally
+
+### Network Security
+
+**Git HTTPS is encrypted:**
+- Data encrypted in transit (TLS/SSL)
+- Same security as online banking
+- Safe on public WiFi (but VPN still recommended)
+
+**Additional security:**
+- Use VPN for extra layer
+- Avoid unencrypted public WiFi without VPN
+- Keep Lokus updated for security patches
+
+---
+
+## Related Features
+
+- **[Workspace Management](/features/workspace)**: Organize your workspace
+- **[File Management](/features/file-management)**: Manage files and folders
+- **[Settings](/features/settings)**: Configure Lokus
+- **[Keyboard Shortcuts](/features/keyboard-shortcuts)**: Master shortcuts
+
+---
+
+## Getting Help
+
+Need assistance with Git Sync?
+
+- **[Troubleshooting Guide](/advanced/troubleshooting)**: Solve common issues
+- **[Community Forum](https://github.com/yourusername/lokus/discussions)**: Ask questions
+- **[GitHub Issues](https://github.com/yourusername/lokus/issues)**: Report bugs
+- **Email Support**: support@lokus.app
+
+---
+
+## What's Next?
+
+- **[Template System](/features/templates/overview)**: Automate note creation
+- **[Bases](/features/bases/overview)**: Structure your data
+- **[Advanced Search](/tutorials/advanced-search)**: Find anything instantly
