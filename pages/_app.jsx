@@ -7,6 +7,13 @@ export default function App({ Component, pageProps }) {
 
   return (
     <>
+      {/* Umami Analytics (Self-hosted, Privacy-friendly) */}
+      <Script
+        src="https://analytics.lokusmd.com/script.js"
+        data-website-id="1299d78a-7f04-411f-9fa2-22ffbbc3258c"
+        strategy="afterInteractive"
+      />
+
       {/* Microsoft Clarity */}
       {clarityId && (
         <Script
