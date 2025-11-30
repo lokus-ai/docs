@@ -1,0 +1,363 @@
+---
+title: "Page Preview - Lokus Documentation"
+description: "Hover over wiki links to preview note content without leaving your current page"
+keywords: [lokus, page preview, hover preview, wiki links, navigation, note preview]
+---
+
+import { Steps, Callout } from 'nextra/components'
+
+# Page Preview
+
+Instantly preview linked notes without navigating away from your current page. Hover over any wiki link to see a quick preview of the target note's content.
+
+<Callout type="info">
+Page preview enhances your workflow by letting you peek at linked content without losing your place.
+</Callout>
+
+## What is Page Preview?
+
+Page preview (also called hover preview or link preview) displays a floating popup when you hover over wiki links in your notes. This popup shows:
+
+- The title of the linked note
+- A preview of the note's content
+- Smart positioning to stay on-screen
+
+### Why Use Page Preview?
+
+- **Stay Focused**: Check linked content without leaving your current note
+- **Faster Navigation**: Decide if you need to open a link before clicking
+- **Context at a Glance**: Understand references without breaking flow
+- **Reduced Tab Clutter**: Fewer unnecessary note opens
+- **Better Research**: Quickly scan multiple references while reading
+
+## How It Works
+
+<Steps>
+
+### Step 1: Create or Find a Wiki Link
+
+Any internal wiki link in your notes can trigger a preview:
+
+```markdown
+See the [[Project Overview]] for details.
+
+Also check out [[Meeting Notes 2024-03-15]].
+```
+
+### Step 2: Hover Over the Link
+
+Move your cursor over a wiki link and wait briefly (approximately 500ms). A preview popup appears near your cursor.
+
+### Step 3: Read the Preview
+
+The popup displays:
+- The note's title in the header
+- A preview of the content (currently shows placeholder text in Phase 1)
+- A close button (×) in the top-right corner
+
+### Step 4: Close or Navigate
+
+- **Close**: Click the × button or move your cursor away from the popup
+- **Open**: Click the wiki link itself to navigate to the full note
+
+</Steps>
+
+## Features
+
+### Smart Positioning
+
+The preview popup intelligently positions itself to stay visible:
+
+- **Default**: Appears below and to the right of your cursor
+- **Near Right Edge**: Shifts left to stay on-screen
+- **Near Bottom**: Appears above the cursor instead of below
+- **Corner Cases**: Adjusts to the nearest visible position
+
+This ensures you can always read the preview, regardless of where the link appears on your screen.
+
+### Theme Integration
+
+Page previews automatically match your active theme:
+
+- **Background**: Uses your theme's primary background color
+- **Text**: Inherits your theme's text colors
+- **Border**: Styled with your theme's border colors
+- **Dark Mode**: Fully compatible with dark themes
+
+### Quick Dismissal
+
+Multiple ways to close a preview:
+
+1. **Click the close button (×)** in the preview header
+2. **Move cursor away** from the preview
+3. **Click elsewhere** in your note
+4. **Navigate to the link** (opens the target note)
+
+## Current Implementation (Phase 1)
+
+<Callout type="info">
+The current version of page preview is in Phase 1, showing the basic preview structure. Future updates will add full content rendering.
+</Callout>
+
+### What's Included
+
+✅ Preview popup appears on hover
+✅ Smart positioning system
+✅ Note title display
+✅ Close button
+✅ Theme integration
+✅ Placeholder content indication
+
+### Coming in Future Phases
+
+The page preview feature is planned to expand with:
+
+- **Full Content Rendering**: Display actual note content (not just placeholder text)
+- **Markdown Formatting**: Render headings, lists, bold, italic, etc.
+- **Image Previews**: Show images embedded in linked notes
+- **Scroll Support**: Navigate through long note previews
+- **Size Customization**: Adjust preview window size in preferences
+- **Delay Configuration**: Control how quickly previews appear
+- **Preview for Block References**: Show preview of specific blocks (`[[Note^blockid]]`)
+- **External Links**: Preview metadata for external URLs
+
+## Use Cases
+
+### Research and Reading
+
+Quickly verify references without losing your place:
+
+```markdown
+## Literature Review
+
+The methodology aligns with [[Smith 2023]] and extends [[Jones 2022]]'s findings.
+```
+
+Hover over each reference to see the full citation or key points without opening multiple notes.
+
+### Project Management
+
+Check task details while reviewing status:
+
+```markdown
+## Sprint Status
+
+- [[Task: Implement Authentication]] - In Progress
+- [[Task: Database Migration]] - Completed
+- [[Task: UI Redesign]] - Blocked (see [[Design Review Notes]])
+```
+
+Preview each task note to see current status, assignees, and blockers.
+
+### Knowledge Navigation
+
+Explore your knowledge graph while maintaining context:
+
+```markdown
+## Zettelkasten Note
+
+This concept relates to [[Atomic Habits]] and contradicts [[Traditional Productivity Methods]].
+
+See also: [[Flow State]], [[Deep Work]], [[Cal Newport's Philosophy]]
+```
+
+Hover over each link to glimpse the connected ideas without breaking your reading flow.
+
+### Writing and Editing
+
+Verify you're linking to the correct note:
+
+```markdown
+For installation instructions, see [[Setup Guide]].
+```
+
+Hover to confirm it's the right setup guide (not "Advanced Setup Guide" or "Quick Setup").
+
+## Tips & Best Practices
+
+### Hover Intentionally
+
+The preview delay prevents accidental popups while casually moving your cursor. Pause briefly over a link to trigger the preview.
+
+### Use for Quick Checks
+
+Page preview is perfect for:
+- ✅ Verifying you're linking to the correct note
+- ✅ Checking if a reference is relevant
+- ✅ Scanning key points before opening
+
+Avoid using it for:
+- ❌ Reading entire notes (open the note instead)
+- ❌ Detailed analysis (better to open in a new tab/pane)
+
+### Combine with Other Features
+
+Page preview works great alongside:
+
+- **Block References**: Preview specific blocks (planned feature)
+- **Backlinks**: Preview notes that link to your current note
+- **Graph View**: Preview nodes when exploring your knowledge graph
+
+### Keyboard-Friendly Alternative
+
+If you prefer keyboard navigation:
+1. Tab to a wiki link (or search with `/`)
+2. Press Enter to open the note directly
+
+## Accessibility
+
+Page preview is designed with accessibility in mind:
+
+- **Keyboard Navigation**: Close button is keyboard-accessible
+- **Screen Readers**: Preview content is announced when opened
+- **High Contrast**: Respects system and theme contrast settings
+- **Motion**: No automatic animations that could cause discomfort
+
+### Disabling Preview (Future)
+
+While not currently available, future versions will include a preference to disable hover preview if it interferes with your workflow or accessibility tools.
+
+## Comparison with Other Apps
+
+### Obsidian
+
+Lokus page preview is inspired by Obsidian's hover preview feature:
+
+- Similar hover activation
+- Comparable positioning logic
+- Theme integration
+
+Planned additions will bring feature parity and beyond.
+
+### Notion
+
+Unlike Notion's page previews (which show in a side panel), Lokus previews appear as floating popups near your cursor for faster, more contextual access.
+
+### Roam Research
+
+Similar to Roam's page reference popups, but with:
+- Better positioning (stays on-screen)
+- Theme integration
+- Cleaner UI
+
+## Troubleshooting
+
+### Preview Not Appearing
+
+**Problem**: Hovering over a wiki link doesn't show a preview.
+
+**Solutions**:
+- Ensure you're hovering over a valid wiki link (`[[Note Name]]`)
+- Wait briefly (500ms delay is normal)
+- Check that the link is properly formatted
+- Verify the target note exists
+
+### Preview Appears in Wrong Position
+
+**Problem**: Preview popup is cut off or poorly positioned.
+
+**Likely Cause**: This is rare due to smart positioning, but can happen with:
+- Very small browser windows
+- Unusual screen aspect ratios
+
+**Solutions**:
+- Resize your window to give more space
+- Move the link away from screen edges if possible
+
+### Preview Content Missing
+
+**Current Status**: Phase 1 shows placeholder text. Full content rendering is planned for future updates.
+
+## Performance Considerations
+
+### Lightweight Implementation
+
+Page preview is designed for performance:
+- **Minimal DOM Impact**: Preview only exists when active
+- **Smart Debouncing**: Prevents excessive rendering from cursor movement
+- **Lazy Content Loading**: (Future) Content loads on-demand, not preemptively
+
+### Best Practices
+
+For optimal performance:
+- Keep notes reasonably sized (very long notes may take longer to preview in future versions)
+- Avoid excessive hover triggering (let the preview appear naturally)
+
+## Customization (Future)
+
+Planned customization options include:
+
+### Preview Appearance
+
+- **Size**: Adjust width and height
+- **Font Size**: Increase or decrease preview text size
+- **Max Lines**: Limit preview length
+
+### Preview Behavior
+
+- **Hover Delay**: Control how quickly preview appears
+- **Auto-Close Delay**: Set how long preview stays open
+- **Trigger Method**: Choose hover, click, or keyboard shortcut
+
+### Preview Content
+
+- **Content Length**: Show first 100, 200, or 500 words
+- **Image Display**: Show/hide images in preview
+- **Format Rendering**: Choose plain text or full markdown rendering
+
+## Related Features
+
+- [Wiki Links](/features/wiki-links) - Internal note linking
+- [Block References](/features/block-references) - Link to specific content blocks
+- [Backlinks](/features/backlinks) - See all notes linking to current note
+- [Graph View](/features/graph-view) - Visualize note connections
+
+## Keyboard Shortcuts
+
+| Action | Shortcut |
+|--------|----------|
+| Close preview | Click × button |
+| Navigate to linked note | Click wiki link |
+
+## API (For Plugin Developers)
+
+Page preview functionality can be extended through Lokus plugins:
+
+```javascript
+// Future API (not yet implemented)
+app.workspace.on('hover-link', (event) => {
+  const { target, position } = event
+  // Custom preview logic
+})
+```
+
+---
+
+Page preview transforms your note-taking experience by making linked content instantly accessible. No more losing your place or opening dozens of tabs—just hover and read.
+
+## Development Roadmap
+
+### Phase 1 (Current) ✅
+- Basic popup structure
+- Smart positioning
+- Theme integration
+- Close button
+
+### Phase 2 (Planned)
+- Full markdown content rendering
+- Image display
+- Customizable size
+
+### Phase 3 (Planned)
+- Block reference previews
+- Scroll support for long notes
+- Performance optimizations
+
+### Phase 4 (Future)
+- External link metadata
+- Preview customization in preferences
+- Plugin API for custom previews
+
+---
+
+Stay tuned for updates as page preview evolves into a comprehensive content discovery tool!

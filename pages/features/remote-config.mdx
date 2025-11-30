@@ -1,0 +1,397 @@
+---
+title: "Remote Configuration - Lokus Documentation"
+description: "Dynamic feature announcements and remote configuration from updates.lokusmd.com. Stay informed about new features and updates."
+keywords: [lokus, remote configuration, announcements, feature flags, remote updates, notifications]
+---
+
+import { Callout } from 'nextra/components'
+
+# Remote Configuration & Announcements
+
+Lokus can receive dynamic feature announcements and configuration updates from a remote server, keeping you informed about new features, updates, and important notifications.
+
+<Callout type="info">
+Remote Configuration was introduced in **v1.3.4** (PR #251) to enable dynamic feature announcements without requiring app updates.
+</Callout>
+
+## Overview
+
+The Remote Configuration system allows Lokus to:
+
+- **Announce New Features**: Get notified when new features are released
+- **Display Promotions**: Show special offers or promotional content
+- **Share Updates**: Receive important product updates and news
+- **Dynamic Content**: Update messaging without releasing a new version
+- **Seasonal Content**: Show time-based announcements for events or releases
+
+All announcements are fetched from `updates.lokusmd.com` in real-time when you launch Lokus.
+
+## How It Works
+
+### Configuration Fetching
+
+1. **On Startup**: Lokus fetches configuration from `https://updates.lokusmd.com/config.json`
+2. **Cache Busting**: Timestamp parameter prevents browser caching (`?t={timestamp}`)
+3. **Fallback**: If fetch fails, Lokus uses default configuration (offline-safe)
+4. **Merge**: Remote settings are merged with local defaults
+
+### Announcement Display
+
+When a valid announcement is available:
+
+1. **Date Range Check**: Verifies announcement is currently active (between start and end dates)
+2. **Dismissal Check**: Checks if you've already dismissed this announcement
+3. **Toast Notification**: Shows announcement in a non-intrusive toast notification
+4. **Action Button**: Optional button to open relevant links
+5. **Persistence**: Dismissed announcements won't show again
+
+### Configuration Structure
+
+The remote configuration file (`config.json`) contains:
+
+```json
+{
+  "announcement": {
+    "id": "welcome-v1.3.5",
+    "title": "Lokus v1.3.5 Released",
+    "message": "New image viewer and performance improvements are here!",
+    "action_label": "Learn More",
+    "action_url": "https://lokusmd.com/releases/v1.3.5",
+    "start_date": "2025-11-25T00:00:00Z",
+    "end_date": "2025-12-31T23:59:59Z"
+  },
+  "enable_new_features": false,
+  "welcome_message_variant": "default",
+  "promo_banner_active": false
+}
+```
+
+## Announcement Features
+
+### Toast Notifications
+
+Announcements appear as elegant toast notifications:
+
+- **Position**: Bottom-right corner of the application
+- **Duration**: Displays for 10 seconds by default
+- **Theme Support**: Matches your light/dark theme preference
+- **Non-Blocking**: Doesn't interrupt your workflow
+- **Dismissible**: Click X or wait for auto-dismiss
+
+### Interactive Actions
+
+Announcements can include action buttons:
+
+- **Link Opening**: Opens URLs in your default browser
+- **Confirmation Dialog**: Asks for permission before opening external links
+- **Security**: Uses Tauri's secure shell plugin for link opening
+- **Fallback**: Standard browser opening if Tauri unavailable
+
+### Smart Scheduling
+
+Announcements support sophisticated scheduling:
+
+#### Seasonality
+
+- **Start Date**: Announcement becomes active at specified date/time
+- **End Date**: Announcement expires after specified date/time
+- **Timezone**: Uses UTC timestamps for consistency
+- **Auto-Filter**: Expired announcements never display
+
+#### Frequency Control
+
+- **Once Per Announcement**: Each unique announcement shows only once
+- **ID-Based Tracking**: Uses announcement `id` to track dismissals
+- **LocalStorage**: Dismissal state persists across sessions
+- **Reset Available**: Clear localStorage to see announcements again
+
+## Privacy and Security
+
+<Callout type="warning">
+Lokus takes your privacy seriously. The remote configuration system is designed with privacy and security as top priorities.
+</Callout>
+
+### Privacy Guarantees
+
+- **No Tracking**: Fetching configuration doesn't track users
+- **No Analytics**: No data collected about announcement interactions
+- **No Personal Data**: No personal information transmitted
+- **Local Storage Only**: Dismissal preferences stored locally
+- **Optional**: Can be disabled entirely in preferences
+
+### Security Features
+
+- **HTTPS Only**: All communication over encrypted HTTPS
+- **First-Party**: Configuration hosted on official Lokus domain
+- **Link Confirmation**: Explicit confirmation before opening external links
+- **No Code Execution**: Configuration is data-only (JSON)
+- **Sandboxed**: No arbitrary code execution from remote config
+- **Open Source**: Configuration system is fully auditable
+
+### Data Collection
+
+**What Lokus DOES:**
+- Fetches public configuration file from `updates.lokusmd.com`
+- Stores dismissed announcement IDs in browser localStorage
+
+**What Lokus DOES NOT:**
+- Track when announcements are viewed
+- Send usage data or analytics
+- Identify individual users
+- Store personal information remotely
+- Share data with third parties
+
+## Configuration Options
+
+### Disabling Announcements
+
+If you prefer not to receive announcements:
+
+1. Open **Preferences** (⌘+, on macOS, Ctrl+, on Windows/Linux)
+2. Navigate to **General** or **Privacy** tab
+3. Toggle off **"Show Remote Announcements"**
+4. Restart Lokus (configuration stops fetching)
+
+<Callout>
+Disabling announcements means you may miss important security updates or critical feature announcements.
+</Callout>
+
+### Clearing Dismissed Announcements
+
+To see previously dismissed announcements again:
+
+1. Open **Developer Tools** (⌘+Shift+I on macOS, F12 on Windows/Linux)
+2. Go to **Console** tab
+3. Execute: `localStorage.removeItem('lokus_dismissed_announcements')`
+4. Restart Lokus
+
+Or manually:
+
+1. Open browser localStorage for Lokus
+2. Delete key: `lokus_dismissed_announcements`
+3. Restart application
+
+### Testing Announcements
+
+For developers or testers:
+
+```javascript
+// View current remote config
+fetch('https://updates.lokusmd.com/config.json?t=' + Date.now())
+  .then(r => r.json())
+  .then(console.log);
+
+// View dismissed announcements
+console.log(JSON.parse(localStorage.getItem('lokus_dismissed_announcements') || '[]'));
+
+// Clear dismissals to see announcements again
+localStorage.removeItem('lokus_dismissed_announcements');
+```
+
+## Use Cases
+
+### Feature Announcements
+
+**Example**: New collaborative editing feature
+
+```json
+{
+  "announcement": {
+    "id": "collab-editing-2025",
+    "title": "Introducing Collaborative Editing",
+    "message": "Edit notes in real-time with your team. Try it now!",
+    "action_label": "Learn How",
+    "action_url": "https://lokusmd.com/docs/collaboration",
+    "start_date": "2025-12-01T00:00:00Z",
+    "end_date": "2025-12-31T23:59:59Z"
+  }
+}
+```
+
+### Release Notifications
+
+**Example**: Major version release
+
+```json
+{
+  "announcement": {
+    "id": "v2.0-launch",
+    "title": "Lokus 2.0 is Here!",
+    "message": "Experience the completely redesigned Lokus with AI-powered features.",
+    "action_label": "What's New",
+    "action_url": "https://lokusmd.com/blog/v2.0-launch",
+    "start_date": "2026-01-15T00:00:00Z",
+    "end_date": "2026-02-15T23:59:59Z"
+  }
+}
+```
+
+### Promotional Events
+
+**Example**: Holiday sale
+
+```json
+{
+  "announcement": {
+    "id": "holiday-sale-2025",
+    "title": "Holiday Sale - 30% Off Lokus Pro",
+    "message": "Upgrade to Lokus Pro and save 30% through December.",
+    "action_label": "Upgrade Now",
+    "action_url": "https://lokusmd.com/pricing?promo=HOLIDAY30",
+    "start_date": "2025-12-01T00:00:00Z",
+    "end_date": "2025-12-31T23:59:59Z"
+  }
+}
+```
+
+### Important Updates
+
+**Example**: Security advisory
+
+```json
+{
+  "announcement": {
+    "id": "security-update-nov-2025",
+    "title": "Security Update Available",
+    "message": "Please update to v1.3.6 for important security fixes.",
+    "action_label": "Update Now",
+    "action_url": "https://lokusmd.com/security/advisory-nov-2025",
+    "start_date": "2025-11-20T00:00:00Z",
+    "end_date": "2025-12-20T23:59:59Z"
+  }
+}
+```
+
+## Technical Details
+
+### React Context API
+
+Remote configuration uses React Context for state management:
+
+- **Provider**: `RemoteConfigProvider` wraps the entire app
+- **Context**: `RemoteConfigContext` provides configuration state
+- **Hook**: `useRemoteConfig()` accesses config in components
+- **Component**: `RemoteAnnouncement` handles toast display
+
+### Configuration Loading
+
+```javascript
+// Default configuration (fallback)
+const DEFAULT_CONFIG = {
+  enable_new_features: false,
+  welcome_message_variant: 'default',
+  promo_banner_active: false,
+};
+
+// Fetch and merge with defaults
+const response = await fetch(`${REMOTE_CONFIG_URL}?t=${Date.now()}`);
+const remoteData = await response.json();
+const config = { ...DEFAULT_CONFIG, ...remoteData };
+```
+
+### State Management
+
+The system maintains three states:
+
+1. **Loading**: Initial fetch in progress
+2. **Loaded**: Configuration successfully fetched and merged
+3. **Error**: Fetch failed, using default configuration
+
+Components can react to these states:
+
+```javascript
+const { config, loading, error, refreshConfig } = useRemoteConfig();
+
+if (loading) return <LoadingSpinner />;
+if (error) console.warn('Using default config');
+// Use config.announcement, config.enable_new_features, etc.
+```
+
+### Error Handling
+
+Robust error handling ensures the app never breaks:
+
+- **Network Failure**: Falls back to default configuration
+- **Invalid JSON**: Logs warning, uses defaults
+- **Missing Fields**: Merges with defaults to fill gaps
+- **CORS Issues**: Properly configured CORS headers on server
+
+## Best Practices
+
+### For Users
+
+- **Keep Announcements Enabled**: Stay informed about important updates
+- **Review Actions**: Read announcement carefully before clicking action buttons
+- **Report Issues**: If an announcement seems suspicious, report it
+- **Check Regularly**: Ensure you're receiving announcements (check on startup)
+
+### For Developers
+
+- **Unique IDs**: Use descriptive, unique IDs for each announcement
+- **Date Ranges**: Always set both start_date and end_date
+- **Testing**: Test announcements in staging before production
+- **Clear Messages**: Keep announcement text concise and actionable
+- **Valid URLs**: Ensure action URLs are correct and accessible
+- **Gradual Rollout**: Consider phased rollouts for major announcements
+
+## Troubleshooting
+
+### Announcements Not Appearing
+
+**Symptoms**: No toast notifications on startup
+
+**Solutions:**
+1. **Check Date Range**: Verify current date is within start_date and end_date
+2. **Clear Dismissals**: Remove from localStorage and restart
+3. **Network Connection**: Ensure internet connectivity
+4. **Check Console**: Look for fetch errors in developer console
+5. **Verify Config**: Manually fetch config.json to verify it's accessible
+
+### Duplicate Announcements
+
+**Symptoms**: Same announcement shows multiple times
+
+**Solutions:**
+1. **Check Announcement ID**: Ensure ID is unique and consistent
+2. **LocalStorage**: Verify dismissal tracking is working
+3. **Clear and Restart**: Clear localStorage and test dismissal
+
+### Action Button Not Working
+
+**Symptoms**: Clicking action button does nothing
+
+**Solutions:**
+1. **Check URL**: Verify action_url is valid and accessible
+2. **Browser Permissions**: Ensure Lokus can open external links
+3. **Console Errors**: Check developer console for errors
+4. **Tauri Shell**: Verify Tauri shell plugin is loaded
+
+### Config Not Loading
+
+**Symptoms**: Remote config never loads, always uses defaults
+
+**Solutions:**
+1. **Network**: Check internet connection
+2. **Firewall**: Ensure `updates.lokusmd.com` is not blocked
+3. **DNS**: Verify DNS resolution works
+4. **CORS**: Check browser console for CORS errors
+5. **Server Status**: Verify updates.lokusmd.com is online
+
+## Future Enhancements
+
+Planned improvements for Remote Configuration:
+
+- **Feature Flags**: Remotely enable/disable features for A/B testing
+- **User Preferences**: Sync preferences across devices
+- **In-App Surveys**: Collect user feedback on features
+- **Changelog Display**: Show recent changes in-app
+- **Announcement History**: View past announcements
+- **Rich Content**: Support for images and formatted text in announcements
+
+---
+
+**Related Topics:**
+- [Auto-Updater](/features/auto-updater) - Automatic application updates
+- [Settings](/features/settings) - Configure Lokus preferences
+- [Privacy](/privacy) - Privacy policy and data handling
+- [Security](/security) - Security practices and advisories

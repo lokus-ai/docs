@@ -10,53 +10,156 @@ keywords: [lokus, templates, overview, note templates, productivity, workspace, 
 
 Templates in Lokus provide reusable structures for common note types, saving time and ensuring consistency across your workspace. From meeting notes to project plans, templates help you start with the right structure every time.
 
-## What's New in v1.3
+## Revolutionary Template System - 90+ Features
 
-Version 1.3 introduces a universal template system that works across all of Lokus:
+Lokus features the most powerful template system in any note-taking app, with **90+ built-in functions** for date operations, text manipulation, and dynamic content generation. Version 1.3 introduces a file-based architecture and enterprise-grade features.
 
-- **Universal Template System** - Templates now work everywhere:
-  - Note templates for structured documents
-  - Daily note templates with automatic date variables
-  - Project templates with multi-file scaffolding
-  - Meeting templates with attendee tracking
-  - Custom templates for any use case
-  - Template inheritance for building on base templates
-  - Template composition to combine multiple templates
-- **Powerful Template Variables** - Dynamic content generation:
-  - `{{title}}` - Note title with automatic capitalization
-  - `{{date}}` - Current date in your preferred format (YYYY-MM-DD default)
-  - `{{time}}` - Current time with 12/24 hour support
-  - `{{datetime}}` - Combined date and time
-  - `{{author}}` - Current user from workspace settings
-  - `{{uuid}}` - Unique identifier for tracking and linking
-  - `{{date+N}}` / `{{date-N}}` - Relative dates (e.g., `{{date+7}}` for one week from now)
-  - Custom variables with prompts: `{{prompt:variable_name:Description}}`
-  - Select variables: `{{select:status:draft,review,published}}`
-  - Multiline variables: `{{multiline:description:Enter details}}`
-  - Conditional content: `{{#if variable}}...{{/if}}`
-- **Smart Template Types** - Pre-configured templates for common workflows:
-  - Note templates with frontmatter, headings, and sections
-  - Daily note templates with automatic date-based naming
-  - Project templates with task lists, milestones, and timelines
-  - Meeting templates with agenda, attendees, and action items
-  - Blog post templates with SEO metadata and structure
-  - Technical documentation with code blocks and API references
-  - Research note templates with citations and methodology
-- **Intelligent Insertion** - Multiple ways to use templates:
-  - Command palette (`Cmd/Ctrl + P` → "new from template")
-  - Slash commands (`/template-name` in editor)
-  - Quick template picker (`Cmd/Ctrl + Shift + N`)
-  - Right-click "New from Template" in file explorer
-  - Keyboard shortcuts for frequently used templates
-  - Auto-apply templates based on folder or tags
-- **Template Management** - Complete control over your templates:
-  - Create templates from UI with visual editor
-  - Edit templates with live preview
-  - Organize templates in categories (Personal, Work, Development, etc.)
-  - Share templates as JSON files or via template marketplace
-  - Import templates from files or URLs
-  - Version control for template changes
-  - Duplicate and customize existing templates
+### File-Based Storage Advantage
+
+Templates are stored as individual `.md` files with YAML frontmatter in your workspace's `templates/` directory:
+
+- **Edit anywhere**: Use any text editor, sync with Git, version control friendly
+- **Portable**: Copy templates between workspaces as simple markdown files
+- **Transparent**: No proprietary format - just markdown with frontmatter
+- **Backup-friendly**: Standard files that work with any backup solution
+- **Git-friendly**: Track changes, collaborate, and share via Git repositories
+
+Example template file structure:
+```markdown
+---
+id: daily-standup
+name: "Daily Standup Notes"
+category: Work
+tags: [meeting, daily, standup]
+createdAt: 2025-11-06T00:00:00.000Z
+updatedAt: 2025-11-06T00:00:00.000Z
+---
+
+# Daily Standup - {{date.format('MMMM do, yyyy')}}
+
+## What I did yesterday
+{{cursor}}
+
+## What I'll do today
+
+## Blockers
+```
+
+### Core Features: 90+ Functions
+
+**70+ Date Operations** - Most comprehensive date handling available:
+- Advanced formatting with `date-fns` patterns
+- Method chaining: `{{date.add(7, 'days').format('MMMM do, yyyy')}}`
+- Relative dates: `tomorrow`, `yesterday`, `nextWeek`, `nextMonday`
+- Date arithmetic: `add()`, `subtract()`, `addMonths()`, `subtractYears()`
+- Boundaries: `startOfWeek`, `endOfMonth`, `startOfYear`
+- Properties: `week`, `quarter`, `weekday`, `daysInMonth`, `isLeapYear`
+- Comparisons: `isBefore`, `isAfter`, `isSameDay`, `isSameWeek`
+- Differences: `differenceInDays`, `differenceInWeeks`, `differenceInMonths`
+
+**60+ Text & Data Filters** - Transform any value with pipe syntax:
+- **String**: `upper`, `lower`, `capitalize`, `title`, `slug`, `truncate`, `trim`, `replace`, `reverse`
+- **Array**: `join`, `first`, `last`, `length`, `sort`, `unique`, `reverse`, `slice`
+- **Number**: `round`, `floor`, `ceil`, `abs`, `format` (with commas), `toFixed`
+- **Date**: `dateFormat`, `timeAgo`, `fromNow`, `relative`
+- **Utility**: `default`, `json`, `typeOf`, `isEmpty`
+- **Chaining**: `{{name | trim | upper | truncate(20)}}`
+
+**Conditionals** - Full if/else/elseif logic:
+```markdown
+{{#if priority == 'High'}}
+⚠️ HIGH PRIORITY
+{{else if priority == 'Medium'}}
+Standard priority
+{{else}}
+Low priority
+{{/if}}
+```
+
+**Loops** - Iterate over arrays with special variables:
+```markdown
+{{#each tasks}}
+{{@index + 1}}. {{this.title}} ({{@first ? 'FIRST' : ''}})
+{{/each}}
+```
+- Special variables: `@index`, `@first`, `@last`, `@length`, `@key`
+
+**JavaScript Sandbox** - Execute safe JavaScript for complex logic:
+```markdown
+{{js: return Math.random() > 0.5 ? 'Yes' : 'No'}}
+{{js: return new Date().getFullYear()}}
+```
+
+**Template Includes** - Compose templates from reusable parts:
+```markdown
+{{include:header}}
+{{include:footer}}
+{{include:greeting:name=John,time=morning}}
+```
+
+**HTML to Markdown** - Automatic conversion of HTML content to clean markdown
+
+**Duplicate Detection** - Prevents accidental template overwrites with warnings
+
+### Real-World Use Cases
+
+**Before Templates:**
+```markdown
+# Meeting Notes - [manually type date]
+Date: [manually type date]
+Attendees: [manually type names]
+
+## Agenda
+1. [manually create structure]
+...
+```
+
+**After Templates:**
+```markdown
+# Meeting Notes - Wednesday, November 6th, 2025
+Date: 2025-11-06
+Attendees: John, Sarah, Mike
+
+## Agenda
+1. [cursor automatically positioned here]
+2.
+3.
+
+## Action Items
+- [ ] Task | Owner: | Due: November 13th
+```
+
+### Universal Template System
+
+Templates work everywhere in Lokus:
+- **Note templates** for structured documents
+- **Daily note templates** with automatic date variables
+- **Project templates** with multi-file scaffolding
+- **Meeting templates** with attendee tracking
+- **Custom templates** for any use case
+- **Template inheritance** for building on base templates
+- **Template composition** to combine multiple templates
+
+### Intelligent Insertion
+
+Multiple ways to use templates:
+- **Command palette** (`Cmd/Ctrl + K` → "Create Template")
+- **Slash commands** in editor
+- **Quick template picker** from selection
+- **Right-click menu** in editor
+- **Keyboard shortcuts** for frequently used templates
+- **Auto-apply** based on context
+
+### Template Management
+
+Complete control over your templates:
+- Create from UI with visual editor
+- Edit templates with live preview
+- Organize in categories (Personal, Work, Development, etc.)
+- Export as markdown files
+- Import from files or repositories
+- Version control with Git
+- Duplicate and customize existing templates
 
 ## What Are Templates?
 
@@ -295,8 +398,11 @@ Configure templates in Settings > Templates:
 
 Ready to dive deeper? Explore these related pages:
 
+- **[Advanced Template Features](/features/templates/advanced)** - Master conditionals, loops, filters, and JavaScript execution
 - **[Template Variables](/features/templates/variables)** - Learn about all available variables and dynamic content
 - **[Template Types](/features/templates/types)** - Explore built-in templates for every use case
 - **[Creating Templates](/features/templates/creating)** - Build your own custom templates from scratch
+- **[Advanced Templates Tutorial](/tutorials/advanced-templates)** - 30-minute hands-on tutorial
+- **[Template Gallery](/examples/template-gallery)** - 10+ copy-paste ready templates
 - **[Editor Features](/features/editor)** - Master the template editor
 - **[Tasks Integration](/features/tasks)** - Use templates with task management

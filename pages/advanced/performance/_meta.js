@@ -1,5 +1,6 @@
 export default {
   "overview": "Overview",
   "quantum": "Quantum Search",
-  "optimization": "Optimization"
+  "optimization": "Optimization",
+  "caching": "Intelligent Caching"
 }

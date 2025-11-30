@@ -11,6 +11,10 @@ Get up and running with Lokus in just a few minutes. This guide will walk you th
 
 ## First Launch
 
+<Callout type="info">
+**New in v1.3.4**: Lokus now features automatic updates, professional image viewing, and intelligent caching for 85-90% faster performance!
+</Callout>
+
 <Steps>
 
 ### Open Your First Workspace
@@ -21,8 +25,12 @@ When you first launch Lokus, you'll be prompted to open or create a workspace. A
 2. Select an empty folder or create a new one
 3. Lokus will initialize the workspace and you're ready to start
 
-> **Note:** 
+> **Note:**
 Your notes are stored as plain Markdown files on your local filesystem, giving you complete ownership and portability of your data.
+
+<Callout>
+**Automatic Updates**: Lokus will silently check for updates 3 seconds after launch. If an update is available, you'll be notified with an option to install it. [Learn more →](/features/auto-updater)
+</Callout>
 
 
 ### Interface Overview
@@ -230,6 +238,22 @@ Organize notes with folders:
   - `areas/` for areas of responsibility
   - `resources/` for reference material
 
+### Images and Media
+
+<Callout type="info">
+**New**: Professional image viewer with zoom, pan, and metadata display!
+</Callout>
+
+Lokus provides a powerful image viewing experience:
+
+- **Embed images**: Use standard Markdown syntax `![Alt text](./image.png)`
+- **Click to view**: Click any embedded image to open in full-screen modal viewer
+- **Zoom and pan**: Use mouse wheel or keyboard shortcuts to zoom (25-500%)
+- **Navigate images**: Use arrow keys to browse all images in your workspace
+- **View metadata**: Press `I` to see image dimensions, file size, and dates
+
+[Learn more about the Image Viewer →](/features/image-viewer)
+
 ## Keyboard Shortcuts
 
 Master these shortcuts to work efficiently:
@@ -273,6 +297,22 @@ Make Lokus your own:
 - **Accent color**: Customize the interface accent color
 - **Font**: Choose from a variety of monospace and serif fonts
 
+## Performance
+
+<Callout type="success">
+**Lightning Fast**: Lokus v1.3.4 features intelligent caching that makes repeated operations instant!
+</Callout>
+
+You'll notice that after the first time you open the command palette or navigate through files, subsequent operations become instantaneous. This is thanks to an intelligent 5-minute TTL cache that eliminates redundant file system operations.
+
+**Performance improvements**:
+- Command Palette: Instant on repeated opens (was ~200-400ms)
+- Split View: 50% faster
+- Bases View: 90% faster on reopen
+- Overall: 85-90% reduction in file system calls
+
+[Learn about performance optimization →](/advanced/performance/caching)
+
 ## Next Steps
 
 Now that you're familiar with the basics, explore these guides:
@@ -281,6 +321,9 @@ Now that you're familiar with the basics, explore these guides:
 - [Markdown Reference](/guides/markdown) - Complete Markdown syntax guide
 - [Keyboard Shortcuts](/guides/keyboard-shortcuts) - Master all shortcuts
 - [Templates & Automation](/guides/templates) - Create powerful workflows
+- [Image Viewer](/features/image-viewer) - Professional image viewing
+- [Auto-Updater](/features/auto-updater) - Keep Lokus up to date
+- [Performance Guide](/advanced/performance/caching) - Optimize for large workspaces
 
 ## Tips for Success
 

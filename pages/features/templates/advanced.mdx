@@ -1,0 +1,903 @@
+---
+title: "Advanced Template Features - Lokus Documentation"
+description: "Master advanced template features including conditionals, loops, JavaScript execution, HTML conversion, and 60+ filters for powerful dynamic content generation."
+keywords: [lokus, templates, advanced features, conditionals, loops, javascript, filters, date operations, template includes]
+---
+
+import { Callout, Steps } from 'nextra/components'
+
+# Advanced Template Features
+
+Lokus templates support advanced features that enable powerful dynamic content generation. With 90+ built-in functions, you can create sophisticated templates for any workflow.
+
+## Table of Contents
+
+- [Conditionals](#conditionals) - If/else/elseif logic
+- [Loops](#loops) - Iterate over arrays with special variables
+- [Filters](#filters) - 60+ functions to transform data
+- [Date Operations](#date-operations) - 70+ date manipulation functions
+- [JavaScript Execution](#javascript-execution) - Safe sandboxed code execution
+- [Template Includes](#template-includes) - Compose reusable template parts
+- [HTML to Markdown](#html-to-markdown) - Automatic HTML conversion
+- [Best Practices](#best-practices) - Tips for maintainable templates
+
+---
+
+## Conditionals
+
+Display content conditionally based on variables or logic.
+
+### Basic If Statement
+
+```markdown
+{{#if priority == 'High'}}
+⚠️ This is a high priority item!
+{{/if}}
+```
+
+### If/Else
+
+```markdown
+{{#if status == 'completed'}}
+✅ Task completed
+{{else}}
+⏳ Task in progress
+{{/if}}
+```
+
+### If/Else If/Else
+
+```markdown
+{{#if priority == 'Critical'}}
+🚨 CRITICAL - Immediate action required
+{{else if priority == 'High'}}
+⚠️ High priority
+{{else if priority == 'Medium'}}
+📌 Medium priority
+{{else}}
+📋 Low priority
+{{/if}}
+```
+
+### Comparison Operators
+
+All standard comparison operators are supported:
+
+| Operator | Description | Example |
+|----------|-------------|---------|
+| `==` | Equals | `{{#if status == 'done'}}` |
+| `!=` | Not equals | `{{#if count != 0}}` |
+| `>` | Greater than | `{{#if age > 18}}` |
+| `>=` | Greater than or equal | `{{#if score >= 90}}` |
+| `<` | Less than | `{{#if temp < 32}}` |
+| `<=` | Less than or equal | `{{#if grade <= 59}}` |
+
+### Logical Operators
+
+Combine conditions with AND (`&&`) and OR (`||`):
+
+```markdown
+{{#if priority == 'High' && urgent == true}}
+⚠️ High priority AND urgent
+{{/if}}
+
+{{#if status == 'done' || status == 'archived'}}
+This item is complete or archived
+{{/if}}
+```
+
+### Nested Conditionals
+
+```markdown
+{{#if category == 'Work'}}
+  Work-related task
+  {{#if priority == 'High'}}
+    High priority work item - act now!
+  {{else}}
+    Standard work item
+  {{/if}}
+{{else}}
+  Personal task
+{{/if}}
+```
+
+### Real-World Example
+
+```markdown
+# {{#if type == 'Bug'}}🐛{{else if type == 'Feature'}}✨{{else}}📝{{/if}} {{title}}
+
+**Priority:** {{priority}}
+{{#if priority == 'Critical'}}
+⚠️ **URGENT** - This issue requires immediate attention
+{{/if}}
+
+**Status:** {{status}}
+{{#if status == 'Open'}}
+🔴 Open - Needs assignment
+{{else if status == 'In Progress'}}
+🟡 In Progress - Currently being worked on
+{{else if status == 'Review'}}
+🔵 In Review - Awaiting approval
+{{else}}
+✅ Closed
+{{/if}}
+```
+
+---
+
+## Loops
+
+Iterate over arrays to generate repeated content with dynamic values.
+
+### Basic Loop
+
+```markdown
+{{#each items}}
+- {{this}}
+{{/each}}
+```
+
+### Loop with Index
+
+```markdown
+{{#each tasks}}
+{{@index + 1}}. {{this.title}}
+{{/each}}
+```
+
+Output:
+```
+1. First task
+2. Second task
+3. Third task
+```
+
+### Special Loop Variables
+
+Access special variables inside loops:
+
+| Variable | Type | Description |
+|----------|------|-------------|
+| `{{@index}}` | Number | Current index (0-based) |
+| `{{@first}}` | Boolean | `true` on first iteration |
+| `{{@last}}` | Boolean | `true` on last iteration |
+| `{{@length}}` | Number | Total number of items |
+| `{{@key}}` | String | Current key (for objects) |
+| `{{this}}` | Any | Current item value |
+
+### Using Special Variables
+
+```markdown
+{{#each attendees}}
+{{@index + 1}}. {{this.name}}{{#if @first}} (Organizer){{/if}}{{#if @last}} (Last to arrive){{/if}}
+{{/each}}
+
+Total attendees: {{attendees.length}}
+```
+
+### Nested Loops
+
+```markdown
+{{#each categories}}
+## {{this.name}}
+
+{{#each this.items}}
+- {{this.title}} ({{this.status}})
+{{/each}}
+
+{{/each}}
+```
+
+### Loop with Conditionals
+
+```markdown
+{{#each tasks}}
+{{#if this.completed}}
+- [x] {{this.title}} ✅
+{{else}}
+- [ ] {{this.title}}
+{{/if}}
+{{/each}}
+```
+
+### Real-World Example
+
+```markdown
+# Meeting Notes
+
+## Attendees
+
+{{#each attendees}}
+{{@index + 1}}. **{{this.name}}**{{#if this.role}} - {{this.role}}{{/if}}{{#if @first}} (Meeting Lead){{/if}}
+{{/each}}
+
+## Action Items
+
+{{#each actionItems}}
+### {{@index + 1}}. {{this.title}}
+- **Owner:** {{this.owner}}
+- **Due:** {{this.due}}
+- **Priority:** {{this.priority}}
+{{#if this.priority == 'High'}}
+⚠️ High priority - needs immediate attention
+{{/if}}
+
+{{/each}}
+
+---
+**Total action items:** {{actionItems.length}}
+```
+
+---
+
+## Filters
+
+Filters transform values using the pipe (`|`) operator. Chain multiple filters for complex transformations.
+
+### String Filters
+
+Transform text:
+
+```markdown
+{{name | upper}}                    → JOHN DOE
+{{name | lower}}                    → john doe
+{{name | capitalize}}               → John doe
+{{name | title}}                    → John Doe
+{{text | truncate(50)}}             → Truncated to 50 characters...
+{{text | trim}}                     → Removes whitespace
+{{url | slug}}                      → converts-to-url-slug
+{{text | replace('old', 'new')}}    → Replaces all occurrences
+{{text | reverse}}                  → txet sesrever
+```
+
+### Array Filters
+
+Manipulate arrays:
+
+```markdown
+{{items | join(', ')}}              → item1, item2, item3
+{{items | first}}                   → First item
+{{items | last}}                    → Last item
+{{items | length}}                  → 5
+{{items | sort}}                    → Alphabetically sorted
+{{items | unique}}                  → Remove duplicates
+{{items | reverse}}                 → Reverse order
+```
+
+### Number Filters
+
+Format numbers:
+
+```markdown
+{{price | round}}                   → 42
+{{price | floor}}                   → 41
+{{price | ceil}}                    → 42
+{{number | abs}}                    → Absolute value
+{{amount | format}}                 → 1,234,567
+{{price | toFixed(2)}}              → 42.00
+```
+
+### Date Filters
+
+Format dates:
+
+```markdown
+{{date | dateFormat('yyyy-MM-dd')}}         → 2025-11-06
+{{date | dateFormat('MMMM do, yyyy')}}      → November 6th, 2025
+{{date | timeAgo}}                          → 3 days ago
+{{date | fromNow}}                          → in 5 days
+{{date | relative}}                         → about 2 hours ago
+```
+
+### Utility Filters
+
+Helper functions:
+
+```markdown
+{{value | default('N/A')}}          → Shows 'N/A' if value is empty
+{{obj | json}}                      → Converts to JSON string
+{{value | typeOf}}                  → 'string', 'number', 'array', etc.
+{{value | isEmpty}}                 → true/false
+```
+
+### Filter Chaining
+
+Combine multiple filters:
+
+```markdown
+{{name | trim | upper | truncate(20)}}
+→ JOHN SMITH JOHNSON...
+
+{{date | dateFormat('yyyy-MM-dd') | default('No date')}}
+→ 2025-11-06 (or 'No date' if empty)
+
+{{items | sort | unique | join(', ')}}
+→ Sorted, unique, comma-separated list
+```
+
+### Real-World Example
+
+```markdown
+# {{title | trim | title}}
+
+**Author:** {{author | capitalize}}
+**Published:** {{date | dateFormat('MMMM do, yyyy')}}
+**Reading time:** {{content | length / 200 | round}} minutes
+
+## Summary
+
+{{summary | trim | truncate(200)}}
+
+## Tags
+
+{{tags | sort | unique | join(', ') | lower}}
+
+---
+*Slug: {{title | slug}}*
+*Word count: {{content | split(' ') | length | format}}*
+```
+
+---
+
+## Date Operations
+
+Lokus provides **70+ date functions** powered by `date-fns`, the most comprehensive date handling in any note app.
+
+### Current Date/Time
+
+```markdown
+{{date}}                           → 2025-11-06
+{{time}}                           → 14:30:00
+{{datetime}}                       → 2025-11-06T14:30:00
+{{timestamp}}                      → 1699281000000
+```
+
+### Date Formatting
+
+Use any `date-fns` pattern:
+
+```markdown
+{{date.format('yyyy-MM-dd')}}              → 2025-11-06
+{{date.format('MMMM do, yyyy')}}           → November 6th, 2025
+{{date.format('EEE, MMM d')}}              → Wed, Nov 6
+{{date.format('dddd, MMMM do, yyyy')}}     → Wednesday, November 6th, 2025
+{{date.format('h:mm a')}}                  → 2:30 PM
+```
+
+Common format tokens:
+- `yyyy` - 4-digit year (2025)
+- `yy` - 2-digit year (25)
+- `MMMM` - Full month (November)
+- `MMM` - Short month (Nov)
+- `MM` - 2-digit month (11)
+- `dd` - 2-digit day (06)
+- `dddd` - Full weekday (Wednesday)
+- `ddd` - Short weekday (Wed)
+- `HH` - 24-hour (14)
+- `h` - 12-hour (2)
+- `mm` - Minutes (30)
+- `a` - AM/PM
+
+### Relative Dates
+
+Quick shortcuts for common date offsets:
+
+```markdown
+{{date.tomorrow}}                  → 2025-11-07
+{{date.yesterday}}                 → 2025-11-05
+{{date.nextWeek}}                  → 2025-11-13
+{{date.lastWeek}}                  → 2025-10-30
+{{date.nextMonth}}                 → 2025-12-06
+{{date.lastMonth}}                 → 2025-10-06
+{{date.nextMonday}}                → 2025-11-10
+{{date.nextFriday}}                → 2025-11-14
+{{date.previousMonday}}            → 2025-11-03
+```
+
+### Date Arithmetic
+
+Add or subtract time:
+
+```markdown
+{{date.add(7, 'days')}}            → 7 days from now
+{{date.add(2, 'weeks')}}           → 2 weeks from now
+{{date.add(3, 'months')}}          → 3 months from now
+{{date.add(1, 'years')}}           → 1 year from now
+
+{{date.subtract(5, 'days')}}       → 5 days ago
+{{date.subtract(2, 'weeks')}}      → 2 weeks ago
+{{date.subtract(1, 'months')}}     → 1 month ago
+```
+
+Shorthand methods:
+
+```markdown
+{{date.addDays(7)}}                → Same as add(7, 'days')
+{{date.addWeeks(2)}}
+{{date.addMonths(3)}}
+{{date.addYears(1)}}
+{{date.subtractDays(5)}}
+{{date.subtractWeeks(2)}}
+```
+
+### Date Boundaries
+
+Get start/end of periods:
+
+```markdown
+{{date.startOfWeek}}               → Start of current week (Monday 00:00)
+{{date.endOfWeek}}                 → End of current week (Sunday 23:59)
+{{date.startOfMonth}}              → First day of month
+{{date.endOfMonth}}                → Last day of month
+{{date.startOfYear}}               → January 1st
+{{date.endOfYear}}                 → December 31st
+{{date.startOfQuarter}}            → Start of Q1/Q2/Q3/Q4
+{{date.endOfQuarter}}              → End of quarter
+```
+
+### Date Properties
+
+Extract date information:
+
+```markdown
+{{date.week}}                      → Week number (1-53)
+{{date.quarter}}                   → Quarter (1-4)
+{{date.weekday}}                   → Day of week (0-6, 0=Sunday)
+{{date.daysInMonth}}               → Days in current month (28-31)
+{{date.daysInYear}}                → Days in year (365 or 366)
+{{date.isLeapYear}}                → true/false
+```
+
+### Method Chaining
+
+Combine operations:
+
+```markdown
+{{date.add(7, 'days').format('MMMM do, yyyy')}}
+→ November 13th, 2025
+
+{{date.nextMonday.format('yyyy-MM-dd')}}
+→ 2025-11-10
+
+{{date.startOfMonth.add(14, 'days').format('dddd')}}
+→ Wednesday
+```
+
+### Real-World Example
+
+```markdown
+# Week {{date.week}} Review ({{date.format('yyyy')}})
+
+**Period:** {{date.startOfWeek.format('MMM do')}} - {{date.endOfWeek.format('MMM do, yyyy')}}
+**Quarter:** Q{{date.quarter}}
+
+## This Week's Goals
+
+Due: {{date.add(7, 'days').format('MMMM do')}}
+
+## Next Week Preview
+
+**Week {{date.add(7, 'days').week}}** starts on {{date.nextMonday.format('MMMM do')}}
+
+## Key Dates
+
+- Today: {{date.format('dddd, MMMM do')}}
+- Tomorrow: {{date.tomorrow.format('dddd, MMMM do')}}
+- End of Month: {{date.endOfMonth.format('MMMM do')}} ({{date.daysInMonth}} days this month)
+- Next Quarter: Q{{date.add(3, 'months').quarter}} starts {{date.add(3, 'months').startOfQuarter.format('MMMM do')}}
+
+{{#if date.isLeapYear}}
+📅 This is a leap year! ({{date.daysInYear}} days)
+{{/if}}
+```
+
+---
+
+## JavaScript Execution
+
+Execute safe JavaScript code in a sandboxed environment for complex logic.
+
+<Callout type="warning">
+JavaScript execution runs in an isolated sandbox with limited APIs for security. Network access, file system access, and DOM manipulation are not available.
+</Callout>
+
+### Basic Execution
+
+```markdown
+{{js: return 2 + 2}}
+→ 4
+
+{{js: return Math.random() > 0.5 ? 'Yes' : 'No'}}
+→ Yes or No (random)
+
+{{js: return new Date().getFullYear()}}
+→ 2025
+```
+
+### Available APIs
+
+The sandbox provides access to:
+
+- **Math**: All Math methods (`Math.random()`, `Math.floor()`, etc.)
+- **Date**: Date creation and manipulation
+- **JSON**: `JSON.parse()`, `JSON.stringify()`
+- **String/Number/Array/Object**: All standard methods
+- **Helper functions**: `uuid()`, `format()`, `slugify()`
+
+### Complex Calculations
+
+```markdown
+{{js:
+  const items = [10, 20, 30, 40, 50];
+  const sum = items.reduce((a, b) => a + b, 0);
+  const avg = sum / items.length;
+  return avg;
+}}
+→ 30
+```
+
+### Conditional Logic
+
+```markdown
+{{js:
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 18) return 'Good afternoon';
+  return 'Good evening';
+}}
+→ Good afternoon (if it's 2 PM)
+```
+
+### Array Manipulation
+
+```markdown
+{{js:
+  const tasks = ['Write docs', 'Review code', 'Deploy'];
+  return tasks.map((t, i) => `${i + 1}. ${t}`).join('\n');
+}}
+→
+1. Write docs
+2. Review code
+3. Deploy
+```
+
+### Real-World Example
+
+```markdown
+# Project Status Report
+
+**Generated:** {{date.format('MMMM do, yyyy')}}
+
+## Team Statistics
+
+{{js:
+  const team = [
+    { name: 'Alice', completed: 45 },
+    { name: 'Bob', completed: 38 },
+    { name: 'Carol', completed: 52 }
+  ];
+
+  const total = team.reduce((sum, m) => sum + m.completed, 0);
+  const avg = Math.round(total / team.length);
+  const top = team.sort((a, b) => b.completed - a.completed)[0];
+
+  return `Total tasks: ${total}\nAverage: ${avg} per person\nTop performer: ${top.name} (${top.completed} tasks)`;
+}}
+
+## Random Task Assignment
+
+Today's reviewer: {{js:
+  const reviewers = ['Alice', 'Bob', 'Carol', 'David'];
+  return reviewers[Math.floor(Math.random() * reviewers.length)];
+}}
+```
+
+---
+
+## Template Includes
+
+Compose templates from reusable parts to avoid duplication.
+
+### Basic Include
+
+Create a reusable header template:
+
+**Template: `header.md`**
+```markdown
+---
+id: header
+name: Header
+---
+
+# {{title}}
+**Date:** {{date}}
+**Author:** {{author}}
+
+---
+```
+
+**Use in another template:**
+```markdown
+{{include:header}}
+
+## Main Content
+
+Your content here...
+```
+
+### Include with Variables
+
+Pass variables to included templates:
+
+**Template: `greeting.md`**
+```markdown
+---
+id: greeting
+name: Greeting
+---
+
+Hello {{name}}, good {{time}}!
+```
+
+**Use with variables:**
+```markdown
+{{include:greeting:name=John,time=morning}}
+```
+
+Output:
+```
+Hello John, good morning!
+```
+
+### Multiple Includes
+
+```markdown
+{{include:header}}
+
+{{include:body}}
+
+{{include:footer}}
+```
+
+### Real-World Example
+
+**Template: `meeting-header.md`**
+```markdown
+---
+id: meeting-header
+name: Meeting Header
+---
+
+# {{type}} Meeting - {{date.format('MMM do')}}
+
+**Date:** {{date.format('MMMM do, yyyy')}}
+**Time:** {{time}}
+**Location:** {{location | default('Remote')}}
+```
+
+**Template: `meeting-footer.md`**
+```markdown
+---
+id: meeting-footer
+name: Meeting Footer
+---
+
+---
+
+## Action Items
+- [ ]
+
+## Next Meeting
+{{date.add(7, 'days').format('MMMM do, yyyy')}}
+
+*Notes by: {{author}}*
+```
+
+**Main template:**
+```markdown
+{{include:meeting-header:type=Weekly Standup,location=Conference Room A}}
+
+## Attendees
+- {{author}}
+
+## Agenda
+1.
+2.
+3.
+
+## Discussion Notes
+
+{{include:meeting-footer}}
+```
+
+---
+
+## HTML to Markdown
+
+Automatically convert HTML content to clean markdown.
+
+### Automatic Conversion
+
+When you paste HTML or include HTML in a template, Lokus automatically converts it to markdown:
+
+**Input:**
+```html
+<h1>Hello World</h1>
+<p>This is a <strong>bold</strong> paragraph with a <a href="https://example.com">link</a>.</p>
+<ul>
+  <li>Item 1</li>
+  <li>Item 2</li>
+</ul>
+```
+
+**Output:**
+```markdown
+# Hello World
+
+This is a **bold** paragraph with a [link](https://example.com).
+
+- Item 1
+- Item 2
+```
+
+### Supported Elements
+
+- **Headings**: `<h1>` to `<h6>` → `# Header`
+- **Bold**: `<strong>`, `<b>` → `**bold**`
+- **Italic**: `<em>`, `<i>` → `*italic*`
+- **Links**: `<a href="">` → `[text](url)`
+- **Images**: `<img src="">` → `![alt](url)`
+- **Lists**: `<ul>`, `<ol>`, `<li>` → `- item` or `1. item`
+- **Code**: `<code>`, `<pre>` → `` `code` `` or ` ```code``` `
+- **Blockquotes**: `<blockquote>` → `> quote`
+- **Tables**: `<table>` → Markdown tables
+- **Line breaks**: `<br>` → Double newline
+
+### Use Cases
+
+- Copy content from web pages
+- Import HTML documentation
+- Convert email content to notes
+- Transform rich text to markdown
+
+---
+
+## Best Practices
+
+### 1. Use Descriptive Variable Names
+
+```markdown
+✅ Good
+{{#if projectStatus == 'completed'}}
+
+❌ Bad
+{{#if ps == 'c'}}
+```
+
+### 2. Chain Operations for Clarity
+
+```markdown
+✅ Good
+{{date.add(7, 'days').format('MMMM do, yyyy')}}
+
+❌ Verbose
+{{date.add(7, 'days')}}
+then format separately
+```
+
+### 3. Add Comments
+
+```markdown
+<!-- Meeting template for weekly standups -->
+<!-- Variables: team, date, attendees -->
+
+# Standup - {{date.format('MMM do')}}
+```
+
+### 4. Use Includes for Reusability
+
+```markdown
+✅ Good
+{{include:header}}
+{{include:footer}}
+
+❌ Repetitive
+Copy-paste same header in every template
+```
+
+### 5. Test Before Saving
+
+Always test templates with sample data before using in production.
+
+### 6. Organize with Categories
+
+```markdown
+---
+category: Work
+tags: [meeting, weekly, standup]
+---
+```
+
+### 7. Keep Templates Focused
+
+One template = one use case. Don't try to make a template do everything.
+
+### 8. Version Control
+
+Store templates in Git to track changes and collaborate.
+
+### 9. Document Complex Logic
+
+```markdown
+{{js:
+  // Calculate average completion rate for the team
+  // Only count active members (status != 'inactive')
+  const activeMembers = team.filter(m => m.status !== 'inactive');
+  const avg = activeMembers.reduce((sum, m) => sum + m.completion, 0) / activeMembers.length;
+  return Math.round(avg);
+}}
+```
+
+### 10. Use Filter Chains
+
+```markdown
+✅ Good
+{{name | trim | capitalize | truncate(50)}}
+
+❌ Nested
+{{truncate(capitalize(trim(name)), 50)}}
+```
+
+---
+
+## Performance Tips
+
+### 1. Limit Loop Iterations
+
+Avoid loops with 1000+ items. Use pagination or filtering.
+
+### 2. Cache Date Calculations
+
+```markdown
+✅ Good
+{{date.nextMonday}} used once, referenced multiple times
+
+❌ Inefficient
+{{date.nextMonday}} recalculated 10 times
+```
+
+### 3. Minimize JavaScript Execution
+
+Use built-in filters and date operations when possible - they're optimized.
+
+### 4. Avoid Deep Nesting
+
+```markdown
+✅ Good
+{{#if a}}...{{/if}}
+{{#if b}}...{{/if}}
+
+❌ Deep
+{{#if a}}
+  {{#if b}}
+    {{#if c}}
+      {{#if d}}...
+```
+
+---
+
+## Next Steps
+
+- **[Template Variables](/features/templates/variables)** - Complete variable reference
+- **[Creating Templates](/features/templates/creating)** - Build your own templates
+- **[Advanced Templates Tutorial](/tutorials/advanced-templates)** - Hands-on 30-minute tutorial
+- **[Template Gallery](/examples/template-gallery)** - Copy-paste ready examples
+- **[Template Overview](/features/templates/overview)** - Back to overview
+
+---
+
+**Need Help?**
+
+- Check the [Template Gallery](/examples/template-gallery) for examples
+- Join the community Discord for template sharing
+- Read the [FAQ](/faq) for common questions

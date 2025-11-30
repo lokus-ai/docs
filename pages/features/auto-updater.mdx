@@ -1,0 +1,211 @@
+---
+title: "Automatic Updates - Lokus Documentation"
+description: "Stay up to date with seamless automatic updates. Lokus checks for new versions and installs updates safely."
+keywords: [lokus, auto update, automatic updates, app updates, releases, update checker]
+---
+
+import { Callout } from 'nextra/components'
+
+# Automatic Updates
+
+Lokus keeps itself up to date automatically so you always have the latest features and fixes without manual intervention.
+
+<Callout type="info">
+Auto-updates were introduced in **v1.3.4** (PR #194) to provide a seamless update experience.
+</Callout>
+
+## How It Works
+
+Lokus uses a sophisticated auto-update system that runs in the background:
+
+### Silent Background Checks
+
+- **Automatic Check**: Lokus silently checks for updates **3 seconds after launch**
+- **Update Source**: All updates are fetched directly from official **GitHub Releases**
+- **Non-Intrusive**: The check happens in the background without disrupting your workflow
+- **Smart Detection**: Only notifies you when a new version is actually available
+
+### Update Process
+
+1. **Detection**: Lokus compares your current version with the latest GitHub release
+2. **Notification**: A modal dialog appears when an update is available
+3. **Download**: Click "Update Now" to download the update in the background
+4. **Progress Tracking**: Watch real-time progress with a visual progress bar
+5. **Installation**: The update installs automatically on restart
+6. **Seamless Restart**: The app relaunches with the new version
+
+### Security Features
+
+<Callout type="warning">
+All updates are **cryptographically signed** to ensure authenticity and security.
+</Callout>
+
+- **Signed Releases**: Every update is digitally signed with Lokus's developer certificate
+- **Signature Verification**: Updates are verified against GitHub release signatures before installation
+- **No Third-Party Servers**: Updates come directly from GitHub - no intermediary servers
+- **Tamper Detection**: Modified or corrupted updates are automatically rejected
+
+## Manual Update Check
+
+You can manually check for updates at any time:
+
+1. Open **Preferences** (⌘+, on macOS, Ctrl+, on Windows/Linux)
+2. Navigate to the **General** tab
+3. Click the **"Check for Updates"** button
+4. Lokus will immediately check for new versions
+
+<Callout>
+This is useful if you want to ensure you're on the latest version before an important task or if you've disabled automatic checks.
+</Callout>
+
+## Update Notifications
+
+When an update is available, you'll see a modal dialog with:
+
+- **Version Number**: The new version that's available (e.g., "v1.3.5")
+- **Update Actions**:
+  - **"Update Now"**: Downloads and installs the update immediately
+  - **"Later"**: Dismisses the dialog; you'll be reminded on next launch
+- **Download Progress**: Real-time progress bar during download (0-100%)
+- **Error Handling**: Clear error messages if download or installation fails
+
+### Update Modal Features
+
+- **Clean Interface**: Dark/light theme support matching your preferences
+- **Progress Visualization**: Smooth animated progress bar
+- **Background Blur**: Subtle backdrop blur for better focus
+- **Escape to Close**: Press `Esc` to dismiss and update later
+- **Click Outside**: Click the backdrop to dismiss
+
+## Configuring Auto-Updates
+
+### Disabling Auto-Updates
+
+If you prefer to update manually:
+
+1. Open **Preferences** → **General**
+2. Look for the auto-update settings section
+3. Toggle off automatic update checks
+
+<Callout type="warning">
+Disabling auto-updates means you'll need to manually check for updates regularly to stay current with bug fixes and new features.
+</Callout>
+
+### Update Frequency
+
+- **Launch Check**: Every time you start Lokus (after 3-second delay)
+- **No Polling**: Lokus doesn't continuously check in the background while running
+- **Minimal Impact**: The check is lightweight and doesn't affect performance
+
+## Troubleshooting
+
+### "Could Not Fetch" Error
+
+This error is normal and automatically suppressed in the following cases:
+
+- **First Release with Updater**: When the updater feature is first introduced
+- **Old Releases**: When running very old versions that predate auto-update artifacts
+- **Network Issues**: Temporary connectivity problems
+
+**Solution**: Check your internet connection and try the manual update check.
+
+### Update Download Fails
+
+**Symptoms**: Progress bar stalls or error message appears
+
+**Solutions**:
+1. **Check Internet Connection**: Ensure stable connectivity
+2. **Retry**: Close the dialog and click "Check for Updates" again
+3. **Firewall Settings**: Ensure Lokus can access `github.com`
+4. **Manual Download**: Visit the [Lokus releases page](https://github.com/yourusername/lokus/releases) if auto-update consistently fails
+
+### Update Doesn't Install
+
+**Symptoms**: Download completes but app doesn't restart
+
+**Solutions**:
+1. **Manual Restart**: Quit and relaunch Lokus manually
+2. **Check Permissions**: Ensure Lokus has permission to modify itself
+3. **Disk Space**: Verify you have sufficient disk space for the update
+4. **Admin Rights**: Some systems require administrator privileges for updates
+
+### Update Loop
+
+**Symptoms**: Same update notification appears repeatedly
+
+**Solutions**:
+1. **Check Version**: Go to Preferences → About to see your current version
+2. **Clear Cache**: Quit Lokus and delete any temporary update files
+3. **Reinstall**: Download and install the latest version manually from GitHub
+
+## Best Practices
+
+### Keep Auto-Updates Enabled
+
+- **Security**: Get critical security patches immediately
+- **Bug Fixes**: Receive stability improvements automatically
+- **Features**: Access new features as soon as they're released
+- **Compatibility**: Stay compatible with future Lokus ecosystem updates
+
+### Update at Convenient Times
+
+- **Save Your Work**: Always save open notes before updating
+- **Close Important Tabs**: Finish critical work before installing updates
+- **Restart When Ready**: You can postpone updates to a convenient time
+
+### Monitor Release Notes
+
+- **Check What's New**: Review release notes in update notifications
+- **Breaking Changes**: Stay informed about potential breaking changes
+- **New Features**: Learn about new capabilities immediately
+
+## Technical Details
+
+### Update Architecture
+
+- **Tauri Plugin**: Built on `@tauri-apps/plugin-updater`
+- **Process Manager**: Uses `@tauri-apps/plugin-process` for relaunch
+- **Component**: `UpdateChecker.jsx` handles all UI and logic
+- **Event System**: Uses custom `check-for-update` browser event
+
+### Version Comparison
+
+- **Semantic Versioning**: Follows semver (MAJOR.MINOR.PATCH)
+- **Pre-Release Support**: Handles alpha, beta, and rc versions
+- **Build Metadata**: Ignores build metadata in comparisons
+
+### Download Process
+
+1. Fetches `latest.json` from GitHub releases endpoint
+2. Compares remote version with local version
+3. Downloads update package if newer version exists
+4. Verifies signature and checksum
+5. Stages update for installation on restart
+
+## Privacy
+
+<Callout type="info">
+Auto-updates respect your privacy:
+</Callout>
+
+- **No Tracking**: Update checks don't track user behavior
+- **No Analytics**: No data is collected during update process
+- **GitHub Only**: All communication is with GitHub's public API
+- **Open Source**: The update mechanism is fully transparent and auditable
+
+## Future Enhancements
+
+Planned improvements for the auto-update system:
+
+- **Release Notes Display**: View detailed changelog before updating
+- **Selective Updates**: Choose to skip specific versions
+- **Beta Channel**: Opt into pre-release versions for testing
+- **Update Scheduling**: Set preferred times for update installation
+- **Silent Updates**: Install updates without restart prompts (macOS App Store version)
+
+---
+
+**Related Topics:**
+- [Getting Started](/getting-started/installation) - Initial installation
+- [Settings](/features/settings) - Configure Lokus preferences
+- [FAQ](/faq) - Common questions and answers

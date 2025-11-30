@@ -1,0 +1,885 @@
+---
+title: Creating Mermaid Diagrams Tutorial - Lokus
+description: Learn how to create flowcharts, sequence diagrams, and Gantt charts with Mermaid in this 20-minute tutorial
+keywords: [lokus, tutorial, mermaid, diagrams, flowcharts, visualization, sequence diagrams, gantt charts]
+---
+
+import { Steps } from 'nextra/components'
+
+# Creating Mermaid Diagrams
+
+Visualize ideas, processes, and relationships with Mermaid diagrams directly in your notes. Create flowcharts, sequence diagrams, Gantt charts, and more using simple text-based syntax.
+
+**Time Estimate:** 20 minutes
+
+## What You'll Learn
+
+By the end of this tutorial, you'll be able to:
+- Create flowcharts to visualize processes
+- Build sequence diagrams for interactions
+- Design Gantt charts for project planning
+- Use class diagrams and entity-relationship diagrams
+- Customize diagram themes and styling
+- Troubleshoot common Mermaid issues
+
+## Prerequisites
+
+- Lokus v1.3.5 or later
+- Basic understanding of flowcharts (helpful but not required)
+- 20 minutes of focused time
+
+---
+
+<Steps>
+
+### Step 1: Your First Mermaid Diagram
+
+Let's start by creating a simple flowchart.
+
+#### 1.1 Create a Test Note
+
+1. Create a new note called `Mermaid Tutorial - Practice`
+2. This is where we'll practice creating diagrams
+
+#### 1.2 Insert a Mermaid Block
+
+Type ``mm and press Space or Enter. This creates a Mermaid diagram block.
+
+Alternatively, you can use the code fence syntax:
+````markdown
+```mermaid
+[diagram code here]
+```
+````
+
+#### 1.3 Your First Flowchart
+
+Let's create a simple morning routine flowchart:
+
+````markdown
+```mermaid
+graph TD
+    A[Wake Up] --> B{Alarm Off?}
+    B -->|Yes| C[Get Out of Bed]
+    B -->|No| D[Snooze]
+    D --> A
+    C --> E[Brush Teeth]
+    E --> F[Make Coffee]
+    F --> G[Start Day]
+```
+````
+
+This creates a top-to-bottom flowchart with:
+- Rectangles `[]` for steps
+- Diamonds `{}` for decisions
+- Arrows `-->` for flow
+- Labels `|text|` on arrows
+
+> **Note:**
+**Success:** You've created your first Mermaid diagram! The diagram updates in real-time as you type.
+
+
+#### 1.4 Diagram Direction
+
+Change the flow direction:
+
+```mermaid
+graph LR  // Left to Right
+graph TD  // Top to Bottom
+graph BT  // Bottom to Top
+graph RL  // Right to Left
+```
+
+Try changing `TD` to `LR` in your diagram and see how it changes!
+
+---
+
+### Step 2: Flowchart Shapes and Connections
+
+Let's explore different shapes and connection types.
+
+#### 2.1 Node Shapes
+
+Create a new diagram showcasing all shapes:
+
+````markdown
+```mermaid
+graph TD
+    A[Rectangle - Process]
+    B(Rounded Rectangle - Process)
+    C([Stadium - Terminal])
+    D[[Subroutine]]
+    E[(Database)]
+    F((Circle - Connection Point))
+    G>Asymmetric - Note]
+    H{Diamond - Decision}
+    I{{Hexagon - Prepare}}
+    J[/Parallelogram - Input/Output/]
+    K[\Parallelogram Alt\]
+    L[/Trapezoid\]
+    M[\Trapezoid Alt/]
+```
+````
+
+#### 2.2 Connection Types
+
+````markdown
+```mermaid
+graph LR
+    A -->|Solid Arrow| B
+    C ---|Solid Line| D
+    E -.->|Dotted Arrow| F
+    G -.-|Dotted Line| H
+    I ==>|Thick Arrow| J
+    K ==|Thick Line| L
+```
+````
+
+#### 2.3 Practical Example: Decision Process
+
+Let's create a bug fix workflow:
+
+````markdown
+```mermaid
+graph TD
+    A[Bug Reported] --> B{Critical?}
+    B -->|Yes| C[Immediate Fix]
+    B -->|No| D[Add to Backlog]
+    C --> E{Fix Works?}
+    E -->|Yes| F[Deploy]
+    E -->|No| G[Debug Further]
+    G --> C
+    D --> H[Weekly Sprint Planning]
+    H --> I[Prioritize]
+    I --> J[Assign to Developer]
+    J --> K[Fix & Test]
+    K --> F
+    F --> L[Monitor]
+```
+````
+
+> **Note:**
+**Pro Tip:** Use descriptive node IDs (A, B, C) consistently. You can reference the same node multiple times to create complex flows.
+
+
+---
+
+### Step 3: Sequence Diagrams
+
+Sequence diagrams show interactions between actors or systems over time.
+
+#### 3.1 Basic Sequence Diagram
+
+Create a user authentication flow:
+
+````markdown
+```mermaid
+sequenceDiagram
+    actor User
+    participant App
+    participant Auth
+    participant Database
+
+    User->>App: Enter credentials
+    App->>Auth: Validate login
+    Auth->>Database: Check credentials
+    Database-->>Auth: User found
+    Auth-->>App: Token issued
+    App-->>User: Login successful
+```
+````
+
+#### 3.2 Sequence Diagram Elements
+
+````markdown
+```mermaid
+sequenceDiagram
+    participant A as Alice
+    participant B as Bob
+
+    Note over A: Alice thinks
+    Note over A,B: Both communicate
+
+    A->>B: Solid arrow (request)
+    B-->>A: Dashed arrow (response)
+    A-)B: Async message
+
+    rect rgb(200, 220, 250)
+        A->>B: Grouped messages
+        B-->>A: In colored box
+    end
+
+    alt Success case
+        B->>A: Success message
+    else Failure case
+        B->>A: Error message
+    end
+
+    loop Every day
+        A->>B: Check status
+    end
+```
+````
+
+#### 3.3 Practical Example: API Call
+
+````markdown
+```mermaid
+sequenceDiagram
+    actor User
+    participant Frontend
+    participant API
+    participant Database
+    participant Cache
+
+    User->>Frontend: Search for "Mermaid diagrams"
+
+    Frontend->>Cache: Check cache
+    Cache-->>Frontend: Cache miss
+
+    Frontend->>API: GET /search?q=mermaid
+
+    activate API
+    API->>Database: Query documents
+    Database-->>API: Results (327 docs)
+    API->>Cache: Store results
+    API-->>Frontend: JSON response
+    deactivate API
+
+    Frontend-->>User: Display results
+
+    Note over User,Frontend: User clicks result #1
+
+    User->>Frontend: Open document
+    Frontend->>API: GET /doc/1234
+    API->>Cache: Check cache
+    Cache-->>API: Cache hit!
+    API-->>Frontend: Document content
+    Frontend-->>User: Render document
+```
+````
+
+---
+
+### Step 4: Gantt Charts for Projects
+
+Gantt charts visualize project timelines and dependencies.
+
+#### 4.1 Basic Gantt Chart
+
+Create a simple project timeline:
+
+````markdown
+```mermaid
+gantt
+    title Product Launch Timeline
+    dateFormat YYYY-MM-DD
+
+    section Planning
+    Define requirements    :a1, 2024-01-01, 7d
+    Market research        :a2, after a1, 10d
+
+    section Design
+    UI/UX Design          :b1, after a2, 14d
+    Design review         :b2, after b1, 3d
+
+    section Development
+    Frontend development  :c1, after b2, 21d
+    Backend development   :c2, after b2, 21d
+    Integration          :c3, after c1 c2, 7d
+
+    section Testing
+    QA Testing           :d1, after c3, 10d
+    Bug fixes            :d2, after d1, 7d
+
+    section Launch
+    Soft launch          :e1, after d2, 3d
+    Public launch        :milestone, after e1, 0d
+```
+````
+
+#### 4.2 Gantt Chart with Task States
+
+````markdown
+```mermaid
+gantt
+    title Q1 2024 Goals
+    dateFormat YYYY-MM-DD
+
+    section Personal
+    Daily exercise         :done, p1, 2024-01-01, 90d
+    Read 12 books         :active, p2, 2024-01-01, 90d
+    Learn Spanish         :p3, 2024-02-01, 60d
+
+    section Career
+    Complete certification :done, c1, 2024-01-01, 30d
+    Build side project    :active, c2, 2024-01-15, 75d
+    Publish blog posts    :c3, 2024-02-01, 60d
+
+    section Finance
+    Save $5,000           :active, f1, 2024-01-01, 90d
+    Investment portfolio  :crit, f2, 2024-01-15, 75d
+```
+````
+
+Task states:
+- `done` - Completed (green)
+- `active` - In progress (blue)
+- `crit` - Critical path (red)
+- No marker - Not started (gray)
+
+---
+
+### Step 5: Other Diagram Types
+
+Lokus supports many Mermaid diagram types. Let's explore more.
+
+#### 5.1 Class Diagram
+
+Perfect for software architecture:
+
+````markdown
+```mermaid
+classDiagram
+    class Note {
+        +String title
+        +String content
+        +Date createdAt
+        +save()
+        +delete()
+        +addTag()
+    }
+
+    class Tag {
+        +String name
+        +Color color
+        +getNotes()
+    }
+
+    class WikiLink {
+        +String source
+        +String target
+        +resolve()
+    }
+
+    Note "1" --> "*" Tag : has
+    Note "1" --> "*" WikiLink : contains
+    WikiLink --> "1" Note : points to
+```
+````
+
+#### 5.2 Entity-Relationship Diagram
+
+For database design:
+
+````markdown
+```mermaid
+erDiagram
+    USER ||--o{ NOTE : creates
+    USER ||--o{ TAG : creates
+    NOTE ||--|{ TAG : tagged-with
+    NOTE ||--o{ BLOCK : contains
+    NOTE ||--o{ WIKILINK : has
+
+    USER {
+        int id PK
+        string username
+        string email
+        datetime created_at
+    }
+
+    NOTE {
+        int id PK
+        int user_id FK
+        string title
+        text content
+        datetime created_at
+        datetime modified_at
+    }
+
+    TAG {
+        int id PK
+        int user_id FK
+        string name
+        string color
+    }
+
+    BLOCK {
+        int id PK
+        int note_id FK
+        string block_id
+        text content
+        int line_number
+    }
+```
+````
+
+#### 5.3 State Diagram
+
+For workflows and states:
+
+````markdown
+```mermaid
+stateDiagram-v2
+    [*] --> Draft
+
+    Draft --> Review : Submit
+    Draft --> Archived : Delete
+
+    Review --> Approved : Accept
+    Review --> Draft : Request Changes
+    Review --> Rejected : Decline
+
+    Approved --> Published : Publish
+    Approved --> Draft : Revert
+
+    Published --> Archived : Archive
+    Published --> Draft : Unpublish
+
+    Rejected --> Draft : Revise
+    Rejected --> Archived : Abandon
+
+    Archived --> [*]
+```
+````
+
+#### 5.4 Pie Chart
+
+For data visualization:
+
+````markdown
+```mermaid
+pie title Time Spent Today
+    "Deep Work" : 4
+    "Meetings" : 2
+    "Email" : 1
+    "Break" : 1
+    "Learning" : 2
+```
+````
+
+---
+
+### Step 6: Styling and Theming
+
+Customize your diagrams to match your aesthetic.
+
+#### 6.1 Inline Styling
+
+````markdown
+```mermaid
+graph TD
+    A[Normal] --> B[Styled Node]
+    style B fill:#f9f,stroke:#333,stroke-width:4px
+
+    C[Another Node] --> D[Error State]
+    style D fill:#f66,stroke:#f00,stroke-width:2px,color:#fff
+```
+````
+
+#### 6.2 Class Styling
+
+````markdown
+```mermaid
+graph TD
+    A[Start]:::important --> B[Process]:::process
+    B --> C[End]:::important
+
+    classDef important fill:#f96,stroke:#333,stroke-width:4px
+    classDef process fill:#bbf,stroke:#33f,stroke-width:2px
+```
+````
+
+#### 6.3 Theme Configuration
+
+Lokus respects your system theme (light/dark mode) and applies appropriate Mermaid themes automatically.
+
+You can also set themes explicitly:
+
+````markdown
+```mermaid
+%%{init: {'theme':'dark'}}%%
+graph TD
+    A[Dark Theme] --> B[Graph]
+```
+````
+
+Available themes:
+- `default` - Standard theme
+- `dark` - Dark mode
+- `forest` - Green palette
+- `neutral` - Minimal colors
+- `base` - Minimal styling
+
+---
+
+### Step 7: Real-World Applications
+
+Let's apply Mermaid diagrams to practical scenarios.
+
+#### 7.1 Project Planning
+
+Create `Project - Website Redesign`:
+
+````markdown
+# Website Redesign Project
+
+## Timeline
+
+```mermaid
+gantt
+    title Website Redesign - 8 Week Plan
+    dateFormat YYYY-MM-DD
+
+    section Discovery
+    User interviews        :done, a1, 2024-01-01, 5d
+    Competitor analysis    :done, a2, 2024-01-01, 5d
+    Analytics review       :done, a3, 2024-01-04, 3d
+
+    section Design
+    Wireframes            :active, b1, 2024-01-08, 7d
+    Design mockups        :b2, 2024-01-15, 10d
+    Design system         :b3, 2024-01-20, 5d
+
+    section Development
+    Setup & Architecture  :c1, 2024-01-25, 3d
+    Homepage             :crit, c2, 2024-01-28, 7d
+    Product pages        :crit, c3, 2024-01-28, 10d
+    Blog section         :c4, 2024-02-05, 7d
+
+    section Testing
+    QA Testing           :d1, 2024-02-12, 5d
+    User acceptance      :d2, 2024-02-17, 3d
+    Bug fixes            :d3, 2024-02-20, 5d
+
+    section Launch
+    Staging deployment   :e1, 2024-02-25, 1d
+    Production launch    :milestone, e2, 2024-02-26, 0d
+```
+
+## Decision Flow
+
+```mermaid
+graph TD
+    A[Design Review] --> B{Approved?}
+    B -->|Yes| C[Move to Development]
+    B -->|No| D{Major Changes?}
+    D -->|Yes| E[Restart Design Phase]
+    D -->|No| F[Minor Revisions]
+    F --> A
+    E --> A
+    C --> G[Development Sprint]
+    G --> H{QA Pass?}
+    H -->|Yes| I[Deploy to Staging]
+    H -->|No| J[Fix Bugs]
+    J --> H
+    I --> K[UAT]
+    K --> L{UAT Pass?}
+    L -->|Yes| M[Production]
+    L -->|No| N[Address Feedback]
+    N --> K
+```
+
+## System Architecture
+
+```mermaid
+graph LR
+    User[User Browser]
+    CDN[CDN]
+    LB[Load Balancer]
+    Web1[Web Server 1]
+    Web2[Web Server 2]
+    API[API Server]
+    DB[(Database)]
+    Cache[(Redis Cache)]
+
+    User --> CDN
+    CDN --> LB
+    LB --> Web1
+    LB --> Web2
+    Web1 --> API
+    Web2 --> API
+    API --> Cache
+    API --> DB
+```
+````
+
+#### 7.2 Learning Workflow
+
+Create `Learning - React Mastery`:
+
+````markdown
+# React Mastery Learning Path
+
+## Learning Sequence
+
+```mermaid
+graph TD
+    A[JavaScript Fundamentals] --> B[ES6+ Features]
+    B --> C[React Basics]
+    C --> D[Components & Props]
+    D --> E[State & Lifecycle]
+    E --> F[Hooks]
+    F --> G{Choose Path}
+    G -->|State Management| H[Redux/Zustand]
+    G -->|Routing| I[React Router]
+    G -->|Styling| J[CSS-in-JS]
+    H --> K[Advanced Patterns]
+    I --> K
+    J --> K
+    K --> L[Testing]
+    L --> M[Performance Optimization]
+    M --> N[Production Ready]
+```
+
+## Daily Practice Schedule
+
+```mermaid
+gantt
+    title 30-Day React Learning Plan
+    dateFormat YYYY-MM-DD
+
+    section Week 1: Basics
+    JavaScript review     :done, w1a, 2024-01-01, 4d
+    React fundamentals    :done, w1b, 2024-01-05, 3d
+
+    section Week 2: Components
+    Component patterns    :active, w2a, 2024-01-08, 4d
+    Props & state         :w2b, 2024-01-12, 3d
+
+    section Week 3: Hooks
+    useState & useEffect  :w3a, 2024-01-15, 3d
+    Custom hooks          :w3b, 2024-01-18, 4d
+
+    section Week 4: Advanced
+    Context API           :w4a, 2024-01-22, 3d
+    Performance          :w4b, 2024-01-25, 2d
+    Build project        :crit, w4c, 2024-01-27, 4d
+```
+````
+
+#### 7.3 Meeting Notes
+
+Create `Meeting - Sprint Planning`:
+
+````markdown
+# Sprint Planning - January 15, 2024
+
+## Attendees
+- Sarah (PM)
+- Mike (Dev Lead)
+- Lisa (Design)
+- Tom (QA)
+
+## Sprint Flow
+
+```mermaid
+graph LR
+    A[Backlog Review] --> B[Story Estimation]
+    B --> C[Sprint Commitment]
+    C --> D[Task Breakdown]
+    D --> E[Assignment]
+    E --> F[Sprint Start]
+```
+
+## User Story Flow
+
+```mermaid
+stateDiagram-v2
+    [*] --> Backlog
+    Backlog --> Todo : Sprint Planning
+    Todo --> InProgress : Developer Starts
+    InProgress --> CodeReview : PR Created
+    CodeReview --> InProgress : Changes Requested
+    CodeReview --> Testing : Approved
+    Testing --> InProgress : Bug Found
+    Testing --> Done : Tests Pass
+    Done --> [*]
+```
+
+## This Sprint Timeline
+
+```mermaid
+gantt
+    title Sprint 42 - Jan 15-29
+    dateFormat YYYY-MM-DD
+
+    section Backend
+    API endpoints        :a1, 2024-01-15, 5d
+    Database migration   :a2, 2024-01-18, 3d
+
+    section Frontend
+    Dashboard UI         :b1, 2024-01-15, 7d
+    Data visualization   :b2, 2024-01-20, 5d
+
+    section Testing
+    Integration tests    :c1, 2024-01-23, 3d
+    Regression testing   :c2, 2024-01-26, 3d
+```
+````
+
+---
+
+### Step 8: Troubleshooting
+
+Common issues and solutions.
+
+#### Problem: Diagram Not Rendering
+
+**Symptom:** Shows "Diagram render error" or code instead of diagram
+
+**Solutions:**
+1. Check syntax - Mermaid is strict about formatting
+2. Verify diagram type is correct (graph, sequenceDiagram, gantt, etc.)
+3. Look for missing quotes on labels with spaces
+4. Check for proper line endings
+5. Validate syntax at [mermaid.live](https://mermaid.live)
+
+#### Problem: Arrows Not Connecting
+
+**Symptom:** Nodes appear but arrows are missing
+
+**Solutions:**
+```mermaid
+// Wrong: No arrow
+A B
+
+// Wrong: Invalid arrow
+A -> B
+
+// Correct:
+A --> B
+A --- B
+A -.-> B
+```
+
+#### Problem: Node Text Has Issues
+
+**Symptom:** Text cut off or improperly displayed
+
+**Solutions:**
+```mermaid
+// Spaces in text need quotes
+A["Text with spaces"] --> B
+
+// Special characters need quotes
+C["Text: with special (chars)"] --> D
+
+// Long text
+E["This is a very long text<br/>that spans multiple lines"] --> F
+```
+
+#### Problem: Gantt Chart Date Issues
+
+**Symptom:** Tasks not showing or in wrong order
+
+**Solutions:**
+```mermaid
+gantt
+    // Always set date format first
+    dateFormat YYYY-MM-DD
+
+    // Use consistent date format
+    Task 1    :a1, 2024-01-01, 7d
+    Task 2    :a2, after a1, 5d
+
+    // Critical: dependencies must exist
+    Task 3    :a3, after a1 a2, 3d
+```
+
+#### Problem: Styling Not Working
+
+**Symptom:** Style changes don't apply
+
+**Solutions:**
+```mermaid
+graph TD
+    A[Node]
+    B[Styled Node]
+
+    // Style must come AFTER node definition
+    style B fill:#f96
+
+    // Class must be defined before use
+    classDef myClass fill:#bbf
+    C[Class Node]:::myClass
+```
+
+---
+
+</Steps>
+
+## What You've Built
+
+Congratulations! You've mastered Mermaid diagrams in Lokus. You can now:
+
+- Create flowcharts for processes and decisions
+- Build sequence diagrams for interactions
+- Design Gantt charts for project timelines
+- Use class, ER, and state diagrams
+- Customize diagram styling and themes
+- Apply diagrams to real-world scenarios
+
+## Diagram Type Quick Reference
+
+| Diagram Type | Use Case | Syntax Start |
+|--------------|----------|--------------|
+| **Flowchart** | Processes, decisions | `graph TD` |
+| **Sequence** | Interactions, API calls | `sequenceDiagram` |
+| **Gantt** | Project timelines | `gantt` |
+| **Class** | Software architecture | `classDiagram` |
+| **ER** | Database design | `erDiagram` |
+| **State** | State machines, workflows | `stateDiagram-v2` |
+| **Pie** | Data proportions | `pie title "Title"` |
+
+## Next Steps
+
+### Continue Learning
+
+- **Next Tutorial:** [Template Workflows](/tutorials/template-workflows) - Automate diagram creation with templates
+- **Related:** [Using Block References](/tutorials/using-block-references) - Link to specific diagram blocks
+- **Advanced:** [Project Management](/tutorials/project-management) - Complete PM workflow with diagrams
+
+### Practice Exercises
+
+1. **Personal Workflow:** Create a flowchart of your morning routine or work process
+2. **Learning Path:** Design a Gantt chart for learning a new skill over 30 days
+3. **System Design:** Document a software system with class and sequence diagrams
+4. **Decision Making:** Build a decision tree for a complex choice you're facing
+
+### Explore Features
+
+- [Canvas](/features/canvas) - Create visual board layouts
+- [Graph View](/features/graph) - Visualize note connections
+- [Templates](/features/templates) - Create diagram templates
+
+---
+
+## Summary
+
+In this tutorial, you learned:
+
+- How to insert Mermaid diagrams with ``mm or code fences
+- Creating flowcharts with various shapes and connections
+- Building sequence diagrams for interactions
+- Designing Gantt charts for project planning
+- Using class, ER, state, and pie chart diagrams
+- Customizing diagram styling and themes
+- Real-world applications in projects, learning, and meetings
+- Troubleshooting common Mermaid issues
+
+Mermaid diagrams transform your notes from text-only to rich visual documents. They're perfect for planning, documentation, and visual thinking.
+
+Happy diagramming!
+
+---
+
+**Resources:**
+- [Official Mermaid Documentation](https://mermaid.js.org/)
+- [Mermaid Live Editor](https://mermaid.live) - Test diagrams online
+- [Mermaid Diagram Examples](/examples/mermaid-gallery)
+
+**Estimated Completion Time:** 20 minutes
+**Difficulty:** Beginner
+**Version:** Lokus v1.3.5+
+**Last Updated:** November 2024

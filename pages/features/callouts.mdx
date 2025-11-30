@@ -1,0 +1,650 @@
+---
+title: "Callouts - Lokus Documentation"
+description: "Highlight important information with Obsidian-style callout blocks for notes, warnings, tips, and more"
+keywords: [lokus, callouts, admonitions, alerts, note blocks, obsidian]
+---
+
+import { Steps, Callout } from 'nextra/components'
+
+# Callouts
+
+Draw attention to important information in your notes with beautiful, color-coded callout blocks. Perfect for warnings, tips, important notes, and more.
+
+<Callout type="info">
+Callouts in Lokus use the exact same syntax as Obsidian, ensuring complete compatibility when migrating notes.
+</Callout>
+
+## What are Callouts?
+
+Callouts (also known as admonitions or alerts) are special formatted blocks that highlight specific types of information. They make your notes more scannable and help readers quickly identify key points, warnings, or actionable advice.
+
+### Why Use Callouts?
+
+- **Visual Hierarchy**: Make important information stand out instantly
+- **Information Types**: Distinguish between notes, warnings, tips, and more
+- **Professional Appearance**: Add polish to documentation and guides
+- **Reader-Friendly**: Help readers quickly find what matters most
+- **Theme Support**: Automatically styled for both light and dark modes
+
+## Callout Types
+
+Lokus supports 8 distinct callout types, each with its own icon and color scheme:
+
+| Type | Icon | Use Case | Color |
+|------|------|----------|-------|
+| **Note** | ℹ️ | General information and remarks | Blue |
+| **Tip** | 💡 | Helpful suggestions and best practices | Green |
+| **Info** | ℹ️ | Additional context and details | Cyan |
+| **Success** | ✅ | Positive outcomes and confirmations | Green |
+| **Warning** | ⚠️ | Cautions and things to be careful about | Orange |
+| **Danger** | 🚨 | Critical warnings and errors | Red |
+| **Question** | ❓ | Open questions or discussion points | Purple |
+| **Example** | 📝 | Code samples and demonstrations | Gray |
+
+## Creating Callouts
+
+### Basic Syntax
+
+Callouts use Obsidian-style syntax with square brackets:
+
+```markdown
+>[!type] Optional Title
+>
+>Your callout content goes here.
+>You can have multiple paragraphs.
+```
+
+The structure:
+1. Start with `>`
+2. Add `[!type]` where `type` is one of: note, tip, info, success, warning, danger, question, example
+3. Optionally add a custom title after the bracket
+4. Continue with `>` for each line of content
+
+### Quick Insert with Slash Command
+
+The fastest way to insert callouts:
+
+<Steps>
+
+### Step 1: Open Command Menu
+
+Type `/` anywhere in your note to open the slash command menu.
+
+### Step 2: Search for Callout
+
+Type "callout" or the specific type you want (e.g., "tip", "warning").
+
+### Step 3: Select and Start Writing
+
+Select the callout type and start typing your content immediately.
+
+</Steps>
+
+### Keyboard Shortcut
+
+Create a basic note callout quickly:
+- **Mac**: `Cmd + Alt + C`
+- **Windows/Linux**: `Ctrl + Alt + C`
+
+## Examples
+
+### Note Callout
+
+Use for general information and explanatory content:
+
+```markdown
+>[!note] Remember
+>
+>Always save your work regularly to avoid losing progress.
+```
+
+Renders as:
+
+```
+┌───────────────────────────────────────────┐
+│ ℹ️  Remember                              │
+├───────────────────────────────────────────┤
+│ Always save your work regularly to avoid  │
+│ losing progress.                          │
+└───────────────────────────────────────────┘
+```
+
+### Tip Callout
+
+Share helpful advice and best practices:
+
+```markdown
+>[!tip] Pro Tip
+>
+>Use keyboard shortcuts to speed up your workflow. Press `Cmd/Ctrl + K` to open the command palette.
+```
+
+### Warning Callout
+
+Alert readers to potential issues:
+
+```markdown
+>[!warning] Be Careful
+>
+>This operation cannot be undone. Make sure you have a backup before proceeding.
+```
+
+### Danger Callout
+
+Highlight critical warnings:
+
+```markdown
+>[!danger] Data Loss Risk
+>
+>Deleting this folder will permanently remove all notes inside. This action is irreversible.
+```
+
+### Info Callout
+
+Provide additional context:
+
+```markdown
+>[!info]
+>
+>This feature was introduced in version 2.0 and requires the latest update to function properly.
+```
+
+### Success Callout
+
+Confirm positive outcomes:
+
+```markdown
+>[!success] Migration Complete
+>
+>All 1,247 notes have been successfully imported from Obsidian to Lokus!
+```
+
+### Question Callout
+
+Pose questions or discussion points:
+
+```markdown
+>[!question] Open Question
+>
+>Should we prioritize performance optimization or adding new features in the next release?
+```
+
+### Example Callout
+
+Demonstrate concepts with examples:
+
+```markdown
+>[!example] Usage Example
+>
+>To link to another note, use the double bracket syntax:
+>
+>[[My Other Note]]
+```
+
+## Customizing Callouts
+
+### Custom Titles
+
+You can replace the default title with your own:
+
+```markdown
+>[!tip] My Custom Title
+>
+>Content goes here.
+```
+
+### Title-Only Callouts
+
+Omit content for a simple highlighted title:
+
+```markdown
+>[!warning] Do Not Delete This Section
+```
+
+### No Title
+
+Leave the space after `[!type]` empty to use only the default type label:
+
+```markdown
+>[!note]
+>
+>This uses the default "Note" title.
+```
+
+## Collapsible Callouts
+
+Make callouts collapsible by adding a minus sign (`-`) after the callout type:
+
+```markdown
+>[!tip]- Click to Expand
+>
+>This content is hidden by default and can be expanded by clicking the header.
+```
+
+The callout appears collapsed initially with a toggle arrow (▶). Clicking the header expands it to show the content (▼).
+
+### When to Use Collapsible Callouts
+
+- **Long Supplementary Information**: Hide detailed explanations that aren't always needed
+- **Advanced Topics**: Collapse advanced content that might overwhelm beginners
+- **FAQ Sections**: Create an expandable FAQ list
+- **Code Examples**: Hide lengthy code samples until needed
+
+```markdown
+>[!example]- Full Code Example
+>
+>```javascript
+>function processData(input) {
+>  // ... lengthy implementation
+>  return result;
+>}
+>```
+```
+
+## Nested Content
+
+Callouts support rich markdown content inside:
+
+### Lists
+
+```markdown
+>[!tip] Key Takeaways
+>
+>- Use callouts to highlight important information
+>- Choose the appropriate type for your message
+>- Keep callouts concise and focused
+```
+
+### Code Blocks
+
+````markdown
+>[!example] Implementation
+>
+>```javascript
+>const note = createNote({
+>  title: "My Note",
+>  content: "Hello world"
+>});
+>```
+````
+
+### Links and Formatting
+
+```markdown
+>[!info] Learn More
+>
+>For details, see [[Documentation]] or visit **our website**.
+>
+>*Important*: This feature requires version 2.0+.
+```
+
+### Multiple Paragraphs
+
+```markdown
+>[!warning] Important Notice
+>
+>This is the first paragraph with important information.
+>
+>This is a second paragraph with additional context.
+>
+>And here's a third paragraph with final remarks.
+```
+
+## Styling
+
+Callouts automatically adapt to your theme:
+
+### Light Mode
+
+- Subtle background colors with good contrast
+- Clear borders and readable text
+- Professional appearance for documentation
+
+### Dark Mode
+
+- Darker backgrounds with vibrant accents
+- Eye-friendly colors for low-light environments
+- Consistent visual hierarchy
+
+### Color System
+
+Each callout type uses semantic colors:
+
+- **Blue** (Note, Info): Neutral information
+- **Green** (Tip, Success): Positive actions and outcomes
+- **Orange** (Warning): Cautions requiring attention
+- **Red** (Danger): Critical warnings
+- **Purple** (Question): Discussion and inquiry
+- **Gray** (Example): Demonstrations and samples
+
+## Use Cases
+
+### Documentation
+
+Create professional documentation with clear sections:
+
+```markdown
+## Installation
+
+>[!warning] Prerequisites
+>
+>Node.js 18+ and npm are required before installation.
+
+>[!tip] Quick Start
+>
+>Run `npm install lokus` to get started quickly.
+
+>[!example] Basic Setup
+>
+>```bash
+>npm install lokus
+>lokus init
+>lokus dev
+>```
+```
+
+### Study Notes
+
+Highlight key concepts:
+
+```markdown
+## Chapter 3: Photosynthesis
+
+>[!note] Definition
+>
+>Photosynthesis is the process by which plants convert light energy into chemical energy.
+
+>[!tip] Memory Aid
+>
+>Remember: Light → Sugar → Energy
+
+>[!question] Review Question
+>
+>What are the main inputs and outputs of photosynthesis?
+```
+
+### Project Planning
+
+Track important decisions and risks:
+
+```markdown
+## Sprint Planning
+
+>[!success] Completed Last Sprint
+>
+>- User authentication
+>- Database migrations
+>- API endpoints
+
+>[!warning] Blockers
+>
+>Third-party API integration delayed until next week.
+
+>[!danger] Critical Issue
+>
+>Security vulnerability found in dependency. Must update before release.
+```
+
+### Meeting Notes
+
+Capture action items and decisions:
+
+```markdown
+## Team Meeting - March 15
+
+>[!note] Attendees
+>
+>Alice, Bob, Carol, David
+
+>[!tip] Key Decisions
+>
+>- Adopt microservices architecture
+>- Weekly deployment schedule
+>- Increase test coverage to 80%
+
+>[!warning] Action Items
+>
+>- [ ] Alice: Update architecture docs
+>- [ ] Bob: Set up CI/CD pipeline
+>- [ ] Carol: Write integration tests
+```
+
+### Tutorial Content
+
+Guide readers with clear instructions:
+
+```markdown
+## Getting Started Tutorial
+
+>[!tip] Before You Begin
+>
+>This tutorial takes approximately 30 minutes.
+
+>[!example] Step 1: Create a Note
+>
+>Click the "New Note" button or press `Cmd+N`.
+
+>[!warning] Common Mistake
+>
+>Don't forget to add a title before saving!
+
+>[!success] Checkpoint
+>
+>You should now have a note titled "My First Note".
+```
+
+## Tips & Best Practices
+
+### Keep Callouts Focused
+
+✅ **Good:** One clear point per callout
+```markdown
+>[!tip]
+>
+>Use templates to save time on repetitive notes.
+```
+
+❌ **Avoid:** Multiple unrelated points
+```markdown
+>[!tip]
+>
+>Use templates. Also, remember to backup. Don't forget keyboard shortcuts. Update regularly.
+```
+
+### Choose the Right Type
+
+Match callout type to content purpose:
+
+| If You're... | Use |
+|-------------|-----|
+| Explaining general information | `[!note]` or `[!info]` |
+| Sharing a helpful suggestion | `[!tip]` |
+| Warning about potential issues | `[!warning]` |
+| Alerting to critical problems | `[!danger]` |
+| Confirming positive outcomes | `[!success]` |
+| Posing a question | `[!question]` |
+| Showing an example | `[!example]` |
+
+### Don't Overuse
+
+Too many callouts reduce their effectiveness. Use them sparingly for truly important information.
+
+✅ **Good:** 2-3 callouts in a long document
+❌ **Avoid:** Every other paragraph is a callout
+
+### Write Clear Titles
+
+Custom titles should be concise and descriptive:
+
+✅ `>[!warning] Backup Required`
+❌ `>[!warning] You Should Probably Think About Maybe Backing Things Up`
+
+### Consider Accessibility
+
+- Use descriptive titles that make sense when read aloud
+- Don't rely solely on color to convey meaning
+- Keep content inside callouts readable and well-formatted
+
+## Keyboard Shortcuts
+
+| Action | Mac | Windows/Linux |
+|--------|-----|---------------|
+| Insert note callout | `Cmd + Alt + C` | `Ctrl + Alt + C` |
+| Open slash menu | `/` | `/` |
+
+## Common Patterns
+
+### Warning + Solution
+
+Pair warnings with actionable solutions:
+
+```markdown
+>[!warning] Issue
+>
+>The database connection may timeout on slow networks.
+
+>[!tip] Solution
+>
+>Increase the timeout value in your configuration:
+>```json
+>{ "timeout": 30000 }
+>```
+```
+
+### Question + Answer
+
+Create FAQ-style content:
+
+```markdown
+>[!question] How do I export my notes?
+>
+>Go to **File → Export** and choose your format.
+
+>[!question] Can I use custom themes?
+>
+>Yes! Visit **Preferences → Themes** to customize.
+```
+
+### Example + Note
+
+Combine demonstrations with explanations:
+
+```markdown
+>[!example] Creating a Link
+>
+>[[My Other Note]]
+
+>[!note] Explanation
+>
+>Double brackets create internal wiki links to other notes in your vault.
+```
+
+## Migration from Other Apps
+
+### From Obsidian
+
+No changes needed! Lokus uses identical callout syntax.
+
+### From Notion
+
+Convert Notion callout blocks:
+
+**Notion:**
+```
+💡 This is a callout in Notion
+```
+
+**Lokus:**
+```markdown
+>[!tip]
+>
+>This is a callout in Lokus
+```
+
+### From Markdown Alerts
+
+Convert standard markdown quotes:
+
+**Standard Markdown:**
+```markdown
+> **Note:** This is important.
+```
+
+**Lokus:**
+```markdown
+>[!note]
+>
+>This is important.
+```
+
+## Related Features
+
+- [Editor](/features/editor) - Rich text editing capabilities
+- [Markdown](/features/markdown) - Full markdown syntax support
+- [Templates](/features/templates) - Include callouts in note templates
+- [Themes](/features/themes) - Customize callout appearance
+
+## Advanced Usage
+
+### Callouts in Templates
+
+Include callouts in template files:
+
+```markdown
+# Meeting Notes Template
+
+**Date:** {{date:YYYY-MM-DD}}
+
+>[!tip] Agenda
+>
+>- Item 1
+>- Item 2
+>- Item 3
+
+## Discussion
+
+>[!note] Key Points
+>
+>-
+
+## Action Items
+
+>[!warning] Follow Up
+>
+>- [ ]
+```
+
+### Callouts with Block References
+
+Reference callout content elsewhere:
+
+```markdown
+>[!tip] Important Tip ^tip-backup
+>
+>Always maintain backups of critical notes.
+
+Later in another note:
+[[This Note^tip-backup]]
+```
+
+### Nested Callouts
+
+While not recommended for readability, callouts can be nested:
+
+```markdown
+>[!info] Project Overview
+>
+>This is the main callout.
+>
+>>[!warning] Known Issue
+>>
+>>There's a nested warning about something specific.
+```
+
+<Callout type="warning">
+Excessive nesting reduces readability. Use sparingly and only when the hierarchy adds clarity.
+</Callout>
+
+---
+
+Callouts transform plain notes into polished, professional documents. Use them wisely to guide your readers and emphasize what matters most.

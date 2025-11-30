@@ -1,6 +1,9 @@
 export default {
   "index": "Tutorials Overview",
   "first-workspace": "First Workspace",
+  "using-block-references": "Block References",
+  "creating-mermaid-diagrams": "Mermaid Diagrams",
+  "template-workflows": "Template Workflows",
   "zettelkasten": "Zettelkasten System",
   "project-management": "Project Management",
   "research-workflow": "Research Workflow",

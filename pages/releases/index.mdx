@@ -10,8 +10,48 @@ Stay up-to-date with the latest features, improvements, and bug fixes in Lokus.
 
 ## Version History
 
+### [v1.3.5 "Production"](/releases/v1.3.5)
+**Released:** November 29, 2025 | **Status:** Production Ready
+
+Production hardening release with remote configuration, comprehensive security audit, UI/UX polish, and Mac App Store readiness.
+
+**Highlights:**
+- Remote configuration and announcements system
+- Complete security audit (3 critical fixes)
+- Production logger with Sentry integration
+- About dialog and enhanced file operations
+- Toast notification system
+- Atomic file writes for data integrity
+- Mac App Store configuration complete
+- Callout blocks with 8 types
+- Import/migration system for Logseq and Roam
+
+[Read full release notes →](/releases/v1.3.5)
+
+---
+
+### [v1.3.4 "Stability"](/releases/v1.3.4)
+**Released:** November 22, 2025 | **Status:** Production Ready
+
+Major stability and feature release with advanced template system, sync overhaul, and critical bug fixes.
+
+**Highlights:**
+- Advanced template system (90+ features)
+- Complete sync system overhaul
+- Block references (Obsidian-style)
+- Mermaid diagram support
+- Auto-updater functionality
+- Page preview on hover
+- Image viewer with zoom controls
+- 85-90% performance improvement
+- Critical bug fixes (split view, Bases, tables)
+
+[Read full release notes →](/releases/v1.3.4)
+
+---
+
 ### [v1.3 "Quantum Leap"](/releases/v1.3)
-**Released:** October 2025 | **Status:** Production Ready
+**Released:** October 20, 2025 | **Status:** Stable
 
 Major release featuring Bases (database system), MCP Server with 68+ AI tools, Quantum Performance Architecture, OAuth 2.0 authentication, and full Windows support.
 
@@ -78,6 +118,38 @@ Lokus follows a regular release cycle:
 - **Patch releases** (x.y.z) - As needed, focusing on bug fixes and security
 
 ## Upgrade Guide
+
+### From v1.3.4 to v1.3.5
+
+v1.3.5 is fully backward compatible with v1.3.4 workspaces. This is primarily a security and polish release.
+
+**What's New:**
+- Remote configuration system (automatic)
+- Security improvements (automatic)
+- New callout blocks and UI components
+- Mac App Store support
+
+**Action Required:**
+1. Review new About dialog (Help → About Lokus)
+2. Optional: Try new callout blocks with `/callout` command
+3. Optional: Test file operations from context menu
+
+### From v1.3.3 to v1.3.4
+
+v1.3.4 introduces major new features while maintaining backward compatibility.
+
+**What's New:**
+- Advanced template system with file-based storage
+- Sync system completely overhauled
+- Block references (Obsidian-style)
+- Mermaid diagram support
+- Auto-updater functionality
+
+**Action Required:**
+1. Review Sync settings if using sync (simplified UI)
+2. Re-authenticate if sync prompts you
+3. Optional: Create templates in Template Manager
+4. Optional: Try block references with `^blockid` syntax
 
 ### From v1.2 to v1.3
 

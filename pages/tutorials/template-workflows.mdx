@@ -1,0 +1,1092 @@
+---
+title: Template Workflows Tutorial - Lokus
+description: Master Lokus templates with dates, variables, conditionals, and loops in this comprehensive 30-minute tutorial
+keywords: [lokus, tutorial, templates, automation, workflows, daily notes, meeting notes]
+---
+
+import { Steps } from 'nextra/components'
+
+# Template Workflows
+
+Automate your note-taking with powerful templates. Learn to create daily notes, meeting templates, project briefs, and more using variables, date functions, conditionals, and loops.
+
+**Time Estimate:** 30 minutes
+
+## What You'll Learn
+
+By the end of this tutorial, you'll be able to:
+- Create templates with variables and placeholders
+- Use date functions for dynamic dates
+- Apply conditionals for smart templates
+- Use loops to generate repeated content
+- Build real-world template workflows
+- Create template libraries for your workflows
+
+## Prerequisites
+
+- Lokus v1.3.4 or later
+- Basic understanding of notes and files
+- Familiarity with markdown
+- 30 minutes of focused time
+
+---
+
+<Steps>
+
+### Step 1: Your First Template
+
+Let's create a simple template to understand the basics.
+
+#### 1.1 Create a Template
+
+1. Create a new note called `Template - Simple Note`
+2. Add this content:
+
+```markdown
+---
+name: Simple Note
+description: A basic template example
+type: template
+---
+
+# {{title}}
+
+Created: {{date}}
+Author: {{author}}
+
+## Notes
+
+{{content}}
+
+---
+
+Tags: #{{category}}
+```
+
+#### 1.2 Understanding Template Syntax
+
+**Variables:**
+```markdown
+{{variableName}}
+```
+
+**Date Functions:**
+```markdown
+{{date.now}}
+{{date.today}}
+{{date.format('MMMM dd, yyyy')}}
+```
+
+**Filters:**
+```markdown
+{{text | upper}}
+{{name | capitalize}}
+{{content | truncate(100)}}
+```
+
+> **Note:**
+**Info:** Templates are regular markdown files with special `{{syntax}}` that gets replaced when you use the template.
+
+
+#### 1.3 Using Your Template
+
+To use a template:
+1. Create a new note
+2. Click the template icon or use slash command `/template`
+3. Select "Simple Note"
+4. Fill in the variables
+5. The template expands with your values
+
+---
+
+### Step 2: Daily Note Template
+
+Let's create a practical daily note template with date functions.
+
+#### 2.1 Create Daily Note Template
+
+Create `Template - Daily Note`:
+
+```markdown
+---
+name: Daily Note
+description: Daily reflection and planning template
+type: template
+category: productivity
+---
+
+# {{date.format('dddd, MMMM D, YYYY')}}
+
+**Week:** {{date.getWeek}} | **Quarter:** Q{{date.getQuarter}}
+
+## Morning Reflection
+
+### Today's Focus
+1.
+2.
+3.
+
+### Energy Level
+- Physical: /10
+- Mental: /10
+- Emotional: /10
+
+## Schedule
+
+### Time Blocks
+- 9:00-10:30 →
+- 10:30-12:00 →
+- 12:00-13:00 → Lunch
+- 13:00-15:00 →
+- 15:00-17:00 →
+
+## Tasks
+
+### Must Do Today
+- [ ]
+- [ ]
+- [ ]
+
+### Would Be Nice
+- [ ]
+- [ ]
+
+## Evening Review
+
+### Accomplished
+-
+
+### Challenges
+-
+
+### Learnings
+-
+
+### Gratitude
+1.
+2.
+3.
+
+---
+
+## Links
+
+**Yesterday:** [[{{date.yesterday.format('YYYY-MM-DD')}} Daily]]
+**Tomorrow:** [[{{date.tomorrow.format('YYYY-MM-DD')}} Daily]]
+
+**Weekly Review:** [[Week {{date.getWeek}} - {{date.getYear}}]]
+
+---
+
+*Created: {{date.now.format('YYYY-MM-DD HH:mm')}}*
+
+#daily-note #{{date.format('yyyy')}} #{{date.format('yyyy-MM')}}
+```
+
+#### 2.2 Date Functions Reference
+
+**Current Date:**
+- `{{date.now}}` - Current date and time
+- `{{date.today}}` - Today at 00:00
+- `{{date.tomorrow}}` - Tomorrow at 00:00
+- `{{date.yesterday}}` - Yesterday at 00:00
+
+**Formatting:**
+```markdown
+{{date.format('YYYY-MM-DD')}}         → 2024-01-15
+{{date.format('MMMM dd, yyyy')}}      → January 15, 2024
+{{date.format('dddd')}}               → Monday
+{{date.format('HH:mm')}}              → 14:30
+```
+
+**Date Arithmetic:**
+```markdown
+{{date.addDays(7)}}                   → 7 days from now
+{{date.subWeeks(1)}}                  → 1 week ago
+{{date.addMonths(1)}}                 → 1 month from now
+{{date.startOfWeek}}                  → Start of this week
+{{date.endOfMonth}}                   → End of this month
+```
+
+**Date Properties:**
+```markdown
+{{date.getDay}}                       → Day of month (1-31)
+{{date.getMonth}}                     → Month (1-12)
+{{date.getYear}}                      → Year (2024)
+{{date.getWeek}}                      → Week number (1-52)
+{{date.getQuarter}}                   → Quarter (1-4)
+{{date.getDayOfWeek}}                 → Day name (Monday)
+```
+
+---
+
+### Step 3: Meeting Notes Template
+
+Let's create a template with variables and conditionals.
+
+#### 3.1 Create Meeting Template
+
+Create `Template - Meeting Notes`:
+
+```markdown
+---
+name: Meeting Notes
+description: Professional meeting documentation
+type: template
+category: meetings
+variables:
+  - name: meeting_title
+    type: text
+    required: true
+    prompt: "Meeting title"
+  - name: meeting_type
+    type: select
+    options: ["Team Sync", "Client Meeting", "1-on-1", "Planning", "Review"]
+    default: "Team Sync"
+  - name: attendees
+    type: text
+    prompt: "Attendees (comma-separated)"
+  - name: has_decisions
+    type: boolean
+    default: true
+  - name: has_action_items
+    type: boolean
+    default: true
+---
+
+# {{meeting_title}}
+
+**Date:** {{date.format('MMMM dd, yyyy')}}
+**Time:** {{date.format('HH:mm')}}
+**Type:** {{meeting_type}}
+
+## Attendees
+
+{{#each attendees.split(',')}}
+- {{this | trim}}
+{{/each}}
+
+---
+
+## Agenda
+
+1.
+2.
+3.
+
+---
+
+## Discussion Notes
+
+### Topic 1
+
+
+### Topic 2
+
+
+---
+
+{{#if has_decisions}}
+## Decisions Made
+
+| Decision | Rationale | Owner |
+|----------|-----------|-------|
+|          |           |       |
+
+---
+{{/if}}
+
+{{#if has_action_items}}
+## Action Items
+
+| Task | Owner | Due Date | Status |
+|------|-------|----------|--------|
+|      |       |          | [ ]    |
+
+---
+{{/if}}
+
+## Next Steps
+
+-
+
+---
+
+## Links
+
+**Previous Meeting:** [[{{meeting_title}} - {{date.subWeeks(1).format('YYYY-MM-DD')}}]]
+**Meeting Series:** [[Meetings/{{meeting_title}}]]
+
+#meeting #{{meeting_type | slug}} #{{date.format('yyyy-MM')}}
+```
+
+#### 3.2 Conditionals Syntax
+
+**If statements:**
+```markdown
+{{#if condition}}
+  Content when true
+{{/if}}
+```
+
+**If-else:**
+```markdown
+{{#if condition}}
+  Content when true
+{{else}}
+  Content when false
+{{/if}}
+```
+
+**If-elseif-else:**
+```markdown
+{{#if condition1}}
+  First condition
+{{elseif condition2}}
+  Second condition
+{{else}}
+  Default
+{{/if}}
+```
+
+**Comparison operators:**
+```markdown
+{{#if count > 5}}
+{{#if status == 'active'}}
+{{#if priority != 'low'}}
+{{#if score >= 80}}
+```
+
+---
+
+### Step 4: Project Template with Loops
+
+Let's create a template that uses loops for repeated sections.
+
+#### 4.1 Create Project Brief Template
+
+Create `Template - Project Brief`:
+
+```markdown
+---
+name: Project Brief
+description: Comprehensive project planning template
+type: template
+category: projects
+variables:
+  - name: project_name
+    type: text
+    required: true
+  - name: status
+    type: select
+    options: ["Planning", "Active", "On Hold", "Completed"]
+    default: "Planning"
+  - name: priority
+    type: select
+    options: ["Critical", "High", "Medium", "Low"]
+    default: "Medium"
+  - name: team_members
+    type: text
+    prompt: "Team members (comma-separated)"
+  - name: num_phases
+    type: number
+    default: 3
+---
+
+# Project: {{project_name}}
+
+**Status:** {{status}}
+**Priority:** {{priority}}
+**Created:** {{date.format('MMMM dd, yyyy')}}
+**Updated:** {{date.format('MMMM dd, yyyy HH:mm')}}
+
+---
+
+## Team
+
+**Project Lead:**
+
+### Team Members
+{{#each team_members.split(',')}}
+- **{{this | trim | capitalize}}**
+  - Role:
+  - Responsibilities:
+{{/each}}
+
+---
+
+## Overview
+
+### Problem Statement
+
+
+### Proposed Solution
+
+
+### Success Criteria
+
+1.
+2.
+3.
+
+---
+
+## Timeline
+
+**Start Date:** {{date.format('YYYY-MM-DD')}}
+**Target End Date:** {{date.addMonths(3).format('YYYY-MM-DD')}}
+**Duration:** ~3 months
+
+### Project Phases
+
+{{#each (range 1 (add num_phases 1))}}
+#### Phase {{this}}: [Phase Name]
+
+**Duration:** [X weeks]
+**Goals:**
+-
+-
+
+**Deliverables:**
+-
+
+---
+
+{{/each}}
+
+---
+
+## Milestones
+
+| Milestone | Target Date | Status |
+|-----------|-------------|--------|
+| Project Kickoff | {{date.format('YYYY-MM-DD')}} | [ ] |
+| Phase 1 Complete | {{date.addMonths(1).format('YYYY-MM-DD')}} | [ ] |
+| Mid-Project Review | {{date.addMonths(1.5).format('YYYY-MM-DD')}} | [ ] |
+| Phase 2 Complete | {{date.addMonths(2).format('YYYY-MM-DD')}} | [ ] |
+| Final Delivery | {{date.addMonths(3).format('YYYY-MM-DD')}} | [ ] |
+
+---
+
+## Risks & Mitigation
+
+| Risk | Probability | Impact | Mitigation Strategy |
+|------|-------------|--------|---------------------|
+|      | Low/Med/High | Low/Med/High |           |
+
+---
+
+## Resources
+
+### Budget
+
+
+### Tools & Technologies
+
+
+### Dependencies
+
+
+---
+
+## Status Updates
+
+### Week {{date.getWeek}} - {{date.format('MMM dd')}}
+
+**Progress:**
+-
+
+**Blockers:**
+-
+
+**Next Week:**
+-
+
+---
+
+## Links
+
+**Project Folder:** [[Projects/{{project_name}}/]]
+**Team Notes:** [[Team/{{project_name}}]]
+**Status Updates:** [[Projects/{{project_name}}/Status Updates]]
+
+#project #{{status | slug}} #{{priority | slug}} #{{date.format('yyyy-Qx')}}
+```
+
+#### 4.2 Loops Syntax
+
+**Each loop:**
+```markdown
+{{#each array}}
+  {{this}} - Current item
+  {{@index}} - Index (0-based)
+  {{@first}} - True if first item
+  {{@last}} - True if last item
+{{/each}}
+```
+
+**Range loop:**
+```markdown
+{{#each (range 1 11)}}
+  Item {{this}}
+{{/each}}
+```
+
+**Loop with conditionals:**
+```markdown
+{{#each items}}
+  {{#if @first}}
+    **First Item:** {{this}}
+  {{elseif @last}}
+    **Last Item:** {{this}}
+  {{else}}
+    - {{this}}
+  {{/if}}
+{{/each}}
+```
+
+---
+
+### Step 5: Using Filters
+
+Filters transform values inline.
+
+#### 5.1 Text Filters
+
+```markdown
+{{name | upper}}                      → JOHN DOE
+{{name | lower}}                      → john doe
+{{name | capitalize}}                 → John doe
+{{name | capitalizeAll}}              → John Doe
+{{text | truncate(50, '...')}}       → Truncated text...
+{{title | slug}}                      → url-safe-slug
+{{text | trim}}                       → Trimmed text
+```
+
+#### 5.2 Array Filters
+
+```markdown
+{{items | join(', ')}}                → item1, item2, item3
+{{items | first}}                     → First item
+{{items | last}}                      → Last item
+{{items | length}}                    → Array length
+{{items | sort}}                      → Sorted array
+{{items | reverse}}                   → Reversed array
+{{items | unique}}                    → Unique items only
+```
+
+#### 5.3 Number Filters
+
+```markdown
+{{price | currency}}                  → $1,234.56
+{{number | round}}                    → Rounded number
+{{number | abs}}                      → Absolute value
+{{percent | percentage}}              → 75%
+```
+
+#### 5.4 Date Filters
+
+```markdown
+{{date | dateFormat('MM/DD/YYYY')}}   → 01/15/2024
+{{date | timeAgo}}                    → 2 hours ago
+{{date | relative}}                   → yesterday at 3:45 PM
+```
+
+#### 5.5 Create Filtered Template
+
+Create `Template - Book Notes`:
+
+```markdown
+---
+name: Book Notes
+description: Book reading notes with filters
+type: template
+variables:
+  - name: book_title
+    type: text
+    required: true
+  - name: author
+    type: text
+    required: true
+  - name: rating
+    type: number
+    min: 1
+    max: 5
+    default: 4
+  - name: pages
+    type: number
+  - name: tags
+    type: text
+    prompt: "Tags (comma-separated)"
+---
+
+# {{book_title | capitalizeAll}}
+
+**Author:** {{author | capitalizeAll}}
+**Rating:** {{rating}}/5 ⭐
+**Pages:** {{pages}}
+**Started:** {{date.format('MMMM dd, yyyy')}}
+**File Name:** `{{book_title | slug}}.md`
+
+---
+
+## Overview
+
+**Genre:**
+**Published:**
+**Read:** {{date.format('MMMM yyyy')}}
+
+---
+
+## Key Takeaways
+
+### Main Ideas
+
+{{#each (range 1 6)}}
+{{this}}.
+
+{{/each}}
+
+---
+
+## Highlights & Quotes
+
+{{#each (range 1 11)}}
+### Highlight {{this}}
+
+> Quote here (p. X)
+
+**My thoughts:**
+
+
+---
+
+{{/each}}
+
+---
+
+## Summary
+
+### In One Sentence
+
+
+### In One Paragraph
+
+
+---
+
+## Action Items
+
+What will I apply from this book?
+
+- [ ]
+- [ ]
+- [ ]
+
+---
+
+## Related
+
+**Similar Books:**
+
+**Related Concepts:**
+{{#each tags.split(',')}}
+- [[{{this | trim | capitalizeAll}}]]
+{{/each}}
+
+---
+
+**Progress:** {{pages}} pages in {{date.differenceInDays(date.addDays(-14), date.now)}} days = {{divide pages 14 | round}} pages/day
+
+#book #{{rating}}-stars {{#each tags.split(',')}}#{{this | trim | slug}} {{/each}}
+```
+
+---
+
+### Step 6: Template Includes
+
+Reuse template snippets across multiple templates.
+
+#### 6.1 Create Reusable Snippets
+
+Create `Template - Snippet - Header`:
+
+```markdown
+---
+name: Header Snippet
+type: snippet
+---
+
+Created: {{date.format('MMMM dd, yyyy')}}
+Modified: {{date.format('MMMM dd, yyyy HH:mm')}}
+
+---
+```
+
+Create `Template - Snippet - Footer`:
+
+```markdown
+---
+name: Footer Snippet
+type: snippet
+---
+
+---
+
+*Last updated: {{date.format('MMMM dd, yyyy HH:mm')}}*
+*Location: [[{{location}}]]*
+
+#note #{{date.format('yyyy')}} #{{date.format('yyyy-MM')}}
+```
+
+#### 6.2 Use Includes in Templates
+
+Create `Template - Article Draft`:
+
+```markdown
+---
+name: Article Draft
+description: Blog post or article template
+type: template
+---
+
+# {{title}}
+
+{{include "Header Snippet"}}
+
+## Outline
+
+### Introduction
+
+- Hook:
+- Context:
+- Thesis:
+
+### Body
+
+#### Section 1:
+
+- Main point:
+- Evidence:
+- Examples:
+
+#### Section 2:
+
+- Main point:
+- Evidence:
+- Examples:
+
+#### Section 3:
+
+- Main point:
+- Evidence:
+- Examples:
+
+### Conclusion
+
+- Summary:
+- Call to action:
+- Final thought:
+
+---
+
+## Draft
+
+[Write draft here]
+
+---
+
+## Research Links
+
+-
+
+---
+
+{{include "Footer Snippet"}}
+```
+
+---
+
+### Step 7: Real-World Workflow
+
+Let's combine everything into a complete workflow.
+
+#### 7.1 Weekly Review Template
+
+Create `Template - Weekly Review`:
+
+```markdown
+---
+name: Weekly Review
+description: Weekly reflection and planning
+type: template
+category: productivity
+---
+
+# Week {{date.getWeek}} Review - {{date.format('MMMM yyyy')}}
+
+**Period:** {{date.startOfWeek.format('MMM dd')}} - {{date.endOfWeek.format('MMM dd, yyyy')}}
+
+---
+
+## Last Week Accomplishments
+
+### Major Wins
+1.
+2.
+3.
+
+### Completed Projects
+- [ ]
+- [ ]
+
+### Daily Notes Summary
+{{#each (range 0 7)}}
+- [[{{date.subDays(this).format('YYYY-MM-DD')}} Daily]]{{#if (eq this 0)}} ← Today{{/if}}
+{{/each}}
+
+---
+
+## Metrics
+
+### Work
+- Deep work hours: __/25
+- Meetings: __ hours
+- Major tasks completed: __
+
+### Personal
+- Exercise days: __/7
+- Reading: __ pages
+- Learning: __ hours
+
+### Habit Tracker
+| Habit | Mon | Tue | Wed | Thu | Fri | Sat | Sun | Score |
+|-------|-----|-----|-----|-----|-----|-----|-----|-------|
+| Exercise | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | 0/7 |
+| Reading | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | 0/7 |
+| Meditation | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | 0/7 |
+
+---
+
+## Challenges & Learnings
+
+### What Went Wrong?
+
+
+### What Did I Learn?
+
+
+### What Would I Do Differently?
+
+
+---
+
+## Next Week Planning
+
+### Week {{date.addWeeks(1).getWeek}} - {{date.addWeeks(1).startOfWeek.format('MMM dd')}} to {{date.addWeeks(1).endOfWeek.format('MMM dd')}}
+
+### Focus Areas
+1.
+2.
+3.
+
+### Major Tasks
+- [ ]
+- [ ]
+- [ ]
+
+### Meetings & Events
+{{#each (range 0 7)}}
+#### {{date.addDays(this).format('dddd, MMM dd')}}
+-
+
+{{/each}}
+
+---
+
+## Goals Progress
+
+### Monthly Goals ({{date.format('MMMM')}})
+
+| Goal | Progress | Status |
+|------|----------|--------|
+|      | __/%     | 🔴🟡🟢 |
+
+### Quarterly Goals (Q{{date.getQuarter}})
+
+| Goal | Progress | Target Date |
+|------|----------|-------------|
+|      | __/%     | {{date.endOfQuarter.format('MMM DD')}} |
+
+---
+
+## Gratitude & Reflection
+
+### This Week I'm Grateful For
+1.
+2.
+3.
+
+### Energy Check-In
+- Physical: __/10
+- Mental: __/10
+- Emotional: __/10
+- Overall: __/10
+
+---
+
+**Last Week:** [[Week {{date.subWeeks(1).getWeek}} - {{date.getYear}}]]
+**Next Week:** [[Week {{date.addWeeks(1).getWeek}} - {{date.getYear}}]]
+**Monthly Review:** [[{{date.format('MMMM yyyy')}} Monthly Review]]
+
+#weekly-review #week-{{date.getWeek}} #{{date.format('yyyy')}}
+```
+
+---
+
+### Step 8: Advanced Techniques
+
+#### 8.1 Nested Conditionals
+
+```markdown
+{{#if priority == 'high'}}
+  {{#if status == 'active'}}
+    ⚠️ **HIGH PRIORITY - ACTIVE**
+  {{else}}
+    ⚠️ **HIGH PRIORITY - PENDING**
+  {{/if}}
+{{elseif priority == 'medium'}}
+  📌 Medium Priority
+{{else}}
+  📋 Low Priority
+{{/if}}
+```
+
+#### 8.2 Complex Loops
+
+```markdown
+{{#each team_members.split(',')}}
+  {{#if @first}}
+## Team Lead
+**{{this | trim | capitalizeAll}}**
+  {{else}}
+### Team Member {{@index}}
+- **Name:** {{this | trim | capitalizeAll}}
+- **Role:**
+  {{/if}}
+
+{{/each}}
+```
+
+#### 8.3 Date Calculations
+
+```markdown
+**Project Duration:** {{date.differenceInDays(start_date, end_date)}} days
+**Weeks Remaining:** {{date.differenceInWeeks(date.now, deadline)}} weeks
+**Sprint Number:** {{divide (date.differenceInWeeks(project_start, date.now)) 2 | round}}
+**Completion:** {{divide (date.differenceInDays(project_start, date.now)) (date.differenceInDays(project_start, project_end)) | multiply(100) | round}}%
+```
+
+#### 8.4 Dynamic Tagging
+
+```markdown
+#{{status | slug}}
+#priority-{{priority | slug}}
+#{{date.format('yyyy')}}
+#{{date.format('yyyy-MM')}}
+#{{date.format('yyyy-Qx')}}
+{{#each tags.split(',')}}
+#{{this | trim | slug}}
+{{/each}}
+```
+
+---
+
+</Steps>
+
+## What You've Built
+
+Congratulations! You've mastered Lokus templates. You can now:
+
+- Create templates with variables and placeholders
+- Use 70+ date functions for dynamic dates
+- Apply conditionals for smart templates
+- Use loops to generate repeated content
+- Apply filters to transform values
+- Build complete workflow systems
+- Create reusable template snippets
+
+## Template Library Quick Reference
+
+### Daily Workflow
+- **Daily Note** - Morning planning & evening review
+- **Weekly Review** - Weekly reflection & planning
+- **Monthly Review** - Goal progress & retrospective
+
+### Meetings
+- **Meeting Notes** - General meeting documentation
+- **1-on-1** - Manager-employee check-ins
+- **Sprint Planning** - Agile sprint planning
+
+### Projects
+- **Project Brief** - Project kickoff documentation
+- **Status Update** - Weekly project status
+- **Post-Mortem** - Project retrospective
+
+### Content
+- **Article Draft** - Blog post outline
+- **Book Notes** - Reading notes
+- **Video Script** - Video content planning
+
+## Next Steps
+
+### Continue Learning
+
+- **Next Example:** [Academic Research Setup](/examples/academic-research-setup) - See templates in action
+- **Related:** [Template Gallery](/examples/template-gallery) - 20+ ready-to-use templates
+- **Advanced:** [Project Management Setup](/examples/project-management-setup) - Complete PM workflow
+
+### Practice Exercises
+
+1. **Personal System:** Create a daily note template for your routine
+2. **Work System:** Build a meeting notes template for your team
+3. **Learning System:** Design a book notes template
+4. **Project System:** Create a project brief template
+
+### Explore Features
+
+- [Templates Documentation](/features/templates) - Complete template reference
+- [Automation](/features/automation) - Advanced automation features
+- [Daily Notes](/features/daily-notes) - Daily notes system
+
+---
+
+## Summary
+
+In this tutorial, you learned:
+
+- Template syntax with `{{variables}}`
+- 70+ date functions for dynamic dates
+- Conditionals with `{{#if}}` statements
+- Loops with `{{#each}}` for repeated content
+- 60+ filters for transforming values
+- Template includes for reusable snippets
+- Real-world workflow templates
+- Advanced techniques and combinations
+
+Templates are one of Lokus's most powerful features, enabling you to automate repetitive note-taking and maintain consistency across your knowledge base.
+
+Happy templating!
+
+---
+
+**Resources:**
+- [Template Syntax Reference](/features/templates/syntax)
+- [Template Variables](/features/templates/variables)
+- [Date Functions Reference](/features/templates/dates)
+- [Filters Reference](/features/templates/filters)
+
+**Estimated Completion Time:** 30 minutes
+**Difficulty:** Intermediate
+**Version:** Lokus v1.3.4+
+**Last Updated:** November 2024

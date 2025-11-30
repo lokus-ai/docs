@@ -1,0 +1,648 @@
+---
+title: Using Block References Tutorial - Lokus
+description: Learn how to use block references to connect specific ideas across your notes in this 15-minute tutorial
+keywords: [lokus, tutorial, block references, note linking, zettelkasten, granular linking]
+---
+
+import { Steps } from 'nextra/components'
+
+# Using Block References
+
+Connect specific ideas across your notes with block-level links. Block references let you link to and embed individual paragraphs, headings, list items, or quotes instead of entire notes.
+
+**Time Estimate:** 15 minutes
+
+## What You'll Learn
+
+By the end of this tutorial, you'll be able to:
+- Create block IDs for specific content
+- Link to individual blocks within notes
+- Embed block content in other notes
+- Use block references for precise knowledge management
+- Apply block references to real-world use cases
+
+## Prerequisites
+
+- Lokus v1.3.4 or later
+- Basic familiarity with wiki links (`[[note]]` syntax)
+- Understanding of note-taking fundamentals
+- 15 minutes of focused time
+
+---
+
+<Steps>
+
+### Step 1: Understanding Block References
+
+Before we dive in, let's understand what block references are and why they're powerful.
+
+#### What is a Block?
+
+In Lokus, a **block** is any distinct unit of content:
+- A paragraph
+- A heading
+- A list item
+- A blockquote
+- A code block
+- A table row
+
+#### What is a Block Reference?
+
+A **block reference** links to a specific block within a note, not the entire note. This enables granular connections between ideas.
+
+**Regular wiki link:**
+```
+[[Book Notes]]
+```
+Links to the entire note.
+
+**Block reference:**
+```
+[[Book Notes^a3x9k2m4]]
+```
+Links to a specific paragraph or section within "Book Notes".
+
+#### Why Use Block References?
+
+1. **Precision:** Link to specific quotes or ideas
+2. **Granularity:** Build connections at the atomic level
+3. **Reusability:** Reference the same insight across multiple notes
+4. **Context:** Preserve the original context when embedding
+
+> **Note:**
+**Info:** Block references are compatible with Obsidian's syntax, making your notes portable across tools.
+
+
+---
+
+### Step 2: Creating Your First Block ID
+
+Let's create a note and add block IDs to specific content.
+
+#### 2.1 Create a Test Note
+
+1. Create a new note called `Book - Atomic Habits`
+2. Add this content:
+
+```markdown
+# Atomic Habits by James Clear
+
+## Key Concepts
+
+### 1% Better Every Day
+
+The compound effect of tiny improvements is remarkable. Getting 1% better each day leads to being 37 times better after one year.
+
+The math: 1.01^365 = 37.78
+
+This isn't just theory - it applies to skills, habits, and knowledge.
+
+### The Four Laws of Behavior Change
+
+1. Make it obvious (Cue)
+2. Make it attractive (Craving)
+3. Make it easy (Response)
+4. Make it satisfying (Reward)
+
+### Environment Design
+
+Environment is the invisible hand that shapes behavior. Don't rely on willpower alone.
+
+Example: If you want to read more, place books where you'll see them.
+```
+
+#### 2.2 Add a Block ID
+
+To create a block ID, simply add `^blockid` at the end of any block:
+
+```markdown
+The compound effect of tiny improvements is remarkable. Getting 1% better each day leads to being 37 times better after one year. ^compound-effect
+```
+
+The syntax is: `content ^your-block-id`
+
+**Block ID Rules:**
+- 8 alphanumeric characters (Lokus can auto-generate)
+- Use `a-z`, `A-Z`, `0-9`, hyphens, and underscores
+- Place at the end of the block
+- Space before the `^` symbol
+
+#### 2.3 Let's Add More Block IDs
+
+Update your note:
+
+```markdown
+# Atomic Habits by James Clear
+
+## Key Concepts
+
+### 1% Better Every Day
+
+The compound effect of tiny improvements is remarkable. Getting 1% better each day leads to being 37 times better after one year. ^compound-effect
+
+The math: 1.01^365 = 37.78 ^compound-math
+
+This isn't just theory - it applies to skills, habits, and knowledge. ^compound-application
+
+### The Four Laws of Behavior Change
+
+1. Make it obvious (Cue) ^law-1
+2. Make it attractive (Craving) ^law-2
+3. Make it easy (Response) ^law-3
+4. Make it satisfying (Reward) ^law-4
+
+### Environment Design
+
+Environment is the invisible hand that shapes behavior. Don't rely on willpower alone. ^environment-power
+
+Example: If you want to read more, place books where you'll see them. ^environment-example
+```
+
+> **Note:**
+**Pro Tip:** Use descriptive block IDs like `^compound-effect` instead of random characters like `^a3x9k2m4`. They're easier to remember and make your links more meaningful.
+
+
+---
+
+### Step 3: Linking to Specific Blocks
+
+Now let's create links to these blocks from another note.
+
+#### 3.1 Create a New Note
+
+Create a note called `Personal Development Ideas`
+
+#### 3.2 Link to Blocks
+
+Use the syntax: `[[Note Name^block-id]]`
+
+```markdown
+# Personal Development Ideas
+
+## Habits & Systems
+
+The key to improvement is consistency, not intensity.
+
+**Key insight:** [[Book - Atomic Habits^compound-effect]]
+
+The mathematical proof shows that small daily improvements compound dramatically: [[Book - Atomic Habits^compound-math]]
+
+## My Habit Building Framework
+
+Based on James Clear's research:
+
+1. [[Book - Atomic Habits^law-1]]
+2. [[Book - Atomic Habits^law-2]]
+3. [[Book - Atomic Habits^law-3]]
+4. [[Book - Atomic Habits^law-4]]
+
+## Environment Optimization
+
+[[Book - Atomic Habits^environment-power]]
+
+Practical application: [[Book - Atomic Habits^environment-example]]
+```
+
+#### 3.3 How Block Links Work
+
+When you click a block reference link:
+- Lokus opens the target note
+- Automatically scrolls to the specific block
+- Highlights the referenced content
+
+Try it: Click one of your block reference links and watch it navigate to the exact paragraph.
+
+> **Note:**
+**Success:** You've created your first block references! These links are now connected at the block level, enabling precise knowledge connections.
+
+
+---
+
+### Step 4: Embedding Block Content
+
+Block references aren't just links - you can embed the actual content.
+
+#### 4.1 Embed Syntax
+
+Use an exclamation mark before the block reference: `![[Note^block-id]]`
+
+#### 4.2 Create an Embedded Note
+
+Create a note called `Daily Review - 2024-01-15`
+
+```markdown
+# Daily Review - January 15, 2024
+
+## What I Learned Today
+
+### Key Insight on Habits
+
+![[Book - Atomic Habits^compound-effect]]
+
+This resonates with my experience learning programming. Small daily practice sessions (30 min) were more effective than weekend marathons (8 hours).
+
+**My action:** Apply the 1% rule to:
+- Reading (10 pages daily)
+- Writing (200 words daily)
+- Exercise (10 minutes daily)
+
+### Habit Design Framework
+
+I'm designing my morning routine using these principles:
+
+![[Book - Atomic Habits^law-1]]
+![[Book - Atomic Habits^law-2]]
+![[Book - Atomic Habits^law-3]]
+![[Book - Atomic Habits^law-4]]
+
+### Environment Changes
+
+![[Book - Atomic Habits^environment-power]]
+
+**Actions I'm taking:**
+- Placing running shoes by bed → Make exercise obvious
+- Deleting social media apps → Make distraction difficult
+- Keeping book on nightstand → Make reading easy
+```
+
+#### 4.3 How Embeds Work
+
+When you embed a block:
+- The content appears inline in your note
+- It stays synced with the original (read-only)
+- Changes to the source update everywhere
+- A link to the source note is preserved
+
+> **Note:**
+**Info:** Embedded blocks are read-only. To edit, click the link to open the source note.
+
+
+---
+
+### Step 5: Real-World Application
+
+Let's apply block references to a practical scenario: academic research notes.
+
+#### 5.1 The Scenario
+
+You're writing a research paper on productivity systems. You've read multiple books and need to connect specific ideas across your notes.
+
+#### 5.2 Create Literature Notes
+
+Create `Book - Deep Work`:
+
+```markdown
+# Deep Work by Cal Newport
+
+## Core Concepts
+
+Deep work is the ability to focus without distraction on cognitively demanding tasks. ^deep-work-definition
+
+Deep work is rare, valuable, and meaningful. ^deep-work-value
+
+Shallow work: non-cognitively demanding, logistical tasks. ^shallow-work-definition
+
+The ability to perform deep work is becoming increasingly rare while simultaneously becoming increasingly valuable. ^deep-work-paradox
+
+## Strategies
+
+Schedule every minute of your day. ^time-blocking
+
+Work in 90-minute focused blocks with breaks between. ^ultradian-rhythm
+
+Shut down completely at end of work day. ^shutdown-ritual
+```
+
+Create `Book - The Power of Habit`:
+
+```markdown
+# The Power of Habit by Charles Duhigg
+
+## The Habit Loop
+
+Every habit consists of a cue, routine, and reward. ^habit-loop
+
+To change a habit, keep the cue and reward the same but change the routine. ^habit-change-strategy
+
+Keystone habits are small changes that cascade to other positive behaviors. ^keystone-habits
+
+## Willpower
+
+Willpower is a muscle that gets tired with use. ^willpower-muscle
+
+To conserve willpower, make important decisions and do hard tasks early in the day. ^willpower-conservation
+```
+
+#### 5.3 Create a Synthesis Note
+
+Create `Research Paper - Productivity Framework`:
+
+```markdown
+# Research Paper: Productivity Framework
+
+## Thesis
+
+Sustainable productivity requires combining deep work practices with habit systems that conserve cognitive resources.
+
+## Section 1: Defining Deep Work
+
+![[Book - Deep Work^deep-work-definition]]
+
+![[Book - Deep Work^deep-work-value]]
+
+This matters because: [[Book - Deep Work^deep-work-paradox]]
+
+## Section 2: The Habit Foundation
+
+Productivity shouldn't rely on willpower. As Duhigg explains: [[Book - The Power of Habit^willpower-muscle]]
+
+Strategy: [[Book - The Power of Habit^willpower-conservation]]
+
+By turning deep work into a habit, we preserve willpower for creative thinking.
+
+## Section 3: Implementation Framework
+
+### Building Deep Work Habits
+
+Combine Newport's time structure:
+- [[Book - Deep Work^time-blocking]]
+- [[Book - Deep Work^ultradian-rhythm]]
+- [[Book - Deep Work^shutdown-ritual]]
+
+With Duhigg's habit mechanics:
+- [[Book - The Power of Habit^habit-loop]]
+- [[Book - The Power of Habit^keystone-habits]]
+
+### Practical Application
+
+![[Book - Atomic Habits^law-1]]
+![[Book - Atomic Habits^law-2]]
+![[Book - Atomic Habits^law-3]]
+![[Book - Atomic Habits^law-4]]
+
+## Section 4: Environment Design
+
+![[Book - Atomic Habits^environment-power]]
+
+**My deep work environment:**
+- Dedicated desk (cue for deep work)
+- Phone in different room (remove shallow work triggers)
+- 90-minute timer visible (make time blocking obvious)
+- Coffee prepared beforehand (make deep work easy)
+
+## Conclusion
+
+By synthesizing insights from multiple sources at the block level, we create a cohesive framework that's greater than the sum of its parts.
+```
+
+> **Note:**
+**Success:** You've created a research synthesis using block references! Notice how you've connected specific ideas from three different books without copying text or losing context.
+
+
+---
+
+### Step 6: Block References Best Practices
+
+Now that you've mastered the basics, let's cover best practices.
+
+#### 6.1 When to Use Block References
+
+**Good Use Cases:**
+- Specific quotes you'll reference multiple times
+- Key definitions or concepts
+- Evidence for arguments
+- Data points or statistics
+- Actionable insights
+- Specific examples
+
+**When NOT to Use:**
+- Linking entire sections (use regular wiki links)
+- Every sentence (too granular)
+- Temporary notes (block IDs add overhead)
+- Quick capture (add IDs during review)
+
+#### 6.2 Block ID Naming
+
+**Descriptive IDs (Recommended):**
+```markdown
+Getting 1% better each day = 37x in a year. ^compound-effect-math
+```
+- Easy to remember
+- Self-documenting
+- Searchable
+
+**Auto-Generated IDs:**
+```markdown
+Getting 1% better each day = 37x in a year. ^a3x9k2m4
+```
+- Quick to create
+- Guaranteed unique
+- No naming overhead
+
+> **Note:**
+**Pro Tip:** Use descriptive IDs for blocks you'll reference often. Use auto-generated IDs for quick capture during reading.
+
+
+#### 6.3 Organization Strategy
+
+**Progressive Capture:**
+
+1. **First pass (Reading):** Take notes without block IDs
+2. **Second pass (Review):** Add block IDs to key insights
+3. **Third pass (Synthesis):** Create references in synthesis notes
+
+**Tag Referenceable Blocks:**
+
+```markdown
+Important definition here. ^key-definition #definition
+
+This is a core principle. ^core-principle #principle
+
+Specific data point: 73% of users. ^user-stat #data
+```
+
+---
+
+### Step 7: Advanced Techniques
+
+Take your block references to the next level.
+
+#### 7.1 Block Reference Chains
+
+Create sequences of related blocks:
+
+```markdown
+# Learning Pathway - Productivity
+
+## Foundation
+Start here: ![[Book - Atomic Habits^compound-effect]]
+
+## Building Blocks
+Then understand: ![[Book - The Power of Habit^habit-loop]]
+
+## Deep Work
+Finally master: ![[Book - Deep Work^deep-work-definition]]
+
+## Integration
+Combine all three: [[Research Paper - Productivity Framework^thesis]]
+```
+
+#### 7.2 Block Collections
+
+Group related blocks by theme:
+
+```markdown
+# Quotes - On Focus
+
+![[Book - Deep Work^deep-work-definition]]
+
+![[Book - Deep Work^shallow-work-definition]]
+
+![[Book - Atomic Habits^environment-power]]
+
+![[Book - The Power of Habit^willpower-muscle]]
+```
+
+#### 7.3 Argument Building
+
+Use blocks as evidence:
+
+```markdown
+# Argument: Why Deep Work Matters
+
+**Claim:** Deep work is the most valuable skill in the modern economy.
+
+**Evidence:**
+1. [[Book - Deep Work^deep-work-value]]
+2. [[Book - Deep Work^deep-work-paradox]]
+
+**Supporting mechanics:**
+- [[Book - The Power of Habit^willpower-muscle]]
+- [[Book - Atomic Habits^compound-effect]]
+
+**Conclusion:** By combining deep work habits with environment design, we maximize valuable output while minimizing willpower depletion.
+```
+
+---
+
+### Step 8: Troubleshooting
+
+Common issues and solutions.
+
+#### Problem: Block Link Not Working
+
+**Symptom:** Click block reference, nothing happens
+
+**Solutions:**
+- Verify block ID exists in target note
+- Check spelling (block IDs are case-sensitive)
+- Ensure no extra spaces: `[[Note^blockid]]` not `[[Note ^blockid]]`
+- Re-save the target note to refresh index
+
+#### Problem: Block ID Not Showing
+
+**Symptom:** Added `^blockid` but it's not recognized
+
+**Solutions:**
+- Add space before `^`: `text ^blockid`
+- Check block type (only works on paragraphs, headings, lists, quotes)
+- Ensure block ID format: `^[a-zA-Z0-9_-]+`
+- Don't use special characters
+
+#### Problem: Embed Shows Old Content
+
+**Symptom:** Embedded block hasn't updated
+
+**Solutions:**
+- Refresh the note (Cmd/Ctrl + R)
+- Re-open the note
+- Check if source was actually saved
+
+#### Problem: Too Many Block IDs
+
+**Symptom:** Note cluttered with `^blockid` markers
+
+**Solutions:**
+- Only add IDs to blocks you'll actually reference
+- Review and remove unused block IDs
+- Use auto-generated IDs to reduce visual clutter
+- Consider if regular wiki links would suffice
+
+---
+
+</Steps>
+
+## What You've Built
+
+Congratulations! You've mastered block references in Lokus. You can now:
+
+- Create block IDs for specific content
+- Link to individual paragraphs, headings, and list items
+- Embed block content across notes
+- Build research synthesis notes with precise references
+- Apply block references to real-world knowledge work
+
+## Real-World Applications
+
+### Academic Research
+Connect specific quotes and evidence across literature notes while maintaining source context.
+
+### Writing Projects
+Build articles and books by referencing and embedding key insights from your note collection.
+
+### Meeting Notes
+Reference specific decisions and action items from past meetings in current discussions.
+
+### Learning Notes
+Create learning pathways by chaining specific concepts from multiple sources.
+
+## Next Steps
+
+### Continue Learning
+
+- **Next Tutorial:** [Creating Mermaid Diagrams](/tutorials/creating-mermaid-diagrams) - Visualize connections and processes
+- **Advanced:** [Template Workflows](/tutorials/template-workflows) - Automate note creation with templates
+- **Related:** [Zettelkasten System](/tutorials/zettelkasten) - Build atomic notes with block references
+
+### Practice Exercises
+
+1. **Quote Collection:** Create a "Favorite Quotes" note with embedded blocks from your reading notes
+2. **Research Synthesis:** Write a 500-word synthesis connecting ideas from 3+ books using block references
+3. **Learning Pathway:** Create a sequential learning guide using block reference chains
+4. **Argument Map:** Build a structured argument with block references as evidence
+
+### Explore Features
+
+- [Wiki Links](/features/wiki-links) - Learn more about Lokus's linking system
+- [Graph View](/features/graph) - Visualize block-level connections
+- [Search](/features/search) - Find blocks by content
+
+---
+
+## Summary
+
+In this tutorial, you learned:
+
+- What block references are and why they're powerful
+- How to create block IDs with `^blockid` syntax
+- Linking to blocks with `[[Note^blockid]]`
+- Embedding blocks with `![[Note^blockid]]`
+- Real-world application in research and writing
+- Best practices for block ID naming and organization
+- Advanced techniques for argument building and synthesis
+
+Block references enable truly atomic note-taking, where you connect specific ideas rather than entire notes. This precision creates a more valuable and usable knowledge base over time.
+
+Happy linking!
+
+---
+
+**Resources:**
+- [Block References Documentation](/features/wiki-links#block-references)
+- [Zettelkasten Tutorial](/tutorials/zettelkasten)
+- [Knowledge Management Guide](/tutorials/research-workflow)
+
+**Estimated Completion Time:** 15 minutes
+**Difficulty:** Beginner
+**Version:** Lokus v1.3.4+
+**Last Updated:** November 2024

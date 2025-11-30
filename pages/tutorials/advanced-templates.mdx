@@ -1,0 +1,802 @@
+---
+title: "Advanced Templates Tutorial - Lokus Documentation"
+description: "30-minute hands-on tutorial to master advanced Lokus templates. Build real-world templates with conditionals, loops, date operations, and filters."
+keywords: [lokus, templates tutorial, advanced templates, hands-on guide, template creation, conditionals, loops, filters]
+---
+
+import { Callout, Steps } from 'nextra/components'
+
+# Advanced Templates Tutorial
+
+**Duration:** 30 minutes | **Level:** Intermediate | **Prerequisites:** Basic template knowledge
+
+Learn to create powerful, dynamic templates using Lokus's 90+ advanced features. This hands-on tutorial builds three real-world templates from scratch.
+
+<Callout type="info">
+**What You'll Build:**
+1. **Smart Daily Note** - Auto-populated with date operations and conditional weather reminders
+2. **Meeting Notes with Attendees** - Dynamic attendee loops and action item tracking
+3. **Project Template** - Complex conditionals, calculations, and formatted outputs
+</Callout>
+
+---
+
+## Prerequisites
+
+Before starting:
+
+- ✅ Lokus installed and workspace created
+- ✅ Basic familiarity with templates (create and use a simple template)
+- ✅ Understanding of markdown syntax
+- ⏱️ 30 minutes of focused time
+
+<Callout>
+**Follow Along**: Open Lokus and create templates as you read. Hands-on practice is the best way to learn!
+</Callout>
+
+---
+
+## Tutorial 1: Smart Daily Note (10 minutes)
+
+Build an intelligent daily note template that adapts based on the day of the week and date.
+
+### Goal
+
+Create a daily note template with:
+- Dynamic date formatting with method chaining
+- Week/quarter information
+- Conditional sections based on day of week
+- Automatic weather reminders based on season
+
+### Step 1: Create the Template
+
+<Steps>
+
+#### Open Template Creator
+
+1. Select any text in your editor
+2. Press `Cmd+K` (Mac) or `Ctrl+K` (Windows/Linux)
+3. Choose "Create Template from Selection"
+
+#### Set Template Metadata
+
+```yaml
+Name: Smart Daily Note
+Category: Personal
+Tags: daily, planning, journal
+```
+
+#### Build the Template Content
+
+```markdown
+# {{date.format('dddd, MMMM do, yyyy')}}
+
+**Week {{date.week}}** | **Q{{date.quarter}}** | **Day {{date.format('DDD')}}/{{date.daysInYear}}**
+
+---
+
+## Daily Overview
+
+**Yesterday:** {{date.yesterday.format('MMM do')}}
+**Tomorrow:** {{date.tomorrow.format('MMM do')}}
+**Days until end of month:** {{date.endOfMonth | differenceInDays(date)}}
+
+{{#if date.weekday == 1}}
+🎯 **Monday Momentum** - Week kickoff! Set your top 3 goals.
+{{else if date.weekday == 5}}
+🎉 **Friday Focus** - Final push! Wrap up this week's priorities.
+{{else if date.weekday == 0 || date.weekday == 6}}
+🌴 **Weekend Vibes** - Take it easy and recharge!
+{{else}}
+💪 **Midweek Grind** - Keep the momentum going!
+{{/if}}
+
+---
+
+## Today's Focus
+
+{{cursor}}
+
+## Schedule
+
+### Morning
+- 9:00 AM -
+- 10:00 AM -
+- 11:00 AM -
+
+### Afternoon
+- 1:00 PM -
+- 2:00 PM -
+- 3:00 PM -
+
+### Evening
+- 5:00 PM -
+
+---
+
+## Notes & Reflections
+
+
+
+---
+
+## Tomorrow Preview
+
+**{{date.tomorrow.format('dddd')}}**:
+
+{{#if date.tomorrow.weekday == 1}}
+- [ ] Plan week ahead
+- [ ] Review priorities
+{{else}}
+- [ ] Review today's progress
+- [ ] Prep for tomorrow
+{{/if}}
+
+---
+
+*Created: {{time}} | Week {{date.week}}/{{date.format('yyyy')}}*
+{{#if date.isLeapYear}}
+📅 Leap year! ({{date.daysInYear}} days)
+{{/if}}
+```
+
+#### Save Template
+
+Click "Save Template"
+
+</Steps>
+
+### Step 2: Test the Template
+
+1. Create a new note
+2. Use your "Smart Daily Note" template
+3. Notice how content changes based on today's date!
+
+### What You Learned
+
+✅ **Date chaining**: `{{date.tomorrow.format('MMM do')}}`
+✅ **Conditionals**: `{{#if date.weekday == 1}}`
+✅ **Date properties**: `week`, `quarter`, `weekday`, `isLeapYear`
+✅ **Date boundaries**: `endOfMonth`, `yesterday`, `tomorrow`
+✅ **Date formatting**: Multiple format patterns
+
+<Callout type="success">
+**Pro Tip**: Test your template on different days by manually changing the date variable to see how conditionals adapt!
+</Callout>
+
+---
+
+## Tutorial 2: Meeting Notes with Dynamic Attendees (10 minutes)
+
+Create a meeting template that generates attendee lists dynamically and tracks action items with ownership.
+
+### Goal
+
+Build a meeting template with:
+- Loop over attendee array
+- Special loop variables (@index, @first, @last)
+- Action items with owner assignment
+- Next meeting date calculation
+
+### Step 1: Understanding the Data Structure
+
+For this tutorial, we'll simulate attendee data. In real use, you'd prompt for this or pull from a database.
+
+### Step 2: Create the Template
+
+<Steps>
+
+#### Create New Template
+
+```yaml
+Name: Team Meeting Notes
+Category: Work
+Tags: meeting, team, collaboration
+```
+
+#### Build Template with Loops
+
+```markdown
+# {{meetingType | default('Team')}} Meeting - {{date.format('MMMM do, yyyy')}}
+
+**Date:** {{date.format('dddd, MMMM do, yyyy')}}
+**Time:** {{time}}
+**Location:** {{location | default('Conference Room / Remote')}}
+
+---
+
+## Attendees
+
+{{#each attendees}}
+{{@index + 1}}. **{{this.name}}**{{#if this.role}} ({{this.role}}){{/if}}{{#if @first}} 👑 Meeting Lead{{/if}}
+{{/each}}
+
+**Total:** {{attendees.length}} {{#if attendees.length == 1}}person{{else}}people{{/if}}
+
+---
+
+## Agenda
+
+1. Review last week's action items
+2. Current week updates
+3. Blockers and challenges
+4. Next steps
+
+---
+
+## Discussion Notes
+
+{{cursor}}
+
+---
+
+## Decisions Made
+
+{{#each decisions}}
+### {{@index + 1}}. {{this.title}}
+**Decision:** {{this.description}}
+**Impact:** {{this.impact | default('TBD')}}
+{{#if @last}}
+
+*All decisions recorded.*
+{{/if}}
+{{/each}}
+
+---
+
+## Action Items
+
+{{#each actionItems}}
+### {{@index + 1}}. {{this.task}}
+
+- **Owner:** {{this.owner}}
+- **Due Date:** {{date.add(this.daysUntilDue, 'days').format('MMMM do')}}
+- **Priority:** {{this.priority | default('Medium')}}
+{{#if this.priority == 'High'}}
+
+⚠️ **HIGH PRIORITY** - Needs immediate attention
+{{/if}}
+{{#if @first}}
+
+*First action item - set the tone!*
+{{/if}}
+
+{{/each}}
+
+**Total Action Items:** {{actionItems.length}}
+
+---
+
+## Next Meeting
+
+**Date:** {{date.add(7, 'days').format('dddd, MMMM do, yyyy')}}
+**Time:** {{time}}
+
+### Prep for Next Time
+- [ ] Review action items
+- [ ] Gather updates
+- [ ] Prepare discussion points
+
+---
+
+*Notes by: {{author | default('Unknown')}}*
+*Meeting #{{meetingNumber | default('N/A')}} | Week {{date.week}}*
+```
+
+</Steps>
+
+### Step 3: Create Sample Data
+
+To test loops, you'd provide data like:
+
+```json
+{
+  "meetingType": "Weekly Standup",
+  "location": "Zoom",
+  "attendees": [
+    { "name": "Alice Johnson", "role": "PM" },
+    { "name": "Bob Smith", "role": "Engineer" },
+    { "name": "Carol White", "role": "Designer" }
+  ],
+  "actionItems": [
+    { "task": "Fix login bug", "owner": "Bob", "daysUntilDue": 3, "priority": "High" },
+    { "task": "Design mockups", "owner": "Carol", "daysUntilDue": 7, "priority": "Medium" }
+  ],
+  "decisions": [
+    { "title": "Tech Stack", "description": "Use React", "impact": "All frontend code" }
+  ],
+  "author": "Alice",
+  "meetingNumber": 42
+}
+```
+
+### What You Learned
+
+✅ **Loops**: `{{#each attendees}}`
+✅ **Special variables**: `@index`, `@first`, `@last`, `@length`
+✅ **Nested properties**: `{{this.name}}`, `{{this.role}}`
+✅ **Conditionals in loops**: `{{#if @first}}`
+✅ **Date arithmetic**: `{{date.add(7, 'days')}}`
+✅ **Filters**: `| default('value')`
+
+<Callout type="info">
+**Real-World Usage**: In practice, you'd integrate this with your team database or use prompts to collect attendee information when creating the note.
+</Callout>
+
+---
+
+## Tutorial 3: Advanced Project Template (10 minutes)
+
+Build a sophisticated project template with calculations, complex conditionals, and formatted outputs.
+
+### Goal
+
+Create a project template with:
+- Priority-based styling
+- Status-dependent sections
+- Timeline calculations
+- Progress tracking with filters
+- JavaScript for complex calculations
+
+### Step 1: Create the Template
+
+<Steps>
+
+#### Create Project Template
+
+```yaml
+Name: Project Brief
+Category: Work
+Tags: project, planning, management
+```
+
+#### Build Advanced Template
+
+```markdown
+# {{#if priority == 'Critical'}}🚨{{else if priority == 'High'}}⚠️{{else if priority == 'Medium'}}📌{{else}}📋{{/if}} {{projectName | title}}
+
+{{#if priority == 'Critical'}}
+---
+⚠️ **CRITICAL PROJECT** - Immediate executive attention required
+---
+{{/if}}
+
+**Created:** {{date.format('MMMM do, yyyy')}}
+**Owner:** {{owner | capitalize}}
+**Status:** {{status | upper}}
+**Priority:** {{priority}}
+
+---
+
+## Executive Summary
+
+{{summary | trim | default('_Pending summary..._')}}
+
+**Word Count:** {{summary | split(' ') | length}} words
+**Reading Time:** {{js: Math.ceil(summary.split(' ').length / 200)}} minutes
+
+---
+
+## Timeline
+
+**Start Date:** {{startDate | dateFormat('MMMM do, yyyy')}}
+**Target End:** {{date.add(duration, 'days').format('MMMM do, yyyy')}}
+**Duration:** {{duration}} days ({{js: Math.round(duration / 7)}} weeks)
+**Days Remaining:** {{date.add(duration, 'days') | differenceInDays(date)}}
+
+### Key Milestones
+
+{{#each milestones}}
+{{@index + 1}}. **{{this.name}}** - {{this.date | dateFormat('MMM do')}}{{#if this.completed}} ✅{{else}} ⏳{{/if}}
+   Progress: {{this.progress}}%
+{{/each}}
+
+**Overall Progress:**
+{{js:
+  const totalProgress = milestones.reduce((sum, m) => sum + m.progress, 0);
+  const avgProgress = Math.round(totalProgress / milestones.length);
+  const bar = '█'.repeat(Math.floor(avgProgress / 10)) + '░'.repeat(10 - Math.floor(avgProgress / 10));
+  return `${bar} ${avgProgress}%`;
+}}
+
+---
+
+## Status Analysis
+
+{{#if status == 'Not Started'}}
+### 🔵 Project Not Yet Started
+
+**Next Steps:**
+1. Finalize scope and requirements
+2. Assign team members
+3. Set up project infrastructure
+4. Schedule kickoff meeting
+
+{{else if status == 'In Progress'}}
+### 🟡 Project In Progress
+
+**Current Phase:** {{currentPhase | default('Execution')}}
+
+**Health Indicators:**
+- Timeline: {{#if daysRemaining > 30}}✅ On Track{{else if daysRemaining > 7}}⚠️ Attention Needed{{else}}🚨 At Risk{{/if}}
+- Budget: {{budgetStatus | default('Within Budget')}}
+- Quality: {{qualityScore | default('Good')}}
+
+{{else if status == 'Blocked'}}
+### 🔴 Project Blocked
+
+**Blockers:**
+{{#each blockers}}
+- {{@index + 1}}. {{this.issue}} (Owner: {{this.owner}})
+{{/each}}
+
+**Escalation Required:** {{#if priority == 'Critical' || priority == 'High'}}YES - Immediate action needed{{else}}Review in next standup{{/if}}
+
+{{else if status == 'Completed'}}
+### ✅ Project Completed
+
+**Completion Date:** {{completionDate | dateFormat('MMMM do, yyyy')}}
+**Final Status:** {{finalStatus | default('Success')}}
+
+{{else}}
+### Status: {{status}}
+
+_Custom status - update template for specific guidance._
+
+{{/if}}
+
+---
+
+## Team & Resources
+
+### Team Members
+
+{{#each team}}
+**{{this.name}}** - {{this.role}}
+- Allocation: {{this.allocation}}%
+- Responsibilities: {{this.responsibilities | join(', ')}}
+{{/each}}
+
+**Team Size:** {{team.length}} {{#if team.length == 1}}member{{else}}members{{/if}}
+
+### Resource Requirements
+
+**Budget:** ${{budget | format}}
+**Tools:** {{tools | sort | join(', ') | default('TBD')}}
+**External Dependencies:** {{dependencies.length}} item{{#if dependencies.length != 1}}s{{/if}}
+
+---
+
+## Risk Assessment
+
+{{#each risks}}
+### {{@index + 1}}. {{this.risk}}
+
+- **Likelihood:** {{this.likelihood | capitalize}}
+- **Impact:** {{this.impact | capitalize}}
+- **Mitigation:** {{this.mitigation | default('TBD')}}
+{{#if this.likelihood == 'high' && this.impact == 'high'}}
+
+⚠️ **CRITICAL RISK** - Requires immediate mitigation plan
+
+{{/if}}
+{{/each}}
+
+**Risk Score:**
+{{js:
+  const riskScores = { low: 1, medium: 2, high: 3 };
+  const totalRisk = risks.reduce((sum, r) => {
+    return sum + (riskScores[r.likelihood] || 0) * (riskScores[r.impact] || 0);
+  }, 0);
+  const avgRisk = totalRisk / risks.length;
+
+  if (avgRisk < 3) return '🟢 Low Risk';
+  if (avgRisk < 6) return '🟡 Medium Risk';
+  return '🔴 High Risk';
+}}
+
+---
+
+## Success Criteria
+
+{{#each successMetrics}}
+{{@index + 1}}. **{{this.metric}}**
+   - Target: {{this.target}}
+   - Current: {{this.current | default('Not measured')}}
+   - Status: {{#if this.current >= this.target}}✅ Met{{else}}⏳ In Progress{{/if}}
+{{/each}}
+
+---
+
+## Communication Plan
+
+**Status Updates:** {{updateFrequency | default('Weekly')}}
+**Next Update:** {{date.add(7, 'days').format('dddd, MMMM do')}}
+**Stakeholders:** {{stakeholders | join(', ')}}
+
+---
+
+## Notes
+
+{{cursor}}
+
+---
+
+## Appendix
+
+**Project ID:** {{projectId | default(uuid())}}
+**Last Updated:** {{date.format('yyyy-MM-dd HH:mm')}}
+**Template Version:** 2.0
+
+{{#if tags}}
+**Tags:** {{tags | sort | join(', ') | lower}}
+{{/if}}
+
+---
+
+*Auto-generated from Lokus Project Brief Template*
+*{{date.format('MMMM do, yyyy')}} | Week {{date.week}} | Q{{date.quarter}}*
+```
+
+</Steps>
+
+### Step 2: Sample Data for Testing
+
+```json
+{
+  "projectName": "customer portal redesign",
+  "priority": "High",
+  "status": "In Progress",
+  "owner": "sarah chen",
+  "summary": "Complete redesign of customer portal to improve user experience and increase conversion rates. Focus on mobile-first design and accessibility.",
+  "startDate": "2025-10-01",
+  "duration": 90,
+  "currentPhase": "Design & Development",
+  "milestones": [
+    { "name": "Research Complete", "date": "2025-10-15", "completed": true, "progress": 100 },
+    { "name": "Designs Approved", "date": "2025-11-01", "completed": true, "progress": 100 },
+    { "name": "Development", "date": "2025-11-30", "completed": false, "progress": 60 },
+    { "name": "Testing", "date": "2025-12-15", "completed": false, "progress": 20 },
+    { "name": "Launch", "date": "2025-12-30", "completed": false, "progress": 0 }
+  ],
+  "team": [
+    { "name": "Sarah Chen", "role": "Product Manager", "allocation": 100, "responsibilities": ["Planning", "Coordination"] },
+    { "name": "Mike Johnson", "role": "Lead Developer", "allocation": 80, "responsibilities": ["Development", "Code Review"] },
+    { "name": "Lisa Brown", "role": "UX Designer", "allocation": 60, "responsibilities": ["Design", "User Testing"] }
+  ],
+  "budget": 150000,
+  "tools": ["Figma", "React", "PostgreSQL", "AWS"],
+  "dependencies": ["API team", "Legal approval"],
+  "risks": [
+    { "risk": "Timeline slippage", "likelihood": "medium", "impact": "high", "mitigation": "Weekly checkpoints" },
+    { "risk": "Budget overrun", "likelihood": "low", "impact": "medium", "mitigation": "Strict cost tracking" }
+  ],
+  "successMetrics": [
+    { "metric": "User Satisfaction", "target": 4.5, "current": 4.2 },
+    { "metric": "Conversion Rate", "target": 25, "current": 18 }
+  ],
+  "updateFrequency": "Weekly",
+  "stakeholders": ["CEO", "VP Product", "Customer Success"],
+  "tags": ["web", "redesign", "customer-facing"]
+}
+```
+
+### What You Learned
+
+✅ **Complex conditionals**: Priority-based emoji, status-dependent sections
+✅ **JavaScript execution**: Progress bars, risk calculations, averages
+✅ **Filter chaining**: `{{tags | sort | join(', ') | lower}}`
+✅ **Number formatting**: `{{budget | format}}` → $150,000
+✅ **Array manipulation**: `{{tools | sort | join(', ')}}`
+✅ **Nested conditionals**: Multiple layers of if/else
+✅ **Dynamic calculations**: Days remaining, progress percentages
+
+<Callout type="success">
+**Achievement Unlocked**: You've built a production-ready project template with enterprise-grade features!
+</Callout>
+
+---
+
+## Bonus: Template Composition
+
+Combine templates using includes for maximum reusability.
+
+### Create Reusable Header
+
+**Template: `project-header.md`**
+```markdown
+---
+id: project-header
+name: Project Header
+---
+
+# {{#if priority == 'Critical'}}🚨{{else if priority == 'High'}}⚠️{{else}}📋{{/if}} {{title | title}}
+
+**Created:** {{date.format('MMMM do, yyyy')}}
+**Owner:** {{owner | capitalize}}
+**Priority:** {{priority}}
+```
+
+### Create Reusable Footer
+
+**Template: `project-footer.md`**
+```markdown
+---
+id: project-footer
+name: Project Footer
+---
+
+---
+
+**Last Updated:** {{date.format('yyyy-MM-dd HH:mm')}}
+**Next Review:** {{date.add(7, 'days').format('MMMM do')}}
+
+*Auto-generated from Lokus Template*
+```
+
+### Use in Main Template
+
+```markdown
+{{include:project-header:title=My Project,priority=High,owner=John}}
+
+## Project Content
+
+Your main content here...
+
+{{include:project-footer}}
+```
+
+<Callout type="info">
+**Benefit**: Change the header once, and all templates using it update automatically!
+</Callout>
+
+---
+
+## Practice Exercises
+
+Test your skills with these challenges:
+
+### Exercise 1: Quarterly Review Template (5 min)
+
+Build a template that:
+- Shows current quarter (Q1/Q2/Q3/Q4)
+- Lists weeks in the quarter
+- Calculates days remaining in quarter
+- Shows next quarter start date
+
+**Hints:**
+- Use `{{date.quarter}}`
+- Use `{{date.endOfQuarter}}`
+- Use `differenceInDays` filter
+
+### Exercise 2: Task Prioritization Template (5 min)
+
+Create a template that:
+- Loops through tasks
+- Sorts by priority (High → Medium → Low)
+- Colors each task based on priority
+- Shows overdue tasks in red
+- Calculates total tasks and completion rate
+
+**Hints:**
+- Use `{{#each tasks}}`
+- Use conditionals for priority styling
+- Use date comparisons for overdue check
+- Use JavaScript for percentage calculations
+
+### Exercise 3: Team Directory Template (5 min)
+
+Build a template that:
+- Lists team members alphabetically
+- Groups by department
+- Shows contact info
+- Calculates team size per department
+- Highlights team leads
+
+**Hints:**
+- Use nested loops (departments → members)
+- Use `{{#if this.isLead}}`
+- Use filters: `sort`, `length`
+- Use `@first` for group headers
+
+---
+
+## Common Patterns & Recipes
+
+Quick reference for frequently used patterns:
+
+### Priority Styling
+
+```markdown
+{{#if priority == 'Critical'}}🚨{{else if priority == 'High'}}⚠️{{else if priority == 'Medium'}}📌{{else}}📋{{/if}}
+```
+
+### Status Badges
+
+```markdown
+{{#if status == 'completed'}}✅{{else if status == 'in_progress'}}🟡{{else if status == 'blocked'}}🔴{{else}}⚪{{/if}}
+```
+
+### Progress Bar
+
+```markdown
+{{js:
+  const percent = (completed / total) * 100;
+  const filled = Math.floor(percent / 10);
+  const bar = '█'.repeat(filled) + '░'.repeat(10 - filled);
+  return `${bar} ${Math.round(percent)}%`;
+}}
+```
+
+### Conditional Pluralization
+
+```markdown
+{{count}} {{#if count == 1}}item{{else}}items{{/if}}
+```
+
+### Date Range Display
+
+```markdown
+{{startDate | dateFormat('MMM do')}} - {{endDate | dateFormat('MMM do, yyyy')}}
+```
+
+### Team List with Roles
+
+```markdown
+{{#each team}}
+**{{this.name}}** ({{this.role}}){{#if @first}} 👑{{/if}}
+{{/each}}
+```
+
+---
+
+## Next Steps
+
+Congratulations! You've mastered advanced Lokus templates. Continue learning:
+
+- **[Template Gallery](/examples/template-gallery)** - 10+ ready-to-use templates
+- **[Advanced Features Reference](/features/templates/advanced)** - Complete feature documentation
+- **[Template Variables Guide](/features/templates/variables)** - All variables explained
+- **[Community Templates](https://github.com/lokus-templates)** - Share and discover templates
+
+---
+
+## Quick Reference Card
+
+Print or bookmark this quick reference:
+
+### Conditionals
+```markdown
+{{#if condition}}...{{else if}}...{{else}}...{{/if}}
+```
+
+### Loops
+```markdown
+{{#each items}}{{@index}}. {{this}}{{/each}}
+```
+
+### Date Operations
+```markdown
+{{date.add(7, 'days').format('MMMM do')}}
+```
+
+### Filters
+```markdown
+{{text | upper | truncate(50)}}
+```
+
+### JavaScript
+```markdown
+{{js: return calculation}}
+```
+
+### Includes
+```markdown
+{{include:template:var=value}}
+```
+
+---
+
+**Questions?** Check the [FAQ](/faq) or join our community Discord for help!
+
+**Share Your Templates**: Built something cool? Share it in the community template gallery!

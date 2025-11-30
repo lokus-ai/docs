@@ -1,0 +1,753 @@
+---
+title: "Lokus v1.3.5 Release Notes"
+description: "Production hardening release with remote configuration, comprehensive security audit, UI/UX polish, and Mac App Store readiness. Released November 29, 2025."
+keywords: [lokus, release notes, v1.3.5, changelog, updates, security, production, app store, remote config]
+---
+
+# Lokus v1.3.5 Release Notes
+
+**Released:** November 29, 2025 | **Status:** Production Ready
+**Download:** [Latest Release](https://github.com/lokus-ai/lokus/releases/latest)
+
+---
+
+## Overview
+
+Lokus v1.3.5 is a production hardening release that completes the preparation for public launch. This release focuses on **security**, **stability**, and **polish** with a comprehensive pre-deployment audit that addressed 3 critical security issues, implemented 12 new user-facing features, and introduced a remote configuration system for dynamic updates.
+
+Building on v1.3.4's major features, v1.3.5 ensures Lokus is production-ready with enhanced security, better error handling, improved logging, and Mac App Store compatibility.
+
+---
+
+## Highlights
+
+- **Remote Configuration System** - Dynamic updates and announcements without app updates
+- **Security Audit Complete** - 3 critical security issues fixed, XSS vulnerabilities eliminated
+- **Production Logger** - Comprehensive logging system with Sentry integration
+- **About Dialog** - App version display with links to resources
+- **File Operations** - Cut/copy files, copy relative paths, open with system apps
+- **Toast Notifications** - Modern notification system replacing alert() calls
+- **Atomic File Writes** - Write-rename pattern prevents data corruption
+- **Mac App Store Ready** - Complete configuration for App Store submission
+- **Callout Blocks** - 8 callout types with beautiful styling
+- **UI/UX Polish** - 184 files changed with massive improvements
+- **Testing Infrastructure** - Comprehensive unit tests added
+
+---
+
+## Major Features
+
+### Remote Configuration & Announcements
+
+Dynamic configuration and broadcast messaging system allowing updates without requiring app updates.
+
+**Key Features:**
+- **Remote Configuration** - Fetch `config.json` from updates.lokusmd.com
+- **Scheduled Announcements** - Display toast notifications with `start_date` and `end_date`
+- **Frequency Control** - One-time announcements stored in localStorage
+- **Actionable Toasts** - "Visit Website" button with native browser opening
+- **Zero Configuration** - Works automatically out of the box
+
+**Technical Implementation:**
+- `RemoteConfigContext` for state management
+- `useRemoteConfig` hook for React integration
+- `RemoteAnnouncement` component with scheduling logic
+- Shadcn UI Toast and Toaster components
+- Tauri Shell plugin for secure external links
+
+**Use Cases:**
+- Feature announcements
+- Maintenance notifications
+- Security alerts
+- Seasonal messages
+- Version upgrade prompts
+
+**Example Configuration:**
+```json
+{
+  "announcements": [
+    {
+      "id": "welcome-v1.3.5",
+      "message": "Welcome to Lokus v1.3.5!",
+      "type": "info",
+      "frequency": "one-time",
+      "start_date": "2025-11-29",
+      "action": {
+        "label": "What's New",
+        "url": "https://lokusmd.com/releases/v1.3.5"
+      }
+    }
+  ]
+}
+```
+
+---
+
+### Security Audit & Fixes
+
+Comprehensive pre-deployment audit addressing all critical security vulnerabilities.
+
+**Critical Security Fixes:**
+
+1. **eval() Replacement**
+   - Replaced `eval()` with Function constructor in PluginRuntime.js
+   - Reduced attack surface for arbitrary code execution
+   - Maintained plugin functionality
+
+2. **Dynamic Import Safety**
+   - Replaced unsafe dynamic imports in PluginManager.js
+   - Implemented safe module loading patterns
+   - Added validation for import paths
+
+3. **postMessage Origin Validation**
+   - Fixed wildcard origins in 15 locations
+   - Now use `window.location.origin` for security
+   - Prevents cross-origin attacks
+
+4. **innerHTML XSS Fix**
+   - Fixed XSS vulnerability in Mermaid.jsx
+   - Use DOM APIs instead of innerHTML
+   - Sanitize user input properly
+
+5. **Error Handling**
+   - Fixed 11 empty catch blocks with proper error logging
+   - Workspace.jsx (3 locations)
+   - Preferences.jsx (1 location)
+   - shortcuts/registry.js (6 locations)
+   - theme/manager.js (2 locations)
+
+**Security Improvements:**
+- Atomic file writes prevent corruption
+- Permission checking system (no longer returns true by default)
+- Secure token storage with platform-specific backends
+- Proper error logging and monitoring
+
+---
+
+### Production Logger
+
+Professional logging system replacing console.log with structured, production-ready logging.
+
+**Features:**
+- **DEV/PROD Modes** - Different log levels for development and production
+- **Sentry Integration** - Automatic error reporting to crash.lokusmd.com
+- **Scoped Loggers** - Component-specific logging with prefixes
+- **Log Levels** - Debug, info, warn, error with filtering
+- **Performance Tracking** - Log timing and performance metrics
+
+**Implementation:**
+- Created `src/utils/logger.js` utility
+- Replaced 50+ console.log calls throughout app
+- Integrated with Sentry SDK in main.jsx
+- Browser tracing and session replay
+- Error capture with filtering
+
+**Usage Example:**
+```javascript
+import { createLogger } from '@/utils/logger';
+
+const log = createLogger('Component');
+log.info('Operation completed', { data });
+log.error('Operation failed', error);
+log.debug('State updated', state);
+```
+
+---
+
+### About Dialog
+
+Professional about dialog displaying app information and resources.
+
+**Features:**
+- **App Version Display** - Shows current version from Tauri API
+- **Resource Links** - GitHub, website, Open Collective
+- **Technical Information** - Version, platform, build info
+- **Modern Design** - Professional styling with backdrop blur
+- **Keyboard Shortcut** - Accessible via menu or shortcut
+
+**Links Provided:**
+- GitHub repository
+- Official website
+- Open Collective for support
+- Documentation
+- Release notes
+
+---
+
+### Enhanced File Operations
+
+Comprehensive file operations in context menu matching professional file managers.
+
+**New Operations:**
+
+1. **Cut/Copy Files**
+   - Cut and copy files with clipboard state management
+   - Visual feedback for clipboard operations
+   - Paste functionality with conflict resolution
+
+2. **Copy Relative Path**
+   - Copy path relative to workspace root
+   - Useful for wiki links and references
+   - Clipboard integration
+
+3. **Open with System App**
+   - Open files with default system application
+   - Support for all file types
+   - Native OS integration
+
+4. **Select for Compare**
+   - Select files for split view comparison
+   - Compare two files side-by-side
+   - Integrated with split view system
+
+5. **Sharing**
+   - Basic sharing functionality
+   - Copy path for sharing
+   - Preparation for advanced sharing features
+
+**Technical Implementation:**
+- `src/utils/clipboard.js` - File clipboard management
+- Relative path calculation from workspace root
+- Tauri commands for system integration
+- Context menu integration
+
+---
+
+### Toast Notification System
+
+Modern notification system replacing alert() calls with beautiful toasts.
+
+**Features:**
+- **4 Toast Types** - Success, error, warning, info
+- **Auto-Dismiss** - Configurable timeout with animations
+- **Stacking** - Multiple toasts stack vertically
+- **Theme Support** - Adapts to light/dark themes
+- **Accessibility** - Screen reader support
+
+**Implementation:**
+- Created `src/components/Toast.jsx`
+- Replaced alert() calls throughout app
+- Smooth animations and transitions
+- Toast queue management
+- Position and duration customization
+
+**Usage Example:**
+```javascript
+import { toast } from '@/components/Toast';
+
+toast.success('File saved successfully!');
+toast.error('Failed to load file');
+toast.warning('Unsaved changes');
+toast.info('New update available');
+```
+
+---
+
+### Atomic File Writes
+
+Data integrity protection through atomic file write operations.
+
+**Implementation:**
+- Write-rename pattern in Rust (src-tauri/src/handlers/files.rs)
+- Write to temporary file first
+- Sync to disk before rename
+- Atomic rename operation
+- Proper error handling
+
+**Benefits:**
+- **No Partial Writes** - File is complete or unchanged
+- **Crash Protection** - No corruption if app crashes during write
+- **Concurrent Safety** - Safe with multiple write operations
+- **Data Integrity** - Guaranteed file consistency
+
+**Technical Details:**
+```rust
+// Write to temp file
+let temp_path = format!("{}.tmp", path);
+fs::write(&temp_path, content)?;
+
+// Sync to disk
+let file = fs::File::open(&temp_path)?;
+file.sync_all()?;
+
+// Atomic rename
+fs::rename(&temp_path, path)?;
+```
+
+---
+
+### Mac App Store Configuration
+
+Complete configuration and documentation for Mac App Store submission.
+
+**Files Created:**
+- `tauri.appstore.conf.json` - App Store build configuration
+- `entitlements-appstore.plist` - Sandbox-compliant entitlements
+- `PrivacyInfo.xcprivacy` - Required privacy manifest
+- `APPSTORE_SETUP.md` - Comprehensive setup guide
+
+**Key Changes:**
+- **App Sandbox** - Required `com.apple.security.app-sandbox` enabled
+- **Entitlements** - Removed incompatible entitlements (JIT, unsigned memory)
+- **Signing** - Configured for "3rd Party Mac Developer" certificate
+- **Privacy Manifest** - Documented API usage reasons
+- **Auto-Updater** - Disabled for App Store builds (handled by App Store)
+
+**Build Command:**
+```bash
+npm run build:appstore
+```
+
+**TestFlight Ready:**
+- Configured for beta testing
+- Privacy manifest compliant
+- Sandbox tested
+- Ready for App Review submission
+
+[Learn more about App Store →](/developers/app-store)
+
+---
+
+### Callout Blocks
+
+Beautiful callout blocks for highlighting important information with 8 distinct types.
+
+**Callout Types:**
+1. **Note** - General information (blue)
+2. **Tip** - Helpful suggestions (green)
+3. **Warning** - Caution messages (yellow)
+4. **Danger** - Critical warnings (red)
+5. **Info** - Informational content (cyan)
+6. **Success** - Success messages (green)
+7. **Question** - Questions or prompts (purple)
+8. **Example** - Code or examples (gray)
+
+**Features:**
+- **Slash Command Support** - Insert via `/callout`
+- **Collapsible** - Use `>[!type]-` for collapsed state
+- **Custom Titles** - Override default title
+- **Nested Content** - Support for complex content
+- **Theme Support** - Beautiful styling in light and dark modes
+- **Lucide Icons** - Consistent iconography
+
+**Syntax:**
+```markdown
+>[!note] Custom Title
+>This is a note callout with custom content.
+>- Supports lists
+>- And other markdown
+
+>[!warning]
+>This warning uses the default title.
+
+>[!tip]-
+>This tip is collapsed by default.
+```
+
+**Visual Design:**
+- Color-coded borders and backgrounds
+- Professional icon set
+- Proper spacing and typography
+- Responsive design
+
+---
+
+## UI/UX Overhaul
+
+### Template System Redesign
+
+**Template Picker:**
+- Professional modal with 3-column card grid layout
+- Smart description extraction (removes markdown syntax and variables)
+- Category and tag filtering
+- Search with clear button
+- Hover actions for edit/preview/duplicate/delete
+- Minimal design using theme colors
+
+**Template Creation:**
+- Enhanced split-view interface
+- Interactive tag input system
+- Edit/Preview tabs for real-time rendering
+- Better form validation and error handling
+- Cleaner, professional appearance
+
+### Modal System Improvements
+
+**Replaced window.prompt() with professional modals:**
+
+1. **ImageInsertModal**
+   - Insert images via URL or workspace file browser
+   - Live image previews
+   - Drag-and-drop support
+
+2. **MathFormulaModal**
+   - Insert LaTeX equations
+   - Live KaTeX preview
+   - Syntax highlighting
+
+**Benefits:**
+- No more browser prompts getting stuck
+- Better keyboard shortcuts
+- Improved focus management
+- Professional appearance
+
+### External Drag & Drop
+
+**Features:**
+- Drag files from OS directly into app
+- Tauri backend for file copy operations
+- Animated drop indicators
+- Auto-refresh file tree after drop
+- Support for multiple files
+
+**User Experience:**
+- Visual feedback during drag
+- Drop zone highlighting
+- Progress indication for large files
+- Automatic organization
+
+### Breadcrumb Navigation
+
+**Improvements:**
+- Clickable path navigation
+- Folder auto-expansion on click
+- Visual hierarchy
+- Hover states
+- Theme-aware styling
+
+---
+
+## Editor Enhancements
+
+### Math Rendering Fixes
+- Fixed formulas showing as plain text
+- Properly inserts math nodes with correct data attributes
+- KaTeX parsing now works correctly
+- Support for inline and block formulas
+
+### Slash Command Improvements
+- Smart filtering with relevance scoring
+- Exact match → title starts with → title contains → description contains
+- Fixed Kanban/Task picker "cleanup is not defined" error
+- Improved command execution flow
+
+### Header Folding Fixed
+- Fixed click detection issues
+- Proper positioning of fold indicators
+- Correct event handling
+- Visual feedback improvements
+
+---
+
+## Import & Migration System
+
+Complete migration wizard for importing from other note-taking apps.
+
+**Supported Platforms:**
+- **Logseq** - Full conversion support with outline structure
+- **Roam Research** - JSON parsing and transformation
+- **Obsidian** - Direct compatibility (no import needed)
+
+**Features:**
+- Beautiful 6-step wizard interface
+- Platform selection with descriptions
+- File/folder picker with validation
+- Preview with before/after comparison
+- Real-time progress tracking
+- Comprehensive error reporting
+- Success summary with statistics
+
+**Import Tab:**
+- Added to Preferences
+- Platform-specific import buttons
+- Obsidian compatibility notice
+- Link to migration guide
+
+[Learn more about Migration →](/guides/migration)
+
+---
+
+## Analytics & Monitoring
+
+### Umami Analytics
+
+Privacy-first analytics to track feature usage and prioritize development.
+
+**Features Tracked:**
+- Daily notes access
+- Graph view usage (2D/3D/force modes)
+- Database views (table/list/grid)
+- App startup performance
+
+**Privacy:**
+- No PII collected
+- No note content tracked
+- No file paths stored
+- User opt-out capability (localStorage)
+- Self-hosted at analytics.lokusmd.com
+
+**Configuration:**
+- Default enabled with easy disable
+- Event data sanitization
+- Whitelisted keys only
+- Performance metrics batching
+
+### Crash Reporting
+
+Enhanced crash reporting with comprehensive testing tools.
+
+**Improvements:**
+- Development crash testing panel (bottom-right)
+- Four test buttons for different error types
+- React Error Boundary integration
+- Session replay captures 10% of sessions, 100% of errors
+- Production source maps for debugging
+
+---
+
+## Product Tour System
+
+Interactive onboarding system for new users.
+
+**Features:**
+- Driver.js integration with custom styling
+- Customizable tour steps
+- Smooth animations
+- Skip and navigate controls
+- Completion tracking
+
+**Tour Steps:**
+- Workspace overview
+- File tree navigation
+- Editor features
+- Search and command palette
+- Settings and preferences
+
+---
+
+## Code Quality Improvements
+
+### Console Cleanup
+- Removed all console.log, console.error, console.warn statements
+- Removed all println! statements from Rust code
+- Replaced with production logger
+- 103 files cleaned
+
+### Rust Improvements
+- Fixed compiler warnings
+- Cleaned up dead code
+- Restored missing imports
+- Better error handling
+- MCP server logging
+
+### Documentation
+- Created TROUBLESHOOTING.md (350 lines)
+- Installation issues coverage
+- Launch and performance troubleshooting
+- File operations debugging
+- Platform-specific fixes
+- Error codes reference
+
+---
+
+## Performance Improvements
+
+### File System Optimization
+- Continued optimization from v1.3.4
+- Cache improvements
+- Reduced redundant operations
+- Faster workspace loading
+
+### Build System
+- Fixed Vite worker format error
+- Changed from "iife" to "es" format
+- Fixes production build failures
+- Smaller bundle sizes
+- Better chunking strategy
+
+---
+
+## Bug Fixes
+
+### High Priority
+- Fixed app version in PluginManager (now uses actual version from Tauri)
+- Fixed math rendering in editor
+- Fixed Kanban/Task picker slash commands
+- Fixed header folding click detection
+- Fixed markdown detection patterns for images
+
+### Medium Priority
+- Fixed PDF viewer worker re-initialization error
+- Fixed tags.map errors in BaseListView and BaseGridView
+- Improved PDF rendering stability
+- Fixed loading UI inconsistencies
+
+### Low Priority
+- Removed 53 empty debug blocks
+- Fixed npm vulnerabilities (6 → 4 MODERATE remaining)
+- Cleaned up deprecated code and imports
+- Removed obsolete documentation files
+
+---
+
+## Infrastructure Improvements
+
+### Utilities Created
+- `src/utils/logger.js` - Production logging
+- `src/utils/appInfo.js` - App version and metadata
+- `src/utils/clipboard.js` - File clipboard with relative paths
+- `src/utils/semver.js` - Full semantic versioning support
+
+### Components Added
+- `AboutDialog.jsx` - About dialog
+- `Toast.jsx` - Toast notification system
+- `RemoteAnnouncement.jsx` - Announcement system
+- `ImportWizard.jsx` - Migration wizard
+- 7 new shadcn-style UI components
+
+### Testing Infrastructure
+- Comprehensive unit tests for RemoteAnnouncement
+- Component tests for editor extensions
+- Test workflows in `.agent/workflows`
+- Better test coverage across the board
+
+---
+
+## Technical Statistics
+
+- **184 files changed** in PR #246 alone
+- **17,301 insertions, 4,967 deletions**
+- **28 commits** recovered in PR #247
+- **103 files** cleaned of console logs
+- **9 new UI components** created
+- **3 critical security issues** fixed
+- **12 new user-facing features**
+- **150+ hours** of audit and implementation work
+
+---
+
+## Migration Guide
+
+### Upgrading from v1.3.4
+
+v1.3.5 is fully backward compatible with v1.3.4 workspaces.
+
+**Recommended Steps:**
+
+1. **Backup Your Workspace**
+   ```bash
+   cp -r ~/Documents/Lokus ~/Documents/Lokus-backup-v1.3.4
+   ```
+
+2. **Download and Install**
+   - Download v1.3.5 from [GitHub Releases](https://github.com/lokus-ai/lokus/releases/v1.3.5)
+   - Install following platform-specific instructions
+
+3. **Review New Features**
+   - Check About dialog (Help → About Lokus)
+   - Try callout blocks with `/callout`
+   - Drag files from OS into Lokus
+   - Test file operations from context menu
+
+4. **Check Announcements**
+   - Remote announcements will appear as toasts
+   - One-time announcements stored in localStorage
+   - Can be dismissed and won't reappear
+
+5. **Report Issues**
+   - [GitHub Issues](https://github.com/lokus-ai/lokus/issues/new)
+
+**No Breaking Changes** - All your existing notes, templates, and settings continue to work.
+
+---
+
+## Known Issues
+
+### In Progress
+1. **Windows MCP Server Firewall** - May prompt for firewall permission
+   - **Workaround:** Allow access when prompted
+   - **Fix:** Coming in v1.3.6
+
+2. **Large Attachments** - Files over 25MB may timeout
+   - **Workaround:** Use smaller files or external storage
+   - **Fix:** Coming in v1.3.6
+
+### Monitoring
+- Remote config fetch performance
+- Toast notification stacking (many simultaneous)
+- Product tour on smaller screens
+
+[Report issues →](https://github.com/lokus-ai/lokus/issues/new)
+
+---
+
+## What's Next?
+
+### v1.3.6 (December 2025)
+- Windows firewall fixes
+- Large file handling improvements
+- Additional performance optimizations
+- More UI polish
+
+### v1.4 "Collaboration" (Q1 2026)
+- Real-time collaboration
+- Shared workspaces
+- Comments and annotations
+- Presence indicators
+
+[View full roadmap →](https://github.com/lokus-ai/lokus/discussions/roadmap)
+
+---
+
+## Key Statistics
+
+- **5 merged PRs** in v1.3.5 release cycle
+- **3 critical security vulnerabilities** fixed
+- **12 new user-facing features**
+- **150+ hours** of audit work
+- **184 files** changed in major PR
+- **103 files** cleaned of debug logs
+- **50+ console.log** calls replaced
+- **8 callout types** implemented
+- **7 new UI components** created
+
+---
+
+## Acknowledgments
+
+Special thanks to everyone who contributed to v1.3.5:
+
+- **Security Auditors:** For identifying critical vulnerabilities
+- **Beta Testers:** For testing pre-release builds
+- **Contributors:** For code contributions and bug reports
+- **Community:** For feedback and suggestions
+
+[See full contributors list →](https://github.com/lokus-ai/lokus/graphs/contributors)
+
+---
+
+## Resources
+
+- [Installation Guide](/getting-started/installation)
+- [Migration Guide](/guides/migration)
+- [Security Best Practices](/security)
+- [Troubleshooting](/troubleshooting)
+- [Developer Documentation](/developers/setup)
+- [GitHub Repository](https://github.com/lokus-ai/lokus)
+- [Community Discussions](https://github.com/lokus-ai/lokus/discussions)
+
+---
+
+## Feedback
+
+We'd love to hear your thoughts on v1.3.5:
+
+- [Share feedback](https://github.com/lokus-ai/lokus/discussions/categories/feedback)
+- [Report bugs](https://github.com/lokus-ai/lokus/issues/new?template=bug_report.md)
+- [Request features](https://github.com/lokus-ai/lokus/issues/new?template=feature_request.md)
+
+---
+
+**Thank you for using Lokus!**
+
+*v1.3.5 represents a major milestone in Lokus's journey to becoming a production-ready, secure, and polished knowledge management application.*

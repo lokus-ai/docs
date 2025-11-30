@@ -1,0 +1,823 @@
+---
+title: "Git Sync Setup Guide - Lokus Documentation"
+description: "Complete step-by-step guide to setting up Git synchronization in Lokus. Simplified 3-field configuration with GitHub, GitLab, or any Git provider."
+keywords: [lokus, git sync, setup guide, github, gitlab, synchronization, backup, version control, tutorial]
+---
+
+import { Steps, Callout, Tabs } from 'nextra/components'
+
+# Git Sync Setup Guide
+
+Synchronize your Lokus workspace across unlimited devices for free using Git. This guide covers the complete setup process with the redesigned sync system introduced in v1.3.4.
+
+<Callout type="info">
+**What's New in v1.3.4**: The sync system was completely overhauled with a unified token system, simplified 3-field configuration, and better error handling. If you set up sync before v1.3.4, you may want to reconfigure using this guide.
+</Callout>
+
+---
+
+## Overview
+
+The new sync system simplifies configuration from 6 fields down to 3 essential fields:
+
+| Old System (v1.3.3) | New System (v1.3.4+) |
+|---------------------|----------------------|
+| Remote URL | ✅ Remote URL |
+| Username | ✅ Username |
+| Password (deprecated) | ❌ Removed |
+| Personal Access Token | ❌ Merged into Token |
+| GitHub Token | ❌ Merged into Token |
+| Email | ❌ Auto-generated |
+| Branch | ✅ Branch (optional, defaults to `main`) |
+
+**Key Improvements:**
+- **Unified Token System**: One token field instead of confusing dual-token setup
+- **Auto-generated Email**: No need to manually enter email address
+- **Better Error Messages**: Clear, actionable feedback on what went wrong
+- **Conflict Resolution UI**: Visual tools for resolving merge conflicts
+- **Connection Testing**: Verify credentials before saving
+
+---
+
+## Prerequisites
+
+Before setting up sync, you'll need:
+
+1. **A Git provider account** (GitHub, GitLab, Bitbucket, etc.)
+2. **A private repository** to store your workspace
+3. **A personal access token** with repository access
+4. **Internet connection** for initial setup
+
+<Callout type="warning">
+**Privacy First**: Always use a **private** repository to keep your notes secure. Never use a public repository unless you intend to share your notes publicly.
+</Callout>
+
+---
+
+## Step 1: Create a Private Repository
+
+<Tabs items={['GitHub', 'GitLab', 'Bitbucket']}>
+  <Tabs.Tab>
+    ### GitHub Setup
+
+    1. Go to [github.com/new](https://github.com/new)
+    2. Enter a repository name (e.g., `lokus-workspace` or `my-notes`)
+    3. Set visibility to **Private** ⚠️
+    4. **Do NOT** initialize with README, .gitignore, or license
+    5. Click **Create repository**
+    6. Copy the repository URL from the page:
+       ```
+       https://github.com/your-username/lokus-workspace.git
+       ```
+
+    <Callout type="info">
+    GitHub offers unlimited private repositories on free accounts. Perfect for personal note storage!
+    </Callout>
+
+    ![GitHub Repository Creation](/placeholder.svg)
+  </Tabs.Tab>
+
+  <Tabs.Tab>
+    ### GitLab Setup
+
+    1. Go to [gitlab.com/projects/new](https://gitlab.com/projects/new)
+    2. Click **Create blank project**
+    3. Enter a project name (e.g., `lokus-workspace`)
+    4. Set visibility to **Private**
+    5. Uncheck "Initialize repository with a README"
+    6. Click **Create project**
+    7. Copy the repository URL (HTTPS):
+       ```
+       https://gitlab.com/your-username/lokus-workspace.git
+       ```
+
+    <Callout type="info">
+    GitLab provides 5GB free storage and unlimited private projects.
+    </Callout>
+  </Tabs.Tab>
+
+  <Tabs.Tab>
+    ### Bitbucket Setup
+
+    1. Go to [bitbucket.org/repo/create](https://bitbucket.org/repo/create)
+    2. Enter a repository name (e.g., `lokus-workspace`)
+    3. Set to **Private repository**
+    4. Select "No" for include README
+    5. Click **Create repository**
+    6. Copy the clone URL (HTTPS):
+       ```
+       https://bitbucket.org/your-username/lokus-workspace.git
+       ```
+
+    <Callout type="info">
+    Bitbucket offers 1GB free storage and unlimited private repositories.
+    </Callout>
+  </Tabs.Tab>
+</Tabs>
+
+---
+
+## Step 2: Create a Personal Access Token
+
+Git providers require a token for authentication. This is more secure than using your password.
+
+<Tabs items={['GitHub', 'GitLab', 'Bitbucket']}>
+  <Tabs.Tab>
+    ### GitHub Token
+
+    <Steps>
+    #### Navigate to Token Settings
+
+    1. Go to [github.com/settings/tokens](https://github.com/settings/tokens)
+    2. Click **Generate new token** → **Generate new token (classic)**
+
+    #### Configure Token
+
+    3. **Note**: Enter `Lokus Sync` (helps you remember what this token is for)
+    4. **Expiration**: Choose duration:
+       - **90 days** (Recommended for security)
+       - **1 year** (Convenient but less secure)
+       - **No expiration** (Not recommended)
+    5. **Select scopes**:
+       - ✅ Check **`repo`** (Full control of private repositories)
+       - ✅ This gives read/write access to your private repos
+       - ❌ Leave all other scopes unchecked
+
+    ![GitHub Token Scopes](/placeholder.svg)
+
+    #### Save Token
+
+    6. Click **Generate token**
+    7. **IMPORTANT**: Copy the token immediately!
+       - You won't be able to see it again
+       - Store it somewhere safe temporarily (you'll paste it into Lokus)
+       - Example token format: `ghp_abcdef123456789...`
+
+    </Steps>
+
+    <Callout type="warning">
+    **Security Note**: Treat this token like a password. Never share it, commit it to code, or post it publicly. If compromised, revoke it immediately in GitHub settings.
+    </Callout>
+
+    <Callout type="info">
+    **Token Expiration**: When your token expires, you'll need to generate a new one and update it in Lokus Settings → Sync. Lokus will show an authentication error when the token expires.
+    </Callout>
+  </Tabs.Tab>
+
+  <Tabs.Tab>
+    ### GitLab Token
+
+    <Steps>
+    #### Navigate to Token Settings
+
+    1. Go to [gitlab.com/-/profile/personal_access_tokens](https://gitlab.com/-/profile/personal_access_tokens)
+    2. Click **Add new token**
+
+    #### Configure Token
+
+    3. **Token name**: `Lokus Sync`
+    4. **Expiration date**: Choose a date (required by GitLab)
+       - Recommended: 90 days for security
+    5. **Select scopes**:
+       - ✅ Check **`write_repository`** (Read and write access)
+       - ✅ Check **`read_repository`** (Read access)
+       - ❌ Leave all other scopes unchecked
+
+    #### Save Token
+
+    6. Click **Create personal access token**
+    7. Copy the token immediately (you won't see it again)
+       - Example format: `glpat-abcdef123456789...`
+
+    </Steps>
+  </Tabs.Tab>
+
+  <Tabs.Tab>
+    ### Bitbucket App Password
+
+    <Steps>
+    #### Navigate to App Password Settings
+
+    1. Click your profile picture → **Personal settings**
+    2. Go to **App passwords** (under Access management)
+    3. Click **Create app password**
+
+    #### Configure App Password
+
+    4. **Label**: `Lokus Sync`
+    5. **Permissions**:
+       - ✅ Repositories: **Read**
+       - ✅ Repositories: **Write**
+       - ❌ Leave all other permissions unchecked
+
+    #### Save Password
+
+    6. Click **Create**
+    7. Copy the generated password immediately
+       - Example format: Random string like `ATBBabcdef123456`
+       - This is your "token" for Lokus
+
+    </Steps>
+  </Tabs.Tab>
+</Tabs>
+
+---
+
+## Step 3: Configure Lokus Sync
+
+Now configure sync in your Lokus workspace with the simplified 3-field setup.
+
+<Steps>
+
+### Open Sync Settings
+
+1. Open Lokus
+2. Press `Cmd+,` (Mac) or `Ctrl+,` (Windows/Linux) to open Settings
+3. Click the **Sync** tab in the left sidebar
+
+### Enter Your Credentials
+
+You'll see three simple fields:
+
+![Lokus Sync Configuration Panel](/placeholder.svg)
+
+**Field 1: Remote URL**
+- Paste your repository URL from Step 1
+- Must end with `.git`
+- Example: `https://github.com/yourusername/lokus-workspace.git`
+
+**Field 2: Username**
+- Your Git provider username (not your email)
+- GitHub: Your GitHub username
+- GitLab: Your GitLab username
+- Bitbucket: Your Bitbucket username
+- Example: `johndoe`
+
+**Field 3: Personal Access Token**
+- Paste the token you created in Step 2
+- This is stored securely and encrypted locally
+- Never exposed to external services
+- Example: `ghp_abc123...` (GitHub) or `glpat-xyz...` (GitLab)
+
+**Optional Field 4: Branch**
+- Usually auto-detected
+- Default: `main`
+- Most repositories use `main` or `master`
+- Only change if your repository uses a different default branch
+
+<Callout type="info">
+**Auto-Save**: Your sync settings are automatically saved as you type. Look for the "Saving..." indicator that appears briefly.
+</Callout>
+
+### Initialize Git Repository
+
+After entering credentials, expand the **"Git Configuration"** section at the bottom:
+
+1. Click **Initialize Git** button
+   - Creates a local Git repository in your workspace
+   - Makes an initial commit of all existing files
+   - Shows "✅ Git repository initialized" on success
+
+2. Click **Connect Remote Repository** button
+   - Links your workspace to the remote repository
+   - Verifies your credentials
+   - Tests the connection
+   - Shows "✅ Remote added successfully" on success
+
+<Callout type="warning">
+**Troubleshooting Connection Errors:**
+
+If you see errors:
+- ❌ **"Invalid credentials"**: Check username and token
+- ❌ **"Repository not found"**: Verify repository URL ends with `.git`
+- ❌ **"Permission denied"**: Ensure token has `repo` scope (GitHub) or `write_repository` (GitLab)
+- ❌ **"Network error"**: Check internet connection
+</Callout>
+
+### Verify Setup
+
+Once both buttons show green checkmarks:
+- ✅ Git repository initialized
+- ✅ Remote added successfully
+
+You're ready to sync!
+
+The sync status indicator (bottom-right corner) should change from gray to blue ☁️.
+
+</Steps>
+
+---
+
+## Step 4: First Sync
+
+Perform your first sync to upload your workspace to the remote repository.
+
+### Option 1: Automatic Sync (Recommended)
+
+1. Make any change to a note (type something and save)
+2. The sync status indicator turns yellow ⚡ (changes pending)
+3. Click the status indicator
+4. Lokus commits and pushes your workspace automatically
+
+### Option 2: Manual Sync
+
+1. Right-click the sync status indicator (bottom-right)
+2. Select **"Commit & Push"** from the menu
+3. Your workspace is uploaded to the remote repository
+
+<Callout type="info">
+**First Sync Takes Longer**: The initial sync uploads all files in your workspace. This may take 10-30 seconds depending on workspace size. Subsequent syncs are much faster (1-2 seconds) since only changes are uploaded.
+</Callout>
+
+### Verify on Remote
+
+Check your Git provider to confirm files were uploaded:
+
+1. Go to your repository on GitHub/GitLab/Bitbucket
+2. You should see all your workspace files
+3. Commit message: "Auto-sync workspace" or "Initial commit"
+
+![Repository with Synced Files](/placeholder.svg)
+
+---
+
+## Step 5: Setup on Additional Devices
+
+To sync the same workspace on another device:
+
+<Steps>
+
+### Install Lokus
+
+Install Lokus on your second device (Mac, Windows, or Linux).
+
+### Clone Workspace
+
+Instead of creating a new workspace:
+
+1. Open Lokus
+2. Go to File → **Clone Workspace from Git**
+3. Enter the same credentials:
+   - Remote URL
+   - Username
+   - Personal Access Token
+4. Choose a local folder location
+5. Click **Clone**
+
+Lokus downloads your workspace and sets up sync automatically.
+
+### Automatic Sync
+
+From now on, both devices stay in sync:
+- Changes on Device A → Push → Device B pulls updates
+- Changes on Device B → Push → Device A pulls updates
+
+</Steps>
+
+<Callout type="success">
+**Sync on Unlimited Devices**: There's no limit! Add as many devices as you need. All devices sync through your Git repository.
+</Callout>
+
+---
+
+## Understanding Sync Status
+
+The sync indicator (bottom-right corner) shows the current status:
+
+| Icon | Status | What It Means | Action |
+|------|--------|---------------|--------|
+| ☁️ Blue Cloud | Synced | Everything is up to date | None needed |
+| 🔄 Spinning | Syncing | Pushing or pulling changes | Wait |
+| ⚡ Yellow Branch | Changes Pending | You have uncommitted changes | Click to commit & push |
+| ⚠️ Orange Warning | Conflicts | Merge conflicts need resolution | Right-click → See conflicts |
+| ❌ Red X | Error | Sync failed | Check error message |
+| ☁️ Gray Cloud | Not Configured | Sync not set up | Go to Settings → Sync |
+
+### Click Actions
+
+- **Left-click**: Quick commit & push (if changes pending)
+- **Right-click**: Open sync menu with more options:
+  - Pull Changes
+  - Commit & Push
+  - Check Status
+  - Force Push (dangerous!)
+  - Force Pull (dangerous!)
+
+---
+
+## Conflict Resolution
+
+When two devices modify the same file differently, conflicts occur.
+
+### Detecting Conflicts
+
+Lokus shows conflicts with:
+- ⚠️ Orange warning icon
+- Status text: "2 conflicts"
+- Notification: "Merge conflicts detected"
+
+### Viewing Conflicts
+
+1. Right-click the sync status indicator
+2. The menu shows conflicted files:
+   ```
+   ⚠️ 2 Conflicts Detected
+
+   meeting-notes.md
+   project-plan.md
+   ```
+
+### Resolving Conflicts
+
+<Steps>
+
+#### Open Conflicted File
+
+Open the file in Lokus editor. You'll see conflict markers:
+
+```markdown
+<<<<<<< Your Changes (Local)
+# Meeting Notes - November 6th
+=======
+# Team Meeting - Nov 6
+>>>>>>> Remote Changes
+```
+
+#### Choose Content
+
+Manually edit the file to keep what you want:
+- Keep local changes (above `=======`)
+- Keep remote changes (below `=======`)
+- Combine both (edit to merge content)
+- Rewrite completely (start fresh)
+
+Remove ALL conflict markers:
+- Delete `<<<<<<< Your Changes (Local)`
+- Delete `=======`
+- Delete `>>>>>>> Remote Changes`
+
+#### Save and Commit
+
+1. Save the file
+2. Click sync status indicator
+3. Lokus commits your resolution
+4. Conflict resolved! ✅
+
+</Steps>
+
+### Conflict Prevention
+
+To minimize conflicts:
+- **Sync frequently**: Pull changes before making major edits
+- **One device at a time**: Avoid editing the same file on multiple devices simultaneously
+- **Communicate**: If collaborating, coordinate who edits what
+
+### Force Resolution (Last Resort)
+
+If conflicts are too complex, use force options:
+
+**Force Push** (Keep Local):
+- Overwrites remote with your local version
+- ⚠️ Destroys remote changes permanently
+- Use only if remote changes are unwanted
+
+**Force Pull** (Keep Remote):
+- Overwrites local with remote version
+- ⚠️ Destroys your local changes permanently
+- Use only if local changes are unwanted
+
+<Callout type="error">
+**DANGER**: Force push/pull are destructive operations that cannot be undone. Only use them if you're certain one version should be discarded completely.
+</Callout>
+
+---
+
+## Sync Menu Reference
+
+Right-click the sync status indicator to access these options:
+
+### Pull Changes
+- Downloads changes from remote repository
+- Merges remote changes with your local workspace
+- Safe: Won't overwrite your uncommitted changes
+- **When to use**: Another device pushed changes
+
+### Commit & Push
+- Commits your local changes
+- Pushes to remote repository
+- Makes your changes available to other devices
+- **When to use**: You made changes and want to sync them
+
+### Check Status
+- Refreshes git status without syncing
+- Shows if you're ahead, behind, or have conflicts
+- **When to use**: Curious about sync state without changing anything
+
+### Force Push
+- ⚠️ Overwrites remote with local (DESTRUCTIVE)
+- Discards all remote changes permanently
+- **When to use**: Remote is corrupted and you want to replace it
+
+### Force Pull
+- ⚠️ Overwrites local with remote (DESTRUCTIVE)
+- Discards all local changes permanently
+- **When to use**: Local is corrupted and you want to reset it
+
+---
+
+## Advanced Configuration
+
+### Custom Branch
+
+By default, Lokus uses the `main` branch. To use a different branch:
+
+1. Go to Settings → Sync
+2. Change the **Branch** field to your preferred branch (e.g., `develop`, `notes`)
+3. Click **Connect Remote Repository** to verify
+
+### Multiple Workspaces
+
+You can sync multiple workspaces to different repositories:
+
+1. Create separate repositories for each workspace
+2. Each workspace has its own sync configuration
+3. Switch between workspaces in Lokus (File → Open Workspace)
+
+### Sync with Self-Hosted Git
+
+Lokus works with any Git server:
+
+1. Use your Git server's HTTPS URL
+2. Generate access token in your Git server
+3. Configure Lokus sync with server URL and token
+
+Examples:
+- Gitea: `https://git.example.com/user/repo.git`
+- Gogs: `https://gogs.example.com/user/repo.git`
+- Azure DevOps: `https://dev.azure.com/org/project/_git/repo`
+
+---
+
+## Troubleshooting
+
+### "Authentication Failed"
+
+**Cause**: Invalid username or token
+
+**Solution**:
+1. Verify username is correct (not email)
+2. Generate a new token
+3. Ensure token has correct permissions:
+   - GitHub: `repo` scope
+   - GitLab: `write_repository` + `read_repository`
+4. Update token in Settings → Sync
+
+### "Repository Not Found"
+
+**Cause**: Invalid repository URL or permission issue
+
+**Solution**:
+1. Verify repository URL ends with `.git`
+2. Check repository is **private** (public repos can have different issues)
+3. Ensure token has access to the repository
+4. Try cloning the repository manually with Git to test credentials
+
+### "Network Error"
+
+**Cause**: Connection issue
+
+**Solution**:
+1. Check internet connection
+2. Try accessing Git provider website
+3. Verify firewall isn't blocking Git connections
+4. Check if VPN is interfering
+
+### "Failed to Push - Non-Fast-Forward"
+
+**Cause**: Remote has changes you don't have locally
+
+**Solution**:
+1. Right-click sync status
+2. Select **Pull Changes** first
+3. Resolve any conflicts
+4. Then **Commit & Push**
+
+### "Git Not Initialized"
+
+**Cause**: Git repository not set up in workspace
+
+**Solution**:
+1. Go to Settings → Sync
+2. Expand "Git Configuration"
+3. Click **Initialize Git**
+4. Then click **Connect Remote Repository**
+
+### Sync Indicator Stuck
+
+**Cause**: Sync operation timed out or crashed
+
+**Solution**:
+1. Restart Lokus
+2. Check sync status (right-click indicator → Check Status)
+3. If still stuck, go to Settings → Sync → **Initialize Git** again
+
+---
+
+## Best Practices
+
+### 1. Sync Frequently
+
+Sync early and often to avoid conflicts:
+- Before major editing sessions: **Pull Changes**
+- After making changes: **Commit & Push**
+- When switching devices: **Pull Changes** first
+
+### 2. Use Descriptive Commits
+
+When manually committing (via Git command line), use clear commit messages:
+```bash
+git commit -m "Add meeting notes from Q4 planning"
+```
+
+### 3. Regular Token Rotation
+
+For security, rotate your tokens every 90 days:
+1. Generate new token
+2. Update in Lokus Settings → Sync
+3. Revoke old token in Git provider
+
+### 4. Backup Strategy
+
+Sync is not a backup! Maintain separate backups:
+- Export workspace periodically (File → Export Workspace)
+- Use Time Machine (Mac) or File History (Windows)
+- Keep critical notes in multiple locations
+
+### 5. Private Repositories Only
+
+**Never** sync sensitive notes to public repositories:
+- Always use private repositories
+- Double-check repository visibility settings
+- Audit repository access regularly (who has access?)
+
+### 6. Monitor Sync Health
+
+Check the sync status indicator regularly:
+- Blue ☁️ = Healthy
+- Yellow ⚡ = Sync soon
+- Orange ⚠️ = Take action
+- Red ❌ = Fix immediately
+
+---
+
+## Migrating from Old Sync System
+
+If you set up sync before v1.3.4, follow these steps to migrate:
+
+<Steps>
+
+### Backup Current Workspace
+
+1. File → Export Workspace
+2. Save backup to safe location
+
+### Note Current Settings
+
+Write down your current:
+- Remote URL
+- Username
+- Token (if you still have it)
+
+### Reconfigure Sync
+
+1. Go to Settings → Sync
+2. You'll see the new simplified interface
+3. Enter the same credentials in the new fields:
+   - Remote URL (same)
+   - Username (same)
+   - Personal Access Token (use your existing GitHub/GitLab token)
+
+<Callout type="info">
+**Token Migration**: The old system had separate "Password" and "Token" fields. The new system uses only the Personal Access Token in the unified "Token" field. If you were using password authentication, you MUST create a Personal Access Token (see Step 2 above).
+</Callout>
+
+### Reinitialize Git
+
+1. Expand "Git Configuration"
+2. Click **Initialize Git** (may show already initialized - that's OK)
+3. Click **Connect Remote Repository**
+4. Verify connection succeeds
+
+### Test Sync
+
+1. Make a small change to a note
+2. Click sync status indicator
+3. Verify push succeeds
+4. Check remote repository to confirm
+
+</Steps>
+
+---
+
+## Security & Privacy
+
+### How Tokens Are Stored
+
+- **Encrypted**: Tokens are encrypted using OS-level encryption (Keychain on Mac, Credential Manager on Windows)
+- **Local Only**: Tokens never leave your device
+- **No Cloud**: Lokus doesn't send tokens to any external service
+- **Secure Communication**: All Git communication uses HTTPS
+
+### Data Privacy
+
+- **You Own Your Data**: All notes stored in your private Git repository
+- **No Lokus Servers**: Sync goes directly between your device and Git provider
+- **No Analytics**: Lokus doesn't track what you sync or when
+- **Open Source**: Sync code is open source and auditable
+
+### Revoking Access
+
+To revoke sync access:
+
+1. **Revoke token** in Git provider settings:
+   - GitHub: Settings → Developer settings → Personal access tokens → Revoke
+   - GitLab: Preferences → Access Tokens → Revoke
+   - Bitbucket: Settings → App passwords → Delete
+2. **Remove from Lokus**: Settings → Sync → Clear credentials
+
+### Audit Log
+
+Your Git repository maintains a complete history:
+- Every sync creates a commit
+- View history: `git log` in workspace folder
+- See who changed what and when
+- Revert to any previous state if needed
+
+---
+
+## Frequently Asked Questions
+
+### Can I sync for free?
+
+**Yes!** Git sync is completely free with:
+- GitHub: Unlimited private repos, unlimited devices
+- GitLab: 5GB free storage
+- Bitbucket: 1GB free storage
+
+### How many devices can I sync?
+
+**Unlimited!** There's no device limit. Sync across as many devices as you need.
+
+### Does sync work offline?
+
+**Partially**: You can work offline. Changes are queued locally and sync when you reconnect to the internet.
+
+### Can multiple people collaborate on one workspace?
+
+**Yes**, but carefully:
+- All users need repository access
+- Set up sync with same repository
+- Communicate to avoid conflicts
+- Consider using branches for concurrent work
+
+### What's the difference between sync and backup?
+
+**Sync**: Real-time synchronization across devices. Data lives in Git repository.
+
+**Backup**: Point-in-time snapshot stored separately. Use both!
+
+### Can I sync to Dropbox/Google Drive instead?
+
+**No direct integration**, but you can:
+1. Create workspace folder in Dropbox/Google Drive
+2. Dropbox/Drive syncs the folder automatically
+3. Not recommended (can corrupt files if editing on multiple devices simultaneously)
+4. Git sync is safer and designed for this use case
+
+### What happens if my token expires?
+
+Lokus shows an authentication error. Generate a new token and update it in Settings → Sync.
+
+### Can I use SSH instead of HTTPS?
+
+**Not yet.** Current version supports HTTPS only. SSH support is planned for a future release.
+
+---
+
+## Next Steps
+
+Now that sync is set up:
+
+- **[Conflict Resolution Tutorial](/tutorials/sync-collaboration)** - Learn to handle merge conflicts like a pro
+- **[Advanced Sync Workflows](/tutorials/sync-collaboration#advanced-workflows)** - Branch strategies and team collaboration
+- **[Git Sync Feature Page](/features/sync)** - Complete sync documentation
+- **[Backup Strategies](/advanced/backup-strategies)** - Protect your data with multiple backups
+
+---
+
+**Need Help?**
+
+- Check [Troubleshooting](#troubleshooting) section above
+- Visit [FAQ](/faq) for common questions
+- Join community Discord for support
+- Email support: support@lokusmd.com

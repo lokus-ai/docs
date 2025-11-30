@@ -1,0 +1,303 @@
+---
+title: "Block References - Lokus Documentation"
+description: "Link to specific blocks within notes using Obsidian-style block references and embeds"
+keywords: [lokus, block references, block links, block embeds, obsidian, note linking]
+---
+
+import { Steps, Callout } from 'nextra/components'
+
+# Block References
+
+Link to and embed specific paragraphs, lists, headings, or any content block within your notes using Obsidian-compatible block reference syntax.
+
+<Callout type="info">
+Block references work identically to Obsidian's implementation, ensuring seamless migration and compatibility.
+</Callout>
+
+## What are Block References?
+
+Block references allow you to create precise links to specific portions of a note, rather than just linking to the entire page. This is invaluable for:
+
+- **Academic citations**: Reference specific paragraphs or quotes from research notes
+- **Meeting notes**: Link to specific action items or decisions across different meetings
+- **Research connections**: Build a web of knowledge linking specific ideas, not just documents
+- **Task tracking**: Reference specific tasks or outcomes from project notes
+
+Instead of linking to an entire note like `[[Project Notes]]`, you can link directly to a specific block: `[[Project Notes^decision-architecture]]`.
+
+## Understanding Block IDs
+
+A **block ID** is a unique identifier you assign to any block of content (paragraph, list item, heading, quote, etc.). Block IDs are created using the caret (`^`) symbol followed by an alphanumeric identifier.
+
+### Block ID Syntax
+
+```markdown
+This is a paragraph that I want to reference later. ^my-block-id
+```
+
+The block ID appears at the end of the content and consists of:
+- A space followed by `^` (caret symbol)
+- An identifier using letters, numbers, hyphens, or underscores: `[a-zA-Z0-9_-]+`
+- Block IDs are case-sensitive
+
+### Valid Block ID Examples
+
+```markdown
+This is a key finding from the research. ^research-finding-1
+
+- Task item that needs referencing ^task-item-urgent
+- Another list item ^list-2
+
+> Important quote from the source material ^important-quote
+
+## Section Heading ^section-intro
+```
+
+### What Can Have Block IDs?
+
+Block IDs can be added to:
+- Paragraphs
+- Headings (all levels)
+- List items (both ordered and unordered)
+- Blockquotes
+- Code blocks
+- Tables
+- Table rows
+
+## Creating Block References
+
+Once you've added a block ID to content, you can reference it from anywhere in your knowledge base.
+
+<Steps>
+
+### Step 1: Add a Block ID
+
+First, add a block ID to the content you want to reference:
+
+```markdown
+The quarterly revenue increased by 23% due to new product launches. ^q4-revenue-finding
+```
+
+The block ID `^q4-revenue-finding` is now attached to this paragraph.
+
+<Callout type="tip">
+Block IDs are displayed with reduced opacity in the editor, making them visible but not distracting.
+</Callout>
+
+### Step 2: Link to the Block
+
+In any note, create a link to the specific block using the syntax `[[filename^blockid]]`:
+
+```markdown
+According to the analysis: [[Q4 Report^q4-revenue-finding]]
+```
+
+This creates a clickable link that navigates directly to the referenced block in the Q4 Report note.
+
+### Step 3: Customize Display Text (Optional)
+
+You can customize how the link appears using the pipe (`|`) syntax:
+
+```markdown
+The results were impressive: [[Q4 Report^q4-revenue-finding|23% revenue increase]]
+```
+
+This displays as "23% revenue increase" but still links to the specific block.
+
+</Steps>
+
+## Block Link Display Format
+
+When you create a block reference without custom text, Lokus automatically formats the link in a readable way:
+
+```markdown
+[[Meeting Notes^action-item-deploy]]
+```
+
+Displays as: **Meeting Notes › Action Item Deploy**
+
+The filename and block ID are separated by a › symbol, with the block ID converted from kebab-case to Title Case for better readability.
+
+## Embedding Blocks
+
+Beyond just linking, you can **embed** the actual content of a block directly into another note using the exclamation mark (`!`) prefix.
+
+### Embed Syntax
+
+```markdown
+![[filename^blockid]]
+```
+
+### How Embeds Work
+
+When you embed a block:
+1. The actual content of the referenced block appears inline in your current note
+2. The embed shows the source filename and block ID as a header
+3. The embedded content is read-only but updates if the source changes
+4. Embeds are displayed with a distinct visual style (border and background)
+
+### Embed Example
+
+If `Research Notes` contains:
+
+```markdown
+The study found a strong correlation between sleep quality and productivity. ^sleep-study-finding
+```
+
+In another note, you can embed it:
+
+```markdown
+## Supporting Evidence
+
+![[Research Notes^sleep-study-finding]]
+```
+
+This will display:
+
+```
+┌─────────────────────────────────────────┐
+│ 📄 Research Notes › sleep-study-finding │
+├─────────────────────────────────────────┤
+│ The study found a strong correlation    │
+│ between sleep quality and productivity. │
+└─────────────────────────────────────────┘
+```
+
+## Use Cases
+
+### Academic Research
+
+Link to specific findings, quotes, or methodologies across your research notes:
+
+```markdown
+## Literature Review
+
+The methodology follows [[Smith 2023^methodology-section]].
+
+Key findings:
+- ![[Study A^finding-correlation]]
+- ![[Study B^finding-causation]]
+```
+
+### Meeting Notes Cross-Referencing
+
+Reference specific decisions or action items:
+
+```markdown
+## Project Status
+
+Following up on [[March 15 Meeting^decision-tech-stack]], we've begun implementation.
+
+Action items from [[March 22 Meeting^action-items-list]]:
+```
+
+### Knowledge Building
+
+Create precise connections between ideas:
+
+```markdown
+## Zettelkasten Example
+
+This concept relates to [[Atomic Habits^habit-loop-definition]] and builds upon [[Thinking Fast and Slow^system-1-vs-2]].
+```
+
+### Task Management
+
+Track tasks and their outcomes across project notes:
+
+```markdown
+## Sprint Retrospective
+
+Completed: [[Sprint 5 Planning^task-backend-api]]
+Still in progress: [[Sprint 5 Planning^task-frontend-ui]]
+```
+
+## Tips & Best Practices
+
+### Naming Block IDs
+
+<Callout type="tip">
+Use descriptive, kebab-case identifiers that make sense out of context:
+- ✅ Good: `^decision-microservices-architecture`
+- ✅ Good: `^finding-user-retention-rate`
+- ❌ Avoid: `^block1`, `^x`, `^temp`
+</Callout>
+
+### When to Use Block References vs. Page Links
+
+| Use Block References When | Use Page Links When |
+|---------------------------|---------------------|
+| Referencing specific findings or quotes | Referencing general topics or concepts |
+| Linking to action items or decisions | Linking to entire documents |
+| Building precise knowledge connections | Creating broad category links |
+| Citing specific sources | Referencing background information |
+
+### Avoiding Conflicts
+
+- Block IDs must be unique within a single note (but can be the same across different notes)
+- If you duplicate content, remember to update block IDs to maintain unique references
+- Use meaningful prefixes for different types of blocks: `^finding-`, `^task-`, `^quote-`, `^decision-`
+
+### Managing Block References
+
+<Callout type="warning">
+If you delete or rename a block ID, existing references will break. Consider:
+- Searching your vault for references before deleting block IDs
+- Using descriptive IDs that won't need changing
+- Keeping a log of important block IDs in your notes
+</Callout>
+
+## Advanced Usage
+
+### Block References in Lists
+
+Create lists of referenced content:
+
+```markdown
+## Key Decisions This Quarter
+
+1. [[Jan Board Meeting^decision-expansion]]
+2. [[Feb Leadership Sync^decision-hiring-freeze]]
+3. [[Mar Strategy Session^decision-product-pivot]]
+```
+
+### Combining with Regular Wiki Links
+
+You can mix block references with regular wiki links:
+
+```markdown
+For background, see [[Product Strategy]] and specifically [[Product Strategy^vision-2024]].
+```
+
+### Block References in Templates
+
+Use block references in templates for repeatable structures:
+
+```markdown
+## Weekly Review Template
+
+### Last Week's Goals
+- Reference: [[{{last_week_note}}^weekly-goals]]
+
+### This Week's Plan
+Add your goals here ^weekly-goals
+```
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| Type `[[` | Open wiki link autocomplete |
+| Type `^` after filename | Switch to block reference mode |
+| Type `![[` | Create an embed instead of a link |
+
+## Related Features
+
+- [Wiki Links](/features/wiki-links) - Basic internal linking
+- [Page Preview](/features/page-preview) - Hover preview for wiki links
+- [Templates](/features/templates) - Automate note creation with block references
+- [Backlinks](/features/backlinks) - See all references to a block
+
+---
+
+Block references transform your notes from isolated documents into a interconnected knowledge graph, enabling precise citation and reusable content blocks throughout your entire knowledge base.

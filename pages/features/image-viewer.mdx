@@ -1,0 +1,359 @@
+---
+title: "Image Viewer - Lokus Documentation"
+description: "Professional image viewing with zoom, pan, navigation, and metadata display. View images in modal or tab mode."
+keywords: [lokus, image viewer, image viewing, zoom, pan, image navigation, metadata, modal, tab]
+---
+
+import { Callout } from 'nextra/components'
+
+# Image Viewer
+
+Lokus features a professional-grade image viewer that provides a rich viewing experience for images in your knowledge base.
+
+<Callout type="info">
+The Image Viewer was introduced in **v1.3.4** (PR #196) with full modal and tab integration.
+</Callout>
+
+## Overview
+
+The Image Viewer provides two viewing modes:
+
+- **Modal Viewer**: Full-screen immersive viewing that overlays your workspace
+- **Tab Viewer**: View images in dedicated tabs alongside your notes
+
+Both modes share the same powerful features: zoom controls, pan navigation, keyboard shortcuts, and metadata display.
+
+## Opening Images
+
+### From Embedded Images
+
+Click any image embedded in your markdown notes:
+
+```markdown
+![My diagram](./images/diagram.png)
+```
+
+When you click the image in the editor, it opens in the **Modal Viewer** with full-screen display.
+
+### From File Browser
+
+Right-click any image file in the file browser:
+
+1. Right-click the image file (`.png`, `.jpg`, `.jpeg`, `.gif`, `.svg`, `.webp`, `.bmp`)
+2. Select **"Open in Image Viewer"** from context menu
+3. Image opens in a new **Tab Viewer** in your tab bar
+
+### Supported Formats
+
+- **PNG** - Portable Network Graphics
+- **JPEG/JPG** - Joint Photographic Experts Group
+- **GIF** - Graphics Interchange Format
+- **SVG** - Scalable Vector Graphics
+- **WebP** - Modern web image format
+- **BMP** - Bitmap images
+- **Data URLs** - Embedded base64 images
+
+## Viewer Features
+
+### Zoom Controls
+
+The Image Viewer provides precise zoom control:
+
+- **Zoom Range**: 25% to 500% (0.25x to 5x)
+- **Zoom Increments**: 25% per step
+- **Default**: Images start at 100% (actual size)
+
+**Zoom Methods:**
+
+1. **Zoom Buttons**: Click + and - buttons in the control bar
+2. **Keyboard Shortcuts**:
+   - `+` or `=` - Zoom in
+   - `-` or `_` - Zoom out
+   - `0` - Reset to 100%
+3. **Mouse Wheel**: Scroll to zoom in/out (10% per scroll)
+
+<Callout>
+The control bar appears when you hover over the image and fades away when idle for a cleaner viewing experience.
+</Callout>
+
+### Pan and Navigation
+
+When zoomed beyond 100%, you can pan to view different areas:
+
+- **Mouse Drag**: Click and drag to pan across the image
+- **Cursor Changes**: Cursor changes to "grab" when pan is available
+- **Smooth Motion**: Panning is smooth and responsive
+- **Boundary Detection**: Can't pan beyond image edges
+
+### Image Navigation
+
+Navigate between multiple images in your workspace:
+
+- **Next Image**: Click right arrow or press `Shift + →`
+- **Previous Image**: Click left arrow or press `Shift + ←`
+- **Keyboard Navigation**: Use shift + arrow keys for quick browsing
+- **Wraparound**: Navigation wraps from last to first image
+
+<Callout type="info">
+Navigation arrows only appear when multiple images are available in the current context.
+</Callout>
+
+### Metadata Display
+
+Toggle the information sidebar to view detailed image metadata:
+
+- **File Name**: Full filename with extension
+- **Dimensions**: Width × Height in pixels (e.g., "1920 × 1080 pixels")
+- **File Size**: Human-readable size (e.g., "2.4 MB")
+- **Modified Date**: Last modification timestamp
+- **Created Date**: File creation timestamp
+- **Full Path**: Complete file system path
+
+**Toggle Metadata:**
+- Click the **Info button** (ℹ️) in top-right corner
+- Press `I` key to toggle on/off
+- Sidebar slides in/out with smooth animation
+
+### Control Bar
+
+The floating control bar provides quick access to all features:
+
+**Controls Available:**
+- **Zoom Out** (`-`) - Decrease zoom by 25%
+- **Zoom Level Display** - Current zoom percentage
+- **Zoom In** (`+`) - Increase zoom by 25%
+- **Fit to Screen** (⛶) - Reset zoom and position
+
+**Appearance:**
+- **Auto-Hide**: Fades away when mouse is idle
+- **Hover to Show**: Appears on mouse movement
+- **Semi-Transparent**: Black background with blur effect
+- **Bottom-Centered**: Positioned at bottom center for easy access
+
+## Modal Viewer Mode
+
+### Features
+
+- **Full-Screen**: Takes over entire window for immersive viewing
+- **Dark Backdrop**: Black background with 95% opacity and blur
+- **Close Button**: X button in top-left corner
+- **Keyboard Close**: Press `Esc` to close
+- **Click Outside**: Click backdrop to close
+- **Smooth Animations**: Fade in/out transitions
+
+### Use Cases
+
+- **Quick Preview**: View embedded images without leaving your note
+- **Focus Mode**: Examine images in detail without distractions
+- **Presentation**: Show images during meetings or presentations
+- **Screenshot Review**: Quickly review captured screenshots
+
+### Behavior
+
+- **Modal Overlay**: Appears on top of all content (z-index: 9999)
+- **Backdrop Click**: Click outside image to dismiss
+- **Navigation Retained**: Can navigate between images while modal is open
+- **State Preserved**: Zoom and pan are preserved during navigation
+
+## Tab Viewer Mode
+
+### Features
+
+- **Dedicated Tab**: Image appears as a regular tab in your tab bar
+- **Persistent**: Stays open until you close the tab
+- **Multi-Image**: Open multiple images in separate tabs
+- **Sidebar Integration**: Full integration with workspace sidebar
+- **Theme Support**: Matches your selected theme
+
+### Use Cases
+
+- **Reference Images**: Keep diagrams or screenshots open while working
+- **Comparison**: Open multiple images side-by-side in split view
+- **Long-Term Access**: Keep frequently accessed images readily available
+- **Organized Workflow**: Manage images like you manage note tabs
+
+### Tab Management
+
+- **Close Tab**: Click X button or use standard tab close shortcuts
+- **Reorder Tabs**: Drag tab to reposition in tab bar
+- **Split View**: Open image in split view alongside notes
+- **Tab Context**: Right-click tab for additional options
+
+## Keyboard Shortcuts
+
+Complete keyboard shortcut reference:
+
+| Shortcut | Action |
+|----------|--------|
+| `Esc` | Close modal viewer |
+| `+` or `=` | Zoom in |
+| `-` or `_` | Zoom out |
+| `0` | Reset zoom to 100% |
+| `I` | Toggle information sidebar |
+| `Shift + →` | Next image |
+| `Shift + ←` | Previous image |
+
+<Callout type="info">
+Keyboard shortcuts work in both modal and tab viewing modes.
+</Callout>
+
+## Advanced Features
+
+### Performance Optimization
+
+- **Lazy Loading**: Images load on-demand, not all at once
+- **Cached Reads**: Repeated views use cached data
+- **Base64 Support**: Embedded data URLs render without backend calls
+- **Smooth Rendering**: Hardware-accelerated transforms for zoom/pan
+
+### Accessibility
+
+- **Keyboard Navigation**: Full functionality without mouse
+- **Visual Feedback**: Clear visual states for all interactions
+- **Screen Reader Support**: Proper ARIA labels and semantic HTML
+- **Focus Management**: Logical focus order through controls
+
+### Integration
+
+- **Theme Aware**: Adapts to light/dark theme preferences
+- **Context Menu**: Integrates with file browser context menu
+- **Editor Integration**: Seamlessly works with TipTap image nodes
+- **Workspace State**: Respects workspace folder scopes and filters
+
+## Tips and Tricks
+
+### Quick Image Review
+
+1. Click image in note to open modal
+2. Use `Shift + →` and `Shift + ←` to browse all images
+3. Press `I` to check metadata for each image
+4. Press `Esc` when done
+
+### Side-by-Side Comparison
+
+1. Right-click first image → Open in Image Viewer (Tab)
+2. Right-click second image → Open in Image Viewer (Tab)
+3. Use split view to see both tabs simultaneously
+4. Use zoom controls to match scales
+
+### Zoom to Detail
+
+1. Open image in viewer
+2. Scroll or press `+` to zoom in (up to 500%)
+3. Click and drag to pan to area of interest
+4. Press `0` to reset when done
+
+### Metadata Inspection
+
+1. Open image in viewer
+2. Press `I` or click info button
+3. Review dimensions, size, and dates
+4. Use path to locate file in file system
+
+## Troubleshooting
+
+### Image Won't Open
+
+**Symptoms**: Image doesn't open when clicked
+
+**Solutions:**
+1. **Check Format**: Ensure image is a supported format
+2. **File Permissions**: Verify Lokus can read the file
+3. **File Path**: Ensure relative paths are correct
+4. **Reload**: Try refreshing the workspace
+
+### Blurry or Pixelated
+
+**Symptoms**: Image appears blurry or low quality
+
+**Solutions:**
+1. **Zoom Level**: Check if zoomed beyond 100%
+2. **Source Quality**: Verify original image resolution
+3. **File Format**: Some formats (e.g., SVG) scale better than others
+4. **Reset Zoom**: Press `0` to return to actual size
+
+### Navigation Arrows Missing
+
+**Symptoms**: Can't navigate to next/previous images
+
+**Reasons:**
+- Only one image in current context
+- No other images in the workspace
+- Current view is filtered or scoped
+
+**Solutions:**
+1. Open multiple images first
+2. Check workspace for other image files
+3. Remove folder scopes if active
+
+### Controls Don't Appear
+
+**Symptoms**: Control bar or buttons don't show
+
+**Solutions:**
+1. **Move Mouse**: Hover over image to trigger controls
+2. **Check Theme**: Ensure theme has proper contrast
+3. **Try Keyboard**: Use keyboard shortcuts as alternative
+4. **Reload**: Refresh the page if controls are stuck
+
+### Metadata Sidebar Empty
+
+**Symptoms**: Info sidebar shows no information
+
+**Reasons:**
+- Viewing embedded base64 image (no file metadata)
+- File metadata not yet loaded
+- Backend communication issue
+
+**Solutions:**
+1. For embedded images: No file metadata available
+2. Wait a moment for metadata to load
+3. Close and reopen the viewer
+
+## Best Practices
+
+### Organizing Images
+
+- **Dedicated Folder**: Keep images in `/images` or `/assets` folder
+- **Descriptive Names**: Use clear filenames (e.g., `architecture-diagram-2024.png`)
+- **Size Optimization**: Compress images before adding to workspace
+- **Format Choice**: Use WebP for photos, PNG for diagrams/screenshots
+
+### Embedding Images
+
+```markdown
+# Good - Relative path with descriptive alt text
+![System Architecture Diagram](./images/architecture.png)
+
+# Good - Clear, descriptive link text
+See the [network topology diagram](./diagrams/network.png) for details.
+
+# Better - With dimensions for layout
+![Logo](./logo.png){width=200}
+```
+
+### Performance Tips
+
+- **Reasonable Sizes**: Keep images under 5MB when possible
+- **Appropriate Formats**: Use optimal formats (WebP > PNG > JPEG for most use cases)
+- **Lazy Loading**: Don't load all images at once - view on demand
+- **Cache Clearing**: Restart Lokus if image viewer becomes sluggish
+
+## Future Enhancements
+
+Planned improvements for the Image Viewer:
+
+- **Image Editing**: Basic crop, rotate, and annotation tools
+- **Gallery View**: Thumbnail grid for browsing all images
+- **Slideshow Mode**: Auto-play through images with customizable timing
+- **Comparison Mode**: Side-by-side image comparison tools
+- **Export Options**: Save zoomed view or annotated versions
+- **EXIF Data**: Display camera and lens metadata for photos
+
+---
+
+**Related Topics:**
+- [Editor](/features/editor) - Rich text editing and image embedding
+- [File Management](/features/file-management) - Organizing files
+- [Keyboard Shortcuts](/features/keyboard-shortcuts) - Complete shortcut reference
+- [Multimedia Library](/features/multimedia-library) - Managing media assets
