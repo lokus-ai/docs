@@ -8,21 +8,15 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     name: Deploy Docs
 
     steps:
-      - name: Deploy to Primary Server
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_KEY }}
-          port: 22
-          script: |
-            echo "Starting docs deployment..."
-            /opt/Lokus-Prod/scripts/deploy-docs.sh
-            echo "Deployment complete!"
+      - name: Deploy Docs
+        run: |
+          echo "Starting docs deployment..."
+          /opt/Lokus-Prod/scripts/deploy-docs.sh
+          echo "Deployment complete!"
 
       - name: Discord Notification
         if: always()
