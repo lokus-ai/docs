@@ -36,11 +36,6 @@ Lokus features a **powerful rich text editor** built on **TipTap 3.4**, providin
 - **Markdown Customization** - Customize WikiLink styles, heading sizes, code themes
 - **Image Improvements** - Better paste handling, auto-compression, lazy loading
 - **Performance** - 40% faster initial load, smooth scrolling for large documents
-- **Status Bar** - Real-time word count, character count, and reading time estimates
-- **Block References** - Link to specific paragraphs with Obsidian-style `[[note^blockid]]` syntax
-- **Mermaid Diagrams** - Create flowcharts, sequence diagrams, and more with integrated diagram support
-- **Callouts** - Highlight important information with 8 callout types (note, tip, warning, etc.)
-- **Page Preview** - Hover over wiki links to preview note content
 
 ### Plugin System Integration
 - **Plugin API** - Extend editor with custom extensions and commands
@@ -838,31 +833,12 @@ The slash command menu provides quick access to all editor features. Type `/` an
 | `/code` | Inline code formatting |
 | `/code block` | Multi-line code block with syntax highlighting |
 
-### Diagrams
-
-| Command | Description |
-|---------|-------------|
-| `/mermaid` | Insert Mermaid diagram block for flowcharts, sequences, etc. |
-
 ### Math
 
 | Command | Description |
 |---------|-------------|
 | `/inline math` | Insert inline LaTeX formula ($x^2$) |
 | `/block math` | Insert display LaTeX formula ($$E=mc^2$$) |
-
-### Callouts
-
-| Command | Description |
-|---------|-------------|
-| `/note callout` | Insert a note callout (blue, ℹ️) |
-| `/tip callout` | Insert a tip callout (green, 💡) |
-| `/warning callout` | Insert a warning callout (orange, ⚠️) |
-| `/danger callout` | Insert a danger callout (red, 🚨) |
-| `/info callout` | Insert an info callout (cyan, ℹ️) |
-| `/success callout` | Insert a success callout (green, ✅) |
-| `/question callout` | Insert a question callout (purple, ❓) |
-| `/example callout` | Insert an example callout (gray, 📝) |
 
 ### Using Slash Commands
 
@@ -878,215 +854,9 @@ The slash command menu provides quick access to all editor features. Type `/` an
 - Commands are organized by category
 - Recently used commands appear first
 
-## Status Bar
-
-The editor includes a comprehensive status bar at the bottom of the window that provides real-time information about your document and editor state.
-
-### Status Bar Features
-
-**Left Section:**
-- **Ready Indicator**: Shows editor is loaded and responsive
-- **Active File**: Displays the current file name (on larger screens)
-- **Open Files Count**: Shows how many files are currently open
-
-**Right Section:**
-- **Word Count**: Real-time count of words in the current document
-- **Character Count**: Total characters including spaces and punctuation
-- **Reading Time**: Estimated reading time based on 200 words per minute
-- **Unsaved Changes**: Indicator showing number of unsaved files
-- **File Type**: Displays current file format (Markdown)
-- **Sync Status**: Cloud sync indicator (if enabled)
-
-### Reading Time Calculation
-
-The status bar calculates reading time using the formula:
-
-```
-Reading Time (minutes) = Word Count ÷ 200 words per minute
-```
-
-This is based on the average adult reading speed. The calculation:
-- Counts only actual words (filters out punctuation-only strings)
-- Includes text in all blocks (paragraphs, lists, quotes, tables)
-- Rounds up to ensure realistic estimates (minimum 1 minute)
-- Updates in real-time as you type
-
-### Word and Character Counting
-
-The word counter is intelligent:
-- **Excludes code blocks**: Code isn't counted as prose
-- **Handles hyphenated words**: "twenty-three" counts as one word
-- **Filters punctuation**: "..." or "---" don't count as words
-- **Includes all text nodes**: Headers, lists, quotes, table cells
-- **Phone numbers**: Recognized and counted appropriately
-- **Email addresses**: Counted as single words
-
-Character count includes:
-- All letters, numbers, and symbols
-- Spaces and punctuation
-- Special characters and emojis
-
-### Customizing Reading Speed
-
-You can adjust the reading speed calculation:
-
-1. Open Settings → Editor → Reading Speed
-2. Set your preferred words per minute (default: 200)
-3. Status bar updates automatically
-
-Common reading speeds:
-- **200 WPM**: Average adult (default)
-- **150 WPM**: Careful reading
-- **250-300 WPM**: Fast readers
-- **100-150 WPM**: Technical/academic content
-
-### Status Bar Items from Plugins
-
-Plugins can add custom items to the status bar:
-
-```javascript
-// Example: Plugin adding custom status item
-context.statusBar.addItem({
-  id: 'my-plugin-status',
-  text: 'Custom Info',
-  tooltip: 'Information from my plugin',
-  alignment: 'right',
-  priority: 10
-});
-```
-
-See [Plugin Development](/developers/plugins) for details on extending the status bar.
-
-### Responsive Behavior
-
-The status bar adapts to screen size:
-- **Large screens (1200px+)**: All items visible
-- **Medium screens (768px-1199px)**: Character count and reading time hidden
-- **Small screens (<768px)**: Only essential items shown (unsaved changes, sync status)
-
-This ensures the status bar remains useful without cluttering small displays.
-
-## Block References
-
-Link to and embed specific blocks within your notes using Obsidian-style block reference syntax.
-
-### What are Block References?
-
-Block references allow you to:
-- Link to specific paragraphs, lists, or headings
-- Embed content from other notes
-- Create precise citations and cross-references
-- Build a interconnected knowledge graph
-
-### Creating Block IDs
-
-Add a block ID to any content by adding `^blockid` at the end:
-
-```markdown
-This is an important paragraph. ^key-finding
-
-- List item with reference ^list-item-1
-- Another item ^list-item-2
-
-## Section Heading ^intro-section
-```
-
-Block IDs:
-- Start with `^` followed by alphanumeric characters, hyphens, or underscores
-- Must be unique within a note
-- Are displayed with reduced opacity in the editor
-
-### Linking to Blocks
-
-Reference a block using `[[filename^blockid]]`:
-
-```markdown
-As mentioned in [[Research Notes^key-finding]], the results show...
-
-See the action items from [[Meeting Notes^todo-list]].
-```
-
-### Embedding Blocks
-
-Embed the actual content using `![[filename^blockid]]`:
-
-```markdown
-## Supporting Evidence
-
-![[Study Results^main-conclusion]]
-```
-
-The embedded content appears inline with:
-- A header showing the source file and block ID
-- The actual block content
-- Distinct visual styling (border and background)
-
-### Display Format
-
-Block references are displayed in a readable format:
-- `[[Notes^action-item-1]]` → **Notes › Action Item 1**
-- The filename and block ID are separated by ›
-- Block IDs are converted from kebab-case to Title Case
-
-For complete documentation, see [Block References](/features/block-references).
-
-## Mermaid Diagrams
-
-Create visual diagrams directly in your notes using Mermaid.js syntax.
-
-### Creating Diagrams
-
-Use the slash command or markdown code block syntax:
-
-````markdown
-```mermaid
-graph TD
-    A[Start] --> B[Process]
-    B --> C[End]
-```
-````
-
-### Supported Diagram Types
-
-- **Flowcharts**: Process flows and decision trees
-- **Sequence Diagrams**: API calls and interactions
-- **Gantt Charts**: Project timelines
-- **Class Diagrams**: Software architecture
-- **State Diagrams**: State machines
-- **Entity Relationship**: Database schemas
-- **Pie Charts**: Data visualization
-- **Git Graphs**: Version control branching
-
-### Diagram Features
-
-**Edit/View Modes**:
-- Double-click or use pencil icon to edit
-- Press Cmd/Ctrl + Enter to render
-- Toggle between source and visual display
-
-**Fullscreen Viewer**:
-- Click maximize icon for fullscreen view
-- Perfect for complex diagrams or presentations
-- Pan and zoom controls
-
-**Theme Integration**:
-- Diagrams automatically match your theme
-- Light/dark mode switching
-- Uses your theme's color variables
-
-### Example Flowchart
-
-```mermaid
-graph LR
-    A[Write] --> B[Review]
-    B --> C[Publish]
-```
-
-For complete syntax and examples, see [Mermaid Diagrams](/features/mermaid-diagrams).
-
 ## Callouts and Admonitions
 
-Create visually distinct blocks for notes, warnings, tips, and more using Obsidian-compatible callout syntax.
+Create visually distinct blocks for notes, warnings, tips, and more using callout syntax.
 
 ### Syntax
 
@@ -1097,51 +867,49 @@ Content goes here
 
 ### Callout Types
 
-Lokus supports 8 callout types, each with unique icons and colors:
-
-**Note** (ℹ️) - General information:
+**Note** - General information:
 ```markdown
 >[!note] Remember
 This is important information to keep in mind.
 ```
 
-**Tip** (💡) - Helpful suggestions:
+**Tip** - Helpful suggestions:
 ```markdown
 >[!tip] Pro Tip
 Use keyboard shortcuts for faster editing!
 ```
 
-**Warning** (⚠️) - Caution notices:
+**Warning** - Caution notices:
 ```markdown
 >[!warning] Be Careful
 This operation cannot be undone.
 ```
 
-**Danger** (🚨) - Critical alerts:
+**Danger** - Critical alerts:
 ```markdown
 >[!danger] Danger
 This will delete all your data!
 ```
 
-**Info** (ℹ️) - Informational blocks:
+**Info** - Informational blocks:
 ```markdown
 >[!info] Did You Know?
 Lokus supports 100+ programming languages.
 ```
 
-**Success** (✅) - Success messages:
+**Success** - Success messages:
 ```markdown
 >[!success] Great Job!
 Your changes have been saved.
 ```
 
-**Question** (❓) - Questions or FAQs:
+**Question** - Questions or FAQs:
 ```markdown
 >[!question] How does this work?
 Callouts use markdown blockquote syntax.
 ```
 
-**Example** (📝) - Code or usage examples:
+**Example** - Code or usage examples:
 ```markdown
 >[!example] Example
 Here's how to use this feature...
@@ -1156,87 +924,18 @@ Add a minus sign after the type to make callouts collapsible:
 This content is hidden by default.
 ```
 
-The callout appears collapsed with a ▶ arrow. Click the header to expand (▼) and show content.
-
 ### Nested Content
 
-Callouts support rich nested markdown:
-- Lists (ordered and unordered)
-- **Bold**, *italic*, and other text formatting
-- `Code blocks` with syntax highlighting
+Callouts support nested markdown:
+- Lists
+- **Bold** and *italic* text
+- `Code blocks`
 - Links and images
-- Tables
-- Math equations
-- Even other callouts (use sparingly)!
-
-### Theme Integration
-
-Callouts automatically adapt to your theme:
-- **Light Mode**: Subtle backgrounds with clear borders
-- **Dark Mode**: Darker backgrounds with vibrant accents
-- **Custom Themes**: Uses your theme's color variables
+- Even other callouts!
 
 ### Keyboard Shortcut
 
-Press **Cmd/Ctrl + Alt + C** to create a note callout quickly.
-
-### Slash Commands for Callouts
-
-Access all callout types via slash command:
-- `/note callout` - Note callout
-- `/tip callout` - Tip callout
-- `/warning callout` - Warning callout
-- `/danger callout` - Danger callout
-- `/info callout` - Info callout
-- `/success callout` - Success callout
-- `/question callout` - Question callout
-- `/example callout` - Example callout
-
-For complete documentation and examples, see [Callouts](/features/callouts).
-
-## Page Preview
-
-Hover over wiki links to preview the target note's content without navigating away from your current page.
-
-### How It Works
-
-1. **Hover**: Move your cursor over any wiki link
-2. **Wait briefly**: Preview appears after ~500ms
-3. **Read**: View the note title and content preview
-4. **Close**: Move cursor away or click the × button
-
-### Smart Positioning
-
-The preview popup intelligently positions itself:
-- Appears near your cursor by default
-- Shifts to stay on-screen near edges
-- Moves above cursor when near bottom
-- Always visible and readable
-
-### Theme Integration
-
-Previews match your active theme:
-- Background, text, and border colors inherited
-- Full dark mode support
-- Consistent with your workspace aesthetics
-
-### Current Phase (Phase 1)
-
-The current implementation includes:
-- ✅ Preview popup structure
-- ✅ Smart positioning system
-- ✅ Note title display
-- ✅ Close button
-- ✅ Theme integration
-
-Future phases will add:
-- Full markdown content rendering
-- Image display in previews
-- Scroll support for long notes
-- Block reference previews
-- Size customization options
-
-For complete documentation, see [Page Preview](/features/page-preview).
+Press **Cmd/Ctrl + Alt + C** to create a callout.
 
 ## Folding Sections
 
@@ -1389,8 +1088,6 @@ Lokus uses **25+ TipTap extensions** to power the editor. Here's a comprehensive
 - `CodeBlockIndent` - Tab support and smart indentation for code blocks
 - `Table` - Full-featured tables with resizing
 - `TableRow`, `TableHeader`, `TableCell` - Table components
-- `Mermaid` - Diagram creation with Mermaid.js syntax
-- `Callout` - Admonition blocks with 8 types and collapsible support
 
 **Math & Science:**
 - `MathInline` - Inline LaTeX equations ($x^2$)
@@ -1398,12 +1095,9 @@ Lokus uses **25+ TipTap extensions** to power the editor. Here's a comprehensive
 
 **Links & References:**
 - `Link` - Standard hyperlinks with auto-detection
-- `WikiLink` - Internal wiki-style links [[page]] with block references
-- `WikiLinkEmbed` - Block embedding with ![[page^blockid]]
+- `WikiLink` - Internal wiki-style links [[page]]
 - `WikiLinkSuggest` - Autocomplete for wiki links
-- `BlockId` - Block ID system for precise references
 - `Image` - Image embedding with resize
-- `PagePreview` - Hover preview for wiki links
 
 **Typography:**
 - `Superscript` - Superscript text (x^2^)
