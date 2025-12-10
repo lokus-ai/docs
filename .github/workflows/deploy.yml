@@ -7,16 +7,63 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy:
-    runs-on: self-hosted
-    name: Deploy Docs
+  deploy-backup:
+    runs-on: [self-hosted, backup]
+    name: Deploy to Backup Server
 
     steps:
-      - name: Deploy Docs
+      - name: Deploy Docs to Backup
         run: |
-          echo "Starting docs deployment..."
+          echo "Starting docs deployment to BACKUP server..."
           /opt/Lokus-Prod/scripts/deploy-docs.sh
-          echo "Deployment complete!"
+          echo "Backup deployment complete!"
+
+      - name: Health Check
+        run: |
+          echo "Running health check..."
+          sleep 10
+          if curl -sf http://localhost:3001 > /dev/null; then
+            echo "Health check passed!"
+          else
+            echo "Health check failed!"
+            exit 1
+          fi
+
+      - name: Discord Notification (Backup)
+        if: failure()
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+          status: failure
+          title: "Docs Deploy FAILED on Backup"
+          description: |
+            Deploy stopped! Production server NOT updated.
+            Commit: ${{ github.sha }}
+            By: ${{ github.actor }}
+          url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+  deploy-production:
+    needs: deploy-backup
+    runs-on: [self-hosted, production]
+    name: Deploy to Production Server
+
+    steps:
+      - name: Deploy Docs to Production
+        run: |
+          echo "Starting docs deployment to PRODUCTION server..."
+          /opt/Lokus-Prod/scripts/deploy-docs.sh
+          echo "Production deployment complete!"
+
+      - name: Health Check
+        run: |
+          echo "Running health check..."
+          sleep 10
+          if curl -sf http://localhost:3001 > /dev/null; then
+            echo "Health check passed!"
+          else
+            echo "Health check failed!"
+            exit 1
+          fi
 
       - name: Discord Notification
         if: always()
@@ -26,6 +73,7 @@ jobs:
           status: ${{ job.status }}
           title: "Docs Deployment"
           description: |
+            Deployed to both servers
             Commit: ${{ github.sha }}
             Branch: ${{ github.ref_name }}
             By: ${{ github.actor }}
