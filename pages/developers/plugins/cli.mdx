@@ -292,6 +292,27 @@ lokus-plugin publish --dry-run
 lokus-plugin publish --registry https://registry.example.com
 ```
 
+### link
+
+Symlink the current plugin to the Lokus plugins directory for development.
+
+```bash
+lokus-plugin link [options]
+```
+
+**Options:**
+- `--force` - Overwrite existing link
+
+**Example:**
+
+```bash
+# Link current plugin
+lokus-plugin link
+
+# Force link (overwrite existing)
+lokus-plugin link --force
+```
+
 ### install
 
 Install plugin locally for testing.
