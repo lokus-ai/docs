@@ -1,690 +1,144 @@
 ---
-title: Plugin CLI Tool Reference
-description: Comprehensive Plugin CLI tool reference covering plugin creation, development with hot reload, building, testing, validation, packaging, and publishing to the Lokus registry.
-keywords: [lokus, plugin cli, plugin development, cli tool, plugin commands, hot reload, plugin testing, plugin publishing]
+title: CLI Reference
+description: The essential command-line tool for Lokus plugin development.
 ---
 
-# Plugin CLI Tool
+import { Tabs, Tab, Callout, Steps } from 'nextra/components'
 
-The `lokus-plugin-cli` is a comprehensive command-line tool for developing, testing, packaging, and publishing Lokus plugins.
+# CLI Reference
 
-## Installation
+The `lokus-plugin` CLI is your primary tool for creating, building, and publishing plugins.
 
-```bash
-# Install globally
-npm install -g @lokus/plugin-cli
+<Callout type="info">
+  **Quick Install:** `npm install -g @lokus/plugin-cli`
+</Callout>
 
-# Or use with npx
-npx @lokus/plugin-cli <command>
+## Quick Reference
 
-# Verify installation
-lokus-plugin --version
-```
+| Command | Description |
+| :--- | :--- |
+| `create` | Scaffold a new plugin project |
+| `dev` | Start development server with hot-reload |
+| `link` | Symlink plugin for local development |
+| `publish` | Publish to the Lokus Registry |
+
+---
 
 ## Commands
 
-### create
-
-Create a new plugin project from template.
-
-```bash
-lokus-plugin create <plugin-name> [options]
-```
-
-**Options:**
-- `--template <name>` - Template to use (basic, editor, ui, data-provider)
-- `-y, --yes` - Quick mode (skip prompts, use defaults)
-- `--typescript` - Use TypeScript (default: true)
-- `--git` - Initialize git repository (default: true)
-- `--install` - Install dependencies (default: true)
-- `--author <name>` - Plugin author name
-- `--license <type>` - License type (default: MIT)
-
-**Examples:**
-
-```bash
-# Basic plugin
-lokus-plugin create my-plugin
-
-# UI plugin with custom template
-lokus-plugin create my-ui-plugin --template ui
-
-# Without git init
-lokus-plugin create my-plugin --no-git
-
-# With custom author
-lokus-plugin create my-plugin --author "John Doe"
-```
-
-**Templates:**
-
-**basic** - Simple plugin template
-```
-my-plugin/
-├── src/
-│   └── index.ts
-├── package.json
-├── plugin.json
-├── tsconfig.json
-└── README.md
-```
-
-**editor** - Editor extension template with TipTap nodes/marks
-
-**ui** - UI plugin template with panels and webviews
-
-**data-provider** - Data provider template with API integration
-
-### dev
-
-Start development mode with hot reload.
-
-```bash
-lokus-plugin dev [options]
-```
-
-**Options:**
-- `--port <number>` - Development server port (default: 3000)
-- `--open` - Open Lokus automatically
-- `--clean` - Clean build before starting
-- `--verbose` - Verbose logging
-- `--debug` - Enable debug mode
-- `--watch <paths>` - Additional paths to watch
-
-> **Tip:** Use `lokus-plugin link` in your plugin directory to symlink it to the Lokus plugins folder before running `dev`.
-
-**Examples:**
-
-```bash
-# Start dev mode
-lokus-plugin dev
-
-# With custom port
-lokus-plugin dev --port 4000
-
-# Clean build and verbose logging
-lokus-plugin dev --clean --verbose
-
-# Debug mode
-lokus-plugin dev --debug
-```
-
-**Features:**
-- Hot module replacement
-- Automatic reloading on file changes
-- Source map support
-- Live error reporting
-- Performance profiling
-
-### build
-
-Build plugin for production.
-
-```bash
-lokus-plugin build [options]
-```
-
-**Options:**
-- `--mode <mode>` - Build mode (production, development)
-- `--sourcemap` - Generate source maps
-- `--minify` - Minify output
-- `--watch` - Watch mode
-- `--clean` - Clean before build
-- `--analyze` - Analyze bundle size
-
-**Examples:**
-
-```bash
-# Production build
-lokus-plugin build
-
-# Development build with source maps
-lokus-plugin build --mode development --sourcemap
-
-# Watch mode
-lokus-plugin build --watch
-
-# Analyze bundle
-lokus-plugin build --analyze
-```
-
-### validate
-
-Validate plugin manifest and code.
-
-```bash
-lokus-plugin validate [options]
-```
-
-**Options:**
-- `--strict` - Strict validation mode
-- `--fix` - Auto-fix issues where possible
-
-**Checks:**
-- Manifest schema validation
-- Required fields presence
-- Permission declarations
-- Contribution points validity
-- Dependency conflicts
-- Code quality issues
-- Security vulnerabilities
-
-**Examples:**
-
-```bash
-# Basic validation
-lokus-plugin validate
-
-# Strict mode
-lokus-plugin validate --strict
-
-# Auto-fix issues
-lokus-plugin validate --fix
-```
-
-**Output:**
-
-```
-Yes Manifest is valid
-Yes All required fields present
-Yes Permissions are valid
-No Missing description for command 'myPlugin.hello'
-No Unused permission 'network:fetch'
- Consider adding keywords for better discoverability
-
-2 errors, 1 warning
-```
-
-### test
-
-Run plugin tests.
-
-```bash
-lokus-plugin test [options]
-```
-
-**Options:**
-- `-w, --watch` - Watch mode
-- `-c, --coverage` - Generate coverage report
-- `-v, --verbose` - Verbose output
-- `-p, --pattern <pattern>` - Test file pattern
-- `--ui` - Open test UI (Vitest only)
-- `--reporter <name>` - Custom reporter
-- `--updateSnapshot` - Update snapshots
-- `--detectOpenHandles` - Detect open handles (Jest)
-
-**Supported Frameworks:**
-- Vitest (Recommended)
-- Jest
-- Mocha
-- AVA
-
-**Examples:**
-
-```bash
-# Run all tests (auto-detects framework)
-lokus-plugin test
-
-# Watch mode
-lokus-plugin test --watch
-
-# With coverage
-lokus-plugin test --coverage
-
-# Specific tests
-lokus-plugin test --pattern "user-service"
-```
-
-### package
-
-Package plugin for distribution.
-
-```bash
-lokus-plugin package [options]
-```
-
-**Options:**
-- `-o, --out-dir <dir>` - Output directory (default: `dist`)
-- `-f, --format <format>` - Format: `zip`, `tar`, or `both`
-- `-t, --target <target>` - Target: `production` or `development`
-- `--no-minify` - Disable minification
-- `--sourcemap` - Include source maps
-- `--sign` - Sign the package
-- `--verify` - Verify package integrity
-- `--include-source` - Include source code
-- `--include-docs` - Include documentation
-
-**Examples:**
-
-```bash
-# Standard package
-lokus-plugin package
-
-# Development build with source maps
-lokus-plugin package --target development --sourcemap
-
-# Multi-format output
-lokus-plugin package --format both
-
-# Include docs and source
-lokus-plugin package --include-docs --include-source
-```
-
-**Output:**
-
-Creates a `.vsix` file:
-```
-my-plugin-1.0.0.vsix
-```
-
-### publish
-
-Publish plugin to registry.
-
-```bash
-lokus-plugin publish [options]
-```
-
-**Options:**
-- `--token <token>` - Registry access token
-- `--registry <url>` - Registry URL
-- `--tag <tag>` - Publication tag (latest, beta, alpha)
-- `--dry-run` - Simulate publishing without uploading
-
-**Examples:**
-
-```bash
-# Publish to default registry
-lokus-plugin publish --token YOUR_TOKEN
-
-# Publish beta version
-lokus-plugin publish --token YOUR_TOKEN --tag beta
-
-# Dry run
-lokus-plugin publish --dry-run
-
-# Custom registry
-lokus-plugin publish --registry https://registry.example.com
-```
-
-### link
-
-Symlink the current plugin to the Lokus plugins directory for development.
-
-```bash
-lokus-plugin link [options]
-```
-
-**Options:**
-- `--force` - Overwrite existing link
-
-**Example:**
-
-```bash
-# Link current plugin
-lokus-plugin link
-
-# Force link (overwrite existing)
-lokus-plugin link --force
-```
-
-### install
-
-Install plugin locally for testing.
-
-```bash
-lokus-plugin install [path] [options]
-```
-
-**Options:**
-- `--force` - Force installation
-- `--link` - Create symlink instead of copying
-
-**Examples:**
-
-```bash
-# Install from current directory
-lokus-plugin install
-
-# Install from path
-lokus-plugin install ./my-plugin
-
-# Create symlink for development
-lokus-plugin install --link
-```
-
-### uninstall
-
-Uninstall plugin from Lokus.
-
-```bash
-lokus-plugin uninstall <plugin-id>
-```
-
-**Example:**
-
-```bash
-lokus-plugin uninstall mycompany.my-plugin
-```
-
-### list
-
-List installed plugins.
-
-```bash
-lokus-plugin list [options]
-```
-
-**Options:**
-- `--outdated` - Show outdated plugins
-- `--json` - Output as JSON
-
-**Examples:**
-
-```bash
-# List all plugins
-lokus-plugin list
-
-# Show outdated
-lokus-plugin list --outdated
-
-# JSON output
-lokus-plugin list --json
-```
-
-### info
-
-Show plugin information.
-
-```bash
-lokus-plugin info <plugin-id>
-```
-
-**Example:**
-
-```bash
-lokus-plugin info mycompany.my-plugin
-```
-
-**Output:**
-
-```
-Plugin: My Plugin
-ID: mycompany.my-plugin
-Version: 1.0.0
-Author: John Doe
-Description: Amazing plugin for Lokus
-License: MIT
-Dependencies: 3
-Permissions: editor:read, editor:write, ui:create
-Status: Active
-```
-
-### login
-
-Authenticate with plugin registry.
-
-```bash
-lokus-plugin login [options]
-```
-
-**Options:**
-- `--token <token>` - Access token
-- `--registry <url>` - Registry URL
-
-**Example:**
-
-```bash
-lokus-plugin login --token YOUR_TOKEN
-```
-
-### docs
-
-Generate comprehensive documentation for your plugin.
-
-```bash
-lokus-plugin docs [options]
-```
-
-**Options:**
-- `-g, --generator <type>` - Generator type: `typedoc`, `jsdoc`, `custom`, or `auto` (default)
-- `-o, --output <dir>` - Output directory (default: `docs`)
-- `-s, --serve` - Start local server after generation
-- `-p, --port <number>` - Server port (default: 8080)
-- `-w, --watch` - Watch mode
-- `--include-source` - Include source code in docs
-- `--include-examples` - Include examples directory
-- `--theme <theme>` - Documentation theme
-
-**Examples:**
-
-```bash
-# Generate docs (auto-detect)
-lokus-plugin docs
-
-# Serve locally
-lokus-plugin docs --serve
-
-# Use TypeDoc specifically
-lokus-plugin docs --generator typedoc --theme dark
-```
-
-### logout
-
-Logout from plugin registry.
-
-```bash
-lokus-plugin logout
-```
-
-## Configuration
-
-### Config File
-
-Create `.lokuspluginrc` or add to `package.json`:
-
-```json
-{
-  "lokusPlugin": {
-    "manifest": "./plugin.json",
-    "entry": "./src/index.ts",
-    "outDir": "./dist",
-    "target": "es2020",
-    "sourceMap": true,
-    "minify": false,
-    "external": ["lokus"],
-    "assets": ["assets/**/*"],
-    "registry": "https://registry.lokus.dev",
-    "publishConfig": {
-      "access": "public",
-      "tag": "latest"
-    }
-  }
-}
-```
-
-### Environment Variables
-
-```bash
-# Registry token
-LOKUS_PLUGIN_TOKEN=your-token
-
-# Registry URL
-LOKUS_PLUGIN_REGISTRY=https://registry.lokus.dev
-
-# Development settings
-LOKUS_PLUGIN_DEV_PORT=3000
-LOKUS_PLUGIN_DEBUG=true
-```
-
-## NPM Scripts
-
-Add to `package.json`:
-
-```json
-{
-  "scripts": {
-    "dev": "lokus-plugin dev",
-    "build": "lokus-plugin build",
-    "test": "lokus-plugin test",
-    "test:watch": "lokus-plugin test --watch",
-    "test:coverage": "lokus-plugin test --coverage",
-    "validate": "lokus-plugin validate",
-    "package": "lokus-plugin package",
-    "publish": "lokus-plugin publish",
-    "lint": "eslint src --ext .ts",
-    "format": "prettier --write src/**/*.ts"
-  }
-}
-```
-
-Then use:
-
-```bash
-npm run dev
-npm run build
-npm run test
-npm run package
-```
+<Tabs items={['Basics', 'Development', 'Publishing', 'Utility']}>
+
+  <Tab>
+    ### `create`
+    Scaffold a new plugin project.
+
+    ```bash
+    lokus-plugin create <name> [options]
+    ```
+
+    **Options:**
+    - `-y, --yes`: Quick mode (skip prompts)
+    - `--template <name>`: `basic`, `ui`, `editor`
+
+    ### `install`
+    Install a plugin locally.
+
+    ```bash
+    lokus-plugin install <path|id>
+    ```
+  </Tab>
+
+  <Tab>
+    ### `dev`
+    Start the development server with hot-reloading.
+
+    ```bash
+    lokus-plugin dev
+    ```
+
+    <Callout type="warning" emoji="⚠️">
+      **Tip:** Run `lokus-plugin link` first to symlink your plugin to the app!
+    </Callout>
+
+    ### `link`
+    Symlink the current plugin to Lokus for local development.
+
+    ```bash
+    lokus-plugin link [--force]
+    ```
+
+    ### `test`
+    Run the test suite (Vitest/Jest).
+
+    ```bash
+    lokus-plugin test [--watch] [--coverage]
+    ```
+  </Tab>
+
+  <Tab>
+    ### `login`
+    Authenticate with the registry.
+
+    ```bash
+    lokus-plugin login
+    # Follow the interactive prompts
+    ```
+
+    ### `publish`
+    Publish your plugin to the registry.
+
+    ```bash
+    lokus-plugin publish
+    ```
+
+    **Options:**
+    - `--tag <tag>`: `latest`, `beta`, `alpha`
+    - `--dry-run`: Simulate without uploading
+
+    ### `package`
+    Build a `.vsix` file for manual distribution.
+
+    ```bash
+    lokus-plugin package
+    ```
+  </Tab>
+
+  <Tab>
+    ### `docs`
+    Generate documentation website.
+    
+    ```bash
+    lokus-plugin docs --serve
+    ```
+
+    ### `validate`
+    Check your `plugin.json` and code for errors.
+
+    ```bash
+    lokus-plugin validate --strict
+    ```
+
+    ### `info`
+    Show details about a plugin.
+
+    ```bash
+    lokus-plugin info <id>
+    ```
+  </Tab>
+
+</Tabs>
 
 ## CI/CD Integration
 
-### GitHub Actions
+<Callout type="info">
+  Use the `LOKUS_REGISTRY_TOKEN` environment variable in CI environments.
+</Callout>
 
-```yaml
-name: Build and Test
-
-on: [push, pull_request]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Validate
-        run: npm run validate
-
-      - name: Run tests
-        run: npm run test:coverage
-
-      - name: Build
-        run: npm run build
-
-      - name: Package
-        run: npm run package
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: plugin-package
-          path: '*.vsix'
+```yaml filename="github-actions.yml"
+steps:
+  - run: npm install
+  - run: npm run build
+  - run: npm run publish
+    env:
+      LOKUS_REGISTRY_TOKEN: ${{ secrets.LOKUS_TOKEN }}
 ```
-
-### Publish on Release
-
-```yaml
-name: Publish
-
-on:
-  release:
-    types: [published]
-
-jobs:
-  publish:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build
-        run: npm run build
-
-      - name: Publish
-        run: npm run publish
-        env:
-          LOKUS_PLUGIN_TOKEN: ${{ secrets.LOKUS_PLUGIN_TOKEN }}
-```
-
-## Debugging
-
-### Enable Debug Mode
-
-```bash
-# Debug CLI itself
-DEBUG=lokus-plugin:* lokus-plugin dev
-
-# Debug specific module
-DEBUG=lokus-plugin:build lokus-plugin build
-
-# Debug all
-DEBUG=* lokus-plugin dev
-```
-
-### Verbose Output
-
-```bash
-lokus-plugin dev --verbose
-lokus-plugin build --verbose
-lokus-plugin test --verbose
-```
-
-## Troubleshooting
-
-### Build Failures
-
-```bash
-# Clean and rebuild
-lokus-plugin build --clean
-
-# Check for errors
-lokus-plugin validate --strict
-
-# View detailed output
-lokus-plugin build --verbose
-```
-
-### Hot Reload Not Working
-
-```bash
-# Restart with clean build
-lokus-plugin dev --clean
-
-# Check watch paths
-lokus-plugin dev --watch src/**/*.ts
-```
-
-### Package Issues
-
-```bash
-# Verify before packaging
-lokus-plugin validate
-
-# Clean package
-rm -rf dist node_modules
-npm install
-lokus-plugin package
-```
-
-## Resources
-
-- [CLI Source Code](https://github.com/lokus-ai/plugin-cli)
-- [Plugin Development Guide](/developers/plugins/getting-started)
-- [Publishing Guide](/developers/plugins/publishing)
