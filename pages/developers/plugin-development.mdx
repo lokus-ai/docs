@@ -41,13 +41,16 @@ The fastest way to get started:
 
 ```bash
 # Install the Plugin CLI globally
-npm install -g @lokus/plugin-cli
+npm install -g lokus-plugin-cli
 
-# Create your first plugin
-lokus-plugin create my-first-plugin
+# Create your first plugin (Quick Mode)
+lokus-plugin create my-first-plugin -y
 
 # Navigate to plugin directory
 cd my-first-plugin
+
+# Link for development
+lokus-plugin link
 
 # Start development with hot reload
 lokus-plugin dev
@@ -228,328 +231,57 @@ Create `plugin.json`:
 }
 ```
 
-### Step 2: Create the Plugin Class
+### Step 2: Create the Plugin Entry Point
 
 Create `src/index.ts`:
 
 ```typescript
-import { Plugin, PluginContext, BasePlugin } from '@lokus/plugin-sdk'
+import { definePlugin } from '@lokus/plugin-sdk';
 
-/**
- * Hello Plugin - Demonstrates basic plugin functionality
- */
-export default class HelloPlugin extends BasePlugin implements Plugin {
-  /**
-   * Called when plugin is activated
-   */
-  async activate(context: PluginContext): Promise<void> {
-    // Initialize the base plugin (handles subscriptions, logging, etc.)
-    await this.initialize(context)
-
+export default definePlugin({
+  activate(context) {
     // Log activation
-    this.log('info', 'Hello Plugin is activating...')
+    context.log('info', 'Hello Plugin is activating...');
 
     // Register commands
-    this.registerCommands()
+    context.subscriptions.push(
+      context.api.commands.register({
+        id: 'helloPlugin.sayHello',
+        title: 'Say Hello',
+        handler: async () => {
+          const greeting = await context.api.storage.get('greeting', 'Hello');
+          context.api.ui.showNotification({
+            message: `${greeting} from Hello Plugin!`,
+            type: 'success'
+          });
+        }
+      })
+    );
 
-    // Create UI elements
-    this.createUI()
-
-    // Load settings
-    await this.loadSettings()
-
-    // Listen for events
-    this.registerEventListeners()
-
-    this.log('info', 'Hello Plugin activated successfully!')
-  }
-
-  /**
-   * Called when plugin is deactivated
-   */
-  async deactivate(): Promise<void> {
-    this.log('info', 'Hello Plugin is deactivating...')
-
-    // Save any pending state
-    await this.saveSettings()
-
-    // Cleanup is handled automatically by BasePlugin
-    // but you can add custom cleanup here
-
-    this.log('info', 'Hello Plugin deactivated')
-  }
-
-  /**
-   * Register plugin commands
-   */
-  private registerCommands(): void {
-    // Say Hello command
-    this.registerCommand({
-      id: 'helloPlugin.sayHello',
-      title: 'Say Hello',
-      handler: () => this.sayHello()
-    })
-
-    // Insert Greeting command
-    this.registerCommand({
-      id: 'helloPlugin.insertGreeting',
-      title: 'Insert Greeting',
-      handler: () => this.insertGreeting()
-    })
-  }
-
-  /**
-   * Create UI elements
-   */
-  private createUI(): void {
-    // Register a panel in the sidebar
-    this.registerPanel({
-      id: 'helloPlugin.panel',
-      title: 'Hello Panel',
-      type: 'webview',
-      location: 'sidebar',
-      icon: 'heart',
-      html: this.getPanelHTML()
-    })
-
-    // Add a status bar item
-    this.api?.ui.createStatusBarItem({
-      id: 'helloPlugin.status',
-      text: '$(heart) Hello',
-      tooltip: 'Click to say hello',
-      command: 'helloPlugin.sayHello',
-      alignment: 'right',
-      priority: 100
-    })
-  }
-
-  /**
-   * Say hello with notification
-   */
-  private async sayHello(): Promise<void> {
-    // Get greeting from settings
-    const greeting = await this.getSetting<string>('greeting', 'Hello')
-    const showTimestamp = await this.getSetting<boolean>('showTimestamp', true)
-
-    // Build message
-    let message = `${greeting} from Hello Plugin!`
-
-    if (showTimestamp) {
-      const time = new Date().toLocaleTimeString()
-      message += ` (${time})`
-    }
-
-    // Show notification
-    this.api?.ui.showNotification({
-      message,
-      type: 'success',
-      duration: 3000
-    })
-
-    // Log the action
-    this.log('info', 'Said hello to user')
-  }
-
-  /**
-   * Insert greeting into editor
-   */
-  private async insertGreeting(): Promise<void> {
-    try {
-      // Get active editor
-      const editor = await this.api?.editor.getActiveEditor()
-
-      if (!editor) {
-        this.api?.ui.showNotification({
-          message: 'No active editor',
-          type: 'warning'
-        })
-        return
-      }
-
-      // Get greeting from settings
-      const greeting = await this.getSetting<string>('greeting', 'Hello')
-      const timestamp = new Date().toLocaleString()
-
-      // Insert content
-      const content = `${greeting}! (${timestamp})\n`
-      await this.api?.editor.insertContent(content)
-
-      this.log('info', 'Inserted greeting into editor')
-    } catch (error) {
-      this.handleError(error as Error, 'Failed to insert greeting')
-    }
-  }
-
-  /**
-   * Register event listeners
-   */
-  private registerEventListeners(): void {
-    // Listen for file save events
-    this.onEvent('file:save', (data) => {
-      this.log('debug', `File saved: ${data.path}`)
-    })
-
-    // Listen for editor selection changes
-    this.onEvent('editor:selection', (selection) => {
-      this.log('debug', `Selection changed: ${selection.from}-${selection.to}`)
-    })
-
-    // Listen for configuration changes
-    this.onEvent('config:change', async (event) => {
-      if (event.key.startsWith('helloPlugin.')) {
-        this.log('info', `Setting changed: ${event.key}`)
-        // Reload settings if needed
-        await this.loadSettings()
-      }
-    })
-  }
-
-  /**
-   * Load plugin settings
-   */
-  private async loadSettings(): Promise<void> {
-    const greeting = await this.getSetting('greeting')
-    const showTimestamp = await this.getSetting('showTimestamp')
-
-    this.log('debug', `Loaded settings - greeting: ${greeting}, timestamp: ${showTimestamp}`)
-  }
-
-  /**
-   * Save plugin settings
-   */
-  private async saveSettings(): Promise<void> {
-    // Settings are saved automatically, but you can
-    // save custom state here if needed
-    this.log('debug', 'Settings saved')
-  }
-
-  /**
-   * Get HTML content for panel
-   */
-  private getPanelHTML(): string {
-    return `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <style>
-            body {
-              padding: 20px;
-              font-family: var(--font-family);
-              color: var(--text-color);
-              background: var(--background-color);
-              margin: 0;
-            }
-            .container {
-              display: flex;
-              flex-direction: column;
-              gap: 16px;
-            }
-            .header {
-              font-size: 18px;
-              font-weight: 600;
-              margin-bottom: 8px;
-            }
-            .button {
-              background: var(--primary-color);
-              color: white;
-              border: none;
-              padding: 10px 20px;
-              border-radius: 6px;
-              cursor: pointer;
-              font-size: 14px;
-              font-weight: 500;
-              transition: opacity 0.2s;
-            }
-            .button:hover {
-              opacity: 0.9;
-            }
-            .button:active {
-              opacity: 0.8;
-            }
-            .info {
-              padding: 12px;
-              background: var(--background-secondary);
-              border-radius: 6px;
-              font-size: 14px;
-              line-height: 1.5;
-            }
-            .counter {
-              font-size: 32px;
-              font-weight: bold;
-              text-align: center;
-              margin: 20px 0;
-              color: var(--primary-color);
-            }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="header">Welcome to Hello Plugin!</div>
-
-            <div class="info">
-              This is a custom panel created by the Hello Plugin.
-              Click the button below to say hello.
-            </div>
-
-            <div class="counter" id="counter">0</div>
-
-            <button class="button" onclick="handleSayHello()">
+    // Create UI Panel
+    context.subscriptions.push(
+      context.api.ui.registerPanel({
+        id: 'helloPlugin.panel',
+        title: 'Hello Panel',
+        type: 'webview',
+        location: 'sidebar',
+        icon: 'heart',
+        html: `
+          <div style="padding: 20px;">
+            <h2>Hello Plugin</h2>
+            <button onclick="window.parent.postMessage({ command: 'sayHello' }, '*')">
               Say Hello
             </button>
-
-            <button class="button" onclick="handleInsertGreeting()">
-              Insert Greeting
-            </button>
           </div>
+        `
+      })
+    );
+  },
 
-          <script>
-            let count = 0
-
-            // Send messages to plugin host
-            function handleSayHello() {
-              count++
-              document.getElementById('counter').textContent = count
-
-              window.parent.postMessage({
-                command: 'sayHello'
-              }, '*')
-            }
-
-            function handleInsertGreeting() {
-              window.parent.postMessage({
-                command: 'insertGreeting'
-              }, '*')
-            }
-
-            // Receive messages from plugin host
-            window.addEventListener('message', event => {
-              const message = event.data
-
-              switch (message.command) {
-                case 'updateCounter':
-                  count = message.count
-                  document.getElementById('counter').textContent = count
-                  break
-
-                case 'reset':
-                  count = 0
-                  document.getElementById('counter').textContent = count
-                  break
-              }
-            })
-
-            // Notify plugin that panel is ready
-            window.parent.postMessage({
-              command: 'ready'
-            }, '*')
-          </script>
-        </body>
-      </html>
-    `
+  deactivate() {
+    console.log('Hello Plugin deactivated');
   }
-}
+});
 ```
 
 ### Step 3: Configure package.json
@@ -621,22 +353,29 @@ Open Lokus and test your plugin:
 
 The Plugin SDK provides everything you need to build plugins.
 
-### BasePlugin Class
+### Using `definePlugin`
 
-Extend `BasePlugin` for automatic resource management:
+The `definePlugin` helper provides type inference and a cleaner API:
 
 ```typescript
-import { BasePlugin, PluginContext } from '@lokus/plugin-sdk'
+import { definePlugin } from '@lokus/plugin-sdk'
 
-export default class MyPlugin extends BasePlugin {
-  async activate(context: PluginContext) {
-    await this.initialize(context)
-
-    // Access API through this.api
-    // Subscriptions automatically cleaned up
-    // Built-in logging, error handling, etc.
+export default definePlugin({
+  async activate(context) {
+    // Access API through context.api
+    // Subscriptions should be pushed to context.subscriptions
+    
+    context.log('info', 'Plugin activated');
+    
+    context.subscriptions.push(
+      context.api.commands.register({
+        id: 'my.command',
+        title: 'My Command',
+        handler: () => { /* ... */ }
+      })
+    );
   }
-}
+});
 ```
 
 **Benefits of BasePlugin:**

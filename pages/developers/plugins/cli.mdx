@@ -33,6 +33,7 @@ lokus-plugin create <plugin-name> [options]
 
 **Options:**
 - `--template <name>` - Template to use (basic, editor, ui, data-provider)
+- `-y, --yes` - Quick mode (skip prompts, use defaults)
 - `--typescript` - Use TypeScript (default: true)
 - `--git` - Initialize git repository (default: true)
 - `--install` - Install dependencies (default: true)
@@ -89,6 +90,8 @@ lokus-plugin dev [options]
 - `--verbose` - Verbose logging
 - `--debug` - Enable debug mode
 - `--watch <paths>` - Additional paths to watch
+
+> **Tip:** Use `lokus-plugin link` in your plugin directory to symlink it to the Lokus plugins folder before running `dev`.
 
 **Examples:**
 
