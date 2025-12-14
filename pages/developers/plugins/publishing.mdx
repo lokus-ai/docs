@@ -28,7 +28,7 @@ Before publishing:
    - Account on [registry.lokus.dev](https://registry.lokus.dev)
    - Email verified
    - Publisher profile created
-   - Access token generated
+   - **Access Token** generated from [Dashboard > Settings > Tokens](https://registry.lokus.dev/dashboard/settings/tokens)
 
 ## Preparing for Release
 
@@ -212,23 +212,38 @@ Visit [registry.lokus.dev](https://registry.lokus.dev):
 
 ### 2. Generate Token
 
-1. Go to Account Settings
-2. Navigate to Access Tokens
+1. Go to **[Dashboard](https://registry.lokus.dev/dashboard)**
+2. Navigate to **Settings > Tokens**
 3. Click "Generate New Token"
 4. Name: "CLI Publishing"
-5. Permissions: "publish:plugin"
-6. Copy token (shown once)
+5. Permissions: Select `publish:plugin`
+6. Copy the token (starts with `lpt_...`)
+
+> **Note:** Tokens are only shown once. Store them securely.
 
 ### 3. Login via CLI
 
+You can login interactively or via flags:
+
 ```bash
-lokus-plugin login --token YOUR_TOKEN
+# Interactive login (Recommended)
+lokus-plugin login
+
+# Paste your token when prompted
 ```
 
-Or set environment variable:
+Or using the token flag:
 
 ```bash
-export LOKUS_PLUGIN_TOKEN=YOUR_TOKEN
+lokus-plugin login --token lpt_YOUR_TOKEN
+```
+
+This saves your credentials to `~/.lokus/config.json`.
+
+Alternatively, use an environment variable (good for CI/CD):
+
+```bash
+export LOKUS_REGISTRY_TOKEN=lpt_YOUR_TOKEN
 ```
 
 ### 4. Publish
