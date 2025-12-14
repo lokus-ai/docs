@@ -204,15 +204,25 @@ lokus-plugin test [options]
 ```
 
 **Options:**
-- `--watch` - Watch mode
-- `--coverage` - Generate coverage report
-- `--verbose` - Verbose output
-- `--testMatch <pattern>` - Test file pattern
+- `-w, --watch` - Watch mode
+- `-c, --coverage` - Generate coverage report
+- `-v, --verbose` - Verbose output
+- `-p, --pattern <pattern>` - Test file pattern
+- `--ui` - Open test UI (Vitest only)
+- `--reporter <name>` - Custom reporter
+- `--updateSnapshot` - Update snapshots
+- `--detectOpenHandles` - Detect open handles (Jest)
+
+**Supported Frameworks:**
+- Vitest (Recommended)
+- Jest
+- Mocha
+- AVA
 
 **Examples:**
 
 ```bash
-# Run all tests
+# Run all tests (auto-detects framework)
 lokus-plugin test
 
 # Watch mode
@@ -222,7 +232,7 @@ lokus-plugin test --watch
 lokus-plugin test --coverage
 
 # Specific tests
-lokus-plugin test --testMatch "**/*.spec.ts"
+lokus-plugin test --pattern "user-service"
 ```
 
 ### package
@@ -234,25 +244,30 @@ lokus-plugin package [options]
 ```
 
 **Options:**
-- `--out <dir>` - Output directory (default: dist)
-- `--target <target>` - Target platform (all, win32, darwin, linux)
-- `--version <version>` - Override version
-- `--no-verify` - Skip verification
+- `-o, --out-dir <dir>` - Output directory (default: `dist`)
+- `-f, --format <format>` - Format: `zip`, `tar`, or `both`
+- `-t, --target <target>` - Target: `production` or `development`
+- `--no-minify` - Disable minification
+- `--sourcemap` - Include source maps
+- `--sign` - Sign the package
+- `--verify` - Verify package integrity
+- `--include-source` - Include source code
+- `--include-docs` - Include documentation
 
 **Examples:**
 
 ```bash
-# Package plugin
+# Standard package
 lokus-plugin package
 
-# Custom output directory
-lokus-plugin package --out ./releases
+# Development build with source maps
+lokus-plugin package --target development --sourcemap
 
-# Specific platform
-lokus-plugin package --target darwin
+# Multi-format output
+lokus-plugin package --format both
 
-# Override version
-lokus-plugin package --version 1.0.1
+# Include docs and source
+lokus-plugin package --include-docs --include-source
 ```
 
 **Output:**
@@ -421,6 +436,37 @@ lokus-plugin login [options]
 
 ```bash
 lokus-plugin login --token YOUR_TOKEN
+```
+
+### docs
+
+Generate comprehensive documentation for your plugin.
+
+```bash
+lokus-plugin docs [options]
+```
+
+**Options:**
+- `-g, --generator <type>` - Generator type: `typedoc`, `jsdoc`, `custom`, or `auto` (default)
+- `-o, --output <dir>` - Output directory (default: `docs`)
+- `-s, --serve` - Start local server after generation
+- `-p, --port <number>` - Server port (default: 8080)
+- `-w, --watch` - Watch mode
+- `--include-source` - Include source code in docs
+- `--include-examples` - Include examples directory
+- `--theme <theme>` - Documentation theme
+
+**Examples:**
+
+```bash
+# Generate docs (auto-detect)
+lokus-plugin docs
+
+# Serve locally
+lokus-plugin docs --serve
+
+# Use TypeDoc specifically
+lokus-plugin docs --generator typedoc --theme dark
 ```
 
 ### logout
