@@ -843,6 +843,39 @@ npm run test:coverage
 npm test -- index.test.ts
 ```
 
+## Assets and Styles
+
+### Using Static Assets
+
+Plugins can load images, fonts, and other static assets from their directory. Use `context.assetUri` to resolve paths:
+
+```typescript
+export default definePlugin({
+  activate(context) {
+    // Construct asset URL
+    const iconUrl = `${context.assetUri}/assets/icon.png`;
+    
+    context.api.ui.registerPanel({
+      // ...
+      html: `<img src="${iconUrl}" />`
+    });
+  }
+});
+```
+
+### Styling
+
+Lokus automatically loads `style.css`, `styles.css`, or `index.css` from your plugin root.
+
+```css
+/* style.css */
+.my-plugin-container {
+  padding: 20px;
+  background: var(--background-secondary);
+  color: var(--text-primary);
+}
+```
+
 ## Debugging Plugins
 
 ### Enable Debug Mode

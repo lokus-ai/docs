@@ -11,23 +11,23 @@ Complete reference for the Lokus Plugin API. All plugins receive an `api` object
 ## Getting the API
 
 ```typescript
-import { Plugin, PluginContext, LokusAPI } from '@lokus/plugin-sdk'
+import { definePlugin } from '@lokus/plugin-sdk'
 
-export default class MyPlugin implements Plugin {
-  private api!: LokusAPI
-
-  async activate(context: PluginContext) {
-    // Access the API
-    this.api = context.api
+export default definePlugin({
+  async activate(context) {
+    // Access the API directly from context
+    const api = context.api
 
     // Use any API
-    await this.api.commands.register({
-      id: 'myPlugin.hello',
-      title: 'Say Hello',
-      handler: () => this.api.ui.showNotification('Hello!', 'info')
-    })
+    context.subscriptions.push(
+      api.commands.register({
+        id: 'myPlugin.hello',
+        title: 'Say Hello',
+        handler: () => api.ui.showNotification('Hello!', 'info')
+      })
+    )
   }
-}
+})
 ```
 
 ## API Overview
@@ -56,7 +56,34 @@ Additional APIs (Lokus 2.0+):
 | [Configuration](#configuration-api) | Settings management |
 | [Terminal](#terminal-api) | Terminal operations |
 
+## Runtime Environment
+
+Plugins run in a secure sandbox with access to specific globals and resources.
+
+### Globals
+
+*   **Standard JS**: `console`, `setTimeout`, `setInterval`, `Promise`, `JSON`, etc.
+*   **Lokus SDK**: `window.LokusSDK` (automatically aliased in imports).
+*   **React**: `window.React` and `window.ReactDOM` are available globally.
+
+### CSS Loading
+
+The runtime automatically loads and injects styles from the following files if they exist in your plugin root:
+*   `style.css`
+*   `styles.css`
+*   `index.css`
+
+### Asset Loading
+
+To load static assets (images, icons) from your plugin directory, use the `assetUri` provided in the context:
+
+```typescript
+const imageUrl = `${context.assetUri}/assets/icon.png`;
+```
+
 ---
+
+## API Overview
 
 ## Commands API
 
