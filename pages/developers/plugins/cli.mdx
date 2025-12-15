@@ -3,7 +3,7 @@ title: CLI Reference
 description: The essential command-line tool for Lokus plugin development.
 ---
 
-import { Tabs, Tab, Callout, Steps } from 'nextra/components'
+import { Tabs, Callout, Steps } from 'nextra/components'
 
 # CLI Reference
 
@@ -28,7 +28,7 @@ The `lokus-plugin` CLI is your primary tool for creating, building, and publishi
 
 <Tabs items={['Basics', 'Development', 'Publishing', 'Utility']}>
 
-  <Tab>
+  <Tabs.Tab>
     ### `create`
     Scaffold a new plugin project.
 
@@ -46,9 +46,9 @@ The `lokus-plugin` CLI is your primary tool for creating, building, and publishi
     ```bash
     lokus-plugin install <path|id>
     ```
-  </Tab>
+  </Tabs.Tab>
 
-  <Tab>
+  <Tabs.Tab>
     ### `dev`
     Start the development server with hot-reloading.
 
@@ -73,9 +73,9 @@ The `lokus-plugin` CLI is your primary tool for creating, building, and publishi
     ```bash
     lokus-plugin test [--watch] [--coverage]
     ```
-  </Tab>
+  </Tabs.Tab>
 
-  <Tab>
+  <Tabs.Tab>
     ### `login`
     Authenticate with the registry.
 
@@ -101,9 +101,9 @@ The `lokus-plugin` CLI is your primary tool for creating, building, and publishi
     ```bash
     lokus-plugin package
     ```
-  </Tab>
+  </Tabs.Tab>
 
-  <Tab>
+  <Tabs.Tab>
     ### `docs`
     Generate documentation website.
     
@@ -124,7 +124,7 @@ The `lokus-plugin` CLI is your primary tool for creating, building, and publishi
     ```bash
     lokus-plugin info <id>
     ```
-  </Tab>
+  </Tabs.Tab>
 
 </Tabs>
 

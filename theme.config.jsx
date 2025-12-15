@@ -1,3 +1,5 @@
+import { useConfig } from 'nextra-theme-docs'
+
 export default {
   logo: (
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -24,50 +26,16 @@ export default {
   docsRepositoryBase: 'https://github.com/lokus-ai/docs',
   useNextSeoProps() {
     return {
-      titleTemplate: '%s – Lokus Documentation',
-      defaultTitle: 'Lokus Documentation – Local-First Knowledge Management',
-      description: 'Comprehensive documentation for Lokus - a powerful, privacy-first knowledge management system with advanced features including interactive graph visualization, AI integration, databases, canvas, and more.',
-      openGraph: {
-        type: 'website',
-        locale: 'en_US',
-        url: 'https://docs.lokus.dev',
-        siteName: 'Lokus Documentation',
-        images: [
-          {
-            url: 'https://docs.lokus.dev/og-image.png',
-            width: 1200,
-            height: 630,
-            alt: 'Lokus Documentation'
-          }
-        ]
-      },
-      twitter: {
-        handle: '@lokus_ai',
-        site: '@lokus_ai',
-        cardType: 'summary_large_image'
-      },
-      additionalMetaTags: [
-        {
-          name: 'viewport',
-          content: 'width=device-width, initial-scale=1.0'
-        },
-        {
-          name: 'keywords',
-          content: 'lokus, knowledge management, note-taking, markdown editor, wiki links, graph visualization, local-first, privacy, tauri, rust, documentation'
-        },
-        {
-          name: 'author',
-          content: 'Lokus Team'
-        },
-        {
-          name: 'theme-color',
-          content: '#6366f1'
-        }
-      ]
+      titleTemplate: '%s – Lokus Documentation'
     }
   },
   head: (
     <>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <meta httpEquiv="Content-Language" content="en" />
+      <meta name="description" content="Lokus Documentation: Local-First Knowledge Management" />
+      <meta name="og:title" content="Lokus Documentation" />
+      <meta name="og:description" content="Lokus Documentation: Local-First Knowledge Management" />
       <link rel="icon" href="/logo.svg" type="image/svg+xml" />
       <link rel="apple-touch-icon" href="/logo.svg" />
       <meta name="msapplication-TileColor" content="#6366f1" />
