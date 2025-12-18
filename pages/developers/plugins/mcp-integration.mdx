@@ -31,7 +31,7 @@ import {
   MCPToolBuilder,
   MCPPromptBuilder,
   MCPServer
-} from '@lokus/plugin-sdk'
+} from 'lokus-plugin-sdk'
 
 export default class MyMCPPlugin implements Plugin {
   private mcpServer?: MCPServer
@@ -534,7 +534,7 @@ const exportTool = new MCPToolBuilder()
 Test your MCP tools with the built-in testing framework:
 
 ```typescript
-import { createMockContext, TestHelper } from '@lokus/plugin-sdk/testing'
+import { createMockContext, TestHelper } from 'lokus-plugin-sdk/testing'
 
 describe('MCP Integration', () => {
   let context: PluginContext

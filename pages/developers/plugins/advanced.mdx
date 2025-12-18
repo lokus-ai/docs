@@ -121,7 +121,7 @@ Built-in testing utilities for comprehensive plugin testing:
 ### Basic Testing
 
 ```typescript
-import { createMockContext, TestHelper } from '@lokus/plugin-sdk/testing'
+import { createMockContext, TestHelper } from 'lokus-plugin-sdk/testing'
 
 describe('MyPlugin', () => {
   let context: PluginContext
@@ -241,11 +241,11 @@ lokus-plugin publish
 Full TypeScript definitions included:
 
 ```bash
-npm install --save-dev @lokus/plugin-sdk
+npm install --save-dev lokus-plugin-sdk
 ```
 
 ```typescript
-import { Plugin, PluginContext } from '@lokus/plugin-sdk'
+import { Plugin, PluginContext } from 'lokus-plugin-sdk'
 
 export default class MyPlugin implements Plugin {
   async activate(context: PluginContext) {
@@ -504,7 +504,7 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 // Lokus (similar API)
-import { Plugin, PluginContext } from '@lokus/plugin-sdk'
+import { Plugin, PluginContext } from 'lokus-plugin-sdk'
 
 export default class MyPlugin implements Plugin {
   async activate(context: PluginContext) {

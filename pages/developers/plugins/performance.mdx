@@ -105,7 +105,7 @@ Lokus v1.3 supports WebAssembly modules for compute-intensive operations, provid
 ### Loading WASM Modules
 
 ```typescript
-import { Plugin, PluginContext } from '@lokus/plugin-sdk'
+import { Plugin, PluginContext } from 'lokus-plugin-sdk'
 
 export default class WasmPlugin implements Plugin {
   private wasmModule?: any
@@ -227,7 +227,7 @@ impl TextAnalyzer {
 ### Using Rust WASM in Plugin
 
 ```typescript
-import { Plugin, PluginContext } from '@lokus/plugin-sdk'
+import { Plugin, PluginContext } from 'lokus-plugin-sdk'
 import init, { TextAnalyzer } from './wasm/text_analyzer'
 
 export default class TextAnalyzerPlugin implements Plugin {
@@ -275,7 +275,7 @@ Offload heavy computations to worker threads to keep UI responsive.
 
 ```typescript
 // worker.ts - Worker thread code
-import { expose } from '@lokus/plugin-sdk/worker'
+import { expose } from 'lokus-plugin-sdk/worker'
 
 const workerAPI = {
   async processLargeFile(content: string) {
@@ -309,8 +309,8 @@ expose(workerAPI)
 ### Main Plugin Code
 
 ```typescript
-import { Plugin, PluginContext } from '@lokus/plugin-sdk'
-import { wrap } from '@lokus/plugin-sdk/worker'
+import { Plugin, PluginContext } from 'lokus-plugin-sdk'
+import { wrap } from 'lokus-plugin-sdk/worker'
 import type { Remote } from 'comlink'
 
 export default class WorkerPlugin implements Plugin {
@@ -370,7 +370,7 @@ Reduce unnecessary computations:
 
 ```typescript
 // Use built-in debounce utilities
-import { debounce } from '@lokus/plugin-sdk/utils'
+import { debounce } from 'lokus-plugin-sdk/utils'
 
 const debouncedHandler = debounce((text) => {
   // Process text
@@ -401,7 +401,7 @@ function expensiveOperation(key: string) {
 }
 
 // LRU cache with size limit
-import { LRUCache } from '@lokus/plugin-sdk/cache'
+import { LRUCache } from 'lokus-plugin-sdk/cache'
 
 const lruCache = new LRUCache({ max: 100 })
 
@@ -415,7 +415,7 @@ function cachedComputation(key: string) {
 For large lists, use virtual scrolling:
 
 ```typescript
-import { VirtualList } from '@lokus/plugin-sdk/ui'
+import { VirtualList } from 'lokus-plugin-sdk/ui'
 
 const list = new VirtualList({
   container: containerElement,
@@ -434,7 +434,7 @@ const list = new VirtualList({
 Limit execution frequency:
 
 ```typescript
-import { throttle } from '@lokus/plugin-sdk/utils'
+import { throttle } from 'lokus-plugin-sdk/utils'
 
 const throttledHandler = throttle((event) => {
   // Handle scroll event
