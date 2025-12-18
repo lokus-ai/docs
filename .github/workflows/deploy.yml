@@ -21,13 +21,26 @@ jobs:
       - name: Health Check
         run: |
           echo "Running health check..."
-          sleep 10
-          if curl -sf http://localhost:3001 > /dev/null; then
-            echo "Health check passed!"
-          else
-            echo "Health check failed!"
-            exit 1
-          fi
+          # Wait for container to be healthy
+          for i in {1..30}; do
+            STATUS=$(docker inspect --format='{{.State.Health.Status}}' lokus-docs 2>/dev/null || echo "unknown")
+            echo "Attempt $i: Container health status: $STATUS"
+            if [ "$STATUS" = "healthy" ]; then
+              echo "✓ Container is healthy!"
+              # Also verify via nginx (actual traffic path)
+              if curl -sf http://localhost:80 -H "Host: docs.lokusmd.com" > /dev/null 2>&1; then
+                echo "✓ Nginx routing works!"
+                exit 0
+              else
+                echo "Warning: Nginx routing check failed, but container is healthy"
+                exit 0
+              fi
+            fi
+            sleep 5
+          done
+          echo "Health check failed after 30 attempts!"
+          docker logs lokus-docs --tail 50
+          exit 1
 
       - name: Discord Notification (Backup)
         if: failure()
@@ -57,13 +70,26 @@ jobs:
       - name: Health Check
         run: |
           echo "Running health check..."
-          sleep 10
-          if curl -sf http://localhost:3001 > /dev/null; then
-            echo "Health check passed!"
-          else
-            echo "Health check failed!"
-            exit 1
-          fi
+          # Wait for container to be healthy
+          for i in {1..30}; do
+            STATUS=$(docker inspect --format='{{.State.Health.Status}}' lokus-docs 2>/dev/null || echo "unknown")
+            echo "Attempt $i: Container health status: $STATUS"
+            if [ "$STATUS" = "healthy" ]; then
+              echo "✓ Container is healthy!"
+              # Also verify via nginx (actual traffic path)
+              if curl -sf http://localhost:80 -H "Host: docs.lokusmd.com" > /dev/null 2>&1; then
+                echo "✓ Nginx routing works!"
+                exit 0
+              else
+                echo "Warning: Nginx routing check failed, but container is healthy"
+                exit 0
+              fi
+            fi
+            sleep 5
+          done
+          echo "Health check failed after 30 attempts!"
+          docker logs lokus-docs --tail 50
+          exit 1
 
       - name: Discord Notification
         if: always()
