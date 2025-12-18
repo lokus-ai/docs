@@ -1,0 +1,520 @@
+---
+title: "QuickPick Component"
+description: "Searchable selection dialog for choosing from a list"
+---
+
+# QuickPick Component
+
+The QuickPick component provides a searchable, keyboard-navigable selection dialog. It supports single and multiple selection, fuzzy filtering, and rich item metadata.
+
+## Usage
+
+Show a QuickPick using `api.ui.showQuickPick()`:
+
+```javascript
+const selected = await api.ui.showQuickPick(items, options);
+```
+
+## Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `items` | `Array\\<string \| QuickPickItem\\>` | Yes | Items to display |
+| `options` | `object` | No | Configuration options |
+
+## QuickPickItem Structure
+
+```typescript
+interface QuickPickItem {
+  label: string;          // Main display text
+  description?: string;   // Secondary text (right-aligned)
+  detail?: string;        // Additional detail line (below label)
+  icon?: string;          // Icon (emoji or text)
+}
+```
+
+### Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `label` | `string` | Main label text (always visible) |
+| `description` | `string` | Secondary text shown on the same line as label (dimmed) |
+| `detail` | `string` | Additional detail text shown below label (smaller, dimmed) |
+| `icon` | `string` | Icon displayed before the label |
+
+## Options
+
+```typescript
+interface QuickPickOptions {
+  title?: string;              // Dialog title
+  placeholder?: string;        // Input placeholder text
+  canPickMany?: boolean;       // Allow multiple selection
+  matchOnDescription?: boolean; // Include description in search
+  matchOnDetail?: boolean;     // Include detail in search
+}
+```
+
+### Available Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `title` | `string` | - | Title displayed at top of dialog |
+| `placeholder` | `string` | `'Select an item...'` | Placeholder text in search input |
+| `canPickMany` | `boolean` | `false` | Enable multi-select with checkboxes |
+| `matchOnDescription` | `boolean` | `false` | Include description field in search |
+| `matchOnDetail` | `boolean` | `false` | Include detail field in search |
+
+## Return Value
+
+Returns `Promise\\<QuickPickItem | QuickPickItem[] | undefined\\>`:
+- **Single selection** (`canPickMany: false`): Returns selected item or `undefined` if cancelled
+- **Multiple selection** (`canPickMany: true`): Returns array of selected items or `undefined` if cancelled
+
+## Basic Example
+
+```javascript
+const selected = await api.ui.showQuickPick(
+  ['Option 1', 'Option 2', 'Option 3'],
+  {
+    title: 'Choose an Option',
+    placeholder: 'Select one...'
+  }
+);
+
+if (selected) {
+  console.log('Selected:', selected);
+}
+```
+
+## Rich Items Example
+
+```javascript
+const selected = await api.ui.showQuickPick(
+  [
+    {
+      label: 'Create New File',
+      description: 'Ctrl+N',
+      detail: 'Create a new file in the current workspace',
+      icon: '📄'
+    },
+    {
+      label: 'Open File',
+      description: 'Ctrl+O',
+      detail: 'Open an existing file',
+      icon: '📂'
+    },
+    {
+      label: 'Save All',
+      description: 'Ctrl+Shift+S',
+      detail: 'Save all modified files',
+      icon: '💾'
+    }
+  ],
+  {
+    title: 'File Actions',
+    placeholder: 'Type to search actions...',
+    matchOnDescription: true,
+    matchOnDetail: true
+  }
+);
+
+if (selected) {
+  console.log('User chose:', selected.label);
+}
+```
+
+## Multi-Select Example
+
+```javascript
+const selected = await api.ui.showQuickPick(
+  [
+    { label: 'JavaScript', icon: '📜' },
+    { label: 'TypeScript', icon: '📘' },
+    { label: 'Python', icon: '🐍' },
+    { label: 'Rust', icon: '🦀' },
+    { label: 'Go', icon: '🔵' }
+  ],
+  {
+    title: 'Select Languages',
+    placeholder: 'Choose one or more languages...',
+    canPickMany: true
+  }
+);
+
+if (selected && selected.length > 0) {
+  console.log(`Selected ${selected.length} languages:`, selected);
+  selected.forEach(item => {
+    console.log(`  ${item.icon} $\\{item.label\\}`);
+  });
+}
+```
+
+## Command Palette Example
+
+```javascript
+// Create a command palette for your plugin
+async function showCommandPalette(api) {
+  const commands = [
+    {
+      label: 'Export Data',
+      description: 'JSON',
+      detail: 'Export current data as JSON file',
+      icon: '📤'
+    },
+    {
+      label: 'Import Data',
+      description: 'JSON',
+      detail: 'Import data from JSON file',
+      icon: '📥'
+    },
+    {
+      label: 'Clear Cache',
+      description: 'Storage',
+      detail: 'Clear all cached data',
+      icon: '🗑️'
+    },
+    {
+      label: 'Settings',
+      description: 'Configure',
+      detail: 'Open plugin settings',
+      icon: '⚙️'
+    }
+  ];
+
+  const selected = await api.ui.showQuickPick(commands, {
+    title: 'Plugin Commands',
+    placeholder: 'Type to search commands...',
+    matchOnDescription: true,
+    matchOnDetail: true
+  });
+
+  if (selected) {
+    switch (selected.label) {
+      case 'Export Data':
+        await exportData(api);
+        break;
+      case 'Import Data':
+        await importData(api);
+        break;
+      case 'Clear Cache':
+        await clearCache(api);
+        break;
+      case 'Settings':
+        await openSettings(api);
+        break;
+    }
+  }
+}
+```
+
+## Dynamic Items Example
+
+```javascript
+// Load items asynchronously
+async function showFileQuickPick(api) {
+  // Show loading state
+  api.ui.showInformationMessage('Loading files...');
+
+  // Fetch files
+  const files = await api.workspace.findFiles('**/*');
+
+  // Convert to QuickPick items
+  const items = files.map(file => ({
+    label: file.name,
+    description: file.path,
+    detail: `Size: ${file.size} bytes, Modified: $\\{file.modified\\}`,
+    icon: getFileIcon(file.extension)
+  }));
+
+  // Show QuickPick
+  const selected = await api.ui.showQuickPick(items, {
+    title: 'Open File',
+    placeholder: 'Search for a file...',
+    matchOnDescription: true
+  });
+
+  if (selected) {
+    await api.workspace.openDocument(selected.description);
+  }
+}
+
+function getFileIcon(extension) {
+  const icons = {
+    'js': '📜', 'ts': '📘', 'json': '📋',
+    'md': '📝', 'txt': '📄', 'png': '🖼️'
+  };
+  return icons[extension] || '📄';
+}
+```
+
+## Keyboard Navigation
+
+The QuickPick supports full keyboard navigation:
+
+| Key | Action |
+|-----|--------|
+| `↑` / `↓` | Navigate up/down through items |
+| `Enter` | Select highlighted item (or confirm multi-select) |
+| `Escape` | Cancel and close dialog |
+| `Space` | Toggle item in multi-select mode |
+| `Type` | Filter items by typing |
+
+## Search Behavior
+
+By default, search matches only on the `label` field:
+
+```javascript
+// Only searches labels
+await api.ui.showQuickPick(items, {
+  placeholder: 'Type to filter...'
+});
+```
+
+Enable searching on additional fields:
+
+```javascript
+// Search labels, descriptions, and details
+await api.ui.showQuickPick(items, {
+  placeholder: 'Type to filter...',
+  matchOnDescription: true,
+  matchOnDetail: true
+});
+```
+
+Search is case-insensitive and matches substrings:
+- Typing "file" matches "New File", "file.js", "Profile"
+- Typing "ctrl" matches items with "Ctrl+N" in any searchable field
+
+## Multi-Select Mode
+
+When `canPickMany: true`:
+
+1. Items show checkboxes
+2. Click or press `Space` to toggle selection
+3. Selected items are highlighted
+4. Press `Enter` or click "Select N items" button to confirm
+5. Press `Escape` to cancel
+
+```javascript
+const languages = await api.ui.showQuickPick(
+  ['JavaScript', 'Python', 'Ruby', 'Go', 'Rust'],
+  {
+    title: 'Select Languages',
+    canPickMany: true
+  }
+);
+
+// languages is an array of selected strings
+if (languages && languages.length > 0) {
+  console.log('Selected:', languages);
+}
+```
+
+## Styling
+
+The QuickPick uses the following CSS variables:
+
+```css
+/* Container */
+--panel                       /* Background color */
+--border                      /* Border color */
+--radius                      /* Border radius */
+
+/* Text */
+--text                        /* Main text color */
+--text-secondary              /* Description color */
+--muted                       /* Detail text color */
+
+/* Input */
+--bg                          /* Input background */
+--accent                      /* Focus border color */
+
+/* Items */
+--accent                      /* Selected/hover background (with opacity) */
+
+/* Footer */
+--panel-secondary             /* Footer background */
+--accent-fg                   /* Button text color */
+```
+
+## Advanced Patterns
+
+### Grouped Items
+
+Simulate groups using separators:
+
+```javascript
+const items = [
+  { label: 'Recent Files', description: '', detail: '' },
+  { label: 'document.md', description: 'Documents', icon: '📝' },
+  { label: 'notes.md', description: 'Documents', icon: '📝' },
+  { label: '---', description: '', detail: '' }, // Separator
+  { label: 'All Files', description: '', detail: '' },
+  { label: 'project.json', description: 'Config', icon: '📋' },
+  { label: 'README.md', description: 'Root', icon: '📄' }
+];
+```
+
+### Contextual Icons
+
+Use icons to indicate state or type:
+
+```javascript
+const items = files.map(file => ({
+  label: file.name,
+  icon: file.isModified ? '●' : file.isNew ? '+' : '○',
+  description: file.path
+}));
+```
+
+### Custom Sorting
+
+Pre-sort items for better UX:
+
+```javascript
+// Sort by recently used
+items.sort((a, b) => b.lastUsed - a.lastUsed);
+
+// Or alphabetically
+items.sort((a, b) => a.label.localeCompare(b.label));
+```
+
+### Cancellation Handling
+
+```javascript
+const result = await api.ui.showQuickPick(items, options);
+
+if (result === undefined) {
+  // User cancelled - handle gracefully
+  console.log('Operation cancelled by user');
+  return;
+}
+
+// Process selection
+console.log('User selected:', result);
+```
+
+## Best Practices
+
+### 1. Provide Helpful Metadata
+
+Use `description` and `detail` to give context:
+
+```javascript
+{
+  label: 'Export',
+  description: 'JSON',  // Format
+  detail: 'Export current workspace as JSON file'  // Full description
+}
+```
+
+### 2. Use Meaningful Icons
+
+Icons help users scan quickly:
+
+```javascript
+const items = [
+  { label: 'New File', icon: '📄' },
+  { label: 'New Folder', icon: '📁' },
+  { label: 'Settings', icon: '⚙️' }
+];
+```
+
+### 3. Enable Smart Search
+
+For complex items, enable additional search fields:
+
+```javascript
+await api.ui.showQuickPick(items, {
+  matchOnDescription: true,  // Search shortcuts
+  matchOnDetail: true        // Search descriptions
+});
+```
+
+### 4. Keep Items Concise
+
+Avoid very long labels:
+
+```javascript
+// Good
+{ label: 'long-filename.js', description: 'src/utils' }
+
+// Bad
+{ label: 'src/utils/helpers/long-filename.js' }
+```
+
+### 5. Handle Empty Results
+
+```javascript
+const files = await loadFiles();
+if (files.length === 0) {
+  api.ui.showInformationMessage('No files found');
+  return;
+}
+
+const selected = await api.ui.showQuickPick(files, options);
+```
+
+## Performance Tips
+
+### 1. Limit Item Count
+
+For very large lists, consider pagination or filtering:
+
+```javascript
+// Show only first 100 results
+const items = allItems.slice(0, 100);
+```
+
+### 2. Lazy Load Details
+
+Don't compute expensive details until needed:
+
+```javascript
+const items = files.map(file => ({
+  label: file.name,
+  description: file.path,
+  get detail() {
+    // Computed on access
+    return `Size: ${computeSize(file)} • Modified: $\\{file.modified\\}`;
+  }
+}));
+```
+
+### 3. Debounce Dynamic Loading
+
+If loading items based on input:
+
+```javascript
+let timeout;
+input.addEventListener('input', (e) => {
+  clearTimeout(timeout);
+  timeout = setTimeout(async () => {
+    const results = await search(e.target.value);
+    updateItems(results);
+  }, 300);
+});
+```
+
+## Troubleshooting
+
+### Dialog doesn't appear
+Ensure `showQuickPick` is awaited and items array is not empty:
+```javascript
+await api.ui.showQuickPick([...], {...});
+```
+
+### Search not working on all fields
+Enable `matchOnDescription` and `matchOnDetail` options.
+
+### Multi-select not showing checkboxes
+Set `canPickMany: true` in options.
+
+### Items not showing icons
+Ensure `icon` property is set on each item.
+
+## See Also
+
+- [UIAPI Reference](/developers/plugins/api-reference/ui-api)
+- [Component Overview](/developers/plugins/components)
+- [UI Plugins Guide](/developers/plugins/ui-plugins)

@@ -141,10 +141,16 @@ interface PluginContext {
 
 ### deactivate() Method
 
+Proper cleanup is essential for all resources, especially with the new APIs:
+
 ```typescript
 export default class MyPlugin implements Plugin {
   private timers: NodeJS.Timeout[] = []
   private watchers: Disposable[] = []
+  private terminals: Terminal[] = []
+  private statusBarItems: StatusBarItem[] = []
+  private treeViews: TreeView[] = []
+  private outputChannels: OutputChannel[] = []
 
   async activate(context: PluginContext) {
     // Setup...
@@ -153,18 +159,34 @@ export default class MyPlugin implements Plugin {
   async deactivate() {
     console.log('Plugin deactivating...')
 
-    // Clear timers
+    // Clear timers and intervals
     this.timers.forEach(timer => clearTimeout(timer))
     this.timers = []
 
-    // Dispose watchers
+    // Dispose file watchers
     this.watchers.forEach(watcher => watcher.dispose())
     this.watchers = []
 
-    // Close connections
+    // Dispose terminals
+    this.terminals.forEach(terminal => terminal.dispose())
+    this.terminals = []
+
+    // Dispose status bar items
+    this.statusBarItems.forEach(item => item.dispose())
+    this.statusBarItems = []
+
+    // Dispose tree views
+    this.treeViews.forEach(view => view.dispose())
+    this.treeViews = []
+
+    // Dispose output channels
+    this.outputChannels.forEach(channel => channel.dispose())
+    this.outputChannels = []
+
+    // Close network connections
     await this.closeConnections()
 
-    // Save state
+    // Save state before exit
     await this.saveState()
 
     console.log('Plugin deactivated')
@@ -240,12 +262,12 @@ context.api.workspace.onDidChangeWorkspaceFolders(event => {
 
 // Configuration changed
 context.api.config.onDidChange((key, value) => {
-  console.log(`Config changed: ${key} = ${value}`)
+  console.log(`Config changed: ${key} = $\\{value\\}`)
 })
 
 // File system events
 context.api.fs.watch('/path', event => {
-  console.log(`File ${event.type}: ${event.path}`)
+  console.log(`File ${event.type}: $\\{event.path\\}`)
 })
 ```
 
@@ -547,15 +569,173 @@ describe('Plugin Lifecycle', () => {
 })
 ```
 
+## Cleanup Patterns for New APIs
+
+### Terminal Cleanup
+
+```typescript
+class MyPlugin {
+  private terminals: Map<string, Terminal> = new Map()
+
+  createBuildTerminal() {
+    const terminal = this.context.terminal.createTerminal({
+      name: 'Build',
+      cwd: this.context.workspace?.rootPath
+    })
+    this.terminals.set('build', terminal)
+    return terminal
+  }
+
+  async deactivate() {
+    // Close all terminals
+    for (const [name, terminal] of this.terminals) {
+      terminal.dispose()
+    }
+    this.terminals.clear()
+  }
+}
+```
+
+### Tree View Cleanup
+
+```typescript
+class MyPlugin {
+  private treeView?: TreeView
+
+  registerExplorer() {
+    this.treeView = this.context.ui.createTreeView('myPlugin.explorer', {
+      treeDataProvider: this.treeDataProvider
+    })
+  }
+
+  async deactivate() {
+    // Dispose tree view
+    if (this.treeView) {
+      this.treeView.dispose()
+      this.treeView = undefined
+    }
+  }
+}
+```
+
+### Status Bar Cleanup
+
+```typescript
+class MyPlugin {
+  private statusBarItem?: StatusBarItem
+
+  createStatusBar() {
+    this.statusBarItem = this.context.ui.createStatusBarItem('left', 100)
+    this.statusBarItem.text = '$(check) Ready'
+    this.statusBarItem.show()
+  }
+
+  async deactivate() {
+    // Dispose status bar item
+    if (this.statusBarItem) {
+      this.statusBarItem.dispose()
+      this.statusBarItem = undefined
+    }
+  }
+}
+```
+
+### Language Provider Cleanup
+
+```typescript
+class MyPlugin {
+  private languageProviders: Disposable[] = []
+
+  registerLanguageFeatures() {
+    // Register completion provider
+    const completionProvider = this.context.languages.registerCompletionProvider(
+      'markdown',
+      this.completionProvider
+    )
+    this.languageProviders.push(completionProvider)
+
+    // Register hover provider
+    const hoverProvider = this.context.languages.registerHoverProvider(
+      'markdown',
+      this.hoverProvider
+    )
+    this.languageProviders.push(hoverProvider)
+  }
+
+  async deactivate() {
+    // Dispose all language providers
+    this.languageProviders.forEach(provider => provider.dispose())
+    this.languageProviders = []
+  }
+}
+```
+
+### Output Channel Cleanup
+
+```typescript
+class MyPlugin {
+  private outputChannel?: OutputChannel
+
+  setupLogging() {
+    this.outputChannel = this.context.ui.createOutputChannel('My Plugin')
+    this.outputChannel.appendLine('Plugin initialized')
+  }
+
+  async deactivate() {
+    // Dispose output channel
+    if (this.outputChannel) {
+      this.outputChannel.dispose()
+      this.outputChannel = undefined
+    }
+  }
+}
+```
+
+### Event Listener Cleanup
+
+```typescript
+class MyPlugin {
+  private eventSubscriptions: Disposable[] = []
+
+  setupEventListeners() {
+    // Terminal events
+    const terminalDisposed = this.context.terminal.onDidCloseTerminal((terminal) => {
+      console.log('Terminal closed:', terminal.name)
+    })
+    this.eventSubscriptions.push(terminalDisposed)
+
+    // Configuration changes
+    const configChanged = this.context.config.onDidChange((e) => {
+      console.log('Config changed:', e.key)
+    })
+    this.eventSubscriptions.push(configChanged)
+
+    // Theme changes
+    const themeChanged = this.context.themes.onDidChangeTheme((theme) => {
+      console.log('Theme changed:', theme.id)
+    })
+    this.eventSubscriptions.push(themeChanged)
+  }
+
+  async deactivate() {
+    // Dispose all event listeners
+    this.eventSubscriptions.forEach(sub => sub.dispose())
+    this.eventSubscriptions = []
+  }
+}
+```
+
 ## Best Practices
 
 1. **Fast Activation** - Keep activation code minimal
-2. **Cleanup Resources** - Always dispose resources in deactivate
+2. **Cleanup All Resources** - Dispose terminals, tree views, status bars, language providers, and event listeners
 3. **Handle Errors** - Gracefully handle activation/deactivation errors
 4. **Use Subscriptions** - Leverage context.subscriptions for auto-cleanup
 5. **State Management** - Use provided state APIs, not global variables
 6. **Background Tasks** - Clean up timers and intervals
-7. **Test Lifecycle** - Write tests for activation/deactivation
+7. **Event Listeners** - Always unsubscribe from events in deactivate
+8. **UI Elements** - Dispose all UI elements (status bars, tree views, output channels)
+9. **Test Lifecycle** - Write tests for activation/deactivation with all resources
 
 ## Resources
 

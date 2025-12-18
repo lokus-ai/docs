@@ -1,0 +1,518 @@
+---
+title: "TreeView Component"
+description: "Display hierarchical data in an expandable tree structure"
+---
+
+# TreeView Component
+
+The TreeView component renders hierarchical data from plugin tree data providers. It displays items in an expandable/collapsible tree structure with support for icons, descriptions, commands, and lazy loading.
+
+## Registration
+
+Register a tree view using `api.ui.registerTreeDataProvider()`:
+
+```javascript
+const disposable = api.ui.registerTreeDataProvider(viewId, provider, options);
+```
+
+## Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `viewId` | `string` | Yes | Unique identifier for the tree view |
+| `provider` | `TreeDataProvider` | Yes | Data provider implementation |
+| `options` | `object` | No | Additional options |
+| `options.title` | `string` | No | Display title for the tree view |
+
+## TreeDataProvider Interface
+
+Your provider must implement the following interface:
+
+```typescript
+interface TreeDataProvider {
+  getChildren(element?: any): Promise<any[]>;
+  getTreeItem(element: any): Promise<TreeItem>;
+  on(event: string, handler: Function): void;
+  off(event: string, handler: Function): void;
+}
+```
+
+### getChildren(element?)
+
+Returns the children of the given element or root elements if no element is provided.
+
+**Parameters:**
+- `element` (optional): The parent element, or `undefined` for root level
+
+**Returns:** `Promise\\<any[]\\>` - Array of child elements
+
+**Example:**
+```javascript
+async getChildren(element) {
+  if (!element) {
+    // Return root items
+    return ['folder1', 'folder2', 'folder3'];
+  }
+  // Return children of element
+  return [`${element}/child1`, `${element}/child2`];
+}
+```
+
+---
+
+### getTreeItem(element)
+
+Converts an element to a TreeItem for display.
+
+**Parameters:**
+- `element`: The element to convert
+
+**Returns:** `Promise\\<TreeItem\\>` - Tree item representation
+
+**Example:**
+```javascript
+async getTreeItem(element) {
+  return {
+    label: element,
+    collapsibleState: element.startsWith('folder') ? 1 : 0,
+    iconPath: element.startsWith('folder') ? '📁' : '📄'
+  };
+}
+```
+
+---
+
+### on(event, handler)
+
+Registers an event handler.
+
+**Events:**
+- `'didChangeTreeData'`: Fired when tree data changes and view should refresh
+
+**Example:**
+```javascript
+on(event, handler) {
+  if (!this.listeners) this.listeners = new Map();
+  this.listeners.set(event, handler);
+}
+```
+
+---
+
+### off(event, handler)
+
+Unregisters an event handler.
+
+**Example:**
+```javascript
+off(event, handler) {
+  if (this.listeners) {
+    this.listeners.delete(event);
+  }
+}
+```
+
+---
+
+## TreeItem Structure
+
+```typescript
+interface TreeItem {
+  label: string | { label: string };
+  collapsibleState?: number;
+  iconPath?: string;
+  description?: string;
+  command?: {
+    command: string;
+    arguments?: any[];
+  };
+  contextValue?: string;
+  id?: string;
+}
+```
+
+### Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `label` | `string \| \\\{label: string\\\}` | Display label for the item |
+| `collapsibleState` | `number` | 0 = None (leaf), 1 = Collapsed, 2 = Expanded |
+| `iconPath` | `string` | Icon to display (emoji or path) |
+| `description` | `string` | Additional description text (shown dimmed) |
+| `command` | `object` | Command to execute when item is clicked |
+| `command.command` | `string` | Command identifier |
+| `command.arguments` | `any[]` | Command arguments |
+| `contextValue` | `string` | Context value for styling (adds as CSS class) |
+| `id` | `string` | Unique identifier for the item |
+
+## Complete Example
+
+```javascript
+class FileTreeProvider {
+  constructor(rootPath) {
+    this.rootPath = rootPath;
+    this.listeners = new Map();
+  }
+
+  async getChildren(element) {
+    if (!element) {
+      // Root level - return top-level folders
+      return [
+        { path: '/src', name: 'src', type: 'folder' },
+        { path: '/tests', name: 'tests', type: 'folder' },
+        { path: '/package.json', name: 'package.json', type: 'file' }
+      ];
+    }
+
+    if (element.type === 'folder') {
+      // Return folder contents
+      const files = await this.readDirectory(element.path);
+      return files.map(file => ({
+        path: `${element.path}/$\\{file.name\\}`,
+        name: file.name,
+        type: file.type
+      }));
+    }
+
+    // Files have no children
+    return [];
+  }
+
+  async getTreeItem(element) {
+    const isFolder = element.type === 'folder';
+
+    return {
+      label: element.name,
+      collapsibleState: isFolder ? 1 : 0, // Collapsed if folder, None if file
+      iconPath: isFolder ? '📁' : this.getFileIcon(element.name),
+      description: isFolder ? '' : this.getFileSize(element.path),
+      contextValue: element.type,
+      command: isFolder ? undefined : {
+        command: 'myPlugin.openFile',
+        arguments: [element.path]
+      }
+    };
+  }
+
+  getFileIcon(filename) {
+    if (filename.endsWith('.js')) return '📜';
+    if (filename.endsWith('.json')) return '📋';
+    if (filename.endsWith('.md')) return '📝';
+    return '📄';
+  }
+
+  getFileSize(path) {
+    // Implementation to get file size
+    return '2.5 KB';
+  }
+
+  async readDirectory(path) {
+    // Implementation to read directory
+    return [
+      { name: 'file1.js', type: 'file' },
+      { name: 'subfolder', type: 'folder' }
+    ];
+  }
+
+  // Event management
+  on(event, handler) {
+    this.listeners.set(event, handler);
+  }
+
+  off(event, handler) {
+    this.listeners.delete(event);
+  }
+
+  // Trigger refresh
+  refresh() {
+    const handler = this.listeners.get('didChangeTreeData');
+    if (handler) {
+      handler();
+    }
+  }
+}
+
+// Register the tree view
+export function activate(api) {
+  const provider = new FileTreeProvider('/path/to/project');
+
+  const disposable = api.ui.registerTreeDataProvider('fileExplorer', provider, {
+    title: 'File Explorer'
+  });
+
+  // Register command for opening files
+  api.commands.registerCommand('myPlugin.openFile', async (filePath) => {
+    await api.workspace.openDocument(filePath);
+  });
+
+  // Refresh tree on file system changes
+  api.workspace.onDidChangeFiles(() => {
+    provider.refresh();
+  });
+
+  return { dispose: () => disposable.dispose() };
+}
+```
+
+## Lazy Loading
+
+The TreeView supports lazy loading of children. Children are only loaded when:
+1. The item is expanded for the first time
+2. The tree is refreshed via `didChangeTreeData` event
+
+```javascript
+async getChildren(element) {
+  if (!element) {
+    // Only load root items initially
+    return await fetchRootItems();
+  }
+
+  // Children loaded only when parent is expanded
+  return await fetchChildren(element);
+}
+```
+
+## Refreshing the Tree
+
+Trigger a tree refresh by firing the `didChangeTreeData` event:
+
+```javascript
+class MyTreeProvider {
+  constructor() {
+    this.listeners = new Map();
+  }
+
+  // ... other methods ...
+
+  refresh() {
+    const handler = this.listeners.get('didChangeTreeData');
+    if (handler) {
+      handler();
+    }
+  }
+}
+
+// Trigger refresh
+provider.refresh();
+```
+
+## Commands on Click
+
+Execute commands when items are clicked:
+
+```javascript
+async getTreeItem(element) {
+  return {
+    label: element.name,
+    collapsibleState: 0,
+    command: {
+      command: 'myPlugin.itemClicked',
+      arguments: [element.id, element.data]
+    }
+  };
+}
+```
+
+## Styling with Context Values
+
+Use `contextValue` to apply custom CSS classes:
+
+```javascript
+async getTreeItem(element) {
+  return {
+    label: element.name,
+    collapsibleState: 0,
+    contextValue: element.isSpecial ? 'special-item' : 'normal-item'
+  };
+}
+```
+
+The `contextValue` is added as a CSS class to the tree item:
+
+```css
+.tree-item.special-item {
+  font-weight: bold;
+  color: var(--accent);
+}
+```
+
+## CSS Variables
+
+The TreeView uses the following CSS variables:
+
+```css
+/* Background and text */
+--background-primary          /* Tree background */
+--text-normal                 /* Item label color */
+--text-muted                  /* Description color */
+
+/* Hover and active states */
+--background-modifier-hover   /* Hover background */
+--background-modifier-active  /* Active/selected background */
+
+/* Borders */
+--background-modifier-border  /* Title border */
+
+/* Scrollbar */
+--scrollbar-thumb-bg          /* Scrollbar color */
+--scrollbar-thumb-hover       /* Scrollbar hover color */
+```
+
+## Loading States
+
+The TreeView shows loading indicators automatically:
+- "Loading..." text shown for root items during initial load
+- "Loading..." shown for children when expanding an item
+
+## Empty State
+
+When `getChildren()` returns an empty array at the root level, the tree displays:
+```
+No items
+```
+
+## Best Practices
+
+### 1. Efficient Data Loading
+
+Only load data when needed:
+
+```javascript
+async getChildren(element) {
+  // Good: Load on demand
+  if (!element) {
+    return await fetchRootItems();
+  }
+  return await fetchChildren(element);
+}
+```
+
+### 2. Provide Meaningful Icons
+
+Use appropriate icons to help users identify items:
+
+```javascript
+getFileIcon(filename) {
+  const ext = filename.split('.').pop();
+  const icons = {
+    'js': '📜', 'json': '📋', 'md': '📝',
+    'png': '🖼️', 'jpg': '🖼️', 'gif': '🖼️'
+  };
+  return icons[ext] || '📄';
+}
+```
+
+### 3. Handle Errors Gracefully
+
+```javascript
+async getChildren(element) {
+  try {
+    return await fetchData(element);
+  } catch (error) {
+    console.error('Failed to load tree items:', error);
+    return [];
+  }
+}
+```
+
+### 4. Use Descriptions Wisely
+
+Add helpful context without cluttering:
+
+```javascript
+async getTreeItem(element) {
+  return {
+    label: element.name,
+    description: element.type === 'file'
+      ? `${element.size} • Modified $\\{element.modified\\}`
+      : `${element.childCount} items`,
+    collapsibleState: element.type === 'folder' ? 1 : 0
+  };
+}
+```
+
+### 5. Clean Up Resources
+
+```javascript
+export function deactivate() {
+  disposable.dispose();
+}
+```
+
+## Performance Tips
+
+### 1. Cache Data
+
+Avoid reloading unchanged data:
+
+```javascript
+class CachedTreeProvider {
+  constructor() {
+    this.cache = new Map();
+  }
+
+  async getChildren(element) {
+    const key = element?.id || 'root';
+    if (this.cache.has(key)) {
+      return this.cache.get(key);
+    }
+    const children = await this.fetchChildren(element);
+    this.cache.set(key, children);
+    return children;
+  }
+
+  invalidateCache() {
+    this.cache.clear();
+    this.refresh();
+  }
+}
+```
+
+### 2. Virtual Scrolling
+
+The TreeView automatically uses efficient rendering for large lists. No action needed.
+
+### 3. Debounce Refreshes
+
+Avoid refreshing too frequently:
+
+```javascript
+class MyTreeProvider {
+  constructor() {
+    this.refreshTimeout = null;
+  }
+
+  scheduleRefresh() {
+    if (this.refreshTimeout) {
+      clearTimeout(this.refreshTimeout);
+    }
+    this.refreshTimeout = setTimeout(() => {
+      this.refresh();
+    }, 500);
+  }
+}
+```
+
+## Troubleshooting
+
+### Tree doesn't refresh
+Make sure you're firing the `didChangeTreeData` event:
+```javascript
+const handler = this.listeners.get('didChangeTreeData');
+if (handler) handler();
+```
+
+### Items not expanding
+Verify `collapsibleState` is set correctly (1 or 2 for expandable items).
+
+### Commands not executing
+Check that the command is registered before the tree item is clicked:
+```javascript
+api.commands.registerCommand('myPlugin.action', handler);
+```
+
+## See Also
+
+- [UIAPI Reference](/developers/plugins/api-reference/ui-api)
+- [Data Providers Guide](/developers/plugins/data-providers)
+- [CommandsAPI Reference](/developers/plugins/api-reference/commands-api)

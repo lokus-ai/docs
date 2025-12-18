@@ -23,14 +23,14 @@ Before you begin, ensure you have:
 The fastest way to create a new plugin is using the Lokus Plugin CLI:
 
 ```bash
-# Install the CLI globally
-npm install -g lokus-plugin-cli
+# Install the CLI globally (one-time setup)
+npm install -g @lokus/plugin-cli
 
 # Create a new plugin with interactive prompts
-npx lokus-plugin create my-first-plugin
+lokus-plugin create my-first-plugin
 
 # Or use quick mode with defaults
-npx lokus-plugin create my-first-plugin --skip-prompts --template basic-typescript
+lokus-plugin create my-first-plugin --skip-prompts --template basic-typescript
 
 # Navigate to the plugin directory
 cd my-first-plugin
@@ -42,11 +42,13 @@ npm install
 npm run build
 
 # Link for development (creates symlink in ~/.lokus/plugins)
-npx lokus-plugin link
+lokus-plugin link
 
 # Validate the plugin
-npx lokus-plugin validate
+lokus-plugin validate
 ```
+
+> Note: The CLI supports both `@lokus/plugin-cli` and `lokus-plugin-cli` package names for compatibility.
 
 ## Available Templates
 
@@ -172,10 +174,14 @@ export default class MyFirstPlugin {
 
 ### Step 2: Understanding the Plugin Context
 
-When your plugin is instantiated, it receives a `PluginContext` with these APIs:
+When your plugin is instantiated, it receives a `PluginContext` with access to all 14 Lokus APIs:
 
 ```typescript
 interface PluginContext {
+  // Plugin metadata
+  pluginId: string;
+  pluginPath: string;
+
   // Logging
   logger: {
     info(message: string, ...args: any[]): void;
@@ -184,18 +190,35 @@ interface PluginContext {
     debug(message: string, ...args: any[]): void;
   };
 
-  // UI notifications
-  ui: {
-    showInformationMessage(message: string): void;
-    showWarningMessage(message: string): void;
-    showErrorMessage(message: string): void;
-  };
+  // Core APIs (always available)
+  editor: EditorAPI;        // 95+ methods for TipTap editor
+  ui: UIAPI;                // Panels, dialogs, notifications
+  commands: CommandsAPI;     // Command registration
+  workspace: WorkspaceAPI;   // File and editor access
+  config: ConfigurationAPI;  // Plugin settings
 
-  // Plugin metadata
-  pluginId: string;
-  pluginPath: string;
+  // Language & Features
+  languages: LanguagesAPI;   // Completion, hover, etc.
+
+  // Terminal & Tasks
+  terminal: TerminalAPI;     // Terminal management
+  tasks: TaskAPI;            // Task execution
+
+  // Debugging & Themes
+  debug: DebugAPI;           // Debug sessions
+  themes: ThemeAPI;          // Theme management
+
+  // Storage & Files
+  storage: StorageAPI;       // Key-value storage
+  fs: FilesystemAPI;         // File operations
+
+  // Network & System
+  network: NetworkAPI;       // HTTP requests (requires permission)
+  clipboard: ClipboardAPI;   // Clipboard access
 }
 ```
+
+See [API Reference](/developers/plugins/api-reference) for complete documentation of all APIs.
 
 ### Step 3: Using the Activation Context
 
@@ -259,14 +282,14 @@ Open Lokus Developer Tools (View → Developer → Toggle Developer Tools) to se
 
 ## Working with the Editor API
 
-If your plugin needs to interact with the editor:
+The EditorAPI provides 95+ methods for deep TipTap editor integration:
 
 ```typescript
 async activate(activationContext: any): Promise<void> {
   const editor = this.context.editor;
 
   // Add a slash command
-  editor.addSlashCommand({
+  await editor.addSlashCommand({
     name: 'my-command',
     description: 'Insert custom content',
     icon: '🎉',
@@ -285,26 +308,39 @@ async activate(activationContext: any): Promise<void> {
     }
   });
 
+  // Register custom TipTap extension
+  await editor.registerExtension({
+    name: 'customNode',
+    type: 'node',
+    schema: {
+      attrs: { data: { default: null } },
+      content: 'inline*',
+      group: 'block',
+      parseDOM: [{ tag: 'div.custom' }],
+      toDOM: (node) => ['div', { class: 'custom' }, 0]
+    }
+  });
+
   // Get current selection
   const selection = await editor.getSelection();
   if (selection) {
-    this.logger.info('Selection:', selection);
+    this.context.logger.info('Selection:', selection);
   }
 }
 ```
 
-### Available Editor Methods
+### Key Editor Methods
 
-| Method | Description |
-|--------|-------------|
-| `addSlashCommand()` | Add a slash command to the editor |
-| `addToolbarItem()` | Add a button to the editor toolbar |
-| `addContextMenuItem()` | Add item to right-click menu |
-| `addKeyboardShortcut()` | Register a keyboard shortcut |
-| `getSelection()` | Get current text selection |
-| `replaceSelection()` | Replace selected text |
-| `getText()` | Get editor content as text |
-| `insertNode()` | Insert a node at cursor position |
+The EditorAPI includes comprehensive methods for:
+- **Extensions**: `registerExtension()`, `registerNode()`, `registerMark()`
+- **Slash Commands**: `addSlashCommand()`, `removeSlashCommand()`
+- **UI Elements**: `addToolbarItem()`, `addContextMenuItem()`, `addKeyboardShortcut()`
+- **Content Manipulation**: `insertNode()`, `replaceSelection()`, `getText()`, `getSelection()`
+- **Node Views**: `registerNodeView()` for custom rendering
+- **Input Rules**: `registerInputRule()` for automatic transformations
+- **Format Detection**: `registerFormat()` for language support
+
+See [EditorAPI Reference](/developers/plugins/api-reference/editor-api) for complete documentation of all 95+ methods.
 
 ## Writing Tests
 
@@ -427,10 +463,67 @@ See [Publishing Guide](/developers/plugins/publishing) for more details.
    npm install
    ```
 
+## Explore More APIs
+
+Now that you have a basic plugin, explore the other powerful APIs:
+
+### Terminal & Task Integration
+```typescript
+// Create a terminal
+const terminal = this.context.terminal.createTerminal({
+  name: 'Build',
+  cwd: this.context.workspace?.rootPath
+});
+terminal.sendText('npm run build');
+```
+
+See [TerminalAPI](/developers/plugins/api-reference/terminal-api) and [TaskAPI](/developers/plugins/api-reference/task-api).
+
+### UI Components
+```typescript
+// Create a status bar item
+const statusBar = this.context.ui.createStatusBarItem('left', 100);
+statusBar.text = 'My Plugin Active';
+statusBar.show();
+
+// Show progress indicator
+await this.context.ui.withProgress(
+  { title: 'Processing...' },
+  async (progress) => {
+    progress.report({ message: 'Step 1' });
+    await doWork();
+  }
+);
+```
+
+See [UIAPI](/developers/plugins/api-reference/ui-api) for dialogs, panels, tree views, and more.
+
+### Language Features
+```typescript
+// Add completion provider
+this.context.languages.registerCompletionProvider('markdown', {
+  async provideCompletionItems(document, position) {
+    return [
+      { label: 'todo', insertText: '- [ ] ', detail: 'Todo item' }
+    ];
+  }
+});
+```
+
+See [LanguagesAPI](/developers/plugins/api-reference/languages-api) for hover, formatting, and code actions.
+
 ## Next Steps
 
-- [Plugin API Reference](/developers/plugins/api) - Full API documentation
-- [Plugin Manifest](/developers/plugins/manifest) - Manifest schema reference
-- [Editor Plugins](/developers/plugins/editor-plugins) - Build editor extensions
-- [UI Plugins](/developers/plugins/ui-plugins) - Create custom UI panels
-- [Publishing](/developers/plugins/publishing) - Publish to the marketplace
+### Core Documentation
+- **[API Reference](/developers/plugins/api-reference)** - Browse all 14 APIs with examples
+- **[Plugin Manifest](/developers/plugins/manifest)** - Comprehensive manifest reference
+- **[Plugin Lifecycle](/developers/plugins/lifecycle)** - Activation, deactivation, and resource management
+
+### Learn by Example
+- **[Tutorials & Guides](/developers/plugins/guides)** - Step-by-step tutorials
+- **[Examples](/developers/plugins/examples)** - Real-world plugin examples
+- **[UI Components](/developers/plugins/components)** - React components for plugin UIs
+
+### Publishing
+- **[Publishing Guide](/developers/plugins/publishing)** - Share your plugin on the marketplace
+- **[CLI Tools](/developers/plugins/cli)** - Command-line development tools

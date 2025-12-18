@@ -1,0 +1,934 @@
+---
+title: AI Assistant Plugin
+description: OpenAI integration with streaming responses and progress indicators
+---
+
+import { Callout } from 'nextra/components'
+import { FileTree } from 'nextra/components'
+
+# AI Assistant Plugin
+
+A complete AI assistant plugin that integrates with OpenAI's API, featuring streaming responses, progress indicators, and configuration management.
+
+<Callout type="info">
+This is the most advanced example, demonstrating network requests, streaming, error handling, and user configuration.
+</Callout>
+
+## Features Demonstrated
+
+- ✅ Network API and HTTP requests
+- ✅ Streaming API responses
+- ✅ Progress indicators with cancellation
+- ✅ Configuration management
+- ✅ Output channels for logs
+- ✅ Error handling and retry logic
+- ✅ Status bar integration
+- ✅ Editor text manipulation
+- ✅ User input dialogs
+
+## Project Structure
+
+<FileTree>
+  <FileTree.Folder name="lokus-ai-assistant" defaultOpen>
+    <FileTree.File name="package.json" />
+    <FileTree.File name="manifest.json" />
+    <FileTree.File name="index.js" />
+    <FileTree.File name="OpenAIClient.js" />
+    <FileTree.File name="prompts.js" />
+    <FileTree.File name="config.json" />
+    <FileTree.File name="README.md" />
+  </FileTree.Folder>
+</FileTree>
+
+## Complete Source Code
+
+### `package.json`
+
+```json filename="package.json"
+{
+  "name": "lokus-ai-assistant",
+  "version": "1.0.0",
+  "description": "AI-powered writing assistant for Lokus",
+  "main": "index.js",
+  "keywords": ["lokus", "plugin", "ai", "openai", "assistant"],
+  "author": "Your Name",
+  "license": "MIT",
+  "engines": {
+    "lokus": "^1.0.0"
+  },
+  "dependencies": {
+    "@lokus/plugin-sdk": "^1.0.0"
+  }
+}
+```
+
+### `manifest.json`
+
+```json filename="manifest.json"
+{
+  "id": "lokus-ai-assistant",
+  "name": "AI Assistant",
+  "version": "1.0.0",
+  "description": "AI-powered writing assistant with OpenAI integration",
+  "author": "Your Name",
+  "main": "index.js",
+  "activationEvents": [
+    "onCommand:ai-assistant.complete",
+    "onCommand:ai-assistant.improve",
+    "onCommand:ai-assistant.explain",
+    "onCommand:ai-assistant.summarize"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "id": "ai-assistant.complete",
+        "title": "Complete Text with AI",
+        "category": "AI Assistant",
+        "icon": "sparkles"
+      },
+      {
+        "id": "ai-assistant.improve",
+        "title": "Improve Writing",
+        "category": "AI Assistant",
+        "icon": "edit"
+      },
+      {
+        "id": "ai-assistant.explain",
+        "title": "Explain Selection",
+        "category": "AI Assistant",
+        "icon": "info"
+      },
+      {
+        "id": "ai-assistant.summarize",
+        "title": "Summarize",
+        "category": "AI Assistant",
+        "icon": "list"
+      },
+      {
+        "id": "ai-assistant.chat",
+        "title": "Chat with AI",
+        "category": "AI Assistant",
+        "icon": "message-circle"
+      }
+    ],
+    "configuration": {
+      "title": "AI Assistant",
+      "properties": {
+        "aiAssistant.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "OpenAI API Key"
+        },
+        "aiAssistant.model": {
+          "type": "string",
+          "enum": ["gpt-4", "gpt-4-turbo", "gpt-3.5-turbo"],
+          "default": "gpt-4-turbo",
+          "description": "OpenAI model to use"
+        },
+        "aiAssistant.temperature": {
+          "type": "number",
+          "default": 0.7,
+          "minimum": 0,
+          "maximum": 2,
+          "description": "Creativity level (0 = deterministic, 2 = very creative)"
+        },
+        "aiAssistant.maxTokens": {
+          "type": "number",
+          "default": 1000,
+          "description": "Maximum tokens in response"
+        }
+      }
+    }
+  },
+  "permissions": [
+    "network"
+  ]
+}
+```
+
+### `prompts.js`
+
+```javascript filename="prompts.js"
+/**
+ * AI prompt templates
+ */
+
+export const prompts = {
+  complete: (context) => ({
+    system: "You are a helpful writing assistant. Complete the user's text naturally and coherently.",
+    user: `Continue writing from here:\n\n$\\{context\\}`
+  }),
+
+  improve: (text) => ({
+    system: "You are an expert editor. Improve the writing while maintaining the author's voice and intent.",
+    user: `Please improve this text:\n\n$\\{text\\}`
+  }),
+
+  explain: (text) => ({
+    system: "You are a teacher. Explain complex topics in simple terms.",
+    user: `Please explain:\n\n$\\{text\\}`
+  }),
+
+  summarize: (text) => ({
+    system: "You are a summarization expert. Create concise, accurate summaries.",
+    user: `Please summarize:\n\n$\\{text\\}`
+  }),
+
+  chat: (message, history) => ({
+    system: "You are a helpful AI assistant integrated into a note-taking app.",
+    user: message,
+    history
+  })
+};
+
+/**
+ * Build messages array for OpenAI API
+ */
+export function buildMessages(prompt) {
+  const messages = [
+    { role: 'system', content: prompt.system }
+  ];
+
+  if (prompt.history) {
+    messages.push(...prompt.history);
+  }
+
+  messages.push({ role: 'user', content: prompt.user });
+
+  return messages;
+}
+```
+
+### `OpenAIClient.js`
+
+```javascript filename="OpenAIClient.js"
+/**
+ * OpenAI API Client with streaming support
+ */
+
+export class OpenAIClient {
+  constructor(apiKey, config = {}) {
+    this.apiKey = apiKey;
+    this.model = config.model || 'gpt-4-turbo';
+    this.temperature = config.temperature || 0.7;
+    this.maxTokens = config.maxTokens || 1000;
+    this.baseURL = 'https://api.openai.com/v1';
+  }
+
+  /**
+   * Complete text with streaming
+   * @param {Array} messages - Message array
+   * @param {Function} onChunk - Called for each streamed chunk
+   * @param {Object} signal - AbortController signal for cancellation
+   * @returns {Promise<string>} Complete response
+   */
+  async complete(messages, onChunk, signal) {
+    const response = await fetch(`${this.baseURL}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer $\\{this.apiKey\\}`
+      },
+      body: JSON.stringify({
+        model: this.model,
+        messages,
+        temperature: this.temperature,
+        max_tokens: this.maxTokens,
+        stream: true
+      }),
+      signal
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error?.message || 'API request failed');
+    }
+
+    return this._processStream(response.body, onChunk);
+  }
+
+  /**
+   * Process streaming response
+   * @private
+   */
+  async _processStream(body, onChunk) {
+    const reader = body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let fullText = '';
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.trim() === '') continue;
+          if (line.trim() === 'data: [DONE]') continue;
+
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              const content = data.choices?.[0]?.delta?.content;
+
+              if (content) {
+                fullText += content;
+                if (onChunk) {
+                  onChunk(content, fullText);
+                }
+              }
+            } catch (error) {
+              console.error('Error parsing stream chunk:', error);
+            }
+          }
+        }
+      }
+
+      return fullText;
+
+    } finally {
+      reader.releaseLock();
+    }
+  }
+
+  /**
+   * Simple non-streaming completion
+   * @param {Array} messages - Message array
+   * @returns {Promise<string>} Complete response
+   */
+  async simpleComplete(messages) {
+    const response = await fetch(`${this.baseURL}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer $\\{this.apiKey\\}`
+      },
+      body: JSON.stringify({
+        model: this.model,
+        messages,
+        temperature: this.temperature,
+        max_tokens: this.maxTokens
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error?.message || 'API request failed');
+    }
+
+    const data = await response.json();
+    return data.choices[0].message.content;
+  }
+}
+```
+
+### `index.js`
+
+```javascript filename="index.js"
+/**
+ * AI Assistant Plugin for Lokus
+ *
+ * Integrates OpenAI API for AI-powered text operations
+ */
+
+import { OpenAIClient } from './OpenAIClient.js';
+import { prompts, buildMessages } from './prompts.js';
+
+/**
+ * Called when the plugin is activated
+ */
+export function activate(api) {
+  console.log('AI Assistant plugin activated');
+
+  // Get configuration
+  const config = api.config.getConfiguration('aiAssistant');
+  let apiKey = config.get('apiKey');
+
+  // Check for API key
+  if (!apiKey) {
+    api.ui.showWarningMessage(
+      'AI Assistant requires an OpenAI API key. Please configure it in settings.',
+      'Configure'
+    ).then(action => {
+      if (action === 'Configure') {
+        api.commands.execute('workbench.action.openSettings', 'aiAssistant.apiKey');
+      }
+    });
+  }
+
+  // Create output channel for logs
+  const outputChannel = api.ui.createOutputChannel('AI Assistant');
+
+  // Create status bar item
+  const statusBar = api.ui.registerStatusBarItem({
+    id: 'ai-assistant.status',
+    text: '$(sparkles) AI',
+    tooltip: 'AI Assistant',
+    alignment: 2,
+    priority: 50
+  });
+  statusBar.show();
+
+  // Track active requests for cancellation
+  const activeRequests = new Map();
+
+  /**
+   * Make AI request with progress and streaming
+   */
+  async function makeAIRequest(prompt, insertAtCursor = false) {
+    // Check API key
+    apiKey = config.get('apiKey');
+    if (!apiKey) {
+      api.ui.showErrorMessage('Please configure your OpenAI API key');
+      return;
+    }
+
+    // Create AI client
+    const client = new OpenAIClient(apiKey, {
+      model: config.get('model'),
+      temperature: config.get('temperature'),
+      maxTokens: config.get('maxTokens')
+    });
+
+    // Build messages
+    const messages = buildMessages(prompt);
+
+    // Create abort controller
+    const abortController = new AbortController();
+    const requestId = Date.now().toString();
+    activeRequests.set(requestId, abortController);
+
+    try {
+      // Show progress
+      await api.ui.withProgress(
+        {
+          location: 'notification',
+          title: 'AI Assistant',
+          cancellable: true
+        },
+        async (progress, token) => {
+          // Handle cancellation
+          token.onCancellationRequested(() => {
+            abortController.abort();
+            activeRequests.delete(requestId);
+          });
+
+          let responseText = '';
+          let lastUpdate = Date.now();
+
+          // Make streaming request
+          progress.report({ message: 'Thinking...' });
+
+          try {
+            responseText = await client.complete(
+              messages,
+              (chunk, fullText) => {
+                // Update progress every 200ms to avoid spam
+                const now = Date.now();
+                if (now - lastUpdate > 200) {
+                  const preview = fullText.length > 50
+                    ? fullText.substring(0, 50) + '...'
+                    : fullText;
+                  progress.report({ message: preview });
+                  lastUpdate = now;
+                }
+
+                // Insert at cursor in real-time if requested
+                if (insertAtCursor) {
+                  api.editor.insertContent(chunk);
+                }
+              },
+              abortController.signal
+            );
+
+            // Log to output channel
+            outputChannel.appendLine(`[${new Date().toLocaleTimeString()}] Request completed`);
+            outputChannel.appendLine(`Prompt: ${prompt.user.substring(0, 100)}...`);
+            outputChannel.appendLine(`Response: ${responseText.substring(0, 200)}...`);
+            outputChannel.appendLine('---');
+
+            // If not inserting at cursor, show in output channel
+            if (!insertAtCursor) {
+              outputChannel.appendLine('\n=== AI Response ===\n');
+              outputChannel.appendLine(responseText);
+              outputChannel.appendLine('\n===================\n');
+              outputChannel.show();
+            }
+
+            return responseText;
+
+          } catch (error) {
+            if (error.name === 'AbortError') {
+              outputChannel.appendLine('Request cancelled by user');
+              api.ui.showInformationMessage('AI request cancelled');
+            } else {
+              throw error;
+            }
+          }
+        }
+      );
+
+    } catch (error) {
+      outputChannel.appendLine(`Error: $\\{error.message\\}`);
+      api.ui.showErrorMessage(`AI request failed: $\\{error.message\\}`);
+    } finally {
+      activeRequests.delete(requestId);
+    }
+  }
+
+  // Register complete command
+  const completeCommand = api.commands.register({
+    id: 'ai-assistant.complete',
+    title: 'Complete Text with AI',
+    execute: async () => {
+      try {
+        // Get text before cursor
+        const selection = await api.editor.getSelection();
+        if (!selection) {
+          api.ui.showWarningMessage('No active editor');
+          return;
+        }
+
+        // Get text from start to cursor
+        const context = await api.editor.getTextInRange({
+          start: { line: 0, character: 0 },
+          end: selection.start
+        });
+
+        if (!context.trim()) {
+          api.ui.showInformationMessage('Type some text first to provide context');
+          return;
+        }
+
+        // Get last 500 characters for context
+        const contextWindow = context.slice(-500);
+        const prompt = prompts.complete(contextWindow);
+
+        await makeAIRequest(prompt, true);
+
+      } catch (error) {
+        api.ui.showErrorMessage(`Failed to complete text: $\\{error.message\\}`);
+      }
+    }
+  });
+
+  // Register improve command
+  const improveCommand = api.commands.register({
+    id: 'ai-assistant.improve',
+    title: 'Improve Writing',
+    execute: async () => {
+      try {
+        const selection = await api.editor.getSelection();
+        if (!selection || selection.isEmpty) {
+          api.ui.showInformationMessage('Please select some text to improve');
+          return;
+        }
+
+        const selectedText = await api.editor.getTextInRange({
+          start: selection.start,
+          end: selection.end
+        });
+
+        const prompt = prompts.improve(selectedText);
+        await makeAIRequest(prompt, false);
+
+      } catch (error) {
+        api.ui.showErrorMessage(`Failed to improve text: $\\{error.message\\}`);
+      }
+    }
+  });
+
+  // Register explain command
+  const explainCommand = api.commands.register({
+    id: 'ai-assistant.explain',
+    title: 'Explain Selection',
+    execute: async () => {
+      try {
+        const selection = await api.editor.getSelection();
+        if (!selection || selection.isEmpty) {
+          api.ui.showInformationMessage('Please select some text to explain');
+          return;
+        }
+
+        const selectedText = await api.editor.getTextInRange({
+          start: selection.start,
+          end: selection.end
+        });
+
+        const prompt = prompts.explain(selectedText);
+        await makeAIRequest(prompt, false);
+
+      } catch (error) {
+        api.ui.showErrorMessage(`Failed to explain text: $\\{error.message\\}`);
+      }
+    }
+  });
+
+  // Register summarize command
+  const summarizeCommand = api.commands.register({
+    id: 'ai-assistant.summarize',
+    title: 'Summarize',
+    execute: async () => {
+      try {
+        const selection = await api.editor.getSelection();
+        let text;
+
+        if (selection && !selection.isEmpty) {
+          // Summarize selection
+          text = await api.editor.getTextInRange({
+            start: selection.start,
+            end: selection.end
+          });
+        } else {
+          // Summarize entire document
+          text = await api.editor.getText();
+        }
+
+        if (!text.trim()) {
+          api.ui.showInformationMessage('No text to summarize');
+          return;
+        }
+
+        const prompt = prompts.summarize(text);
+        await makeAIRequest(prompt, false);
+
+      } catch (error) {
+        api.ui.showErrorMessage(`Failed to summarize: $\\{error.message\\}`);
+      }
+    }
+  });
+
+  // Register chat command
+  const chatCommand = api.commands.register({
+    id: 'ai-assistant.chat',
+    title: 'Chat with AI',
+    execute: async () => {
+      const message = await api.ui.showInputBox({
+        prompt: 'Ask AI anything',
+        placeholder: 'What would you like to know?'
+      });
+
+      if (!message) return;
+
+      const prompt = prompts.chat(message, []);
+      await makeAIRequest(prompt, false);
+    }
+  });
+
+  // Listen for configuration changes
+  const configDisposable = api.config.onDidChangeConfiguration((event) => {
+    if (event.affectsConfiguration('aiAssistant.apiKey')) {
+      apiKey = config.get('apiKey');
+      if (apiKey) {
+        api.ui.showInformationMessage('AI Assistant API key updated');
+      }
+    }
+  });
+
+  // Return cleanup function
+  return {
+    dispose: () => {
+      // Cancel all active requests
+      for (const controller of activeRequests.values()) {
+        controller.abort();
+      }
+      activeRequests.clear();
+
+      // Dispose resources
+      completeCommand.dispose();
+      improveCommand.dispose();
+      explainCommand.dispose();
+      summarizeCommand.dispose();
+      chatCommand.dispose();
+      configDisposable.dispose();
+      statusBar.dispose();
+      outputChannel.dispose();
+
+      console.log('AI Assistant plugin deactivated');
+    }
+  };
+}
+
+/**
+ * Called when the plugin is deactivated
+ */
+export function deactivate() {
+  // Additional cleanup if needed
+}
+```
+
+## Installation & Testing
+
+### Step 1: Get OpenAI API Key
+
+1. Go to [platform.openai.com](https://platform.openai.com)
+2. Create an account or sign in
+3. Go to API keys section
+4. Create a new API key
+5. Copy the key (starts with `sk-`)
+
+<Callout type="warning">
+**Important:** Never commit your API key to version control! Use environment variables or user configuration.
+</Callout>
+
+### Step 2: Install Plugin
+
+```bash
+mkdir lokus-ai-assistant
+cd lokus-ai-assistant
+
+# Copy all files
+npm install
+npm link
+# In Lokus plugins directory
+npm link lokus-ai-assistant
+```
+
+### Step 3: Configure
+
+1. Open Lokus
+2. Enable AI Assistant plugin
+3. Go to **Preferences > Settings**
+4. Search for "AI Assistant"
+5. Paste your OpenAI API key
+6. Optionally configure model and temperature
+
+### Step 4: Test Commands
+
+Try these commands in the Command Palette:
+
+1. **Complete Text** - Type some text, then run this to continue
+2. **Improve Writing** - Select text and improve it
+3. **Explain Selection** - Get explanations
+4. **Summarize** - Summarize selected text or entire document
+5. **Chat with AI** - Ask questions
+
+## Code Walkthrough
+
+### Streaming API Calls
+
+```javascript
+await client.complete(
+  messages,
+  (chunk, fullText) => {
+    // Called for each chunk
+    progress.report({ message: chunk });
+    api.editor.insertContent(chunk);  // Real-time insertion
+  },
+  abortController.signal
+);
+```
+
+Streaming provides real-time feedback as the AI generates text.
+
+### Progress with Cancellation
+
+```javascript
+await api.ui.withProgress(
+  {
+    location: 'notification',
+    title: 'AI Assistant',
+    cancellable: true
+  },
+  async (progress, token) => {
+    token.onCancellationRequested(() => {
+      abortController.abort();
+    });
+
+    progress.report({ message: 'Thinking...' });
+    // ... make request
+  }
+);
+```
+
+Users can cancel long-running requests.
+
+### Error Handling
+
+```javascript
+try {
+  await makeAIRequest(prompt);
+} catch (error) {
+  if (error.name === 'AbortError') {
+    // User cancelled
+  } else if (error.message.includes('API key')) {
+    // Invalid API key
+  } else {
+    // Other error
+  }
+}
+```
+
+Different error types require different handling.
+
+### Output Channels
+
+```javascript
+const outputChannel = api.ui.createOutputChannel('AI Assistant');
+outputChannel.appendLine('Request completed');
+outputChannel.show();
+```
+
+Output channels are perfect for detailed logs and responses.
+
+## Extension Ideas
+
+Enhance this plugin with:
+
+1. **Conversation History** - Multi-turn conversations
+2. **Custom Prompts** - User-defined prompt templates
+3. **Multiple Providers** - Support Claude, Gemini, etc.
+4. **Caching** - Cache responses for repeat queries
+5. **Token Counter** - Show token usage and costs
+6. **Prompt Library** - Share and reuse prompts
+
+### Example: Conversation History
+
+```javascript
+const conversationHistory = [];
+
+async function chat(message) {
+  conversationHistory.push({ role: 'user', content: message });
+
+  const response = await client.simpleComplete([
+    { role: 'system', content: 'You are a helpful assistant.' },
+    ...conversationHistory
+  ]);
+
+  conversationHistory.push({ role: 'assistant', content: response });
+
+  return response;
+}
+```
+
+### Example: Token Counter
+
+```javascript
+function estimateTokens(text) {
+  // Rough estimate: 1 token ≈ 4 characters
+  return Math.ceil(text.length / 4);
+}
+
+const inputTokens = estimateTokens(prompt);
+const outputTokens = estimateTokens(response);
+const cost = (inputTokens * 0.00001) + (outputTokens * 0.00003); // GPT-4 pricing
+
+statusBar.text = `AI (${inputTokens + outputTokens} tokens, $${cost.toFixed(4)})`;
+```
+
+## Security Best Practices
+
+<Callout type="error">
+**Never hardcode API keys!** Always use configuration.
+</Callout>
+
+### Safe API Key Storage
+
+```javascript
+// ✅ Good - Read from config
+const apiKey = config.get('apiKey');
+
+// ❌ Bad - Hardcoded
+const apiKey = 'sk-...';
+```
+
+### Validate API Keys
+
+```javascript
+async function validateAPIKey(key) {
+  if (!key || !key.startsWith('sk-')) {
+    return false;
+  }
+
+  try {
+    // Test with simple request
+    await client.simpleComplete([
+      { role: 'user', content: 'Hi' }
+    ]);
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+```
+
+### Rate Limiting
+
+```javascript
+const rateLimiter = {
+  requests: [],
+  maxPerMinute: 20,
+
+  canMakeRequest() {
+    const oneMinuteAgo = Date.now() - 60000;
+    this.requests = this.requests.filter(t => t > oneMinuteAgo);
+    return this.requests.length < this.maxPerMinute;
+  },
+
+  addRequest() {
+    this.requests.push(Date.now());
+  }
+};
+
+if (!rateLimiter.canMakeRequest()) {
+  api.ui.showWarningMessage('Rate limit exceeded. Please wait.');
+  return;
+}
+```
+
+## Performance Tips
+
+1. **Use Streaming** - Better user experience
+2. **Show Progress** - Users know something is happening
+3. **Cache Responses** - Avoid duplicate API calls
+4. **Abort Unused Requests** - Save API credits
+5. **Optimize Context** - Only send relevant text
+
+## Common Issues
+
+### Issue: API key not working
+
+**Solutions:**
+- Check if key is correct
+- Ensure account has credits
+- Verify API access is enabled
+
+### Issue: Slow responses
+
+**Solutions:**
+- Use faster models (gpt-3.5-turbo)
+- Reduce maxTokens
+- Use streaming for better UX
+
+### Issue: High costs
+
+**Solutions:**
+- Implement rate limiting
+- Cache common requests
+- Use cheaper models when possible
+- Show token/cost estimates
+
+## Next Steps
+
+Congratulations! You've completed all plugin examples. Now explore:
+
+- **[API Reference](/developers/plugins/api-reference)** - Complete API documentation
+- **[Best Practices](/developers/plugins/guides/best-practices)** - Production-ready patterns
+- **[Publishing](/developers/plugins/publishing)** - Share your plugins
+- **[Advanced Topics](/developers/plugins/advanced)** - Deep dives
+
+## Complete Example Repository
+
+<Callout type="info">
+Find all examples on GitHub:
+[github.com/lokus-ai/plugin-examples](https://github.com/lokus-ai/plugin-examples)
+</Callout>
+
+---
+
+**Finished all examples?** You're now ready to build amazing plugins! Check out the [API Reference](/developers/plugins/api-reference) for complete details.

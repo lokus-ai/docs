@@ -1,0 +1,642 @@
+---
+title: "useTerminals"
+description: "React hook for terminal management"
+---
+
+# useTerminals
+
+React hook for accessing and managing terminal state. Provides real-time updates when terminals are created, disposed, or their state changes.
+
+## Import
+
+```javascript
+import { useTerminals } from '@lokus/plugin-sdk';
+```
+
+## Usage
+
+```jsx
+import { useTerminals } from '@lokus/plugin-sdk';
+
+function TerminalPanel() {
+  const {
+    terminals,
+    activeTerminal,
+    sendText,
+    showTerminal,
+    hideTerminal,
+    disposeTerminal,
+    clearTerminal,
+    getTerminal
+  } = useTerminals();
+
+  return (
+    <div>
+      <h3>Terminals ({terminals.length})</h3>
+      {activeTerminal && (
+        <p>Active: {activeTerminal.name}</p>
+      )}
+    </div>
+  );
+}
+```
+
+## Return Object
+
+The hook returns an object with the following properties and methods:
+
+### Properties
+
+#### terminals
+**Type:** `Terminal[]`
+
+Array of all registered terminals.
+
+**Updates when:**
+- Terminal is created
+- Terminal is disposed
+- Terminal receives data
+- Terminal produces output
+
+```jsx
+function TerminalList() {
+  const { terminals } = useTerminals();
+
+  return (
+    <ul>
+      {terminals.map(term => (
+        <li key={term.id}>
+          {term.name} - {term.isVisible ? 'Visible' : 'Hidden'}
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+#### activeTerminal
+**Type:** `Terminal | null`
+
+The currently active/visible terminal, or `null` if no terminal is active.
+
+**Updates when:**
+- Active terminal changes
+- Terminal is shown
+- Terminal is hidden
+
+```jsx
+function ActiveTerminal() {
+  const { activeTerminal } = useTerminals();
+
+  if (!activeTerminal) {
+    return <p>No active terminal</p>;
+  }
+
+  return (
+    <div>
+      <h4>{activeTerminal.name}</h4>
+      <pre>{activeTerminal.output}</pre>
+    </div>
+  );
+}
+```
+
+### Methods
+
+#### sendText(terminalId, text, addNewLine)
+
+Send text to a specific terminal.
+
+**Parameters:**
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| terminalId | string | - | Terminal ID |
+| text | string | - | Text to send |
+| addNewLine | boolean | true | Whether to append newline |
+
+**Returns:** `void`
+
+**Example:**
+```jsx
+function TerminalInput() {
+  const { terminals, sendText } = useTerminals();
+  const [command, setCommand] = useState('');
+
+  const handleSend = () => {
+    if (terminals.length > 0) {
+      sendText(terminals[0].id, command);
+      setCommand('');
+    }
+  };
+
+  return (
+    <div>
+      <input
+        value={command}
+        onChange={(e) => setCommand(e.target.value)}
+        onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+      />
+      <button onClick={handleSend}>Send</button>
+    </div>
+  );
+}
+```
+
+#### showTerminal(terminalId, preserveFocus)
+
+Show/activate a specific terminal.
+
+**Parameters:**
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| terminalId | string | - | Terminal ID |
+| preserveFocus | boolean | false | Keep current focus |
+
+**Returns:** `void`
+
+**Example:**
+```jsx
+function TerminalTabs() {
+  const { terminals, activeTerminal, showTerminal } = useTerminals();
+
+  return (
+    <div className="tabs">
+      {terminals.map(term => (
+        <button
+          key={term.id}
+          className={activeTerminal?.id === term.id ? 'active' : ''}
+          onClick={() => showTerminal(term.id)}
+        >
+          {term.name}
+        </button>
+      ))}
+    </div>
+  );
+}
+```
+
+#### hideTerminal(terminalId)
+
+Hide a specific terminal.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| terminalId | string | Terminal ID |
+
+**Returns:** `void`
+
+**Example:**
+```jsx
+function TerminalControls({ terminalId }) {
+  const { hideTerminal } = useTerminals();
+
+  return (
+    <button onClick={() => hideTerminal(terminalId)}>
+      Hide Terminal
+    </button>
+  );
+}
+```
+
+#### disposeTerminal(terminalId)
+
+Permanently dispose/close a terminal.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| terminalId | string | Terminal ID |
+
+**Returns:** `void`
+
+**Example:**
+```jsx
+function TerminalCloseButton({ terminalId }) {
+  const { disposeTerminal } = useTerminals();
+
+  const handleClose = () => {
+    if (confirm('Close this terminal?')) {
+      disposeTerminal(terminalId);
+    }
+  };
+
+  return (
+    <button onClick={handleClose}>
+      Close Terminal
+    </button>
+  );
+}
+```
+
+#### clearTerminal(terminalId)
+
+Clear the output of a specific terminal.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| terminalId | string | Terminal ID |
+
+**Returns:** `void`
+
+**Example:**
+```jsx
+function TerminalClearButton({ terminalId }) {
+  const { clearTerminal } = useTerminals();
+
+  return (
+    <button onClick={() => clearTerminal(terminalId)}>
+      Clear
+    </button>
+  );
+}
+```
+
+#### getTerminal(terminalId)
+
+Get a specific terminal by ID.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| terminalId | string | Terminal ID |
+
+**Returns:** `Terminal | undefined`
+
+**Example:**
+```jsx
+function TerminalDetails({ terminalId }) {
+  const { getTerminal } = useTerminals();
+  const terminal = getTerminal(terminalId);
+
+  if (!terminal) {
+    return <p>Terminal not found</p>;
+  }
+
+  return (
+    <div>
+      <h4>{terminal.name}</h4>
+      <p>ID: {terminal.id}</p>
+      <p>Visible: {terminal.isVisible ? 'Yes' : 'No'}</p>
+    </div>
+  );
+}
+```
+
+## Terminal Interface
+
+```typescript
+interface Terminal {
+  id: string;           // Unique terminal identifier
+  name: string;         // Display name
+  pluginId: string;     // Plugin that created this terminal
+  isVisible: boolean;   // Whether terminal is currently shown
+  output: string;       // Terminal output content
+}
+```
+
+## Events Subscribed
+
+The hook automatically subscribes to these terminal manager events:
+
+- `terminal-created` - New terminal created
+- `terminal-disposed` - Terminal closed
+- `terminal-data` - Terminal received data
+- `terminal-output` - Terminal produced output
+- `active-terminal-changed` - Active terminal changed
+- `terminal-shown` - Terminal became visible
+- `terminal-hidden` - Terminal became hidden
+
+All event subscriptions are automatically cleaned up when the component unmounts.
+
+## Common Patterns
+
+### Pattern 1: Terminal Status Indicator
+
+```jsx
+import { useTerminals } from '@lokus/plugin-sdk';
+
+function TerminalStatusBar() {
+  const { terminals, activeTerminal } = useTerminals();
+
+  return (
+    <div className="status-bar">
+      <span>{terminals.length} terminals</span>
+      {activeTerminal && (
+        <span> | Active: {activeTerminal.name}</span>
+      )}
+    </div>
+  );
+}
+```
+
+### Pattern 2: Terminal Manager UI
+
+```jsx
+import { useTerminals } from '@lokus/plugin-sdk';
+
+function TerminalManager() {
+  const {
+    terminals,
+    activeTerminal,
+    showTerminal,
+    clearTerminal,
+    disposeTerminal
+  } = useTerminals();
+
+  return (
+    <div className="terminal-manager">
+      <div className="terminal-list">
+        {terminals.map(term => (
+          <div
+            key={term.id}
+            className={activeTerminal?.id === term.id ? 'active' : ''}
+          >
+            <span onClick={() => showTerminal(term.id)}>
+              {term.name}
+            </span>
+            <button onClick={() => clearTerminal(term.id)}>
+              Clear
+            </button>
+            <button onClick={() => disposeTerminal(term.id)}>
+              Close
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {activeTerminal && (
+        <div className="terminal-output">
+          <pre>{activeTerminal.output}</pre>
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+### Pattern 3: Quick Command Runner
+
+```jsx
+import { useTerminals } from '@lokus/plugin-sdk';
+import { useState } from 'react';
+
+function QuickCommand() {
+  const { terminals, sendText, showTerminal } = useTerminals();
+  const [command, setCommand] = useState('');
+
+  const runCommand = () => {
+    if (terminals.length === 0) {
+      alert('No terminals available');
+      return;
+    }
+
+    // Use first terminal or create logic to select one
+    const terminal = terminals[0];
+    sendText(terminal.id, command);
+    showTerminal(terminal.id);
+    setCommand('');
+  };
+
+  return (
+    <div className="quick-command">
+      <input
+        type="text"
+        value={command}
+        onChange={(e) => setCommand(e.target.value)}
+        onKeyDown={(e) => e.key === 'Enter' && runCommand()}
+        placeholder="Enter command..."
+      />
+      <button onClick={runCommand} disabled={!command}>
+        Run
+      </button>
+    </div>
+  );
+}
+```
+
+### Pattern 4: Terminal Output Monitor
+
+```jsx
+import { useTerminals } from '@lokus/plugin-sdk';
+import { useEffect, useState } from 'react';
+
+function TerminalMonitor({ terminalId }) {
+  const { getTerminal } = useTerminals();
+  const [outputLines, setOutputLines] = useState([]);
+
+  useEffect(() => {
+    const terminal = getTerminal(terminalId);
+    if (terminal) {
+      const lines = terminal.output.split('\n').slice(-50); // Last 50 lines
+      setOutputLines(lines);
+    }
+  }, [getTerminal, terminalId]);
+
+  return (
+    <div className="terminal-monitor">
+      <h4>Output Monitor</h4>
+      <pre>
+        {outputLines.map((line, i) => (
+          <div key={i}>{line}</div>
+        ))}
+      </pre>
+    </div>
+  );
+}
+```
+
+### Pattern 5: Multi-Terminal Broadcast
+
+```jsx
+import { useTerminals } from '@lokus/plugin-sdk';
+
+function BroadcastCommand() {
+  const { terminals, sendText } = useTerminals();
+  const [command, setCommand] = useState('');
+
+  const broadcast = () => {
+    terminals.forEach(term => {
+      sendText(term.id, command);
+    });
+    setCommand('');
+  };
+
+  return (
+    <div>
+      <input
+        value={command}
+        onChange={(e) => setCommand(e.target.value)}
+        placeholder="Command to all terminals..."
+      />
+      <button onClick={broadcast}>
+        Broadcast to {terminals.length} terminals
+      </button>
+    </div>
+  );
+}
+```
+
+### Pattern 6: Terminal Search
+
+```jsx
+import { useTerminals } from '@lokus/plugin-sdk';
+import { useMemo, useState } from 'react';
+
+function TerminalSearch() {
+  const { terminals, showTerminal } = useTerminals();
+  const [search, setSearch] = useState('');
+
+  const filtered = useMemo(() => {
+    const term = search.toLowerCase();
+    return terminals.filter(t =>
+      t.name.toLowerCase().includes(term) ||
+      t.output.toLowerCase().includes(term)
+    );
+  }, [terminals, search]);
+
+  return (
+    <div>
+      <input
+        type="text"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Search terminals..."
+      />
+      <ul>
+        {filtered.map(term => (
+          <li key={term.id} onClick={() => showTerminal(term.id)}>
+            {term.name}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+### Pattern 7: Terminal with Auto-scroll
+
+```jsx
+import { useTerminals } from '@lokus/plugin-sdk';
+import { useEffect, useRef } from 'react';
+
+function AutoScrollTerminal({ terminalId }) {
+  const { getTerminal } = useTerminals();
+  const outputRef = useRef(null);
+  const terminal = getTerminal(terminalId);
+
+  useEffect(() => {
+    // Auto-scroll to bottom when output changes
+    if (outputRef.current) {
+      outputRef.current.scrollTop = outputRef.current.scrollHeight;
+    }
+  }, [terminal?.output]);
+
+  if (!terminal) {
+    return <p>Terminal not found</p>;
+  }
+
+  return (
+    <div className="terminal">
+      <h4>{terminal.name}</h4>
+      <pre ref={outputRef} className="terminal-output">
+        {terminal.output}
+      </pre>
+    </div>
+  );
+}
+```
+
+## Best Practices
+
+### 1. Check Terminal Existence
+Always verify a terminal exists before operating on it:
+
+```jsx
+const terminal = getTerminal(terminalId);
+if (!terminal) {
+  console.warn('Terminal not found:', terminalId);
+  return;
+}
+sendText(terminal.id, 'command');
+```
+
+### 2. Handle Empty Terminal List
+Gracefully handle cases when no terminals are available:
+
+```jsx
+if (terminals.length === 0) {
+  return <p>No terminals available. Create one first.</p>;
+}
+```
+
+### 3. Preserve Focus When Needed
+Use `preserveFocus` when showing terminals programmatically:
+
+```jsx
+// Don't steal focus from user's current input
+showTerminal(terminalId, true);
+```
+
+### 4. Clean Terminal Output
+Clear terminal output periodically to prevent memory issues:
+
+```jsx
+useEffect(() => {
+  const timer = setInterval(() => {
+    terminals.forEach(term => {
+      if (term.output.length > 100000) { // 100KB
+        clearTerminal(term.id);
+      }
+    });
+  }, 60000); // Every minute
+
+  return () => clearInterval(timer);
+}, [terminals, clearTerminal]);
+```
+
+### 5. Confirm Before Closing
+Always confirm before disposing terminals:
+
+```jsx
+const handleClose = (terminalId) => {
+  if (confirm('Close this terminal? Output will be lost.')) {
+    disposeTerminal(terminalId);
+  }
+};
+```
+
+## Performance Considerations
+
+### Limit Output Rendering
+For large outputs, only render visible portion:
+
+```jsx
+const visibleOutput = useMemo(() => {
+  const lines = terminal.output.split('\n');
+  return lines.slice(-100).join('\n'); // Last 100 lines
+}, [terminal.output]);
+```
+
+### Debounce Output Updates
+Debounce rapid output updates:
+
+```jsx
+import { useDebounce } from 'use-debounce';
+
+function DebouncedTerminal({ terminalId }) {
+  const { getTerminal } = useTerminals();
+  const terminal = getTerminal(terminalId);
+  const [debouncedOutput] = useDebounce(terminal?.output, 100);
+
+  return <pre>{debouncedOutput}</pre>;
+}
+```
+
+## Related
+
+- [Terminal API](/developers/plugins/api-reference/terminal) - Create and manage terminals
+- [Output Channels Hook](/developers/plugins/hooks/use-output-channels) - Similar hook for output channels
+- [React Hooks Overview](/developers/plugins/hooks) - All available hooks

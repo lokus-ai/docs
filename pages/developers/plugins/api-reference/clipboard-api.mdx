@@ -1,0 +1,454 @@
+---
+title: "ClipboardAPI Reference"
+description: "Read from and write to the system clipboard in Lokus plugins"
+keywords: [lokus, plugin api, clipboard, copy, paste]
+---
+
+# ClipboardAPI
+
+Read from and write to the system clipboard. Access via `context.clipboard`.
+
+## Overview
+
+The ClipboardAPI provides simple access to the system clipboard for copying and pasting text. Plugins can:
+- Copy text to clipboard
+- Read text from clipboard
+- Integrate clipboard operations into workflows
+
+**Common Use Cases:**
+- Copy generated content
+- Share plugin outputs
+- Import clipboard content
+- Clipboard history features
+
+## Methods
+
+### writeText(text)
+
+Write text to the clipboard.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| text | string | Yes | Text to copy to clipboard |
+
+**Returns:** Promise that resolves when copied.
+
+**Example:**
+
+```typescript
+// Copy simple text
+await context.clipboard.writeText('Hello, World!');
+context.ui.showInformationMessage('Copied to clipboard');
+
+// Copy JSON
+const data = { name: 'John', age: 30 };
+await context.clipboard.writeText(JSON.stringify(data, null, 2));
+
+// Copy with user feedback
+try {
+  await context.clipboard.writeText(generatedCode);
+  context.ui.showInformationMessage('Code copied!');
+} catch (error) {
+  context.ui.showErrorMessage('Copy failed');
+}
+```
+
+---
+
+### read()
+
+Read content from the clipboard.
+
+**Returns:** Promise resolving to ClipboardItems array.
+
+**ClipboardItem Interface:**
+
+```typescript
+interface ClipboardItem {
+  types: string[];  // MIME types available
+  getType(type: string): Promise<Blob>;
+}
+```
+
+**Example:**
+
+```typescript
+// Read clipboard content
+const items = await context.clipboard.read();
+
+if (items.length === 0) {
+  context.ui.showWarningMessage('Clipboard is empty');
+  return;
+}
+
+// Get text from first item
+const item = items[0];
+if (item.types.includes('text/plain')) {
+  const blob = await item.getType('text/plain');
+  const text = await blob.text();
+  context.logger.info('Clipboard text:', text);
+}
+
+// Check for other types
+if (item.types.includes('text/html')) {
+  const blob = await item.getType('text/html');
+  const html = await blob.text();
+  context.logger.info('Clipboard HTML:', html);
+}
+```
+
+---
+
+## Complete Example
+
+```typescript
+export default class ClipboardPlugin {
+  private context: PluginContext;
+  private history: string[];
+
+  constructor(context: PluginContext) {
+    this.context = context;
+    this.history = [];
+  }
+
+  async activate(): Promise<void> {
+    // Load clipboard history
+    this.history = await context.storage.get('clipboard_history') ?? [];
+
+    // Register commands
+    context.commands.register([
+      {
+        id: 'myPlugin.copyFormatted',
+        name: 'Copy as Formatted Text',
+        execute: () => this.copyFormatted()
+      },
+      {
+        id: 'myPlugin.pasteFromClipboard',
+        name: 'Paste from Clipboard',
+        execute: () => this.pasteFromClipboard()
+      },
+      {
+        id: 'myPlugin.showHistory',
+        name: 'Show Clipboard History',
+        execute: () => this.showHistory()
+      },
+      {
+        id: 'myPlugin.clearHistory',
+        name: 'Clear Clipboard History',
+        execute: () => this.clearHistory()
+      }
+    ]);
+  }
+
+  async copyFormatted(): Promise<void> {
+    // Get current editor selection
+    const selection = await context.editor.getSelection();
+    if (!selection || !selection.text) {
+      context.ui.showWarningMessage('No text selected');
+      return;
+    }
+
+    // Format text
+    const formatted = this.formatText(selection.text);
+
+    // Copy to clipboard
+    await context.clipboard.writeText(formatted);
+
+    // Save to history
+    this.history.unshift(formatted);
+    if (this.history.length > 10) {
+      this.history = this.history.slice(0, 10);
+    }
+    await context.storage.set('clipboard_history', this.history);
+
+    context.ui.showInformationMessage('Copied formatted text');
+  }
+
+  formatText(text: string): string {
+    // Example formatting: add header and footer
+    return `=== Formatted Text ===\n\n${text}\n\n=== End ===`;
+  }
+
+  async pasteFromClipboard(): Promise<void> {
+    try {
+      const items = await context.clipboard.read();
+      if (items.length === 0) {
+        context.ui.showWarningMessage('Clipboard is empty');
+        return;
+      }
+
+      const item = items[0];
+      if (item.types.includes('text/plain')) {
+        const blob = await item.getType('text/plain');
+        const text = await blob.text();
+
+        // Insert into editor
+        await context.editor.insertNode('text', {}, text);
+        context.ui.showInformationMessage('Pasted from clipboard');
+      }
+    } catch (error) {
+      context.ui.showErrorMessage(`Paste failed: $\\{error.message\\}`);
+    }
+  }
+
+  async showHistory(): Promise<void> {
+    if (this.history.length === 0) {
+      context.ui.showWarningMessage('No clipboard history');
+      return;
+    }
+
+    const items = this.history.map((text, index) => ({
+      label: text.substring(0, 50) + (text.length > 50 ? '...' : ''),
+      description: `${text.length} chars`,
+      index
+    }));
+
+    const selected = await context.ui.showQuickPick(items, {
+      title: 'Clipboard History'
+    });
+
+    if (selected) {
+      const text = this.history[selected.index];
+      await context.clipboard.writeText(text);
+      context.ui.showInformationMessage('Copied to clipboard');
+    }
+  }
+
+  async clearHistory(): Promise<void> {
+    const confirmed = await context.ui.showConfirm({
+      title: 'Clear History',
+      message: 'Clear clipboard history?'
+    });
+
+    if (confirmed) {
+      this.history = [];
+      await context.storage.set('clipboard_history', []);
+      context.ui.showInformationMessage('History cleared');
+    }
+  }
+
+  async deactivate(): Promise<void> {
+    // Save history
+    await context.storage.set('clipboard_history', this.history);
+  }
+}
+```
+
+---
+
+## Advanced Example: Clipboard Transformer
+
+```typescript
+export default class ClipboardTransformerPlugin {
+  private context: PluginContext;
+
+  constructor(context: PluginContext) {
+    this.context = context;
+  }
+
+  async activate(): Promise<void> {
+    context.commands.register([
+      {
+        id: 'myPlugin.transformClipboard',
+        name: 'Transform Clipboard',
+        execute: () => this.transformClipboard()
+      },
+      {
+        id: 'myPlugin.copyAsMarkdown',
+        name: 'Copy as Markdown',
+        execute: () => this.copyAsMarkdown()
+      },
+      {
+        id: 'myPlugin.copyAsJSON',
+        name: 'Copy as JSON',
+        execute: () => this.copyAsJSON()
+      }
+    ]);
+  }
+
+  async transformClipboard(): Promise<void> {
+    // Read clipboard
+    const items = await context.clipboard.read();
+    if (items.length === 0) return;
+
+    const item = items[0];
+    if (!item.types.includes('text/plain')) {
+      context.ui.showWarningMessage('No text in clipboard');
+      return;
+    }
+
+    const blob = await item.getType('text/plain');
+    const text = await blob.text();
+
+    // Show transformation options
+    const transformations = [
+      { label: 'UPPERCASE', transform: (t: string) => t.toUpperCase() },
+      { label: 'lowercase', transform: (t: string) => t.toLowerCase() },
+      { label: 'Title Case', transform: (t: string) => this.toTitleCase(t) },
+      { label: 'Reverse', transform: (t: string) => t.split('').reverse().join('') },
+      { label: 'Base64 Encode', transform: (t: string) => btoa(t) },
+      { label: 'Base64 Decode', transform: (t: string) => atob(t) }
+    ];
+
+    const selected = await context.ui.showQuickPick(transformations, {
+      title: 'Select Transformation'
+    });
+
+    if (selected) {
+      try {
+        const transformed = selected.transform(text);
+        await context.clipboard.writeText(transformed);
+        context.ui.showInformationMessage('Clipboard transformed');
+      } catch (error) {
+        context.ui.showErrorMessage(`Transform failed: $\\{error.message\\}`);
+      }
+    }
+  }
+
+  toTitleCase(text: string): string {
+    return text.replace(/\w\S*/g, (txt) =>
+      txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+    );
+  }
+
+  async copyAsMarkdown(): Promise<void> {
+    const selection = await context.editor.getSelection();
+    if (!selection?.text) {
+      context.ui.showWarningMessage('No text selected');
+      return;
+    }
+
+    // Convert to markdown code block
+    const markdown = `\`\`\`\n${selection.text}\n\`\`\``;
+    await context.clipboard.writeText(markdown);
+    context.ui.showInformationMessage('Copied as Markdown');
+  }
+
+  async copyAsJSON(): Promise<void> {
+    const selection = await context.editor.getSelection();
+    if (!selection?.text) {
+      context.ui.showWarningMessage('No text selected');
+      return;
+    }
+
+    try {
+      // Try to parse and format as JSON
+      const obj = JSON.parse(selection.text);
+      const formatted = JSON.stringify(obj, null, 2);
+      await context.clipboard.writeText(formatted);
+      context.ui.showInformationMessage('Copied formatted JSON');
+    } catch (error) {
+      context.ui.showErrorMessage('Invalid JSON');
+    }
+  }
+
+  async deactivate(): Promise<void> {
+    // Cleanup
+  }
+}
+```
+
+---
+
+## Best Practices
+
+1. **Provide User Feedback**: Show success/error messages
+   ```typescript
+   await context.clipboard.writeText(text);
+   context.ui.showInformationMessage('Copied!');
+   ```
+
+2. **Handle Errors**: Wrap in try-catch
+   ```typescript
+   try {
+     await context.clipboard.writeText(text);
+   } catch (error) {
+     context.ui.showErrorMessage('Copy failed');
+   }
+   ```
+
+3. **Check Content Before Reading**: Verify clipboard has content
+   ```typescript
+   const items = await context.clipboard.read();
+   if (items.length === 0) {
+     return; // Empty clipboard
+   }
+   ```
+
+4. **Store History**: Save clipboard history for later use
+   ```typescript
+   const history = await context.storage.get('clipboard') ?? [];
+   history.unshift(text);
+   await context.storage.set('clipboard', history.slice(0, 10));
+   ```
+
+5. **Validate Content**: Check content type before processing
+   ```typescript
+   if (item.types.includes('text/plain')) {
+     const blob = await item.getType('text/plain');
+     const text = await blob.text();
+   }
+   ```
+
+---
+
+## Security Notes
+
+- **User Permission**: Browser may require user interaction for clipboard access
+- **Sensitive Data**: Be careful copying sensitive information
+- **Privacy**: Don't log clipboard contents
+- **User Awareness**: Always notify users when copying to clipboard
+
+```typescript
+// ✓ Good - notify user
+await context.clipboard.writeText(data);
+context.ui.showInformationMessage('Data copied to clipboard');
+
+// ✗ Bad - silent copy without notification
+await context.clipboard.writeText(sensitiveData); // No user notification
+```
+
+---
+
+## Browser Compatibility
+
+The Clipboard API requires:
+- HTTPS (except localhost)
+- User interaction for read operations
+- Permissions for accessing clipboard
+
+```typescript
+// Check if clipboard API is available
+if (!navigator.clipboard) {
+  context.ui.showErrorMessage('Clipboard API not available');
+  return;
+}
+
+// Clipboard read may require user permission
+try {
+  const items = await context.clipboard.read();
+} catch (error) {
+  if (error.name === 'NotAllowedError') {
+    context.ui.showErrorMessage('Clipboard access denied');
+  }
+}
+```
+
+---
+
+## Limitations
+
+- **Text Only (writeText)**: Only plain text supported for writing
+- **Read Requires Interaction**: Reading may require recent user interaction
+- **Size Limits**: Large content may fail to copy
+- **Format Support**: Limited MIME types supported
+
+---
+
+## See Also
+
+- [EditorAPI Reference](/developers/plugins/api-reference/editor-api) - Editor content
+- [UIAPI Reference](/developers/plugins/api-reference/ui-api) - User notifications
+- [StorageAPI Reference](/developers/plugins/api-reference/storage-api) - Store clipboard history

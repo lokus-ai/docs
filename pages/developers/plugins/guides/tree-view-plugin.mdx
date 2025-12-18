@@ -1,0 +1,770 @@
+---
+title: Creating Tree Views
+description: Complete tutorial for building custom tree view plugins in Lokus with tree data providers, custom rendering, and interactive actions.
+keywords: [lokus, tree view, sidebar, tree data provider, custom views, file explorer]
+---
+
+import { Callout } from 'nextra/components'
+import { Tabs} from 'nextra/components'
+
+# Creating Tree Views
+
+This tutorial teaches you how to build custom tree views for Lokus sidebars. Tree views are perfect for displaying hierarchical data like file explorers, outlines, or custom navigation panels.
+
+## What You'll Build
+
+We'll create a **"Bookmark Manager"** tree view that:
+- Displays bookmarked pages in a tree structure
+- Supports folders and nested organization
+- Provides click actions to open bookmarks
+- Updates dynamically when bookmarks change
+- Shows custom icons for different bookmark types
+
+## Prerequisites
+
+- Completed the [Getting Started](/developers/plugins/getting-started) guide
+- Understanding of React components (helpful but not required)
+- Familiarity with tree data structures
+
+## Step 1: Project Setup
+
+Create a new plugin with UI capabilities:
+
+```bash
+npx lokus-plugin create bookmark-manager --template react-ui-panel
+cd bookmark-manager
+npm install
+```
+
+<Callout type="info">
+The `react-ui-panel` template includes React dependencies and UI setup needed for tree views.
+</Callout>
+
+## Step 2: Understanding Tree Data Providers
+
+A Tree Data Provider is an object that implements the following interface:
+
+```typescript
+interface TreeDataProvider<T> {
+  // Get root elements or children of an element
+  getChildren(element?: T): Promise<T[]> | T[]
+
+  // Get the tree item representation for an element
+  getTreeItem(element: T): Promise<TreeItem> | TreeItem
+
+  // Optional: Get parent of an element
+  getParent?(element: T): Promise<T | undefined> | T | undefined
+
+  // Optional: Notify when tree data changes
+  onDidChangeTreeData?: (listener: (e?: T) => void) => Disposable
+}
+
+interface TreeItem {
+  label: string
+  description?: string
+  tooltip?: string
+  collapsibleState?: CollapsibleState // 0 = None, 1 = Collapsed, 2 = Expanded
+  command?: Command
+  iconPath?: string
+  contextValue?: string
+}
+```
+
+## Step 3: Define Your Data Model
+
+Create `src/models/Bookmark.ts`:
+
+```typescript filename="src/models/Bookmark.ts"
+export interface Bookmark {
+  id: string
+  label: string
+  type: 'folder' | 'page' | 'url'
+  path?: string // For pages
+  url?: string // For URLs
+  icon?: string
+  children?: Bookmark[]
+}
+
+export const sampleBookmarks: Bookmark[] = [
+  {
+    id: '1',
+    label: 'Work',
+    type: 'folder',
+    icon: '💼',
+    children: [
+      {
+        id: '2',
+        label: 'Project Planning',
+        type: 'page',
+        path: '/Work/Project Planning.md',
+        icon: '📋',
+      },
+      {
+        id: '3',
+        label: 'Meeting Notes',
+        type: 'page',
+        path: '/Work/Meeting Notes.md',
+        icon: '📝',
+      },
+    ],
+  },
+  {
+    id: '4',
+    label: 'Personal',
+    type: 'folder',
+    icon: '🏠',
+    children: [
+      {
+        id: '5',
+        label: 'Ideas',
+        type: 'page',
+        path: '/Personal/Ideas.md',
+        icon: '💡',
+      },
+      {
+        id: '6',
+        label: 'Reading List',
+        type: 'url',
+        url: 'https://example.com/reading',
+        icon: '📚',
+      },
+    ],
+  },
+  {
+    id: '7',
+    label: 'Quick Notes',
+    type: 'page',
+    path: '/Quick Notes.md',
+    icon: '⚡',
+  },
+]
+```
+
+## Step 4: Implement the Tree Data Provider
+
+Create `src/providers/BookmarkTreeProvider.ts`:
+
+<Tabs items={['BookmarkTreeProvider.ts', 'EventEmitter Helper']}>
+<Tabs.Tab>
+
+```typescript filename="src/providers/BookmarkTreeProvider.ts"
+import { Bookmark, sampleBookmarks } from '../models/Bookmark'
+import { EventEmitter } from '../utils/EventEmitter'
+
+export class BookmarkTreeProvider {
+  private bookmarks: Bookmark[] = sampleBookmarks
+  private _onDidChangeTreeData = new EventEmitter<Bookmark | undefined>()
+
+  // Event that fires when tree data changes
+  get onDidChangeTreeData() {
+    return this._onDidChangeTreeData.event
+  }
+
+  /**
+   * Get children for a bookmark (or root bookmarks if undefined)
+   */
+  async getChildren(element?: Bookmark): Promise<Bookmark[]> {
+    if (!element) {
+      // Return root level bookmarks
+      return this.bookmarks
+    }
+
+    // Return children of the element
+    return element.children || []
+  }
+
+  /**
+   * Get the tree item representation for a bookmark
+   */
+  async getTreeItem(element: Bookmark): Promise<TreeItem> {
+    const hasChildren = element.children && element.children.length > 0
+
+    return {
+      label: element.label,
+      description: this.getDescription(element),
+      tooltip: this.getTooltip(element),
+      collapsibleState: hasChildren ? 1 : 0, // 0 = None, 1 = Collapsed, 2 = Expanded
+      command: element.type !== 'folder' ? {
+        id: 'bookmark-manager.openBookmark',
+        title: 'Open Bookmark',
+        arguments: [element],
+      } : undefined,
+      iconPath: element.icon,
+      contextValue: element.type, // Used for context menus
+    }
+  }
+
+  /**
+   * Get parent of a bookmark (for navigation)
+   */
+  async getParent(element: Bookmark): Promise<Bookmark | undefined> {
+    return this.findParent(this.bookmarks, element)
+  }
+
+  /**
+   * Refresh the tree view
+   */
+  refresh(element?: Bookmark): void {
+    this._onDidChangeTreeData.fire(element)
+  }
+
+  /**
+   * Add a new bookmark
+   */
+  addBookmark(bookmark: Bookmark, parent?: Bookmark): void {
+    if (parent) {
+      // Add to parent's children
+      if (!parent.children) {
+        parent.children = []
+      }
+      parent.children.push(bookmark)
+      this.refresh(parent)
+    } else {
+      // Add to root
+      this.bookmarks.push(bookmark)
+      this.refresh()
+    }
+  }
+
+  /**
+   * Remove a bookmark
+   */
+  removeBookmark(bookmark: Bookmark): void {
+    const parent = this.findParent(this.bookmarks, bookmark)
+
+    if (parent && parent.children) {
+      parent.children = parent.children.filter(b => b.id !== bookmark.id)
+      this.refresh(parent)
+    } else {
+      this.bookmarks = this.bookmarks.filter(b => b.id !== bookmark.id)
+      this.refresh()
+    }
+  }
+
+  // Helper methods
+  private getDescription(element: Bookmark): string {
+    if (element.type === 'folder' && element.children) {
+      return `${element.children.length} items`
+    }
+    return ''
+  }
+
+  private getTooltip(element: Bookmark): string {
+    switch (element.type) {
+      case 'page':
+        return `Page: $\\{element.path\\}`
+      case 'url':
+        return `URL: $\\{element.url\\}`
+      case 'folder':
+        return `Folder: $\\{element.label\\}`
+      default:
+        return element.label
+    }
+  }
+
+  private findParent(
+    bookmarks: Bookmark[],
+    target: Bookmark
+  ): Bookmark | undefined {
+    for (const bookmark of bookmarks) {
+      if (bookmark.children?.some(child => child.id === target.id)) {
+        return bookmark
+      }
+
+      if (bookmark.children) {
+        const parent = this.findParent(bookmark.children, target)
+        if (parent) return parent
+      }
+    }
+    return undefined
+  }
+}
+```
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+```typescript filename="src/utils/EventEmitter.ts"
+export class EventEmitter<T> {
+  private listeners: Array<(data: T) => void> = []
+
+  /**
+   * Subscribe to events
+   */
+  event = (listener: (data: T) => void): { dispose: () => void } => {
+    this.listeners.push(listener)
+
+    return {
+      dispose: () => {
+        const index = this.listeners.indexOf(listener)
+        if (index > -1) {
+          this.listeners.splice(index, 1)
+        }
+      },
+    }
+  }
+
+  /**
+   * Fire an event to all listeners
+   */
+  fire(data: T): void {
+    this.listeners.forEach(listener => listener(data))
+  }
+}
+```
+
+</Tabs.Tab>
+</Tabs>
+
+<Callout type="info">
+**Key Methods:**
+- `getChildren()` - Called when expanding a node or loading root items
+- `getTreeItem()` - Converts your data into a displayable tree item
+- `onDidChangeTreeData` - Event that tells Lokus to refresh the tree
+- `refresh()` - Triggers a tree refresh for an element (or entire tree if undefined)
+</Callout>
+
+## Step 5: Register the Tree View
+
+Update `src/index.ts` to register your tree view:
+
+```typescript filename="src/index.ts"
+import { LokusPlugin } from '@lokus/plugin-api'
+import { BookmarkTreeProvider } from './providers/BookmarkTreeProvider'
+import { Bookmark } from './models/Bookmark'
+
+let treeProvider: BookmarkTreeProvider
+
+export function activate(context: LokusPlugin.ExtensionContext) {
+  // Create the tree data provider
+  treeProvider = new BookmarkTreeProvider()
+
+  // Register the tree view
+  const treeView = context.ui.registerTreeDataProvider('bookmarkManager', treeProvider)
+
+  // Register command to open bookmarks
+  const openCommand = context.commands.register({
+    id: 'bookmark-manager.openBookmark',
+    title: 'Open Bookmark',
+    handler: async (bookmark: Bookmark) => {
+      if (bookmark.type === 'page' && bookmark.path) {
+        // Open page in editor
+        await context.workspace.openDocument(bookmark.path)
+      } else if (bookmark.type === 'url' && bookmark.url) {
+        // Open URL in browser
+        await context.env.openExternal(bookmark.url)
+      }
+    },
+  })
+
+  // Register command to add bookmark
+  const addCommand = context.commands.register({
+    id: 'bookmark-manager.addBookmark',
+    title: 'Add Bookmark',
+    handler: async () => {
+      const label = await context.ui.showInputBox({
+        prompt: 'Enter bookmark name',
+        placeholder: 'My Bookmark',
+      })
+
+      if (label) {
+        const newBookmark: Bookmark = {
+          id: Date.now().toString(),
+          label,
+          type: 'page',
+          path: `/Bookmarks/${label}.md`,
+          icon: '📌',
+        }
+
+        treeProvider.addBookmark(newBookmark)
+      }
+    },
+  })
+
+  // Register command to refresh tree
+  const refreshCommand = context.commands.register({
+    id: 'bookmark-manager.refresh',
+    title: 'Refresh Bookmarks',
+    handler: () => {
+      treeProvider.refresh()
+    },
+  })
+
+  // Add all disposables to subscriptions
+  context.subscriptions.push(treeView, openCommand, addCommand, refreshCommand)
+}
+
+export function deactivate() {
+  // Cleanup handled automatically
+}
+```
+
+## Step 6: Update the Manifest
+
+Configure your plugin to show the tree view in the sidebar:
+
+```json filename="plugin.json"
+{
+  "manifest": "2.0",
+  "id": "bookmark-manager",
+  "name": "bookmark-manager",
+  "displayName": "Bookmark Manager",
+  "version": "0.1.0",
+  "description": "Manage your bookmarks in a tree view",
+  "main": "./dist/index.js",
+  "lokusVersion": ">=1.0.0",
+  "capabilities": {
+    "ui": true,
+    "commands": true
+  },
+  "contributes": {
+    "views": {
+      "sidebar": [
+        {
+          "id": "bookmarkManager",
+          "name": "Bookmarks",
+          "icon": "🔖",
+          "when": "always"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "id": "bookmark-manager.openBookmark",
+        "title": "Open Bookmark",
+        "category": "Bookmarks"
+      },
+      {
+        "id": "bookmark-manager.addBookmark",
+        "title": "Add Bookmark",
+        "category": "Bookmarks",
+        "icon": "➕"
+      },
+      {
+        "id": "bookmark-manager.refresh",
+        "title": "Refresh Bookmarks",
+        "category": "Bookmarks",
+        "icon": "🔄"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "bookmark-manager.addBookmark",
+          "when": "view == bookmarkManager",
+          "group": "navigation"
+        },
+        {
+          "command": "bookmark-manager.refresh",
+          "when": "view == bookmarkManager",
+          "group": "navigation"
+        }
+      ]
+    }
+  }
+}
+```
+
+<Callout type="info">
+**Manifest Configuration:**
+- `views.sidebar` - Defines where your tree view appears
+- `contributes.commands` - Declares available commands
+- `menus.view/title` - Adds buttons to the tree view toolbar
+</Callout>
+
+## Step 7: Build and Test
+
+Build and link your plugin:
+
+```bash
+# Build the plugin
+npm run build
+
+# Link for development
+npx lokus-plugin link
+
+# Restart Lokus
+```
+
+### Testing Your Tree View
+
+You should now see:
+
+1. **Sidebar Panel** - "Bookmarks" with a 🔖 icon
+2. **Tree Structure** - Folders and bookmarks in a hierarchy
+3. **Toolbar Buttons** - Add (➕) and Refresh (🔄) buttons
+4. **Click Actions** - Clicking a bookmark opens the page/URL
+
+## Expected Output
+
+Your tree view should look like this:
+
+```
+🔖 Bookmarks                          [➕] [🔄]
+├─ 💼 Work (2 items)
+│  ├─ 📋 Project Planning
+│  └─ 📝 Meeting Notes
+├─ 🏠 Personal (2 items)
+│  ├─ 💡 Ideas
+│  └─ 📚 Reading List
+└─ ⚡ Quick Notes
+```
+
+## Step 8: Add Context Menus
+
+Add right-click context menus for tree items:
+
+```json filename="plugin.json" {18-36}
+{
+  "contributes": {
+    "commands": [
+      {
+        "id": "bookmark-manager.deleteBookmark",
+        "title": "Delete Bookmark",
+        "category": "Bookmarks"
+      },
+      {
+        "id": "bookmark-manager.renameBookmark",
+        "title": "Rename Bookmark",
+        "category": "Bookmarks"
+      }
+    ],
+    "menus": {
+      "view/item/context": [
+        {
+          "command": "bookmark-manager.deleteBookmark",
+          "when": "view == bookmarkManager",
+          "group": "2_actions"
+        },
+        {
+          "command": "bookmark-manager.renameBookmark",
+          "when": "view == bookmarkManager && viewItem == page",
+          "group": "2_actions"
+        }
+      ]
+    }
+  }
+}
+```
+
+Implement the commands:
+
+```typescript filename="src/index.ts"
+// Delete bookmark command
+const deleteCommand = context.commands.register({
+  id: 'bookmark-manager.deleteBookmark',
+  title: 'Delete Bookmark',
+  handler: async (bookmark: Bookmark) => {
+    const confirm = await context.ui.showQuickPick(
+      ['Yes', 'No'],
+      {
+        title: `Delete "${bookmark.label}"?`,
+        placeholder: 'This action cannot be undone',
+      }
+    )
+
+    if (confirm === 'Yes') {
+      treeProvider.removeBookmark(bookmark)
+    }
+  },
+})
+
+// Rename bookmark command
+const renameCommand = context.commands.register({
+  id: 'bookmark-manager.renameBookmark',
+  title: 'Rename Bookmark',
+  handler: async (bookmark: Bookmark) => {
+    const newLabel = await context.ui.showInputBox({
+      prompt: 'Enter new name',
+      value: bookmark.label,
+    })
+
+    if (newLabel && newLabel !== bookmark.label) {
+      bookmark.label = newLabel
+      treeProvider.refresh()
+    }
+  },
+})
+
+context.subscriptions.push(deleteCommand, renameCommand)
+```
+
+<Callout type="info">
+**Context Value Usage:**
+- `viewItem` in the `when` clause refers to the `contextValue` from `getTreeItem()`
+- Use different context values for different item types (e.g., 'page', 'folder', 'url')
+- This allows showing different menu items for different node types
+</Callout>
+
+## Step 9: Add Drag and Drop Support
+
+Enable dragging and reordering bookmarks:
+
+```typescript filename="src/providers/BookmarkTreeProvider.ts" {5-9,14-30}
+export class BookmarkTreeProvider {
+  // ... existing code ...
+
+  /**
+   * Handle drag and drop
+   */
+  async handleDrop(target: Bookmark, sources: Bookmark[]): Promise<void> {
+    // Implementation depends on your requirements
+    for (const source of sources) {
+      // Remove from old location
+      this.removeBookmark(source)
+
+      // Add to new location
+      this.addBookmark(source, target.type === 'folder' ? target : undefined)
+    }
+
+    this.refresh()
+  }
+
+  /**
+   * Can this item be dragged?
+   */
+  async canDrag(element: Bookmark): Promise<boolean> {
+    return true // All bookmarks can be dragged
+  }
+
+  /**
+   * Can items be dropped on this target?
+   */
+  async canDrop(target: Bookmark, sources: Bookmark[]): Promise<boolean> {
+    return target.type === 'folder' // Only drop on folders
+  }
+}
+```
+
+## Advanced: Dynamic Loading
+
+For large datasets, load children on demand:
+
+```typescript filename="src/providers/BookmarkTreeProvider.ts"
+export class BookmarkTreeProvider {
+  private cache = new Map<string, Bookmark[]>()
+
+  async getChildren(element?: Bookmark): Promise<Bookmark[]> {
+    if (!element) {
+      // Return root items
+      return this.bookmarks
+    }
+
+    // Check cache first
+    if (this.cache.has(element.id)) {
+      return this.cache.get(element.id)!
+    }
+
+    // Load children from remote source
+    const children = await this.loadChildrenFromRemote(element.id)
+    this.cache.set(element.id, children)
+
+    return children
+  }
+
+  private async loadChildrenFromRemote(parentId: string): Promise<Bookmark[]> {
+    // Simulate async loading
+    await new Promise(resolve => setTimeout(resolve, 500))
+
+    // Return loaded children
+    return [
+      {
+        id: `${parentId}-1`,
+        label: 'Loaded Child 1',
+        type: 'page',
+        path: '/loaded1.md',
+        icon: '📄',
+      },
+      {
+        id: `${parentId}-2`,
+        label: 'Loaded Child 2',
+        type: 'page',
+        path: '/loaded2.md',
+        icon: '📄',
+      },
+    ]
+  }
+
+  /**
+   * Clear cache and refresh
+   */
+  clearCache(): void {
+    this.cache.clear()
+    this.refresh()
+  }
+}
+```
+
+## Common Pitfalls
+
+<Callout type="warning">
+**Tree Not Updating**
+
+If your tree doesn't update after data changes, make sure you're calling `refresh()`:
+```typescript
+treeProvider.addBookmark(newBookmark)
+treeProvider.refresh() // ✅ Required!
+```
+</Callout>
+
+<Callout type="warning">
+**Command Arguments Not Passed**
+
+Ensure your command in `getTreeItem()` includes arguments:
+```typescript
+command: {
+  id: 'my.command',
+  title: 'My Command',
+  arguments: [element], // ✅ Pass the element
+}
+```
+</Callout>
+
+<Callout type="warning">
+**Async Methods**
+
+Both `getChildren()` and `getTreeItem()` can be async or sync. Choose based on your needs:
+```typescript
+async getChildren(element?: T): Promise<T[]>   // ✅ For remote data
+getChildren(element?: T): T[]                   // ✅ For local data
+```
+</Callout>
+
+## Performance Tips
+
+For large trees, follow these best practices:
+
+1. **Lazy Loading** - Only load visible children
+2. **Caching** - Cache expensive computations
+3. **Debounce Refresh** - Batch multiple updates
+4. **Limit Depth** - Prevent infinite recursion
+
+```typescript
+// Debounce refresh calls
+private refreshTimeout?: NodeJS.Timeout
+
+debouncedRefresh(element?: Bookmark): void {
+  if (this.refreshTimeout) {
+    clearTimeout(this.refreshTimeout)
+  }
+
+  this.refreshTimeout = setTimeout(() => {
+    this.refresh(element)
+  }, 100)
+}
+```
+
+## Next Steps
+
+Now that you've built a tree view plugin, explore:
+
+- **[Terminal Plugin](/developers/plugins/guides/terminal-plugin)** - Integrate terminal functionality
+- **[Testing Plugins](/developers/plugins/guides/testing-plugins)** - Write comprehensive tests
+- **[UI API Reference](/developers/plugins/api-reference/ui)** - Full UI API documentation
+- **[Commands API Reference](/developers/plugins/api-reference/commands)** - Command system details
+
+## Complete Code Reference
+
+<Callout type="info">
+See the full working example in the [Lokus Plugin Examples](https://github.com/lokus-ai/plugin-examples/tree/main/bookmark-manager) repository.
+</Callout>

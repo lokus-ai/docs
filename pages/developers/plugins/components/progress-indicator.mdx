@@ -1,0 +1,625 @@
+---
+title: "ProgressIndicator Component"
+description: "Show progress feedback for long-running operations"
+---
+
+# ProgressIndicator Component
+
+The ProgressIndicator component provides visual feedback for long-running operations. It supports both determinate (percentage-based) and indeterminate progress, with optional cancellation.
+
+## Usage
+
+The primary way to show progress is through `api.ui.withProgress()`:
+
+```javascript
+const result = await api.ui.withProgress(options, task);
+```
+
+## Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `options` | `object` | Yes | Progress configuration |
+| `task` | `function` | Yes | Task function to execute |
+
+## Options
+
+```typescript
+interface ProgressOptions {
+  location: 'notification' | 'window' | 'source-control';
+  title?: string;
+  cancellable?: boolean;
+}
+```
+
+### Available Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `location` | `string` | `'notification'` | Where to show the progress indicator |
+| `title` | `string` | - | Title text displayed above progress bar |
+| `cancellable` | `boolean` | `false` | Whether user can cancel the operation |
+
+### Location Types
+
+| Location | Behavior | Use Case |
+|----------|----------|----------|
+| `'notification'` | Bottom-right corner, small | Background tasks, non-intrusive |
+| `'window'` | Center of window, modal | Critical operations, requires attention |
+| `'source-control'` | Source control panel | SCM operations |
+
+## Task Function
+
+The task function receives two parameters:
+
+```typescript
+type TaskFunction<T> = (
+  progress: Progress,
+  token: CancellationToken
+) => Promise<T>;
+```
+
+### Progress Object
+
+```typescript
+interface Progress {
+  report(value: ProgressValue): void;
+}
+
+interface ProgressValue {
+  message?: string;    // Status message
+  increment?: number;  // Percentage increment (0-100)
+}
+```
+
+### CancellationToken
+
+```typescript
+interface CancellationToken {
+  isCancellationRequested: boolean;
+  onCancellationRequested(listener: () => void): Disposable;
+}
+```
+
+## Basic Example
+
+```javascript
+await api.ui.withProgress(
+  {
+    location: 'notification',
+    title: 'Processing Files',
+    cancellable: true
+  },
+  async (progress, token) => {
+    for (let i = 0; i < 100; i++) {
+      // Check for cancellation
+      if (token.isCancellationRequested) {
+        return null;
+      }
+
+      // Report progress
+      progress.report({
+        message: `Processing file ${i + 1}/100`,
+        increment: 1
+      });
+
+      await processFile(i);
+    }
+
+    return 'Complete';
+  }
+);
+```
+
+## Determinate Progress
+
+Show exact progress percentage:
+
+```javascript
+await api.ui.withProgress(
+  {
+    location: 'notification',
+    title: 'Uploading Files'
+  },
+  async (progress) => {
+    const files = await getFiles();
+    const total = files.length;
+
+    for (let i = 0; i < total; i++) {
+      progress.report({
+        message: `Uploading $\\{files[i].name\\}`,
+        increment: (100 / total)  // Calculate percentage
+      });
+
+      await uploadFile(files[i]);
+    }
+  }
+);
+```
+
+## Indeterminate Progress
+
+When you don't know the total amount:
+
+```javascript
+await api.ui.withProgress(
+  {
+    location: 'notification',
+    title: 'Loading Data'
+  },
+  async (progress) => {
+    progress.report({ message: 'Connecting to server...' });
+    await connect();
+
+    progress.report({ message: 'Fetching data...' });
+    const data = await fetchData();
+
+    progress.report({ message: 'Processing...' });
+    return await process(data);
+  }
+);
+```
+
+Note: Omit the `increment` property for indeterminate progress (animated bar).
+
+## Cancellable Operations
+
+Allow users to cancel long operations:
+
+```javascript
+const result = await api.ui.withProgress(
+  {
+    location: 'window',
+    title: 'Building Project',
+    cancellable: true
+  },
+  async (progress, token) => {
+    // Set up cancellation handler
+    token.onCancellationRequested(() => {
+      console.log('User cancelled build');
+    });
+
+    const steps = ['Clean', 'Compile', 'Test', 'Package'];
+
+    for (let i = 0; i < steps.length; i++) {
+      // Check cancellation before each step
+      if (token.isCancellationRequested) {
+        return { success: false, reason: 'cancelled' };
+      }
+
+      progress.report({
+        message: `${steps[i]}...`,
+        increment: 25
+      });
+
+      await executeStep(steps[i]);
+    }
+
+    return { success: true };
+  }
+);
+
+if (result.success) {
+  api.ui.showInformationMessage('Build complete!');
+} else {
+  api.ui.showWarningMessage('Build cancelled');
+}
+```
+
+## Window (Modal) Progress
+
+For operations that require user attention:
+
+```javascript
+await api.ui.withProgress(
+  {
+    location: 'window',
+    title: 'Installing Dependencies',
+    cancellable: false
+  },
+  async (progress) => {
+    progress.report({ message: 'Downloading packages...' });
+    await downloadPackages();
+
+    progress.report({ message: 'Installing...' });
+    await installPackages();
+
+    progress.report({ message: 'Running post-install scripts...' });
+    await runScripts();
+  }
+);
+```
+
+## Multiple Progress Indicators
+
+You can show multiple progress indicators simultaneously:
+
+```javascript
+// First operation
+api.ui.withProgress(
+  {
+    location: 'notification',
+    title: 'Syncing Files'
+  },
+  async (progress) => {
+    // ... sync logic
+  }
+);
+
+// Second operation (runs concurrently)
+api.ui.withProgress(
+  {
+    location: 'notification',
+    title: 'Building Assets'
+  },
+  async (progress) => {
+    // ... build logic
+  }
+);
+```
+
+## Error Handling
+
+Handle errors within the task function:
+
+```javascript
+try {
+  const result = await api.ui.withProgress(
+    {
+      location: 'notification',
+      title: 'Processing'
+    },
+    async (progress) => {
+      try {
+        progress.report({ message: 'Step 1...' });
+        await step1();
+
+        progress.report({ message: 'Step 2...' });
+        await step2();
+
+        return { success: true };
+      } catch (error) {
+        // Handle error within task
+        progress.report({ message: 'Failed!' });
+        throw error;
+      }
+    }
+  );
+
+  api.ui.showInformationMessage('Operation completed');
+} catch (error) {
+  api.ui.showErrorMessage(`Operation failed: $\\{error.message\\}`);
+}
+```
+
+## Real-World Examples
+
+### File Download
+
+```javascript
+async function downloadFile(api, url, destination) {
+  await api.ui.withProgress(
+    {
+      location: 'notification',
+      title: 'Downloading File',
+      cancellable: true
+    },
+    async (progress, token) => {
+      const response = await fetch(url);
+      const total = parseInt(response.headers.get('content-length'), 10);
+      let downloaded = 0;
+
+      const reader = response.body.getReader();
+      const chunks = [];
+
+      while (true) {
+        // Check cancellation
+        if (token.isCancellationRequested) {
+          reader.cancel();
+          return null;
+        }
+
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        chunks.push(value);
+        downloaded += value.length;
+
+        // Report progress
+        const percentage = (downloaded / total) * 100;
+        progress.report({
+          message: `${(downloaded / 1024 / 1024).toFixed(2)} MB / ${(total / 1024 / 1024).toFixed(2)} MB`,
+          increment: percentage - (downloaded - value.length) / total * 100
+        });
+      }
+
+      // Save file
+      const blob = new Blob(chunks);
+      await saveFile(destination, blob);
+      return destination;
+    }
+  );
+}
+```
+
+### Batch Processing
+
+```javascript
+async function processBatch(api, items) {
+  const results = await api.ui.withProgress(
+    {
+      location: 'window',
+      title: 'Processing Items',
+      cancellable: true
+    },
+    async (progress, token) => {
+      const results = [];
+      const total = items.length;
+
+      for (let i = 0; i < total; i++) {
+        if (token.isCancellationRequested) {
+          break;
+        }
+
+        const item = items[i];
+
+        progress.report({
+          message: `Processing ${item.name} (${i + 1}/${total})`,
+          increment: (100 / total)
+        });
+
+        try {
+          const result = await processItem(item);
+          results.push({ item, result, success: true });
+        } catch (error) {
+          results.push({ item, error, success: false });
+        }
+      }
+
+      return results;
+    }
+  );
+
+  // Show summary
+  const succeeded = results.filter(r => r.success).length;
+  const failed = results.filter(r => !r.success).length;
+
+  api.ui.showInformationMessage(
+    `Processed ${succeeded} items successfully, ${failed} failed`
+  );
+}
+```
+
+### Search Operation
+
+```javascript
+async function searchFiles(api, query) {
+  return await api.ui.withProgress(
+    {
+      location: 'notification',
+      title: 'Searching Files'
+    },
+    async (progress) => {
+      progress.report({ message: 'Indexing files...' });
+      const files = await api.workspace.findFiles('**/*');
+
+      progress.report({ message: `Searching ${files.length} files...` });
+      const results = [];
+
+      for (let i = 0; i < files.length; i++) {
+        const content = await api.workspace.readFile(files[i]);
+        if (content.includes(query)) {
+          results.push(files[i]);
+        }
+
+        // Update every 100 files
+        if (i % 100 === 0) {
+          progress.report({
+            message: `Searched ${i}/${files.length} files`,
+            increment: (100 / files.length) * 100
+          });
+        }
+      }
+
+      return results;
+    }
+  );
+}
+```
+
+## Styling
+
+The ProgressIndicator uses the following CSS variables:
+
+```css
+/* Container */
+--panel                       /* Background color */
+--border                      /* Border color */
+--radius                      /* Border radius */
+
+/* Text */
+--text                        /* Title color */
+--text-secondary              /* Message color */
+--muted                       /* Percentage color */
+
+/* Progress bar */
+--border                      /* Bar background */
+--accent                      /* Bar fill color */
+
+/* Cancel button */
+--text-secondary              /* Button color */
+--danger                      /* Button hover color */
+```
+
+### Location-Specific Styles
+
+Different locations have different styling:
+
+```css
+/* Notification (bottom-right) */
+.progress-notification {
+  min-width: 300px;
+  max-width: 500px;
+}
+
+/* Window (modal, centered) */
+.progress-window {
+  min-width: 400px;
+  max-width: 600px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* Source control (compact) */
+.progress-source-control {
+  min-width: 250px;
+  padding: 8px;
+}
+```
+
+## Best Practices
+
+### 1. Choose Appropriate Location
+
+- **Notification**: Non-critical background tasks
+- **Window**: Critical operations requiring user attention
+- **Source Control**: SCM-related operations
+
+### 2. Provide Meaningful Messages
+
+```javascript
+// Good
+progress.report({ message: 'Compiling TypeScript (35/100 files)' });
+
+// Less helpful
+progress.report({ message: 'Processing...' });
+```
+
+### 3. Update Progress Regularly
+
+Update at least every few seconds for long operations:
+
+```javascript
+for (let i = 0; i < items.length; i++) {
+  // Update every 10 items or every item for small batches
+  if (i % 10 === 0 || items.length < 50) {
+    progress.report({
+      message: `Processing ${i + 1}/$\\{items.length\\}`,
+      increment: (100 / items.length)
+    });
+  }
+  await processItem(items[i]);
+}
+```
+
+### 4. Handle Cancellation Properly
+
+Always check `isCancellationRequested` and clean up:
+
+```javascript
+async (progress, token) => {
+  const cleanup = [];
+
+  try {
+    for (const item of items) {
+      if (token.isCancellationRequested) {
+        break;
+      }
+      const resource = await processItem(item);
+      cleanup.push(resource);
+    }
+  } finally {
+    // Clean up even if cancelled
+    for (const resource of cleanup) {
+      await resource.dispose();
+    }
+  }
+}
+```
+
+### 5. Use Determinate When Possible
+
+Determinate progress (with percentage) is more informative:
+
+```javascript
+// Good: User knows progress
+progress.report({
+  message: 'Processing file 50/100',
+  increment: 1
+});
+
+// Less informative
+progress.report({
+  message: 'Processing files...'
+});
+```
+
+## Performance Tips
+
+### 1. Batch Progress Updates
+
+Don't update too frequently:
+
+```javascript
+// Good: Update every 100ms
+let lastUpdate = 0;
+for (const item of items) {
+  await process(item);
+
+  const now = Date.now();
+  if (now - lastUpdate > 100) {
+    progress.report({ /* ... */ });
+    lastUpdate = now;
+  }
+}
+
+// Bad: Update every iteration
+for (const item of items) {
+  await process(item);
+  progress.report({ /* ... */ });  // Too frequent!
+}
+```
+
+### 2. Avoid Expensive Message Calculations
+
+```javascript
+// Good: Calculate once
+const total = items.length;
+progress.report({
+  message: `${i + 1}/$\\{total\\}`,
+  increment: percentageIncrement
+});
+
+// Bad: Recalculate every time
+progress.report({
+  message: `${i + 1}/$\\{items.filter(x => x.valid).length\\}`,  // Expensive!
+  increment: percentageIncrement
+});
+```
+
+## Troubleshooting
+
+### Progress not showing
+Ensure `withProgress` is awaited and task function is async:
+```javascript
+await api.ui.withProgress(options, async (progress) => { ... });
+```
+
+### Percentage not updating
+Make sure you're using `increment`, not absolute values:
+```javascript
+progress.report({ increment: 10 });  // Adds 10%
+```
+
+### Cancellation not working
+Check `isCancellationRequested` regularly and return early:
+```javascript
+if (token.isCancellationRequested) {
+  return null;
+}
+```
+
+## See Also
+
+- [UIAPI Reference](/developers/plugins/api-reference/ui-api)
+- [Component Overview](/developers/plugins/components)
+- [UI Plugins Guide](/developers/plugins/ui-plugins)

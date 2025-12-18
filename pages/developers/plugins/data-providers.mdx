@@ -43,7 +43,7 @@ export default class DataProviderPlugin implements Plugin {
   async fetchData(query: string): Promise<any[]> {
     try {
       const response = await this.api.network.fetch(
-        `https://api.example.com/data?q=${encodeURIComponent(query)}`
+        `https://api.example.com/data?q=$\\{encodeURIComponent(query)\\}`
       )
       return await response.json()
     } catch (error) {
@@ -123,7 +123,7 @@ class GitHubProviderPlugin implements Plugin {
         `https://api.github.com/repos/${repo || 'user/repo'}/issues`,
         {
           headers: {
-            'Authorization': `Bearer ${this.token}`,
+            'Authorization': `Bearer $\\{this.token\\}`,
             'Accept': 'application/vnd.github.v3+json'
           }
         }
@@ -211,19 +211,19 @@ class RESTProviderPlugin implements Plugin {
   }
 
   private async request(endpoint: string, options: RequestInit = {}) {
-    const url = `${this.baseUrl}${endpoint}`
+    const url = `${this.baseUrl}$\\{endpoint\\}`
 
     const response = await this.api.network.fetch(url, {
       ...options,
       headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
+        'Authorization': `Bearer $\\{this.apiKey\\}`,
         'Content-Type': 'application/json',
         ...options.headers
       }
     })
 
     if (!response.ok) {
-      throw new Error(`API request failed: ${response.statusText}`)
+      throw new Error(`API request failed: $\\{response.statusText\\}`)
     }
 
     return response.json()
@@ -253,14 +253,14 @@ class RESTProviderPlugin implements Plugin {
   }
 
   async updateItem(id: string, data: any) {
-    return this.request(`/items/${id}`, {
+    return this.request(`/items/$\\{id\\}`, {
       method: 'PUT',
       body: JSON.stringify(data)
     })
   }
 
   async deleteItem(id: string) {
-    return this.request(`/items/${id}`, {
+    return this.request(`/items/$\\{id\\}`, {
       method: 'DELETE'
     })
   }
@@ -292,7 +292,7 @@ class CachedProviderPlugin implements Plugin {
       })
 
       // Persist to storage
-      await this.api.storage.set(`cache:${key}`, {
+      await this.api.storage.set(`cache:$\\{key\\}`, {
         data,
         timestamp: Date.now()
       })
@@ -313,8 +313,8 @@ class CachedProviderPlugin implements Plugin {
   }
 
   async getData(id: string) {
-    return this.fetchWithCache(`data:${id}`, () =>
-      this.api.network.fetch(`https://api.example.com/data/${id}`)
+    return this.fetchWithCache(`data:$\\{id\\}`, () =>
+      this.api.network.fetch(`https://api.example.com/data/$\\{id\\}`)
         .then(r => r.json())
     )
   }

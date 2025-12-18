@@ -1,0 +1,745 @@
+---
+title: "usePluginTreeViews"
+description: "React hooks for tree view providers"
+---
+
+# usePluginTreeViews
+
+React hooks for accessing plugin tree view providers. Tree views allow plugins to display hierarchical data in the sidebar, similar to file explorers or outlines.
+
+## Import
+
+```javascript
+import {
+  usePluginTreeViews,
+  usePluginTreeViewsByPlugin,
+  useTreeViewExists
+} from '@lokus/plugin-sdk';
+```
+
+## Hooks
+
+### usePluginTreeViews()
+
+Returns an array of all registered tree view providers.
+
+**Returns:** `TreeViewRegistration[]`
+
+**Updates when:**
+- Tree provider is registered
+- Tree provider is unregistered
+- Tree providers are cleared
+
+**Example:**
+```jsx
+import { usePluginTreeViews } from '@lokus/plugin-sdk';
+
+function TreeViewList() {
+  const treeViews = usePluginTreeViews();
+
+  return (
+    <div>
+      <h3>Available Tree Views ({treeViews.length})</h3>
+      <ul>
+        {treeViews.map(view => (
+          <li key={view.viewId}>
+            <strong>{view.title}</strong>
+            <span className="plugin-id">{view.pluginId}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+---
+
+### usePluginTreeViewsByPlugin(pluginId)
+
+Get tree views registered by a specific plugin.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| pluginId | string | Plugin ID to filter by |
+
+**Returns:** `TreeViewRegistration[]`
+
+**Updates when:**
+- Tree provider is registered
+- Tree provider is unregistered
+- Tree providers are cleared
+- pluginId parameter changes
+
+**Example:**
+```jsx
+import { usePluginTreeViewsByPlugin } from '@lokus/plugin-sdk';
+
+function PluginTreeViews({ pluginId }) {
+  const treeViews = usePluginTreeViewsByPlugin(pluginId);
+
+  if (treeViews.length === 0) {
+    return <p>No tree views for {pluginId}</p>;
+  }
+
+  return (
+    <div>
+      <h4>{pluginId} Tree Views</h4>
+      <ul>
+        {treeViews.map(view => (
+          <li key={view.viewId}>{view.title}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+---
+
+### useTreeViewExists(viewId)
+
+Check if a tree view is currently registered.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| viewId | string | Tree view ID to check |
+
+**Returns:** `boolean` - `true` if tree view exists, `false` otherwise
+
+**Updates when:**
+- Tree provider is registered
+- Tree provider is unregistered
+- Tree providers are cleared
+- viewId parameter changes
+
+**Example:**
+```jsx
+import { useTreeViewExists } from '@lokus/plugin-sdk';
+
+function ConditionalTreeView({ viewId }) {
+  const exists = useTreeViewExists(viewId);
+
+  if (!exists) {
+    return (
+      <div className="warning">
+        Tree view "{viewId}" not available.
+        Please install the required plugin.
+      </div>
+    );
+  }
+
+  return <div>Tree view is available!</div>;
+}
+```
+
+## TreeViewRegistration Interface
+
+```typescript
+interface TreeViewRegistration {
+  viewId: string;              // Unique tree view identifier
+  provider: TreeDataProvider;  // Tree data provider instance
+  title: string;               // Display title
+  pluginId: string;            // Plugin that registered this view
+}
+```
+
+## TreeDataProvider Interface
+
+```typescript
+interface TreeDataProvider {
+  getChildren(element?: any): any[] | Promise<any[]>;
+  getTreeItem(element: any): TreeItem | Promise<TreeItem>;
+  onDidChangeTreeData?: (callback: () => void) => { dispose: () => void };
+}
+
+interface TreeItem {
+  id: string;
+  label: string;
+  description?: string;
+  iconPath?: string;
+  collapsibleState?: 'none' | 'collapsed' | 'expanded';
+  command?: {
+    id: string;
+    title: string;
+    arguments?: any[];
+  };
+  contextValue?: string;
+}
+```
+
+## Common Patterns
+
+### Pattern 1: Tree View Selector
+
+```jsx
+import { usePluginTreeViews } from '@lokus/plugin-sdk';
+import { useState } from 'react';
+
+function TreeViewSelector() {
+  const treeViews = usePluginTreeViews();
+  const [selected, setSelected] = useState(null);
+
+  return (
+    <div>
+      <select
+        value={selected || ''}
+        onChange={(e) => setSelected(e.target.value)}
+      >
+        <option value="">Select a tree view...</option>
+        {treeViews.map(view => (
+          <option key={view.viewId} value={view.viewId}>
+            {view.title}
+          </option>
+        ))}
+      </select>
+
+      {selected && (
+        <TreeViewRenderer viewId={selected} />
+      )}
+    </div>
+  );
+}
+```
+
+### Pattern 2: Tree View Renderer
+
+```jsx
+import { usePluginTreeViews } from '@lokus/plugin-sdk';
+import { useState, useEffect } from 'react';
+
+function TreeViewRenderer({ viewId }) {
+  const treeViews = usePluginTreeViews();
+  const [items, setItems] = useState([]);
+
+  const treeView = treeViews.find(v => v.viewId === viewId);
+
+  useEffect(() => {
+    if (!treeView) return;
+
+    const loadItems = async () => {
+      const children = await treeView.provider.getChildren();
+      const treeItems = await Promise.all(
+        children.map(child => treeView.provider.getTreeItem(child))
+      );
+      setItems(treeItems);
+    };
+
+    loadItems();
+
+    // Listen for updates
+    if (treeView.provider.onDidChangeTreeData) {
+      const subscription = treeView.provider.onDidChangeTreeData(() => {
+        loadItems();
+      });
+      return () => subscription.dispose();
+    }
+  }, [treeView]);
+
+  if (!treeView) {
+    return <p>Tree view not found</p>;
+  }
+
+  return (
+    <div className="tree-view">
+      <h4>{treeView.title}</h4>
+      <ul>
+        {items.map(item => (
+          <TreeItemComponent key={item.id} item={item} />
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+### Pattern 3: Expandable Tree Items
+
+```jsx
+import { useState } from 'react';
+
+function TreeItemComponent({ item, provider }) {
+  const [expanded, setExpanded] = useState(
+    item.collapsibleState === 'expanded'
+  );
+  const [children, setChildren] = useState([]);
+
+  const handleExpand = async () => {
+    if (!expanded && item.collapsibleState !== 'none') {
+      const childElements = await provider.getChildren(item);
+      const childItems = await Promise.all(
+        childElements.map(child => provider.getTreeItem(child))
+      );
+      setChildren(childItems);
+    }
+    setExpanded(!expanded);
+  };
+
+  return (
+    <li>
+      <div className="tree-item" onClick={handleExpand}>
+        {item.collapsibleState !== 'none' && (
+          <span className="expand-icon">
+            {expanded ? '▼' : '▶'}
+          </span>
+        )}
+        {item.iconPath && (
+          <img src={item.iconPath} alt="" className="icon" />
+        )}
+        <span>{item.label}</span>
+        {item.description && (
+          <span className="description">{item.description}</span>
+        )}
+      </div>
+
+      {expanded && children.length > 0 && (
+        <ul className="tree-children">
+          {children.map(child => (
+            <TreeItemComponent
+              key={child.id}
+              item={child}
+              provider={provider}
+            />
+          ))}
+        </ul>
+      )}
+    </li>
+  );
+}
+```
+
+### Pattern 4: Plugin Tree View Manager
+
+```jsx
+import { usePluginTreeViews } from '@lokus/plugin-sdk';
+import { useMemo } from 'react';
+
+function PluginTreeManager() {
+  const treeViews = usePluginTreeViews();
+
+  const grouped = useMemo(() => {
+    const groups = {};
+    treeViews.forEach(view => {
+      if (!groups[view.pluginId]) {
+        groups[view.pluginId] = [];
+      }
+      groups[view.pluginId].push(view);
+    });
+    return groups;
+  }, [treeViews]);
+
+  return (
+    <div className="tree-manager">
+      {Object.entries(grouped).map(([pluginId, views]) => (
+        <section key={pluginId}>
+          <h3>{pluginId}</h3>
+          <ul>
+            {views.map(view => (
+              <li key={view.viewId}>{view.title}</li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </div>
+  );
+}
+```
+
+### Pattern 5: Tree View Search
+
+```jsx
+import { usePluginTreeViews } from '@lokus/plugin-sdk';
+import { useState, useMemo } from 'react';
+
+function SearchableTreeViews() {
+  const treeViews = usePluginTreeViews();
+  const [search, setSearch] = useState('');
+
+  const filtered = useMemo(() => {
+    const term = search.toLowerCase();
+    return treeViews.filter(view =>
+      view.title.toLowerCase().includes(term) ||
+      view.pluginId.toLowerCase().includes(term)
+    );
+  }, [treeViews, search]);
+
+  return (
+    <div>
+      <input
+        type="text"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Search tree views..."
+      />
+      <p>{filtered.length} results</p>
+      <ul>
+        {filtered.map(view => (
+          <li key={view.viewId}>
+            {view.title} <span>({view.pluginId})</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+### Pattern 6: Tree View with Commands
+
+```jsx
+import { useCommandExecute } from '@lokus/plugin-sdk';
+
+function TreeItemWithCommand({ item }) {
+  const execute = useCommandExecute();
+
+  const handleClick = () => {
+    if (item.command) {
+      execute(item.command.id, ...(item.command.arguments || []));
+    }
+  };
+
+  return (
+    <div
+      className="tree-item"
+      onClick={handleClick}
+      style={{ cursor: item.command ? 'pointer' : 'default' }}
+    >
+      {item.label}
+      {item.command && <span className="has-command">⚡</span>}
+    </div>
+  );
+}
+```
+
+### Pattern 7: Virtual Tree View
+
+```jsx
+import { usePluginTreeViews } from '@lokus/plugin-sdk';
+import { useState, useEffect } from 'react';
+import { FixedSizeList } from 'react-window';
+
+function VirtualTreeView({ viewId }) {
+  const treeViews = usePluginTreeViews();
+  const [flatItems, setFlatItems] = useState([]);
+
+  const treeView = treeViews.find(v => v.viewId === viewId);
+
+  useEffect(() => {
+    if (!treeView) return;
+
+    const flattenTree = async () => {
+      const items = await loadAllItems(treeView.provider);
+      setFlatItems(items);
+    };
+
+    flattenTree();
+  }, [treeView]);
+
+  if (!treeView) return null;
+
+  return (
+    <FixedSizeList
+      height={600}
+      itemCount={flatItems.length}
+      itemSize={30}
+    >
+      {({ index, style }) => (
+        <div style={style}>
+          {flatItems[index].label}
+        </div>
+      )}
+    </FixedSizeList>
+  );
+}
+```
+
+### Pattern 8: Tree View Status
+
+```jsx
+import { usePluginTreeViews } from '@lokus/plugin-sdk';
+
+function TreeViewStatus() {
+  const treeViews = usePluginTreeViews();
+
+  return (
+    <div className="status-panel">
+      <h4>Tree Views</h4>
+      <p>Registered: {treeViews.length}</p>
+
+      {treeViews.length === 0 && (
+        <p className="hint">
+          No tree views available. Install plugins that provide tree views.
+        </p>
+      )}
+
+      <details>
+        <summary>View all tree views</summary>
+        <ul>
+          {treeViews.map(view => (
+            <li key={view.viewId}>
+              {view.title} <em>({view.pluginId})</em>
+            </li>
+          ))}
+        </ul>
+      </details>
+    </div>
+  );
+}
+```
+
+## Best Practices
+
+### 1. Handle Async Loading
+Tree data loading is often async. Handle loading states:
+
+```jsx
+const [loading, setLoading] = useState(true);
+
+useEffect(() => {
+  const load = async () => {
+    setLoading(true);
+    const data = await provider.getChildren();
+    setItems(data);
+    setLoading(false);
+  };
+  load();
+}, [provider]);
+
+if (loading) return <Spinner />;
+```
+
+### 2. Subscribe to Updates
+If provider supports updates, subscribe to changes:
+
+```jsx
+useEffect(() => {
+  if (!provider.onDidChangeTreeData) return;
+
+  const subscription = provider.onDidChangeTreeData(() => {
+    refreshTree();
+  });
+
+  return () => subscription.dispose();
+}, [provider]);
+```
+
+### 3. Lazy Load Children
+Only load children when nodes are expanded:
+
+```jsx
+const handleExpand = async (item) => {
+  if (item.children === undefined) {
+    const children = await provider.getChildren(item);
+    item.children = children; // Cache
+  }
+  setExpanded(true);
+};
+```
+
+### 4. Handle Missing Providers
+Always check if tree view exists:
+
+```jsx
+const treeView = treeViews.find(v => v.viewId === viewId);
+if (!treeView) {
+  return <p>Tree view not available</p>;
+}
+```
+
+### 5. Use Context Values
+Tree items can have context values for contextual actions:
+
+```jsx
+function TreeItem({ item }) {
+  const showContextMenu = (e) => {
+    e.preventDefault();
+    // Use item.contextValue to determine menu items
+    if (item.contextValue === 'file') {
+      showFileMenu(item);
+    } else if (item.contextValue === 'folder') {
+      showFolderMenu(item);
+    }
+  };
+
+  return (
+    <div onContextMenu={showContextMenu}>
+      {item.label}
+    </div>
+  );
+}
+```
+
+### 6. Memoize Tree Rendering
+Tree rendering can be expensive. Use memoization:
+
+```jsx
+const TreeItem = React.memo(({ item, provider }) => {
+  // Component implementation
+}, (prev, next) => {
+  return prev.item.id === next.item.id &&
+         prev.item.label === next.item.label;
+});
+```
+
+### 7. Provide Empty States
+Show helpful messages when tree is empty:
+
+```jsx
+if (items.length === 0) {
+  return (
+    <div className="empty-tree">
+      <p>No items to display</p>
+      <button onClick={refresh}>Refresh</button>
+    </div>
+  );
+}
+```
+
+## Example: File Explorer Tree View
+
+```jsx
+import { usePluginTreeViews, useCommandExecute } from '@lokus/plugin-sdk';
+import { useState, useEffect } from 'react';
+
+function FileExplorerTree() {
+  const treeViews = usePluginTreeViews();
+  const execute = useCommandExecute();
+  const [expanded, setExpanded] = useState(new Set());
+
+  const fileExplorer = treeViews.find(v =>
+    v.viewId === 'fileExplorer'
+  );
+
+  if (!fileExplorer) {
+    return <p>File explorer not available</p>;
+  }
+
+  return (
+    <div className="file-explorer">
+      <h3>{fileExplorer.title}</h3>
+      <TreeView provider={fileExplorer.provider} />
+    </div>
+  );
+}
+
+function TreeView({ provider }) {
+  const [items, setItems] = useState([]);
+  const execute = useCommandExecute();
+
+  useEffect(() => {
+    const load = async () => {
+      const children = await provider.getChildren();
+      const treeItems = await Promise.all(
+        children.map(c => provider.getTreeItem(c))
+      );
+      setItems(treeItems);
+    };
+
+    load();
+
+    if (provider.onDidChangeTreeData) {
+      const sub = provider.onDidChangeTreeData(load);
+      return () => sub.dispose();
+    }
+  }, [provider]);
+
+  return (
+    <ul className="tree-root">
+      {items.map(item => (
+        <TreeNode
+          key={item.id}
+          item={item}
+          provider={provider}
+          execute={execute}
+        />
+      ))}
+    </ul>
+  );
+}
+
+function TreeNode({ item, provider, execute }) {
+  const [expanded, setExpanded] = useState(false);
+  const [children, setChildren] = useState([]);
+
+  const handleClick = () => {
+    if (item.command) {
+      execute(item.command.id, ...(item.command.arguments || []));
+    } else if (item.collapsibleState !== 'none') {
+      toggleExpand();
+    }
+  };
+
+  const toggleExpand = async () => {
+    if (!expanded) {
+      const childElements = await provider.getChildren(item);
+      const childItems = await Promise.all(
+        childElements.map(c => provider.getTreeItem(c))
+      );
+      setChildren(childItems);
+    }
+    setExpanded(!expanded);
+  };
+
+  return (
+    <li className="tree-node">
+      <div className="tree-item" onClick={handleClick}>
+        {item.collapsibleState !== 'none' && (
+          <span onClick={(e) => { e.stopPropagation(); toggleExpand(); }}>
+            {expanded ? '📂' : '📁'}
+          </span>
+        )}
+        <span>{item.label}</span>
+      </div>
+
+      {expanded && (
+        <ul className="tree-children">
+          {children.map(child => (
+            <TreeNode
+              key={child.id}
+              item={child}
+              provider={provider}
+              execute={execute}
+            />
+          ))}
+        </ul>
+      )}
+    </li>
+  );
+}
+```
+
+## Performance Considerations
+
+### Virtual Scrolling
+For large trees, use virtualization:
+
+```jsx
+import { VariableSizeList } from 'react-window';
+
+// Flatten tree and render virtually
+<VariableSizeList
+  height={600}
+  itemCount={flattenedTree.length}
+  itemSize={(index) => flattenedTree[index].depth * 20 + 30}
+>
+  {Row}
+</VariableSizeList>
+```
+
+### Debounce Updates
+Debounce rapid tree updates:
+
+```jsx
+import { useDebounce } from 'use-debounce';
+
+const [items, setItems] = useState([]);
+const [debouncedItems] = useDebounce(items, 100);
+```
+
+## Related
+
+- [TreeView API](/developers/plugins/api-reference/tree-views) - Register tree view providers
+- [Data Providers Guide](/developers/plugins/data-providers) - Creating tree data providers
+- [React Hooks Overview](/developers/plugins/hooks) - All available hooks

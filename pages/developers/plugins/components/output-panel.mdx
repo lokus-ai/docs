@@ -1,0 +1,714 @@
+---
+title: "OutputPanel Component"
+description: "Display text output from plugins with channel support"
+---
+
+# OutputPanel Component
+
+The OutputPanel provides a text output display for plugins to show logs, messages, and other text-based output. It supports multiple named channels, auto-scrolling, and content management.
+
+## Usage
+
+Create an output channel using `api.ui.createOutputChannel()`:
+
+```javascript
+const output = api.ui.createOutputChannel(name);
+```
+
+## Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `name` | `string` | Yes | Unique name for the output channel |
+
+## OutputChannel Object
+
+The returned output channel provides the following methods:
+
+```typescript
+interface OutputChannel {
+  name: string;
+  append(value: string): void;
+  appendLine(value: string): void;
+  replace(value: string): void;
+  clear(): void;
+  show(preserveFocus?: boolean): void;
+  hide(): void;
+  dispose(): void;
+}
+```
+
+### Methods
+
+| Method | Parameters | Description |
+|--------|------------|-------------|
+| `append` | `value: string` | Append text without newline |
+| `appendLine` | `value: string` | Append text with newline |
+| `replace` | `value: string` | Replace entire content |
+| `clear` | - | Clear all content |
+| `show` | `preserveFocus?: boolean` | Show output panel (steals focus unless `preserveFocus` is true) |
+| `hide` | - | Hide output panel |
+| `dispose` | - | Dispose output channel |
+
+## Basic Example
+
+```javascript
+export function activate(api) {
+  const output = api.ui.createOutputChannel('My Plugin');
+
+  output.appendLine('Plugin activated');
+  output.appendLine('Initializing...');
+  output.show();
+
+  return {
+    dispose: () => output.dispose()
+  };
+}
+```
+
+## Appending Text
+
+### With Newline
+
+```javascript
+output.appendLine('First line');
+output.appendLine('Second line');
+output.appendLine('Third line');
+
+// Result:
+// First line
+// Second line
+// Third line
+```
+
+### Without Newline
+
+```javascript
+output.append('Loading');
+output.append('.');
+output.append('.');
+output.append('.');
+output.appendLine(' Done!');
+
+// Result:
+// Loading... Done!
+```
+
+## Replacing Content
+
+Replace entire content:
+
+```javascript
+output.replace('This replaces all previous content');
+```
+
+## Clearing Content
+
+Clear all content:
+
+```javascript
+output.clear();
+output.appendLine('Starting fresh...');
+```
+
+## Multiple Channels
+
+Create multiple channels for different purposes:
+
+```javascript
+export function activate(api) {
+  const debugOutput = api.ui.createOutputChannel('Plugin Debug');
+  const buildOutput = api.ui.createOutputChannel('Plugin Build');
+  const errorOutput = api.ui.createOutputChannel('Plugin Errors');
+
+  // Debug messages
+  debugOutput.appendLine('[DEBUG] Plugin starting');
+
+  // Build messages
+  buildOutput.appendLine('Building project...');
+  buildOutput.appendLine('Build complete');
+
+  // Error messages
+  errorOutput.appendLine('Error: Something went wrong');
+  errorOutput.show(); // Show errors immediately
+
+  return {
+    dispose: () => {
+      debugOutput.dispose();
+      buildOutput.dispose();
+      errorOutput.dispose();
+    }
+  };
+}
+```
+
+## Channel Selection
+
+Users can select between channels using the dropdown:
+
+```javascript
+// Create multiple channels
+const channels = {
+  main: api.ui.createOutputChannel('Main'),
+  debug: api.ui.createOutputChannel('Debug'),
+  network: api.ui.createOutputChannel('Network')
+};
+
+// Write to different channels
+channels.main.appendLine('Application started');
+channels.debug.appendLine('[DEBUG] Configuration loaded');
+channels.network.appendLine('[NET] Connected to server');
+
+// Show specific channel
+channels.debug.show();
+```
+
+## Logging Patterns
+
+### Timestamped Logs
+
+```javascript
+function log(output, message, level = 'INFO') {
+  const timestamp = new Date().toISOString();
+  output.appendLine(`[${timestamp}] [${level}] $\\{message\\}`);
+}
+
+const output = api.ui.createOutputChannel('My Plugin');
+log(output, 'Plugin started', 'INFO');
+log(output, 'Processing file...', 'DEBUG');
+log(output, 'Operation complete', 'SUCCESS');
+```
+
+### Structured Logging
+
+```javascript
+class Logger {
+  constructor(channelName) {
+    this.output = api.ui.createOutputChannel(channelName);
+  }
+
+  log(level, message, data) {
+    const timestamp = new Date().toISOString();
+    let logLine = `[${timestamp}] [${level}] $\\{message\\}`;
+
+    if (data) {
+      logLine += `\n$\\{JSON.stringify(data, null, 2)\\}`;
+    }
+
+    this.output.appendLine(logLine);
+  }
+
+  info(message, data) {
+    this.log('INFO', message, data);
+  }
+
+  debug(message, data) {
+    this.log('DEBUG', message, data);
+  }
+
+  warn(message, data) {
+    this.log('WARN', message, data);
+  }
+
+  error(message, data) {
+    this.log('ERROR', message, data);
+    this.output.show(); // Auto-show on errors
+  }
+
+  dispose() {
+    this.output.dispose();
+  }
+}
+
+// Usage
+const logger = new Logger('My Plugin');
+logger.info('Starting process');
+logger.debug('Configuration', { port: 3000, debug: true });
+logger.error('Failed to connect', { error: 'ECONNREFUSED' });
+```
+
+### Progress Logging
+
+```javascript
+async function processFiles(api, files) {
+  const output = api.ui.createOutputChannel('File Processor');
+  output.show(true); // Show without stealing focus
+
+  output.appendLine(`Processing ${files.length} files...`);
+  output.appendLine('');
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+
+    output.append(`[${i + 1}/${files.length}] ${file.name}... `);
+
+    try {
+      await processFile(file);
+      output.appendLine('✓ Done');
+    } catch (error) {
+      output.appendLine(`✗ Failed: $\\{error.message\\}`);
+    }
+  }
+
+  output.appendLine('');
+  output.appendLine('Processing complete!');
+}
+```
+
+## Real-World Examples
+
+### Build System
+
+```javascript
+class BuildPlugin {
+  activate(api) {
+    this.output = api.ui.createOutputChannel('Build Output');
+
+    api.commands.registerCommand('build.run', async () => {
+      await this.runBuild();
+    });
+  }
+
+  async runBuild() {
+    this.output.clear();
+    this.output.show();
+
+    this.output.appendLine('=== Build Started ===');
+    this.output.appendLine('');
+
+    try {
+      this.output.appendLine('Step 1: Cleaning...');
+      await this.clean();
+      this.output.appendLine('✓ Clean complete');
+      this.output.appendLine('');
+
+      this.output.appendLine('Step 2: Compiling...');
+      await this.compile();
+      this.output.appendLine('✓ Compilation complete');
+      this.output.appendLine('');
+
+      this.output.appendLine('Step 3: Running tests...');
+      const testResults = await this.test();
+      this.output.appendLine(`✓ Tests passed (${testResults.passed}/${testResults.total})`);
+      this.output.appendLine('');
+
+      this.output.appendLine('=== Build Successful ===');
+    } catch (error) {
+      this.output.appendLine('');
+      this.output.appendLine(`✗ Build Failed: $\\{error.message\\}`);
+      this.output.appendLine('');
+      this.output.appendLine('=== Build Failed ===');
+    }
+  }
+
+  async clean() {
+    // Clean implementation
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  }
+
+  async compile() {
+    // Compile implementation
+    await new Promise(resolve => setTimeout(resolve, 2000));
+  }
+
+  async test() {
+    // Test implementation
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    return { passed: 10, total: 10 };
+  }
+
+  deactivate() {
+    this.output.dispose();
+  }
+}
+```
+
+### Network Monitor
+
+```javascript
+class NetworkMonitor {
+  activate(api) {
+    this.output = api.ui.createOutputChannel('Network Activity');
+
+    // Monitor network requests
+    this.interceptRequests();
+  }
+
+  interceptRequests() {
+    const originalFetch = window.fetch;
+
+    window.fetch = async (...args) => {
+      const [url, options] = args;
+      const method = options?.method || 'GET';
+
+      this.output.appendLine(`→ ${method} $\\{url\\}`);
+      const startTime = Date.now();
+
+      try {
+        const response = await originalFetch(...args);
+        const duration = Date.now() - startTime;
+
+        this.output.appendLine(
+          `← ${response.status} ${response.statusText} (${duration}ms)`
+        );
+        this.output.appendLine('');
+
+        return response;
+      } catch (error) {
+        const duration = Date.now() - startTime;
+        this.output.appendLine(`✗ Error: ${error.message} (${duration}ms)`);
+        this.output.appendLine('');
+        throw error;
+      }
+    };
+  }
+
+  deactivate() {
+    this.output.dispose();
+  }
+}
+```
+
+### Debug Logger
+
+```javascript
+class DebugPlugin {
+  activate(api) {
+    this.debugOutput = api.ui.createOutputChannel('Debug');
+    this.verbose = api.configuration.get('debug.verbose', false);
+
+    // Intercept console
+    this.interceptConsole();
+
+    // Register debug command
+    api.commands.registerCommand('debug.toggleVerbose', () => {
+      this.verbose = !this.verbose;
+      api.ui.showInformationMessage(
+        `Verbose logging $\\{this.verbose ? 'enabled' : 'disabled'\\}`
+      );
+    });
+
+    // Register show output command
+    api.commands.registerCommand('debug.showOutput', () => {
+      this.debugOutput.show();
+    });
+  }
+
+  interceptConsole() {
+    const originalLog = console.log;
+    const originalWarn = console.warn;
+    const originalError = console.error;
+
+    console.log = (...args) => {
+      if (this.verbose) {
+        this.debugOutput.appendLine(`[LOG] $\\{args.join(' ')\\}`);
+      }
+      originalLog.apply(console, args);
+    };
+
+    console.warn = (...args) => {
+      this.debugOutput.appendLine(`[WARN] $\\{args.join(' ')\\}`);
+      originalWarn.apply(console, args);
+    };
+
+    console.error = (...args) => {
+      this.debugOutput.appendLine(`[ERROR] $\\{args.join(' ')\\}`);
+      this.debugOutput.show(); // Show on errors
+      originalError.apply(console, args);
+    };
+  }
+
+  deactivate() {
+    this.debugOutput.dispose();
+  }
+}
+```
+
+### Test Runner Output
+
+```javascript
+async function runTests(api, testFiles) {
+  const output = api.ui.createOutputChannel('Test Results');
+  output.clear();
+  output.show();
+
+  output.appendLine('=== Test Run Started ===');
+  output.appendLine('');
+
+  let totalTests = 0;
+  let passed = 0;
+  let failed = 0;
+  const failures = [];
+
+  for (const file of testFiles) {
+    output.appendLine(`Running ${file.name}:`);
+
+    const results = await runTestFile(file);
+    totalTests += results.tests.length;
+
+    for (const test of results.tests) {
+      if (test.passed) {
+        output.appendLine(`  ✓ $\\{test.name\\}`);
+        passed++;
+      } else {
+        output.appendLine(`  ✗ $\\{test.name\\}`);
+        output.appendLine(`    $\\{test.error.message\\}`);
+        failed++;
+        failures.push({ file: file.name, test: test.name, error: test.error });
+      }
+    }
+
+    output.appendLine('');
+  }
+
+  output.appendLine('=== Test Summary ===');
+  output.appendLine(`Total: $\\{totalTests\\}`);
+  output.appendLine(`Passed: ${passed} (${((passed / totalTests) * 100).toFixed(1)}%)`);
+  output.appendLine(`Failed: $\\{failed\\}`);
+
+  if (failures.length > 0) {
+    output.appendLine('');
+    output.appendLine('=== Failures ===');
+    failures.forEach(f => {
+      output.appendLine(`${f.file} > $\\{f.test\\}`);
+      output.appendLine(`  $\\{f.error.message\\}`);
+      output.appendLine('');
+    });
+  }
+}
+```
+
+## Panel Visibility
+
+Control output panel visibility:
+
+```javascript
+// Show panel (steal focus)
+output.show();
+
+// Show without stealing focus
+output.show(true);
+
+// Hide panel
+output.hide();
+```
+
+## Auto-Scroll
+
+The output panel automatically scrolls to the bottom when new content is added. This ensures the latest output is always visible.
+
+## Channel Management
+
+Get information about channels:
+
+```javascript
+// Get all channels
+const channels = api.ui.getOutputChannels();
+
+// Get active channel
+const activeChannel = api.ui.getActiveOutputChannel();
+
+// Clear specific channel
+api.ui.clearOutputChannel('My Plugin');
+```
+
+## Events
+
+Listen to output channel events:
+
+```javascript
+// Channel created
+api.ui.on('output-channel-created', ({ name }) => {
+  console.log('Channel created:', name);
+});
+
+// Channel updated
+api.ui.on('output-channel-update', ({ name, lines }) => {
+  console.log('Channel updated:', name);
+});
+
+// Channel shown
+api.ui.on('output-channel-show', ({ name }) => {
+  console.log('Channel shown:', name);
+});
+
+// Channel hidden
+api.ui.on('output-channel-hide', ({ name }) => {
+  console.log('Channel hidden:', name);
+});
+
+// Channel disposed
+api.ui.on('output-channel-disposed', ({ name }) => {
+  console.log('Channel disposed:', name);
+});
+```
+
+## Styling
+
+The OutputPanel uses the following CSS variables:
+
+```css
+/* Panel */
+--background-primary          /* Panel background */
+--border                      /* Border color */
+
+/* Header */
+--background-secondary        /* Header background */
+--text-normal                 /* Text color */
+
+/* Channel selector */
+--background-modifier-border  /* Select border */
+--background-modifier-hover   /* Select hover */
+
+/* Content */
+--text-normal                 /* Output text color */
+--text-muted                  /* Empty state color */
+
+/* Scrollbar */
+--scrollbar-thumb-bg          /* Scrollbar color */
+```
+
+## Best Practices
+
+### 1. Use Descriptive Channel Names
+
+```javascript
+// Good
+const output = api.ui.createOutputChannel('My Plugin - Build');
+
+// Less helpful
+const output = api.ui.createOutputChannel('Output');
+```
+
+### 2. Separate Concerns
+
+Create different channels for different purposes:
+
+```javascript
+const mainOutput = api.ui.createOutputChannel('Plugin');
+const debugOutput = api.ui.createOutputChannel('Plugin Debug');
+const errorOutput = api.ui.createOutputChannel('Plugin Errors');
+```
+
+### 3. Clear Before New Operations
+
+```javascript
+async function runBuild(output) {
+  output.clear(); // Clear previous output
+  output.show();
+  output.appendLine('Starting new build...');
+  // ...
+}
+```
+
+### 4. Auto-Show on Errors
+
+```javascript
+try {
+  await riskyOperation();
+} catch (error) {
+  output.appendLine(`Error: $\\{error.message\\}`);
+  output.show(); // Show output on error
+}
+```
+
+### 5. Clean Up Channels
+
+```javascript
+export function deactivate() {
+  output.dispose();
+}
+```
+
+### 6. Use Timestamps for Long Processes
+
+```javascript
+output.appendLine(`[${new Date().toISOString()}] Operation started`);
+```
+
+## Performance Tips
+
+### 1. Batch Appends
+
+```javascript
+// Good: Build string first
+let log = '';
+for (const item of items) {
+  log += `Processing ${item}\n`;
+}
+output.append(log);
+
+// Less efficient: Append each line
+for (const item of items) {
+  output.appendLine(`Processing $\\{item\\}`);
+}
+```
+
+### 2. Limit Output Size
+
+```javascript
+const MAX_LINES = 1000;
+let lineCount = 0;
+
+function log(message) {
+  if (lineCount >= MAX_LINES) {
+    output.clear();
+    output.appendLine('(Output cleared - max lines reached)');
+    lineCount = 0;
+  }
+  output.appendLine(message);
+  lineCount++;
+}
+```
+
+### 3. Don't Show Unnecessarily
+
+```javascript
+// Only show if user needs to see it
+if (error) {
+  output.show();
+} else {
+  output.show(true); // Don't steal focus for success
+}
+```
+
+## Troubleshooting
+
+### Channel not showing
+Call `show()` after writing content:
+```javascript
+output.appendLine('Message');
+output.show();
+```
+
+### Content not updating
+Ensure you're calling append/appendLine methods:
+```javascript
+output.appendLine('New line'); // ✓ Correct
+output.append('Text');          // ✓ Correct
+output = 'Text';                // ✗ Wrong
+```
+
+### Multiple channels confusion
+Use descriptive names and show the relevant channel:
+```javascript
+errorOutput.show(); // Show errors specifically
+```
+
+## Comparison: OutputPanel vs TerminalPanel
+
+| Feature | OutputPanel | TerminalPanel |
+|---------|-------------|---------------|
+| Purpose | Display text output | Execute commands |
+| Input | No direct input | Command input |
+| Formatting | Plain text | Color-coded |
+| Multiple channels | Yes (dropdown) | Yes (tabs) |
+| Programmatic output | Yes | No (display only) |
+| Best for | Logs, status, messages | Command execution |
+
+## See Also
+
+- [UIAPI Reference](/developers/plugins/api-reference/ui-api)
+- [TerminalPanel Component](/developers/plugins/components/terminal-panel)
+- [Component Overview](/developers/plugins/components)
+- [UI Plugins Guide](/developers/plugins/ui-plugins)

@@ -1,0 +1,603 @@
+---
+title: Building Editor Extensions
+description: Complete tutorial for building custom TipTap editor extensions in Lokus plugins with nodes, marks, commands, and slash commands.
+keywords: [lokus, editor extension, tiptap, custom nodes, marks, slash commands, editor plugin]
+---
+
+import { Callout } from 'nextra/components'
+import { Tabs} from 'nextra/components'
+
+# Building Editor Extensions
+
+This tutorial walks you through building custom editor extensions for Lokus using TipTap. You'll learn how to create custom nodes, marks, slash commands, and keyboard shortcuts.
+
+## What You'll Build
+
+We'll create a **"Highlight Box"** extension that:
+- Adds a custom node for highlighted callout boxes
+- Provides a slash command to insert boxes
+- Supports keyboard shortcuts
+- Allows custom styling and colors
+
+## Prerequisites
+
+- Completed the [Getting Started](/developers/plugins/getting-started) guide
+- Basic understanding of TipTap editor concepts
+- Familiarity with ProseMirror schemas (helpful but not required)
+
+## Step 1: Project Setup
+
+First, create a new plugin using the CLI:
+
+```bash
+npx lokus-plugin create highlight-box-plugin --template basic-typescript
+cd highlight-box-plugin
+npm install
+```
+
+<Callout type="info">
+The TypeScript template includes all necessary dependencies for editor extensions, including type definitions for TipTap.
+</Callout>
+
+## Step 2: Understanding Editor Extensions
+
+Lokus's editor is built on TipTap, which uses three main extension types:
+
+| Type | Purpose | Example Use Cases |
+|------|---------|-------------------|
+| **Node** | Block or inline content structure | Paragraphs, headings, custom boxes |
+| **Mark** | Text formatting that spans content | Bold, italic, custom highlights |
+| **Extension** | Editor behavior without content | Keyboard shortcuts, utilities |
+
+For our highlight box, we'll use a **Node** extension.
+
+## Step 3: Create the Highlight Box Node
+
+Create a new file `src/extensions/HighlightBox.ts`:
+
+<Tabs items={['HighlightBox.ts', 'Type Definitions']}>
+<Tabs.Tab>
+
+```typescript filename="src/extensions/HighlightBox.ts"
+import { Node } from '@tiptap/core'
+
+export interface HighlightBoxOptions {
+  HTMLAttributes: Record<string, any>
+}
+
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    highlightBox: {
+      /**
+       * Insert a highlight box
+       */
+      setHighlightBox: (options?: { color?: string }) => ReturnType
+    }
+  }
+}
+
+export const HighlightBox = Node.create<HighlightBoxOptions>({
+  name: 'highlightBox',
+
+  group: 'block',
+
+  content: 'block+',
+
+  // Define attributes for customization
+  addAttributes() {
+    return {
+      color: {
+        default: 'blue',
+        parseHTML: element => element.getAttribute('data-color'),
+        renderHTML: attributes => {
+          return {
+            'data-color': attributes.color,
+          }
+        },
+      },
+    }
+  },
+
+  // Parse HTML when pasting content
+  parseHTML() {
+    return [
+      {
+        tag: 'div[data-type="highlight-box"]',
+      },
+    ]
+  },
+
+  // Render the node to HTML
+  renderHTML({ HTMLAttributes }) {
+    return [
+      'div',
+      {
+        ...HTMLAttributes,
+        'data-type': 'highlight-box',
+        class: `highlight-box highlight-box--$\\{HTMLAttributes['data-color']\\}`,
+      },
+      0, // Content goes here
+    ]
+  },
+
+  // Add commands to manipulate the node
+  addCommands() {
+    return {
+      setHighlightBox:
+        options =>
+        ({ commands }) => {
+          return commands.insertContent({
+            type: this.name,
+            attrs: { color: options?.color || 'blue' },
+            content: [
+              {
+                type: 'paragraph',
+                content: [{ type: 'text', text: 'Your highlighted content here...' }],
+              },
+            ],
+          })
+        },
+    }
+  },
+
+  // Add keyboard shortcuts
+  addKeyboardShortcuts() {
+    return {
+      'Mod-Shift-h': () => this.editor.commands.setHighlightBox(),
+    }
+  },
+})
+```
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+```typescript filename="src/types/editor.d.ts"
+// Extend TipTap's command types
+import '@tiptap/core'
+
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    highlightBox: {
+      setHighlightBox: (options?: { color?: string }) => ReturnType
+    }
+  }
+}
+```
+
+</Tabs.Tab>
+</Tabs>
+
+<Callout type="info">
+**Key Concepts:**
+- `group: 'block'` - Makes it a block-level element (like paragraphs)
+- `content: 'block+'` - Can contain one or more block elements
+- `addAttributes()` - Defines custom attributes (color in our case)
+- `addCommands()` - Exposes editor commands that other code can call
+</Callout>
+
+## Step 4: Register the Extension with Lokus
+
+Now update your `src/index.ts` to register this extension:
+
+```typescript filename="src/index.ts"
+import { LokusPlugin } from '@lokus/plugin-api'
+import { HighlightBox } from './extensions/HighlightBox'
+
+export function activate(context: LokusPlugin.ExtensionContext) {
+  // Register the custom node extension
+  const disposable = context.editor.registerNode(context.plugin.id, {
+    name: 'highlightBox',
+    group: 'block',
+    content: 'block+',
+
+    attributes: {
+      color: {
+        default: 'blue',
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-color'),
+        renderHTML: (attributes: any) => ({
+          'data-color': attributes.color,
+        }),
+      },
+    },
+
+    parseHTML: [
+      {
+        tag: 'div[data-type="highlight-box"]',
+      },
+    ],
+
+    renderHTML: ({ HTMLAttributes }: any) => [
+      'div',
+      {
+        ...HTMLAttributes,
+        'data-type': 'highlight-box',
+        class: `highlight-box highlight-box--$\\{HTMLAttributes['data-color']\\}`,
+      },
+      0, // Content hole
+    ],
+
+    commands: {
+      setHighlightBox: (options?: { color?: string }) => {
+        return (props: any) => {
+          return props.commands.insertContent({
+            type: 'highlightBox',
+            attrs: { color: options?.color || 'blue' },
+            content: [
+              {
+                type: 'paragraph',
+                content: [{ type: 'text', text: 'Your highlighted content here...' }],
+              },
+            ],
+          })
+        }
+      },
+    },
+
+    keyboardShortcuts: {
+      'Mod-Shift-h': (props: any) => props.commands.setHighlightBox(),
+    },
+  })
+
+  context.subscriptions.push(disposable)
+}
+
+export function deactivate() {
+  // Cleanup handled automatically by disposables
+}
+```
+
+<Callout type="warning">
+**Important:** Always register extensions in the `activate()` function and add the disposable to `context.subscriptions` for proper cleanup.
+</Callout>
+
+## Step 5: Add a Slash Command
+
+Make it easy for users to insert highlight boxes with a slash command:
+
+```typescript filename="src/index.ts" {8-20}
+export function activate(context: LokusPlugin.ExtensionContext) {
+  // ... previous node registration code ...
+
+  // Register slash command
+  const slashCommand = context.editor.registerSlashCommand(context.plugin.id, {
+    id: 'insert-highlight-box',
+    title: 'Highlight Box',
+    description: 'Insert a colored highlight box',
+    icon: '🎨',
+    group: 'blocks',
+    order: 10,
+    keywords: ['box', 'highlight', 'callout', 'note'],
+    handler: (editor) => {
+      return editor.commands.setHighlightBox({ color: 'blue' })
+    },
+  })
+
+  context.subscriptions.push(slashCommand)
+}
+```
+
+## Step 6: Add Styling
+
+Create a CSS file for your highlight box styles:
+
+```css filename="src/styles/highlightBox.css"
+.highlight-box {
+  margin: 1em 0;
+  padding: 1em;
+  border-radius: 8px;
+  border-left: 4px solid;
+  background: var(--color-bg);
+  transition: all 0.2s ease;
+}
+
+.highlight-box:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Color variants */
+.highlight-box--blue {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.highlight-box--green {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.highlight-box--yellow {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.highlight-box--red {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.highlight-box p:last-child {
+  margin-bottom: 0;
+}
+```
+
+Include the CSS in your manifest:
+
+```json filename="plugin.json" {10-12}
+{
+  "manifest": "2.0",
+  "id": "highlight-box-plugin",
+  "name": "highlight-box-plugin",
+  "displayName": "Highlight Box Plugin",
+  "version": "0.1.0",
+  "main": "./dist/index.js",
+  "lokusVersion": ">=1.0.0",
+  "capabilities": {
+    "editor": true
+  },
+  "styles": [
+    "./src/styles/highlightBox.css"
+  ]
+}
+```
+
+## Step 7: Build and Test
+
+Build your plugin and link it for development:
+
+```bash
+# Build the plugin
+npm run build
+
+# Link for local testing
+npx lokus-plugin link
+
+# Restart Lokus to load the plugin
+```
+
+### Testing Your Extension
+
+1. **Slash Command**: Type `/` in the editor and search for "Highlight Box"
+2. **Keyboard Shortcut**: Press `Cmd+Shift+H` (Mac) or `Ctrl+Shift+H` (Windows/Linux)
+3. **Paste HTML**: Try pasting HTML with `\<div data-type="highlight-box"\>` structure
+
+## Step 8: Add Color Selection
+
+Let's make the slash command interactive by adding color selection:
+
+```typescript filename="src/index.ts" {14-40}
+export function activate(context: LokusPlugin.ExtensionContext) {
+  // ... previous registrations ...
+
+  // Register multiple slash commands for different colors
+  const colors = [
+    { name: 'blue', emoji: '🔵', label: 'Blue' },
+    { name: 'green', emoji: '🟢', label: 'Green' },
+    { name: 'yellow', emoji: '🟡', label: 'Yellow' },
+    { name: 'red', emoji: '🔴', label: 'Red' },
+  ]
+
+  colors.forEach((color, index) => {
+    const command = context.editor.registerSlashCommand(context.plugin.id, {
+      id: `insert-highlight-box-$\\{color.name\\}`,
+      title: `${color.label} Highlight Box`,
+      description: `Insert a ${color.name} highlight box`,
+      icon: color.emoji,
+      group: 'blocks',
+      order: 10 + index,
+      keywords: ['box', 'highlight', 'callout', color.name],
+      handler: (editor) => {
+        return editor.commands.setHighlightBox({ color: color.name })
+      },
+    })
+
+    context.subscriptions.push(command)
+  })
+}
+```
+
+## Expected Output
+
+When users type `/highlight` or `/blue`, they'll see:
+
+```
+🎨 Highlight Box
+   Insert a colored highlight box
+
+🔵 Blue Highlight Box
+   Insert a blue highlight box
+
+🟢 Green Highlight Box
+   Insert a green highlight box
+
+🟡 Yellow Highlight Box
+   Insert a yellow highlight box
+
+🔴 Red Highlight Box
+   Insert a red highlight box
+```
+
+After inserting, they'll see a styled box like:
+
+```markdown
+┌────────────────────────────────┐
+│ 🔵 Your highlighted content     │
+│ here...                         │
+└────────────────────────────────┘
+```
+
+## Common Pitfalls
+
+<Callout type="warning">
+**Schema Conflicts**
+
+If your node name conflicts with an existing TipTap extension, it won't load. Use unique, prefixed names:
+```typescript
+name: 'myPluginHighlightBox' // ✅ Good
+name: 'highlightBox'          // ⚠️ Could conflict
+```
+</Callout>
+
+<Callout type="warning">
+**Content Schema Issues**
+
+Ensure your content definition matches what you want to allow:
+```typescript
+content: 'block+'   // ✅ One or more blocks
+content: 'inline*'  // ✅ Zero or more inline elements
+content: 'text*'    // ✅ Only text
+content: ''         // ✅ No content (leaf node)
+```
+</Callout>
+
+<Callout type="warning">
+**Disposal Not Working**
+
+Always add disposables to subscriptions:
+```typescript
+const disposable = context.editor.registerNode(...)
+context.subscriptions.push(disposable) // ✅ Required!
+```
+</Callout>
+
+## Advanced: Input Rules
+
+Add automatic conversion when typing patterns:
+
+```typescript filename="src/index.ts"
+const inputRule = context.editor.registerInputRule(context.plugin.id, {
+  id: 'highlight-box-rule',
+  pattern: /:::(\w+)\s$/,
+  handler: ({ state, range, match }) => {
+    const color = match[1] // e.g., 'blue', 'green'
+    const validColors = ['blue', 'green', 'yellow', 'red']
+
+    if (validColors.includes(color)) {
+      return state.tr
+        .delete(range.from, range.to)
+        .setBlockType(range.from, range.from, 'highlightBox', { color })
+    }
+
+    return null
+  },
+})
+
+context.subscriptions.push(inputRule)
+```
+
+Now typing `:::blue ` automatically creates a blue highlight box!
+
+## Next Steps
+
+Now that you've built a custom editor extension, explore:
+
+- **[Tree View Plugin](/developers/plugins/guides/tree-view-plugin)** - Create custom sidebar panels
+- **[Terminal Plugin](/developers/plugins/guides/terminal-plugin)** - Integrate with terminal functionality
+- **[Testing Plugins](/developers/plugins/guides/testing-plugins)** - Write comprehensive tests
+- **[Editor API Reference](/developers/plugins/api-reference/editor)** - Full API documentation
+
+## Complete Code Example
+
+Here's the full `src/index.ts` for reference:
+
+```typescript filename="src/index.ts"
+import { LokusPlugin } from '@lokus/plugin-api'
+
+export function activate(context: LokusPlugin.ExtensionContext) {
+  // Register the highlight box node
+  const nodeDisposable = context.editor.registerNode(context.plugin.id, {
+    name: 'highlightBox',
+    group: 'block',
+    content: 'block+',
+
+    attributes: {
+      color: {
+        default: 'blue',
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-color'),
+        renderHTML: (attributes: any) => ({ 'data-color': attributes.color }),
+      },
+    },
+
+    parseHTML: [{ tag: 'div[data-type="highlight-box"]' }],
+
+    renderHTML: ({ HTMLAttributes }: any) => [
+      'div',
+      {
+        ...HTMLAttributes,
+        'data-type': 'highlight-box',
+        class: `highlight-box highlight-box--$\\{HTMLAttributes['data-color']\\}`,
+      },
+      0,
+    ],
+
+    commands: {
+      setHighlightBox: (options?: { color?: string }) => (props: any) => {
+        return props.commands.insertContent({
+          type: 'highlightBox',
+          attrs: { color: options?.color || 'blue' },
+          content: [
+            {
+              type: 'paragraph',
+              content: [{ type: 'text', text: 'Your highlighted content here...' }],
+            },
+          ],
+        })
+      },
+    },
+
+    keyboardShortcuts: {
+      'Mod-Shift-h': (props: any) => props.commands.setHighlightBox(),
+    },
+  })
+
+  // Register slash commands for each color
+  const colors = [
+    { name: 'blue', emoji: '🔵', label: 'Blue' },
+    { name: 'green', emoji: '🟢', label: 'Green' },
+    { name: 'yellow', emoji: '🟡', label: 'Yellow' },
+    { name: 'red', emoji: '🔴', label: 'Red' },
+  ]
+
+  const slashCommands = colors.map((color, index) =>
+    context.editor.registerSlashCommand(context.plugin.id, {
+      id: `insert-highlight-box-$\\{color.name\\}`,
+      title: `${color.label} Highlight Box`,
+      description: `Insert a ${color.name} highlight box`,
+      icon: color.emoji,
+      group: 'blocks',
+      order: 10 + index,
+      keywords: ['box', 'highlight', 'callout', color.name],
+      handler: (editor) => editor.commands.setHighlightBox({ color: color.name }),
+    })
+  )
+
+  // Register input rule
+  const inputRule = context.editor.registerInputRule(context.plugin.id, {
+    id: 'highlight-box-rule',
+    pattern: /:::(\w+)\s$/,
+    handler: ({ state, range, match }) => {
+      const color = match[1]
+      const validColors = ['blue', 'green', 'yellow', 'red']
+
+      if (validColors.includes(color)) {
+        return state.tr
+          .delete(range.from, range.to)
+          .setBlockType(range.from, range.from, 'highlightBox', { color })
+      }
+
+      return null
+    },
+  })
+
+  // Add all disposables to subscriptions
+  context.subscriptions.push(
+    nodeDisposable,
+    ...slashCommands,
+    inputRule
+  )
+}
+
+export function deactivate() {
+  // Cleanup handled automatically
+}
+```

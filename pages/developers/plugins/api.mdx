@@ -1,12 +1,14 @@
 ---
-title: Plugin API Reference
-description: Complete reference for the Lokus Plugin API - commands, editor, UI, filesystem, network, and storage APIs.
+title: Plugin API Quick Reference
+description: Quick reference for the Lokus Plugin API with links to detailed documentation.
 keywords: [lokus, plugin api, api reference, commands api, editor api, ui api, filesystem api]
 ---
 
-# API Reference
+# API Quick Reference
 
-Complete reference for the Lokus Plugin API. Plugins receive a `PluginContext` during construction and an activation context during `activate()`.
+> **Note:** This page provides a quick overview of the Lokus Plugin API. For comprehensive documentation with detailed examples, method signatures, and advanced usage, visit the **[API Reference](/developers/plugins/api-reference)** section.
+
+This is a condensed quick reference. Plugins receive a `PluginContext` during construction with access to all APIs.
 
 ## Plugin Structure
 
@@ -38,16 +40,25 @@ export default class MyPlugin {
 
 ## API Overview
 
-| API | Access | Purpose |
-|-----|--------|---------|
-| [Logger](#logger-api) | `context.logger` | Logging and debugging |
-| [UI](#ui-api) | `context.ui` | Notifications and dialogs |
-| [Editor](#editor-api) | `context.editor` | Editor operations |
-| [Commands](#commands-api) | `activationContext.commands` | Command registration |
-| [Filesystem](#filesystem-api) | `context.fs` | File operations |
-| [Network](#network-api) | `context.network` | HTTP requests |
-| [Storage](#storage-api) | `context.storage` | Plugin data storage |
-| [Clipboard](#clipboard-api) | `context.clipboard` | Clipboard access |
+Lokus provides **14 comprehensive APIs** for complete extensibility:
+
+| API | Access | Purpose | Full Docs |
+|-----|--------|---------|-----------|
+| [EditorAPI](#editor-api) | `context.editor` | TipTap editor (95+ methods) | [View](/developers/plugins/api-reference/editor-api) |
+| [UIAPI](#ui-api) | `context.ui` | UI components & notifications | [View](/developers/plugins/api-reference/ui-api) |
+| [CommandsAPI](#commands-api) | `context.commands` | Command registration | [View](/developers/plugins/api-reference/commands-api) |
+| [WorkspaceAPI](#workspace-api) | `context.workspace` | File and editor access | [View](/developers/plugins/api-reference/workspace-api) |
+| [ConfigurationAPI](#configuration-api) | `context.config` | Plugin settings | [View](/developers/plugins/api-reference/configuration-api) |
+| [LanguagesAPI](#languages-api) | `context.languages` | Language features | [View](/developers/plugins/api-reference/languages-api) |
+| [TerminalAPI](#terminal-api) | `context.terminal` | Terminal management | [View](/developers/plugins/api-reference/terminal-api) |
+| [TaskAPI](#task-api) | `context.tasks` | Task execution | [View](/developers/plugins/api-reference/task-api) |
+| [DebugAPI](#debug-api) | `context.debug` | Debugging sessions | [View](/developers/plugins/api-reference/debug-api) |
+| [ThemeAPI](#theme-api) | `context.themes` | Theme management | [View](/developers/plugins/api-reference/theme-api) |
+| [StorageAPI](#storage-api) | `context.storage` | Data persistence | [View](/developers/plugins/api-reference/storage-api) |
+| [FilesystemAPI](#filesystem-api) | `context.fs` | File operations | [View](/developers/plugins/api-reference/filesystem-api) |
+| [NetworkAPI](#network-api) | `context.network` | HTTP requests | [View](/developers/plugins/api-reference/network-api) |
+| [ClipboardAPI](#clipboard-api) | `context.clipboard` | Clipboard access | [View](/developers/plugins/api-reference/clipboard-api) |
+| [Logger](#logger-api) | `context.logger` | Logging and debugging | Built-in |
 
 ---
 
@@ -828,9 +839,148 @@ async doSomething() {
 
 ---
 
+## Workspace API
+
+Access: `context.workspace`
+
+Access workspace files, folders, and active editors.
+
+```typescript
+const rootPath = context.workspace?.rootPath;
+const activeEditor = context.workspace?.activeTextEditor;
+
+context.workspace?.onDidChangeActiveTextEditor((editor) => {
+  console.log(`Editor changed: $\\{editor?.document.fileName\\}`);
+});
+```
+
+See [WorkspaceAPI Reference](/developers/plugins/api-reference/workspace-api) for complete documentation.
+
+---
+
+## Configuration API
+
+Access: `context.config`
+
+Read and write plugin configuration settings.
+
+```typescript
+const theme = await context.config.get('theme') ?? 'dark';
+await context.config.set('theme', 'light');
+
+context.config.onDidChange((e) => {
+  console.log(`Config changed: ${e.key} = $\\{e.value\\}`);
+});
+```
+
+See [ConfigurationAPI Reference](/developers/plugins/api-reference/configuration-api).
+
+---
+
+## Languages API
+
+Access: `context.languages`
+
+Register language features like completion providers and formatters.
+
+```typescript
+context.languages.registerCompletionProvider('markdown', {
+  async provideCompletionItems(document, position) {
+    return [
+      { label: 'todo', insertText: '- [ ] ', detail: 'Todo item' }
+    ];
+  }
+});
+```
+
+See [LanguagesAPI Reference](/developers/plugins/api-reference/languages-api).
+
+---
+
+## Terminal API
+
+Access: `context.terminal`
+
+Create and manage virtual terminals.
+
+```typescript
+const terminal = context.terminal.createTerminal({
+  name: 'Build',
+  cwd: context.workspace?.rootPath
+});
+terminal.show();
+terminal.sendText('npm run build');
+```
+
+See [TerminalAPI Reference](/developers/plugins/api-reference/terminal-api).
+
+---
+
+## Task API
+
+Access: `context.tasks`
+
+Register task providers and execute automated tasks.
+
+```typescript
+context.tasks.registerTaskProvider('npm', {
+  async provideTasks() {
+    return [
+      { type: 'npm', name: 'build', command: 'npm run build' }
+    ];
+  }
+});
+```
+
+See [TaskAPI Reference](/developers/plugins/api-reference/task-api).
+
+---
+
+## Debug API
+
+Access: `context.debug`
+
+Register debug adapters and manage debugging sessions.
+
+```typescript
+await context.debug.startDebugging({
+  type: 'node',
+  name: 'Launch App',
+  request: 'launch',
+  program: '${workspaceFolder}/index.js'
+});
+```
+
+See [DebugAPI Reference](/developers/plugins/api-reference/debug-api).
+
+---
+
+## Theme API
+
+Access: `context.themes`
+
+Register custom themes and manage theme settings.
+
+```typescript
+context.themes.registerTheme({
+  id: 'my-theme',
+  label: 'My Theme',
+  uiTheme: 'vs-dark',
+  colors: {
+    'editor.background': '#1a1a1a',
+    'editor.foreground': '#e0e0e0'
+  }
+});
+```
+
+See [ThemeAPI Reference](/developers/plugins/api-reference/theme-api).
+
+---
+
 ## Next Steps
 
+- **[Complete API Reference](/developers/plugins/api-reference)** - Detailed documentation for all APIs
 - [Getting Started](/developers/plugins/getting-started) - Create your first plugin
 - [Plugin Manifest](/developers/plugins/manifest) - Manifest reference
-- [Editor Plugins](/developers/plugins/editor-plugins) - Advanced editor integrations
+- [Plugin Lifecycle](/developers/plugins/lifecycle) - Activation and resource management
 - [Publishing](/developers/plugins/publishing) - Publish to the marketplace

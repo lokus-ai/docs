@@ -1,0 +1,517 @@
+---
+title: "NetworkAPI Reference"
+description: "HTTP requests and network access for Lokus plugins"
+keywords: [lokus, plugin api, network, http, fetch, api calls]
+---
+
+# NetworkAPI
+
+Make HTTP requests with permission-controlled network access. Access via `context.network`.
+
+## Overview
+
+The NetworkAPI allows plugins to make HTTP requests to external APIs and services. Network access requires the `network` permission in your plugin manifest.
+
+**Key Features:**
+- Standard fetch API interface
+- Permission-based access control
+- Support for all HTTP methods
+- Request/response headers
+- JSON and binary data
+
+## Permission Required
+
+Add to your `package.json`:
+
+```json
+{
+  "lokus": {
+    "permissions": ["network"]
+  }
+}
+```
+
+## Methods
+
+### fetch(url, options?)
+
+Make an HTTP request using the Fetch API.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| url | string | Yes | Request URL |
+| options | RequestInit | No | Fetch options |
+
+**Options:**
+
+```typescript
+interface RequestInit {
+  method?: string;           // GET, POST, PUT, DELETE, etc.
+  headers?: HeadersInit;     // Request headers
+  body?: BodyInit;           // Request body
+  mode?: RequestMode;        // cors, no-cors, same-origin
+  credentials?: RequestCredentials; // omit, same-origin, include
+  cache?: RequestCache;      // default, no-cache, reload, etc.
+  redirect?: RequestRedirect; // follow, error, manual
+  referrer?: string;         // Referrer URL
+  signal?: AbortSignal;      // Abort controller signal
+}
+```
+
+**Returns:** Promise resolving to Response object.
+
+**Response Interface:**
+
+```typescript
+interface Response {
+  ok: boolean;
+  status: number;
+  statusText: string;
+  headers: Headers;
+
+  // Body methods
+  json(): Promise<any>;
+  text(): Promise<string>;
+  blob(): Promise<Blob>;
+  arrayBuffer(): Promise<ArrayBuffer>;
+}
+```
+
+**Example:**
+
+```typescript
+// Simple GET request
+const response = await context.network.fetch('https://api.example.com/data');
+const data = await response.json();
+context.logger.info('Data:', data);
+
+// POST request with JSON
+const response = await context.network.fetch('https://api.example.com/create', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer token123'
+  },
+  body: JSON.stringify({
+    name: 'New Item',
+    value: 42
+  })
+});
+
+// Check response status
+if (response.ok) {
+  const result = await response.json();
+  context.ui.showInformationMessage('Success!');
+} else {
+  context.ui.showErrorMessage(`Error: $\\{response.status\\}`);
+}
+```
+
+---
+
+## Complete Example
+
+```typescript
+export default class APIPlugin {
+  private context: PluginContext;
+  private apiKey: string;
+  private baseUrl: string;
+
+  constructor(context: PluginContext) {
+    this.context = context;
+    this.apiKey = '';
+    this.baseUrl = 'https://api.example.com';
+  }
+
+  async activate(): Promise<void> {
+    // Load API key from storage
+    this.apiKey = await context.storage.get('apiKey') ?? '';
+
+    // Register commands
+    context.commands.register([
+      {
+        id: 'myPlugin.fetchData',
+        name: 'Fetch Data',
+        execute: () => this.fetchData()
+      },
+      {
+        id: 'myPlugin.postData',
+        name: 'Post Data',
+        execute: () => this.postData()
+      },
+      {
+        id: 'myPlugin.setApiKey',
+        name: 'Set API Key',
+        execute: () => this.setApiKey()
+      }
+    ]);
+  }
+
+  async fetchData(): Promise<void> {
+    if (!this.apiKey) {
+      context.ui.showErrorMessage('API key not set');
+      return;
+    }
+
+    try {
+      const response = await context.network.fetch(`${this.baseUrl}/data`, {
+        headers: {
+          'Authorization': `Bearer $\\{this.apiKey\\}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: $\\{response.statusText\\}`);
+      }
+
+      const data = await response.json();
+      context.logger.info('Fetched data:', data);
+      context.ui.showInformationMessage('Data fetched successfully');
+    } catch (error) {
+      context.logger.error('Fetch failed:', error);
+      context.ui.showErrorMessage(`Failed: $\\{error.message\\}`);
+    }
+  }
+
+  async postData(): Promise<void> {
+    if (!this.apiKey) {
+      context.ui.showErrorMessage('API key not set');
+      return;
+    }
+
+    try {
+      const response = await context.network.fetch(`${this.baseUrl}/items`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer $\\{this.apiKey\\}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          title: 'New Item',
+          timestamp: Date.now()
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: $\\{response.statusText\\}`);
+      }
+
+      const result = await response.json();
+      context.logger.info('Created item:', result);
+      context.ui.showInformationMessage(`Created: $\\{result.id\\}`);
+    } catch (error) {
+      context.logger.error('Post failed:', error);
+      context.ui.showErrorMessage(`Failed: $\\{error.message\\}`);
+    }
+  }
+
+  async setApiKey(): Promise<void> {
+    const key = await context.ui.showInputBox({
+      prompt: 'Enter API key',
+      placeholder: 'Your API key'
+    });
+
+    if (key) {
+      this.apiKey = key;
+      await context.storage.set('apiKey', key);
+      context.ui.showInformationMessage('API key saved');
+    }
+  }
+
+  async deactivate(): Promise<void> {
+    // Cleanup
+  }
+}
+```
+
+---
+
+## Advanced Example: API Client
+
+```typescript
+export default class APIClientPlugin {
+  private context: PluginContext;
+  private client: APIClient;
+
+  constructor(context: PluginContext) {
+    this.context = context;
+    this.client = new APIClient(context);
+  }
+
+  async activate(): Promise<void> {
+    await this.client.initialize();
+
+    context.commands.register([
+      {
+        id: 'myPlugin.syncData',
+        name: 'Sync Data',
+        execute: () => this.syncData()
+      }
+    ]);
+  }
+
+  async syncData(): Promise<void> {
+    await context.ui.withProgress(
+      { title: 'Syncing data...', location: 'notification' },
+      async (progress, token) => {
+        try {
+          // Fetch remote data
+          progress.report({ message: 'Fetching remote data...' });
+          const remoteData = await this.client.getAll();
+
+          // Get local data
+          progress.report({ message: 'Loading local data...' });
+          const localData = await context.storage.get('data') ?? [];
+
+          // Merge
+          progress.report({ message: 'Merging data...' });
+          const merged = this.mergeData(localData, remoteData);
+
+          // Save locally
+          await context.storage.set('data', merged);
+
+          // Push changes
+          progress.report({ message: 'Pushing changes...' });
+          await this.client.updateBatch(merged);
+
+          context.ui.showInformationMessage('Sync complete');
+        } catch (error) {
+          context.ui.showErrorMessage(`Sync failed: $\\{error.message\\}`);
+        }
+      }
+    );
+  }
+
+  mergeData(local: any[], remote: any[]): any[] {
+    // Merge logic
+    return [...local, ...remote];
+  }
+
+  async deactivate(): Promise<void> {
+    await this.client.cleanup();
+  }
+}
+
+class APIClient {
+  private context: PluginContext;
+  private baseUrl: string;
+  private token?: string;
+
+  constructor(context: PluginContext) {
+    this.context = context;
+    this.baseUrl = 'https://api.example.com';
+  }
+
+  async initialize(): Promise<void> {
+    // Load auth token
+    this.token = await this.context.storage.get('auth_token');
+
+    // Authenticate if needed
+    if (!this.token) {
+      await this.authenticate();
+    }
+  }
+
+  async authenticate(): Promise<void> {
+    const response = await this.context.network.fetch(`${this.baseUrl}/auth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: 'user',
+        password: 'pass'
+      })
+    });
+
+    const { token } = await response.json();
+    this.token = token;
+    await this.context.storage.set('auth_token', token);
+  }
+
+  async request(endpoint: string, options: RequestInit = {}): Promise<any> {
+    const response = await this.context.network.fetch(`${this.baseUrl}$\\{endpoint\\}`, {
+      ...options,
+      headers: {
+        'Authorization': `Bearer $\\{this.token\\}`,
+        'Content-Type': 'application/json',
+        ...options.headers
+      }
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        // Token expired, re-authenticate
+        await this.authenticate();
+        return this.request(endpoint, options);
+      }
+      throw new Error(`HTTP ${response.status}: $\\{response.statusText\\}`);
+    }
+
+    return response.json();
+  }
+
+  async getAll(): Promise<any[]> {
+    return this.request('/items');
+  }
+
+  async getById(id: string): Promise<any> {
+    return this.request(`/items/$\\{id\\}`);
+  }
+
+  async create(data: any): Promise<any> {
+    return this.request('/items', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async update(id: string, data: any): Promise<any> {
+    return this.request(`/items/$\\{id\\}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.request(`/items/$\\{id\\}`, {
+      method: 'DELETE'
+    });
+  }
+
+  async updateBatch(items: any[]): Promise<void> {
+    await this.request('/items/batch', {
+      method: 'PUT',
+      body: JSON.stringify({ items })
+    });
+  }
+
+  async cleanup(): Promise<void> {
+    // Cleanup if needed
+  }
+}
+```
+
+---
+
+## Error Handling
+
+```typescript
+try {
+  const response = await context.network.fetch(url);
+
+  // Check HTTP status
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: $\\{response.statusText\\}`);
+  }
+
+  const data = await response.json();
+} catch (error) {
+  if (error.name === 'TypeError') {
+    // Network error (no connection, DNS failure, etc.)
+    context.ui.showErrorMessage('Network error: Check connection');
+  } else if (error.name === 'AbortError') {
+    // Request was aborted
+    context.ui.showWarningMessage('Request cancelled');
+  } else {
+    // Other errors
+    context.ui.showErrorMessage(`Error: $\\{error.message\\}`);
+  }
+}
+```
+
+---
+
+## Request Cancellation
+
+```typescript
+// Create abort controller
+const controller = new AbortController();
+
+// Start request
+const fetchPromise = context.network.fetch(url, {
+  signal: controller.signal
+});
+
+// Cancel after 5 seconds
+setTimeout(() => {
+  controller.abort();
+}, 5000);
+
+try {
+  const response = await fetchPromise;
+} catch (error) {
+  if (error.name === 'AbortError') {
+    context.logger.info('Request cancelled');
+  }
+}
+```
+
+---
+
+## Best Practices
+
+1. **Check Permissions**: Verify network permission in manifest
+   ```json
+   { "permissions": ["network"] }
+   ```
+
+2. **Handle Errors**: Always wrap in try-catch
+   ```typescript
+   try {
+     const response = await context.network.fetch(url);
+   } catch (error) {
+     context.logger.error('Request failed:', error);
+   }
+   ```
+
+3. **Check Status Codes**: Verify response.ok
+   ```typescript
+   if (!response.ok) {
+     throw new Error(`HTTP $\\{response.status\\}`);
+   }
+   ```
+
+4. **Use Timeouts**: Prevent hanging requests
+   ```typescript
+   const controller = new AbortController();
+   setTimeout(() => controller.abort(), 10000);
+
+   fetch(url, { signal: controller.signal });
+   ```
+
+5. **Cache Responses**: Store frequently accessed data
+   ```typescript
+   const cached = await context.storage.get('cache:data');
+   if (cached && Date.now() - cached.timestamp < 3600000) {
+     return cached.data;
+   }
+
+   const data = await fetchFromAPI();
+   await context.storage.set('cache:data', {
+     data,
+     timestamp: Date.now()
+   });
+   ```
+
+6. **Secure Credentials**: Store tokens safely
+   ```typescript
+   // Store in storage, not in code
+   const token = await context.storage.get('api_token');
+   ```
+
+---
+
+## Security Notes
+
+- **Permission Required**: Network access requires explicit permission
+- **CORS Applies**: Browser CORS rules apply to requests
+- **HTTPS Recommended**: Use HTTPS for sensitive data
+- **No Credentials in Code**: Store API keys in storage
+
+---
+
+## See Also
+
+- [StorageAPI Reference](/developers/plugins/api-reference/storage-api) - Store API credentials
+- [UIAPI Reference](/developers/plugins/api-reference/ui-api) - Progress indicators

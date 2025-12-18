@@ -1,0 +1,696 @@
+---
+title: "FilesystemAPI Reference"
+description: "Safe file system access for Lokus plugins"
+keywords: [lokus, plugin api, filesystem, files, directories, read, write]
+---
+
+# FilesystemAPI
+
+Safe file system access for reading and writing files. Access via `context.fs`.
+
+## Overview
+
+The FilesystemAPI provides secure file system operations within the plugin's sandboxed directory. Plugins can:
+- Read and write files
+- Create and delete directories
+- Copy, move, and rename files
+- Check file existence and get metadata
+- Open file dialogs for user selection
+
+All file paths are relative to the plugin's data directory for security.
+
+## Methods
+
+### openFileDialog(options)
+
+Show a file picker dialog.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| options | object | No | Dialog options |
+| options.accept | string | No | File type filter (e.g., '.txt,.md') |
+| options.multiple | boolean | No | Allow multiple selection (default: false) |
+| options.title | string | No | Dialog title |
+
+**Returns:** Promise resolving to selected file path(s) or `undefined`.
+
+**Example:**
+
+```typescript
+// Single file selection
+const file = await context.fs.openFileDialog({
+  accept: '.md,.txt',
+  title: 'Select Markdown File'
+});
+
+if (file) {
+  const content = await context.fs.readFile(file);
+  context.logger.info('File content:', content);
+}
+
+// Multiple file selection
+const files = await context.fs.openFileDialog({
+  accept: '.json',
+  multiple: true,
+  title: 'Select Config Files'
+});
+
+if (files) {
+  for (const file of files) {
+    // Process each file
+  }
+}
+```
+
+---
+
+### writeFile(relativePath, content)
+
+Write content to a file.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| relativePath | string | Yes | Path relative to plugin directory |
+| content | string \| Uint8Array | Yes | File content |
+
+**Returns:** Promise that resolves when written.
+
+**Example:**
+
+```typescript
+// Write text file
+await context.fs.writeFile('config.json', JSON.stringify({
+  theme: 'dark',
+  fontSize: 14
+}, null, 2));
+
+// Write binary file
+const data = new Uint8Array([/* ... */]);
+await context.fs.writeFile('data.bin', data);
+
+context.ui.showInformationMessage('File saved');
+```
+
+---
+
+### readFile(relativePath)
+
+Read file content.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| relativePath | string | Yes | Path relative to plugin directory |
+
+**Returns:** Promise resolving to file content (Uint8Array).
+
+**Example:**
+
+```typescript
+// Read binary data
+const data = await context.fs.readFile('data.bin');
+
+// Convert to text
+const text = new TextDecoder().decode(data);
+context.logger.info('File content:', text);
+
+// Parse JSON
+const config = JSON.parse(text);
+```
+
+---
+
+### exists(relativePath)
+
+Check if file or directory exists.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| relativePath | string | Yes | Path relative to plugin directory |
+
+**Returns:** Promise resolving to `true` if exists.
+
+**Example:**
+
+```typescript
+const hasConfig = await context.fs.exists('config.json');
+
+if (!hasConfig) {
+  // Create default config
+  await context.fs.writeFile('config.json', JSON.stringify(defaultConfig));
+}
+
+// Check directory
+const hasCache = await context.fs.exists('cache');
+if (!hasCache) {
+  await context.fs.mkdir('cache');
+}
+```
+
+---
+
+### ensureDir(relativePath)
+
+Ensure directory exists, creating if needed.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| relativePath | string | Yes | Directory path relative to plugin directory |
+
+**Returns:** Promise that resolves when directory exists.
+
+**Example:**
+
+```typescript
+// Ensure nested directory exists
+await context.fs.ensureDir('cache/images');
+
+// Now safe to write files
+await context.fs.writeFile('cache/images/logo.png', imageData);
+```
+
+---
+
+### mkdir(relativePath)
+
+Create a directory.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| relativePath | string | Yes | Directory path relative to plugin directory |
+
+**Returns:** Promise that resolves when created.
+
+**Example:**
+
+```typescript
+// Create directory
+await context.fs.mkdir('downloads');
+
+// Create nested directory (parent must exist)
+await context.fs.mkdir('data');
+await context.fs.mkdir('data/exports');
+```
+
+---
+
+### readdir(relativePath)
+
+Read directory contents.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| relativePath | string | Yes | Directory path relative to plugin directory |
+
+**Returns:** Promise resolving to array of file/directory names.
+
+**Example:**
+
+```typescript
+const files = await context.fs.readdir('cache');
+context.logger.info(`Found ${files.length} files:`, files);
+
+// Filter by extension
+const jsonFiles = files.filter(f => f.endsWith('.json'));
+
+// Process each file
+for (const file of files) {
+  const content = await context.fs.readFile(`cache/$\\{file\\}`);
+  // Process content...
+}
+```
+
+---
+
+### delete(relativePath)
+
+Delete a file or directory.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| relativePath | string | Yes | Path relative to plugin directory |
+
+**Returns:** Promise that resolves when deleted.
+
+**Example:**
+
+```typescript
+// Delete file
+await context.fs.delete('temp.txt');
+
+// Delete directory (must be empty)
+await context.fs.delete('cache');
+
+// Delete with confirmation
+const confirmed = await context.ui.showConfirm({
+  title: 'Delete File',
+  message: 'Delete config.json?'
+});
+
+if (confirmed) {
+  await context.fs.delete('config.json');
+}
+```
+
+---
+
+### rename(oldPath, newPath)
+
+Rename or move a file/directory.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| oldPath | string | Yes | Current path (relative) |
+| newPath | string | Yes | New path (relative) |
+
+**Returns:** Promise that resolves when renamed.
+
+**Example:**
+
+```typescript
+// Rename file
+await context.fs.rename('old-name.txt', 'new-name.txt');
+
+// Move file to subdirectory
+await context.fs.rename('file.txt', 'archive/file.txt');
+
+// Rename directory
+await context.fs.rename('old-dir', 'new-dir');
+```
+
+---
+
+### copy(source, destination)
+
+Copy a file.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| source | string | Yes | Source path (relative) |
+| destination | string | Yes | Destination path (relative) |
+
+**Returns:** Promise that resolves when copied.
+
+**Example:**
+
+```typescript
+// Copy file
+await context.fs.copy('template.txt', 'document.txt');
+
+// Backup file
+const timestamp = Date.now();
+await context.fs.copy('data.json', `backups/data-${timestamp}.json`);
+
+// Copy to subdirectory
+await context.fs.ensureDir('exports');
+await context.fs.copy('report.pdf', 'exports/report.pdf');
+```
+
+---
+
+### stat(path)
+
+Get file/directory metadata.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| path | string | Yes | Path relative to plugin directory |
+
+**Returns:** Promise resolving to file stats object.
+
+**Stats Interface:**
+
+```typescript
+interface FileStats {
+  isFile: boolean;
+  isDirectory: boolean;
+  size: number;          // Bytes
+  mtime: number;         // Modified time (ms)
+  ctime: number;         // Created time (ms)
+}
+```
+
+**Example:**
+
+```typescript
+const stats = await context.fs.stat('data.json');
+
+context.logger.info('File info:');
+context.logger.info(`Type: $\\{stats.isFile ? 'file' : 'directory'\\}`);
+context.logger.info(`Size: ${stats.size} bytes`);
+context.logger.info(`Modified: $\\{new Date(stats.mtime)\\}`);
+
+// Check file size before reading
+if (stats.size > 1024 * 1024) {
+  context.ui.showWarningMessage('File is very large (>1MB)');
+}
+```
+
+---
+
+## Complete Example
+
+```typescript
+export default class FileManagerPlugin {
+  private context: PluginContext;
+
+  constructor(context: PluginContext) {
+    this.context = context;
+  }
+
+  async activate(): Promise<void> {
+    // Ensure required directories exist
+    await context.fs.ensureDir('data');
+    await context.fs.ensureDir('cache');
+    await context.fs.ensureDir('backups');
+
+    // Register commands
+    context.commands.register([
+      {
+        id: 'myPlugin.saveData',
+        name: 'Save Data',
+        execute: () => this.saveData()
+      },
+      {
+        id: 'myPlugin.loadData',
+        name: 'Load Data',
+        execute: () => this.loadData()
+      },
+      {
+        id: 'myPlugin.backup',
+        name: 'Create Backup',
+        execute: () => this.createBackup()
+      },
+      {
+        id: 'myPlugin.listFiles',
+        name: 'List Files',
+        execute: () => this.listFiles()
+      }
+    ]);
+
+    // Load data on startup
+    await this.loadData();
+  }
+
+  async saveData(): Promise<void> {
+    const data = {
+      timestamp: Date.now(),
+      settings: { /* ... */ },
+      content: { /* ... */ }
+    };
+
+    try {
+      await context.fs.writeFile('data/state.json', JSON.stringify(data, null, 2));
+      context.ui.showInformationMessage('Data saved');
+    } catch (error) {
+      context.ui.showErrorMessage(`Save failed: $\\{error.message\\}`);
+    }
+  }
+
+  async loadData(): Promise<void> {
+    try {
+      const exists = await context.fs.exists('data/state.json');
+      if (!exists) {
+        context.logger.info('No saved data found');
+        return;
+      }
+
+      const data = await context.fs.readFile('data/state.json');
+      const text = new TextDecoder().decode(data);
+      const state = JSON.parse(text);
+
+      context.logger.info('Data loaded:', state);
+      context.ui.showInformationMessage('Data loaded');
+    } catch (error) {
+      context.ui.showErrorMessage(`Load failed: $\\{error.message\\}`);
+    }
+  }
+
+  async createBackup(): Promise<void> {
+    try {
+      const exists = await context.fs.exists('data/state.json');
+      if (!exists) {
+        context.ui.showWarningMessage('No data to backup');
+        return;
+      }
+
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      await context.fs.copy('data/state.json', `backups/state-${timestamp}.json`);
+
+      context.ui.showInformationMessage('Backup created');
+    } catch (error) {
+      context.ui.showErrorMessage(`Backup failed: $\\{error.message\\}`);
+    }
+  }
+
+  async listFiles(): Promise<void> {
+    try {
+      const files = await context.fs.readdir('data');
+
+      context.logger.info('Files in data directory:');
+      for (const file of files) {
+        const stats = await context.fs.stat(`data/$\\{file\\}`);
+        const size = (stats.size / 1024).toFixed(2);
+        context.logger.info(`- ${file} (${size} KB)`);
+      }
+
+      context.ui.showInformationMessage(`Found ${files.length} files`);
+    } catch (error) {
+      context.ui.showErrorMessage(`List failed: $\\{error.message\\}`);
+    }
+  }
+
+  async deactivate(): Promise<void> {
+    // Save data on deactivation
+    await this.saveData();
+  }
+}
+```
+
+---
+
+## Advanced Example: File Processor
+
+```typescript
+export default class FileProcessorPlugin {
+  private context: PluginContext;
+
+  constructor(context: PluginContext) {
+    this.context = context;
+  }
+
+  async activate(): Promise<void> {
+    context.commands.register([
+      {
+        id: 'myPlugin.importFile',
+        name: 'Import File',
+        execute: () => this.importFile()
+      },
+      {
+        id: 'myPlugin.processFiles',
+        name: 'Process Files',
+        execute: () => this.processFiles()
+      },
+      {
+        id: 'myPlugin.cleanupOldFiles',
+        name: 'Cleanup Old Files',
+        execute: () => this.cleanupOldFiles()
+      }
+    ]);
+  }
+
+  async importFile(): Promise<void> {
+    // Let user select file
+    const file = await context.fs.openFileDialog({
+      accept: '.json,.txt,.md',
+      title: 'Import File'
+    });
+
+    if (!file) return;
+
+    try {
+      // Read external file
+      const content = await context.fs.readFile(file);
+      const text = new TextDecoder().decode(content);
+
+      // Save to plugin directory
+      await context.fs.ensureDir('imports');
+      const filename = file.split('/').pop();
+      await context.fs.writeFile(`imports/$\\{filename\\}`, text);
+
+      context.ui.showInformationMessage(`Imported: $\\{filename\\}`);
+    } catch (error) {
+      context.ui.showErrorMessage(`Import failed: $\\{error.message\\}`);
+    }
+  }
+
+  async processFiles(): Promise<void> {
+    try {
+      await context.fs.ensureDir('imports');
+      await context.fs.ensureDir('processed');
+
+      const files = await context.fs.readdir('imports');
+
+      for (const file of files) {
+        if (!file.endsWith('.json')) continue;
+
+        // Read file
+        const data = await context.fs.readFile(`imports/$\\{file\\}`);
+        const text = new TextDecoder().decode(data);
+        const json = JSON.parse(text);
+
+        // Process data
+        const processed = this.transform(json);
+
+        // Save processed version
+        await context.fs.writeFile(
+          `processed/$\\{file\\}`,
+          JSON.stringify(processed, null, 2)
+        );
+      }
+
+      context.ui.showInformationMessage(`Processed ${files.length} files`);
+    } catch (error) {
+      context.ui.showErrorMessage(`Processing failed: $\\{error.message\\}`);
+    }
+  }
+
+  transform(data: any): any {
+    // Transform data (example)
+    return {
+      ...data,
+      processed: true,
+      timestamp: Date.now()
+    };
+  }
+
+  async cleanupOldFiles(): Promise<void> {
+    try {
+      const dirs = ['cache', 'temp', 'imports'];
+      const maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days
+      let deleted = 0;
+
+      for (const dir of dirs) {
+        const exists = await context.fs.exists(dir);
+        if (!exists) continue;
+
+        const files = await context.fs.readdir(dir);
+
+        for (const file of files) {
+          const stats = await context.fs.stat(`${dir}/$\\{file\\}`);
+          const age = Date.now() - stats.mtime;
+
+          if (age > maxAge) {
+            await context.fs.delete(`${dir}/$\\{file\\}`);
+            deleted++;
+          }
+        }
+      }
+
+      context.ui.showInformationMessage(`Deleted ${deleted} old files`);
+    } catch (error) {
+      context.ui.showErrorMessage(`Cleanup failed: $\\{error.message\\}`);
+    }
+  }
+
+  async deactivate(): Promise<void> {
+    // Cleanup handled automatically
+  }
+}
+```
+
+---
+
+## Best Practices
+
+1. **Use Relative Paths**: All paths are relative to plugin directory
+   ```typescript
+   await fs.writeFile('data/config.json', content);  // ✓
+   await fs.writeFile('/abs/path/file.txt', content); // ✗ Security error
+   ```
+
+2. **Ensure Directories Exist**: Create directories before writing
+   ```typescript
+   await fs.ensureDir('data/exports');
+   await fs.writeFile('data/exports/file.txt', content);
+   ```
+
+3. **Handle Errors**: Wrap operations in try-catch
+   ```typescript
+   try {
+     await fs.writeFile('data.json', content);
+   } catch (error) {
+     context.logger.error('Write failed:', error);
+   }
+   ```
+
+4. **Check File Existence**: Verify before reading
+   ```typescript
+   if (await fs.exists('config.json')) {
+     const data = await fs.readFile('config.json');
+   }
+   ```
+
+5. **Use Binary for Non-Text**: Handle encodings properly
+   ```typescript
+   // Read binary
+   const data = await fs.readFile('image.png');
+
+   // Convert to text
+   const text = new TextDecoder().decode(data);
+   ```
+
+6. **Clean Up Temp Files**: Remove temporary files
+   ```typescript
+   async deactivate() {
+     await fs.delete('temp');
+   }
+   ```
+
+---
+
+## Security Notes
+
+- **Sandboxed Access**: Plugins can only access their own directory
+- **No Absolute Paths**: Absolute paths are blocked for security
+- **No Parent Access**: Cannot use `..` to escape directory
+- **Safe by Default**: All operations are sandboxed
+
+```typescript
+// ✓ Allowed
+await fs.writeFile('data/file.txt', content);
+await fs.readFile('cache/data.json');
+
+// ✗ Blocked
+await fs.writeFile('/etc/passwd', content);        // Absolute path
+await fs.readFile('../../../secret.txt');          // Parent access
+```
+
+---
+
+## See Also
+
+- [StorageAPI Reference](/developers/plugins/api-reference/storage-api) - Key-value storage
+- [NetworkAPI Reference](/developers/plugins/api-reference/network-api) - Remote files
+- [WorkspaceAPI Reference](/developers/plugins/api-reference/workspace-api) - Workspace files

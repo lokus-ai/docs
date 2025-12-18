@@ -1,0 +1,450 @@
+---
+title: "TaskAPI Reference"
+description: "Register task providers and execute tasks in Lokus plugins"
+keywords: [lokus, plugin api, tasks, build tasks, automation]
+---
+
+# TaskAPI
+
+Register task providers and execute automated tasks. Access via `context.tasks`.
+
+## Overview
+
+The TaskAPI allows plugins to:
+- Register task providers for different task types (npm, shell, custom)
+- Execute tasks programmatically
+- Listen for task lifecycle events
+- Get all available tasks from providers
+
+Tasks are reusable automation units (builds, tests, deploys) that can be triggered by users or other plugins.
+
+## Methods
+
+### registerTaskProvider(type, provider)
+
+Register a task provider for a specific task type.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| type | string | Yes | Unique task type identifier |
+| provider | TaskProvider | Yes | Provider implementation |
+
+**Provider Interface:**
+
+```typescript
+interface TaskProvider {
+  provideTasks?(): Promise<Task[]>;
+  resolveTask?(task: Task): Promise<Task>;
+}
+```
+
+**Returns:** Disposable to unregister the provider.
+
+**Example:**
+
+```typescript
+const disposable = context.tasks.registerTaskProvider('npm', {
+  async provideTasks() {
+    return [
+      {
+        type: 'npm',
+        name: 'build',
+        command: 'npm run build',
+        group: 'build'
+      },
+      {
+        type: 'npm',
+        name: 'test',
+        command: 'npm test',
+        group: 'test'
+      }
+    ];
+  },
+  async resolveTask(task) {
+    // Enhance task with additional config
+    return {
+      ...task,
+      cwd: context.workspace?.rootPath
+    };
+  }
+});
+
+// Unregister when done
+disposable.dispose();
+```
+
+---
+
+### executeTask(task)
+
+Execute a task programmatically.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| task | Task | Yes | Task definition |
+
+**Task Interface:**
+
+```typescript
+interface Task {
+  type: string;           // Task type
+  name: string;           // Task name
+  command?: string;       // Command to execute
+  args?: string[];        // Command arguments
+  cwd?: string;          // Working directory
+  env?: object;          // Environment variables
+  group?: string;        // Task group (build, test, etc.)
+  problemMatcher?: any;  // Problem matcher config
+}
+```
+
+**Returns:** Promise resolving to TaskExecution object.
+
+**TaskExecution Interface:**
+
+```typescript
+interface TaskExecution {
+  task: Task;
+  executionId: string;
+  terminate(): void;
+}
+```
+
+**Example:**
+
+```typescript
+const task = {
+  type: 'shell',
+  name: 'deploy',
+  command: 'npm run deploy',
+  cwd: context.workspace?.rootPath
+};
+
+try {
+  const execution = await context.tasks.executeTask(task);
+  context.logger.info(`Task started: $\\{execution.executionId\\}`);
+
+  // Can terminate later if needed
+  // execution.terminate();
+} catch (error) {
+  context.logger.error('Task failed:', error);
+}
+```
+
+---
+
+### getTasks()
+
+Get all tasks from all registered providers.
+
+**Returns:** Promise resolving to array of Task objects.
+
+**Example:**
+
+```typescript
+const tasks = await context.tasks.getTasks();
+
+// Filter by type
+const npmTasks = tasks.filter(t => t.type === 'npm');
+
+// Filter by group
+const buildTasks = tasks.filter(t => t.group === 'build');
+
+context.logger.info(`Found ${tasks.length} tasks`);
+```
+
+---
+
+## Events
+
+### onDidStartTask(listener)
+
+Listen for task start events.
+
+**Parameters:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| listener | function | Callback receiving `\\\{ task, executionId \\\}` |
+
+**Returns:** Disposable to stop listening.
+
+**Example:**
+
+```typescript
+context.tasks.onDidStartTask(({ task, executionId }) => {
+  context.logger.info(`Task started: ${task.name} (${executionId})`);
+  context.ui.showInformationMessage(`Running ${task.name}...`);
+});
+```
+
+---
+
+### onDidEndTask(listener)
+
+Listen for task end events.
+
+**Parameters:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| listener | function | Callback receiving `\\\{ task, executionId \\\}` |
+
+**Returns:** Disposable to stop listening.
+
+**Example:**
+
+```typescript
+context.tasks.onDidEndTask(({ task, executionId }) => {
+  context.logger.info(`Task completed: $\\{task.name\\}`);
+  context.ui.showInformationMessage(`${task.name} completed!`);
+});
+```
+
+---
+
+## Complete Example
+
+```typescript
+export default class TaskPlugin {
+  private context: PluginContext;
+
+  constructor(context: PluginContext) {
+    this.context = context;
+  }
+
+  async activate(): Promise<void> {
+    // Register custom task provider
+    context.tasks.registerTaskProvider('custom', {
+      async provideTasks() {
+        return [
+          {
+            type: 'custom',
+            name: 'format',
+            command: 'prettier --write .',
+            group: 'build'
+          },
+          {
+            type: 'custom',
+            name: 'lint',
+            command: 'eslint .',
+            group: 'test'
+          }
+        ];
+      }
+    });
+
+    // Register commands to run tasks
+    context.commands.register('myPlugin.runFormat', {
+      name: 'Format Code',
+      execute: () => this.runFormatTask()
+    });
+
+    // Listen for task events
+    context.tasks.onDidStartTask(({ task }) => {
+      context.logger.info(`Starting: $\\{task.name\\}`);
+    });
+
+    context.tasks.onDidEndTask(({ task }) => {
+      context.logger.info(`Completed: $\\{task.name\\}`);
+    });
+  }
+
+  async runFormatTask(): Promise<void> {
+    const tasks = await context.tasks.getTasks();
+    const formatTask = tasks.find(t => t.name === 'format');
+
+    if (!formatTask) {
+      context.ui.showErrorMessage('Format task not found');
+      return;
+    }
+
+    try {
+      await context.tasks.executeTask(formatTask);
+    } catch (error) {
+      context.ui.showErrorMessage(`Task failed: $\\{error.message\\}`);
+    }
+  }
+
+  async deactivate(): Promise<void> {
+    // Cleanup handled automatically
+  }
+}
+```
+
+---
+
+## Advanced Example: Build System
+
+```typescript
+export default class BuildPlugin {
+  private context: PluginContext;
+  private currentExecution?: TaskExecution;
+
+  constructor(context: PluginContext) {
+    this.context = context;
+  }
+
+  async activate(): Promise<void> {
+    // Register build task provider
+    context.tasks.registerTaskProvider('build', {
+      async provideTasks() {
+        return [
+          {
+            type: 'build',
+            name: 'production',
+            command: 'npm run build',
+            env: { NODE_ENV: 'production' },
+            group: 'build'
+          },
+          {
+            type: 'build',
+            name: 'development',
+            command: 'npm run build:dev',
+            env: { NODE_ENV: 'development' },
+            group: 'build'
+          }
+        ];
+      },
+      async resolveTask(task) {
+        // Add project-specific config
+        return {
+          ...task,
+          cwd: context.workspace?.rootPath,
+          problemMatcher: {
+            pattern: {
+              regexp: '^(.+):(\\d+):(\\d+): (.+)$',
+              file: 1,
+              line: 2,
+              column: 3,
+              message: 4
+            }
+          }
+        };
+      }
+    });
+
+    // Register commands
+    context.commands.register([
+      {
+        id: 'myPlugin.buildProd',
+        name: 'Build for Production',
+        execute: () => this.runBuild('production')
+      },
+      {
+        id: 'myPlugin.buildDev',
+        name: 'Build for Development',
+        execute: () => this.runBuild('development')
+      },
+      {
+        id: 'myPlugin.stopBuild',
+        name: 'Stop Build',
+        execute: () => this.stopBuild()
+      }
+    ]);
+
+    // Track build progress
+    context.tasks.onDidStartTask(({ task, executionId }) => {
+      if (task.type === 'build') {
+        context.ui.showInformationMessage(`Building ${task.name}...`);
+      }
+    });
+
+    context.tasks.onDidEndTask(({ task }) => {
+      if (task.type === 'build') {
+        context.ui.showInformationMessage(`Build ${task.name} completed!`);
+        this.currentExecution = undefined;
+      }
+    });
+  }
+
+  async runBuild(variant: string): Promise<void> {
+    // Stop current build if running
+    if (this.currentExecution) {
+      this.currentExecution.terminate();
+    }
+
+    const tasks = await context.tasks.getTasks();
+    const buildTask = tasks.find(t => t.type === 'build' && t.name === variant);
+
+    if (!buildTask) {
+      context.ui.showErrorMessage(`Build task '${variant}' not found`);
+      return;
+    }
+
+    try {
+      this.currentExecution = await context.tasks.executeTask(buildTask);
+    } catch (error) {
+      context.ui.showErrorMessage(`Build failed: $\\{error.message\\}`);
+      this.currentExecution = undefined;
+    }
+  }
+
+  stopBuild(): void {
+    if (this.currentExecution) {
+      this.currentExecution.terminate();
+      context.ui.showInformationMessage('Build stopped');
+    } else {
+      context.ui.showWarningMessage('No build running');
+    }
+  }
+
+  async deactivate(): Promise<void> {
+    // Stop any running tasks
+    this.currentExecution?.terminate();
+  }
+}
+```
+
+---
+
+## Best Practices
+
+1. **Use Task Groups**: Organize tasks by purpose
+   ```typescript
+   { group: 'build' }  // Build tasks
+   { group: 'test' }   // Test tasks
+   ```
+
+2. **Set Working Directory**: Specify `cwd` for context
+   ```typescript
+   {
+     cwd: context.workspace?.rootPath
+   }
+   ```
+
+3. **Handle Errors**: Wrap execution in try-catch
+   ```typescript
+   try {
+     await context.tasks.executeTask(task);
+   } catch (error) {
+     context.logger.error('Task failed:', error);
+   }
+   ```
+
+4. **Track Executions**: Store references for cancellation
+   ```typescript
+   this.execution = await context.tasks.executeTask(task);
+   // Later: this.execution.terminate();
+   ```
+
+5. **Use Problem Matchers**: Parse output for errors
+   ```typescript
+   {
+     problemMatcher: {
+       pattern: { regexp: '...' }
+     }
+   }
+   ```
+
+---
+
+## See Also
+
+- [TerminalAPI Reference](/developers/plugins/api-reference/terminal-api) - Terminal management
+- [CommandsAPI Reference](/developers/plugins/api-reference/commands-api) - Command registration
+- [WorkspaceAPI Reference](/developers/plugins/api-reference/workspace-api) - Workspace information

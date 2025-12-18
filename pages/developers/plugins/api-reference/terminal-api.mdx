@@ -1,0 +1,324 @@
+---
+title: "TerminalAPI Reference"
+description: "Create and manage virtual terminals in Lokus plugins"
+keywords: [lokus, plugin api, terminal, shell, command execution]
+---
+
+# TerminalAPI
+
+Create and manage virtual terminals from your plugin. Access via `context.terminal`.
+
+## Overview
+
+The TerminalAPI allows plugins to:
+- Create named terminal instances
+- Send commands to terminals programmatically
+- Listen for terminal lifecycle events
+- Get active terminal and list all terminals
+
+## Methods
+
+### createTerminal(options)
+
+Creates a new terminal instance.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| options | object \| string | No | Terminal options or name |
+| options.name | string | No | Terminal display name |
+| options.shellPath | string | No | Shell executable path |
+| options.shellArgs | string[] | No | Shell arguments |
+| options.cwd | string | No | Working directory |
+| options.env | object | No | Environment variables |
+
+**Returns:** Terminal object with methods:
+- `sendText(text, addNewLine?)` - Send text to terminal
+- `show(preserveFocus?)` - Show terminal panel
+- `hide()` - Hide terminal
+- `dispose()` - Close terminal
+
+**Example:**
+
+```typescript
+// Create with options object
+const terminal = context.terminal.createTerminal({
+  name: 'Build Terminal',
+  cwd: '/path/to/project',
+  env: {
+    NODE_ENV: 'development'
+  }
+});
+
+terminal.show();
+terminal.sendText('npm run build');
+
+// Simple form with just name
+const simpleTerminal = context.terminal.createTerminal('My Terminal');
+```
+
+---
+
+### sendText(terminalId, text, addNewLine?)
+
+Send text to a specific terminal by ID.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| terminalId | string | Yes | Terminal ID |
+| text | string | Yes | Text to send |
+| addNewLine | boolean | No | Add newline (default: true) |
+
+**Example:**
+
+```typescript
+const terminal = context.terminal.createTerminal('Deploy');
+context.terminal.sendText(terminal.id, 'npm run deploy', true);
+```
+
+---
+
+### getActiveTerminal()
+
+Get the currently active terminal.
+
+**Returns:** Terminal object or `undefined` if no active terminal.
+
+**Example:**
+
+```typescript
+const active = context.terminal.getActiveTerminal();
+if (active) {
+  context.logger.info(`Active terminal: $\\{active.name\\}`);
+}
+```
+
+---
+
+### activeTerminal (getter)
+
+Alias for `getActiveTerminal()`.
+
+**Example:**
+
+```typescript
+const active = context.terminal.activeTerminal;
+```
+
+---
+
+### getTerminals()
+
+Get all terminal instances.
+
+**Returns:** Array of terminal objects.
+
+**Example:**
+
+```typescript
+const terminals = context.terminal.getTerminals();
+terminals.forEach(t => {
+  context.logger.info(`Terminal: ${t.name} (${t.id})`);
+});
+```
+
+---
+
+## Events
+
+### onDidOpenTerminal(listener)
+
+Listen for terminal creation events.
+
+**Parameters:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| listener | function | Callback receiving terminal object |
+
+**Returns:** Disposable to stop listening.
+
+**Example:**
+
+```typescript
+const disposable = context.terminal.onDidOpenTerminal((terminal) => {
+  context.logger.info(`Terminal opened: $\\{terminal.name\\}`);
+});
+
+// Stop listening later
+disposable.dispose();
+```
+
+---
+
+### onDidCloseTerminal(listener)
+
+Listen for terminal close events.
+
+**Parameters:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| listener | function | Callback receiving `\\\{ terminalId \\\}` |
+
+**Returns:** Disposable to stop listening.
+
+**Example:**
+
+```typescript
+context.terminal.onDidCloseTerminal(({ terminalId }) => {
+  context.logger.info(`Terminal closed: $\\{terminalId\\}`);
+});
+```
+
+---
+
+### onDidChangeActiveTerminal(listener)
+
+Listen for active terminal changes.
+
+**Parameters:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| listener | function | Callback receiving terminal object |
+
+**Returns:** Disposable to stop listening.
+
+**Example:**
+
+```typescript
+context.terminal.onDidChangeActiveTerminal((terminal) => {
+  context.logger.info(`Active terminal changed to: $\\{terminal.name\\}`);
+});
+```
+
+---
+
+## Terminal Object
+
+The terminal object returned by `createTerminal()` has the following structure:
+
+```typescript
+interface Terminal {
+  id: string;
+  name: string;
+  shellPath?: string;
+  shellArgs?: string[];
+  cwd?: string;
+  env?: Record<string, string>;
+  pluginId: string;
+
+  // Methods
+  sendText(text: string, addNewLine?: boolean): void;
+  show(preserveFocus?: boolean): void;
+  hide(): void;
+  dispose(): void;
+}
+```
+
+---
+
+## Complete Example
+
+```typescript
+export default class TerminalPlugin {
+  private context: PluginContext;
+  private buildTerminal?: Terminal;
+
+  constructor(context: PluginContext) {
+    this.context = context;
+  }
+
+  async activate(): Promise<void> {
+    // Create a dedicated build terminal
+    this.buildTerminal = this.context.terminal.createTerminal({
+      name: 'Build',
+      cwd: this.context.workspace?.rootPath
+    });
+
+    // Register command to run build
+    this.context.commands.register('myPlugin.build', {
+      name: 'Run Build',
+      execute: () => this.runBuild()
+    });
+
+    // Listen for terminal events
+    this.context.terminal.onDidOpenTerminal((terminal) => {
+      this.context.logger.info(`New terminal: $\\{terminal.name\\}`);
+    });
+
+    this.context.terminal.onDidCloseTerminal(({ terminalId }) => {
+      if (this.buildTerminal?.id === terminalId) {
+        this.buildTerminal = undefined;
+      }
+    });
+  }
+
+  async runBuild(): Promise<void> {
+    if (!this.buildTerminal) {
+      this.buildTerminal = this.context.terminal.createTerminal({
+        name: 'Build',
+        cwd: this.context.workspace?.rootPath
+      });
+    }
+
+    this.buildTerminal.show();
+    this.buildTerminal.sendText('npm run build');
+
+    this.context.ui.showInformationMessage('Build started');
+  }
+
+  async deactivate(): Promise<void> {
+    // Clean up terminal
+    this.buildTerminal?.dispose();
+  }
+}
+```
+
+---
+
+## Best Practices
+
+1. **Name Your Terminals**: Use descriptive names for better UX
+   ```typescript
+   createTerminal({ name: 'Build Terminal' });
+   ```
+
+2. **Set Working Directory**: Specify `cwd` for context-aware commands
+   ```typescript
+   createTerminal({
+     name: 'Project',
+     cwd: context.workspace?.rootPath
+   });
+   ```
+
+3. **Clean Up**: Dispose terminals when plugin deactivates
+   ```typescript
+   async deactivate() {
+     this.terminal?.dispose();
+   }
+   ```
+
+4. **Use Events**: React to terminal state changes
+   ```typescript
+   onDidCloseTerminal(({ terminalId }) => {
+     // Handle cleanup
+   });
+   ```
+
+5. **Preserve Focus**: Use `preserveFocus` when showing terminals
+   ```typescript
+   terminal.show(true); // Don't steal focus from editor
+   ```
+
+---
+
+## See Also
+
+- [UIAPI Reference](/developers/plugins/api-reference/ui-api) - Output channels and panels
+- [CommandsAPI Reference](/developers/plugins/api-reference/commands-api) - Command registration
+- [WorkspaceAPI Reference](/developers/plugins/api-reference/workspace-api) - Workspace information

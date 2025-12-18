@@ -1,0 +1,677 @@
+---
+title: Custom Formatter Plugin
+description: Transform text with custom formatting commands
+---
+
+import { Callout } from 'nextra/components'
+import { FileTree } from 'nextra/components'
+
+# Custom Formatter Plugin
+
+A plugin that provides custom text formatting commands to transform selected text. Includes case conversion, text wrapping, and sorting.
+
+<Callout type="info">
+This example demonstrates editor manipulation, text selection handling, and custom commands.
+</Callout>
+
+## Features Demonstrated
+
+- ✅ Getting and setting editor selection
+- ✅ Reading and replacing selected text
+- ✅ Text transformation functions
+- ✅ Multiple command registration
+- ✅ Configuration with user preferences
+- ✅ Command palette integration
+
+## Project Structure
+
+<FileTree>
+  <FileTree.Folder name="lokus-custom-formatter" defaultOpen>
+    <FileTree.File name="package.json" />
+    <FileTree.File name="manifest.json" />
+    <FileTree.File name="index.js" />
+    <FileTree.File name="formatters.js" />
+    <FileTree.File name="config.json" />
+    <FileTree.File name="README.md" />
+  </FileTree.Folder>
+</FileTree>
+
+## Complete Source Code
+
+### `package.json`
+
+```json filename="package.json"
+{
+  "name": "lokus-custom-formatter",
+  "version": "1.0.0",
+  "description": "Custom text formatting commands for Lokus",
+  "main": "index.js",
+  "keywords": ["lokus", "plugin", "formatter", "text-transformation"],
+  "author": "Your Name",
+  "license": "MIT",
+  "engines": {
+    "lokus": "^1.0.0"
+  },
+  "dependencies": {
+    "@lokus/plugin-sdk": "^1.0.0"
+  }
+}
+```
+
+### `manifest.json`
+
+```json filename="manifest.json"
+{
+  "id": "lokus-custom-formatter",
+  "name": "Custom Formatter",
+  "version": "1.0.0",
+  "description": "Transform text with custom formatting commands",
+  "author": "Your Name",
+  "main": "index.js",
+  "activationEvents": [
+    "onCommand:custom-formatter.upperCase",
+    "onCommand:custom-formatter.lowerCase",
+    "onCommand:custom-formatter.titleCase",
+    "onCommand:custom-formatter.sortLines",
+    "onCommand:custom-formatter.reverseLines",
+    "onCommand:custom-formatter.wrapQuotes",
+    "onCommand:custom-formatter.removeBlankLines"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "id": "custom-formatter.upperCase",
+        "title": "Transform to UPPERCASE",
+        "category": "Format"
+      },
+      {
+        "id": "custom-formatter.lowerCase",
+        "title": "Transform to lowercase",
+        "category": "Format"
+      },
+      {
+        "id": "custom-formatter.titleCase",
+        "title": "Transform to Title Case",
+        "category": "Format"
+      },
+      {
+        "id": "custom-formatter.sortLines",
+        "title": "Sort Lines Alphabetically",
+        "category": "Format"
+      },
+      {
+        "id": "custom-formatter.reverseLines",
+        "title": "Reverse Lines",
+        "category": "Format"
+      },
+      {
+        "id": "custom-formatter.wrapQuotes",
+        "title": "Wrap in Quotes",
+        "category": "Format"
+      },
+      {
+        "id": "custom-formatter.removeBlankLines",
+        "title": "Remove Blank Lines",
+        "category": "Format"
+      }
+    ],
+    "configuration": {
+      "title": "Custom Formatter",
+      "properties": {
+        "customFormatter.quoteStyle": {
+          "type": "string",
+          "enum": ["double", "single", "backtick"],
+          "default": "double",
+          "description": "Quote style for wrapping text"
+        },
+        "customFormatter.sortCaseSensitive": {
+          "type": "boolean",
+          "default": false,
+          "description": "Case-sensitive line sorting"
+        }
+      }
+    }
+  },
+  "permissions": []
+}
+```
+
+### `formatters.js`
+
+```javascript filename="formatters.js"
+/**
+ * Text transformation functions
+ */
+
+/**
+ * Convert text to UPPERCASE
+ */
+export function toUpperCase(text) {
+  return text.toUpperCase();
+}
+
+/**
+ * Convert text to lowercase
+ */
+export function toLowerCase(text) {
+  return text.toLowerCase();
+}
+
+/**
+ * Convert text to Title Case
+ */
+export function toTitleCase(text) {
+  return text
+    .toLowerCase()
+    .split(' ')
+    .map(word => {
+      // Don't capitalize articles, conjunctions, prepositions (unless first word)
+      const smallWords = ['a', 'an', 'and', 'as', 'at', 'but', 'by', 'for', 'in', 'of', 'on', 'or', 'the', 'to'];
+      if (smallWords.includes(word)) {
+        return word;
+      }
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .map((word, index) => {
+      // Always capitalize first word
+      if (index === 0) {
+        return word.charAt(0).toUpperCase() + word.slice(1);
+      }
+      return word;
+    })
+    .join(' ');
+}
+
+/**
+ * Sort lines alphabetically
+ */
+export function sortLines(text, caseSensitive = false) {
+  const lines = text.split('\n');
+
+  if (caseSensitive) {
+    lines.sort();
+  } else {
+    lines.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+  }
+
+  return lines.join('\n');
+}
+
+/**
+ * Reverse line order
+ */
+export function reverseLines(text) {
+  return text.split('\n').reverse().join('\n');
+}
+
+/**
+ * Wrap text in quotes
+ */
+export function wrapInQuotes(text, quoteStyle = 'double') {
+  const quotes = {
+    double: '"',
+    single: "'",
+    backtick: '`'
+  };
+
+  const quote = quotes[quoteStyle] || quotes.double;
+
+  // Split by lines and wrap each line
+  return text
+    .split('\n')
+    .map(line => line.trim() ? `${quote}${line}$\\{quote\\}` : line)
+    .join('\n');
+}
+
+/**
+ * Remove blank lines
+ */
+export function removeBlankLines(text) {
+  return text
+    .split('\n')
+    .filter(line => line.trim().length > 0)
+    .join('\n');
+}
+
+/**
+ * Add line numbers
+ */
+export function addLineNumbers(text) {
+  return text
+    .split('\n')
+    .map((line, index) => `${index + 1}. $\\{line\\}`)
+    .join('\n');
+}
+
+/**
+ * Duplicate lines
+ */
+export function duplicateLines(text) {
+  return text
+    .split('\n')
+    .map(line => `${line}\n$\\{line\\}`)
+    .join('\n');
+}
+```
+
+### `index.js`
+
+```javascript filename="index.js"
+/**
+ * Custom Formatter Plugin for Lokus
+ *
+ * Provides text transformation commands for the editor
+ */
+
+import * as formatters from './formatters.js';
+
+/**
+ * Apply a formatter to the selected text
+ * @param {Object} api - Lokus Plugin API
+ * @param {Function} formatter - Formatter function
+ * @param {string} commandName - Name of the command for error messages
+ */
+async function applyFormatter(api, formatter, commandName) {
+  try {
+    // Get current selection
+    const selection = await api.editor.getSelection();
+
+    if (!selection) {
+      api.ui.showWarningMessage('No active editor');
+      return;
+    }
+
+    // Check if there's selected text
+    if (selection.isEmpty) {
+      api.ui.showInformationMessage('Please select some text first');
+      return;
+    }
+
+    // Get the selected text
+    const selectedText = await api.editor.getTextInRange({
+      start: selection.start,
+      end: selection.end
+    });
+
+    if (!selectedText) {
+      api.ui.showWarningMessage('Could not get selected text');
+      return;
+    }
+
+    // Apply the formatter
+    const formattedText = formatter(selectedText);
+
+    // Replace the selection with formatted text
+    await api.editor.replaceText(
+      { start: selection.start, end: selection.end },
+      formattedText
+    );
+
+    // Show success message
+    api.ui.showInformationMessage(`Applied $\\{commandName\\}`);
+
+  } catch (error) {
+    console.error(`Error in ${commandName}:`, error);
+    api.ui.showErrorMessage(`Failed to apply ${commandName}: $\\{error.message\\}`);
+  }
+}
+
+/**
+ * Called when the plugin is activated
+ */
+export function activate(api) {
+  console.log('Custom Formatter plugin activated');
+
+  // Get configuration
+  const config = api.config.getConfiguration('customFormatter');
+  const quoteStyle = config.get('quoteStyle', 'double');
+  const sortCaseSensitive = config.get('sortCaseSensitive', false);
+
+  // Array to store all disposables
+  const disposables = [];
+
+  // Register uppercase command
+  disposables.push(
+    api.commands.register({
+      id: 'custom-formatter.upperCase',
+      title: 'Transform to UPPERCASE',
+      execute: () => applyFormatter(api, formatters.toUpperCase, 'UPPERCASE')
+    })
+  );
+
+  // Register lowercase command
+  disposables.push(
+    api.commands.register({
+      id: 'custom-formatter.lowerCase',
+      title: 'Transform to lowercase',
+      execute: () => applyFormatter(api, formatters.toLowerCase, 'lowercase')
+    })
+  );
+
+  // Register title case command
+  disposables.push(
+    api.commands.register({
+      id: 'custom-formatter.titleCase',
+      title: 'Transform to Title Case',
+      execute: () => applyFormatter(api, formatters.toTitleCase, 'Title Case')
+    })
+  );
+
+  // Register sort lines command
+  disposables.push(
+    api.commands.register({
+      id: 'custom-formatter.sortLines',
+      title: 'Sort Lines Alphabetically',
+      execute: () => applyFormatter(
+        api,
+        (text) => formatters.sortLines(text, sortCaseSensitive),
+        'Sort Lines'
+      )
+    })
+  );
+
+  // Register reverse lines command
+  disposables.push(
+    api.commands.register({
+      id: 'custom-formatter.reverseLines',
+      title: 'Reverse Lines',
+      execute: () => applyFormatter(api, formatters.reverseLines, 'Reverse Lines')
+    })
+  );
+
+  // Register wrap quotes command
+  disposables.push(
+    api.commands.register({
+      id: 'custom-formatter.wrapQuotes',
+      title: 'Wrap in Quotes',
+      execute: () => applyFormatter(
+        api,
+        (text) => formatters.wrapInQuotes(text, quoteStyle),
+        'Wrap in Quotes'
+      )
+    })
+  );
+
+  // Register remove blank lines command
+  disposables.push(
+    api.commands.register({
+      id: 'custom-formatter.removeBlankLines',
+      title: 'Remove Blank Lines',
+      execute: () => applyFormatter(api, formatters.removeBlankLines, 'Remove Blank Lines')
+    })
+  );
+
+  // Listen for configuration changes
+  const configDisposable = api.config.onDidChangeConfiguration((event) => {
+    if (event.affectsConfiguration('customFormatter')) {
+      api.ui.showInformationMessage('Custom Formatter configuration updated');
+    }
+  });
+  disposables.push(configDisposable);
+
+  // Return cleanup function
+  return {
+    dispose: () => {
+      disposables.forEach(d => d.dispose());
+      console.log('Custom Formatter plugin deactivated');
+    }
+  };
+}
+
+/**
+ * Called when the plugin is deactivated
+ */
+export function deactivate() {
+  // Additional cleanup if needed
+}
+```
+
+## Installation & Testing
+
+### Step 1: Create the Plugin
+
+```bash
+mkdir lokus-custom-formatter
+cd lokus-custom-formatter
+
+# Copy all files above
+npm install
+```
+
+### Step 2: Link and Enable
+
+```bash
+npm link
+# In Lokus plugins directory
+npm link lokus-custom-formatter
+```
+
+### Step 3: Test the Commands
+
+1. Open Lokus and enable the plugin
+2. Open a document and select some text
+3. Open Command Palette (`Cmd+Shift+P`)
+4. Try these commands:
+   - "Transform to UPPERCASE" - converts to ALL CAPS
+   - "Transform to lowercase" - converts to all lowercase
+   - "Transform to Title Case" - Converts To Title Case
+   - "Sort Lines Alphabetically" - sorts selected lines
+   - "Reverse Lines" - reverses line order
+   - "Wrap in Quotes" - wraps each line in quotes
+   - "Remove Blank Lines" - removes empty lines
+
+## Code Walkthrough
+
+### Getting Selected Text
+
+```javascript
+// 1. Get the selection
+const selection = await api.editor.getSelection();
+
+// 2. Check if text is selected
+if (selection.isEmpty) {
+  api.ui.showInformationMessage('Please select some text first');
+  return;
+}
+
+// 3. Get the text in the selection
+const selectedText = await api.editor.getTextInRange({
+  start: selection.start,
+  end: selection.end
+});
+```
+
+Selection objects have:
+- `start` - Starting position `\\\{line, character\\\}`
+- `end` - Ending position `\\\{line, character\\\}`
+- `isEmpty` - Boolean indicating if nothing is selected
+
+### Replacing Text
+
+```javascript
+await api.editor.replaceText(
+  { start: selection.start, end: selection.end },
+  formattedText
+);
+```
+
+This replaces the text in the given range with new text. The editor cursor will be positioned at the end of the replacement.
+
+### Applying Formatters
+
+The `applyFormatter` helper function:
+1. Gets the current selection
+2. Extracts the selected text
+3. Applies the formatter function
+4. Replaces the selection with formatted text
+5. Handles errors gracefully
+
+```javascript
+async function applyFormatter(api, formatter, commandName) {
+  // ... get selection and text ...
+  const formattedText = formatter(selectedText);
+  await api.editor.replaceText(range, formattedText);
+}
+```
+
+### Using Configuration
+
+```javascript
+const config = api.config.getConfiguration('customFormatter');
+const quoteStyle = config.get('quoteStyle', 'double');
+```
+
+Reads user preferences defined in `manifest.json`. The second parameter is the default value.
+
+### Listening to Config Changes
+
+```javascript
+api.config.onDidChangeConfiguration((event) => {
+  if (event.affectsConfiguration('customFormatter')) {
+    // Reload configuration
+  }
+});
+```
+
+This allows your plugin to react when users change settings.
+
+## Extension Ideas
+
+Add more formatters:
+
+1. **Markdown Formatting**
+   - Bold selected text (`**text**`)
+   - Italicize (`*text*`)
+   - Create links
+   - Convert to code blocks
+
+2. **Advanced Transformations**
+   - Snake_case, camelCase, kebab-case conversion
+   - Remove duplicate lines
+   - Trim whitespace
+   - ROT13 encoding
+
+3. **Programming Helpers**
+   - Comment/uncomment lines
+   - Generate TODO items
+   - Add JSDoc templates
+   - Format JSON
+
+### Example: Bold Formatter
+
+```javascript
+// In formatters.js
+export function toBold(text) {
+  return `**${text}**`;
+}
+
+// In index.js
+disposables.push(
+  api.commands.register({
+    id: 'custom-formatter.bold',
+    title: 'Make Bold',
+    execute: () => applyFormatter(api, formatters.toBold, 'Bold')
+  })
+);
+```
+
+### Example: Case Converter
+
+```javascript
+export function toCamelCase(text) {
+  return text
+    .replace(/[-_\s]+(.)?/g, (_, char) => char ? char.toUpperCase() : '')
+    .replace(/^(.)/, (char) => char.toLowerCase());
+}
+
+export function toSnakeCase(text) {
+  return text
+    .replace(/([A-Z])/g, '_$1')
+    .toLowerCase()
+    .replace(/^_/, '');
+}
+
+export function toKebabCase(text) {
+  return text
+    .replace(/([A-Z])/g, '-$1')
+    .toLowerCase()
+    .replace(/^-/, '');
+}
+```
+
+## Testing Tips
+
+### Test with Different Selections
+
+```
+Test single line
+Test
+multiple
+lines
+Test with    spaces
+```
+
+### Test Edge Cases
+
+- Empty selection
+- Entire document
+- Selection with special characters
+- Unicode text
+- Very long selections
+
+### Add Unit Tests
+
+```javascript
+// formatters.test.js
+import { toUpperCase, toTitleCase } from './formatters.js';
+
+console.assert(toUpperCase('hello') === 'HELLO');
+console.assert(toTitleCase('hello world') === 'Hello World');
+```
+
+## Common Issues
+
+<Callout type="warning">
+**Issue:** Command doesn't appear in palette
+
+**Solution:** Check that command ID in `manifest.json` matches the one in `commands.register()`
+</Callout>
+
+### Issue: Text not replaced correctly
+
+Make sure to use the correct range format:
+
+```javascript
+// ✅ Correct
+{ start: { line: 0, character: 0 }, end: { line: 0, character: 5 } }
+
+// ❌ Wrong
+{ from: 0, to: 5 }  // This is TipTap format, not API format
+```
+
+## Performance Considerations
+
+For very large selections:
+
+```javascript
+if (selectedText.length > 1000000) { // 1MB
+  const proceed = await api.ui.showConfirm({
+    title: 'Large Selection',
+    message: 'This selection is very large. Continue?'
+  });
+
+  if (!proceed) return;
+}
+```
+
+## Next Steps
+
+Learn more advanced topics:
+
+- **[File Explorer](/developers/plugins/examples/file-explorer)** - Build tree view UIs
+- **[AI Assistant](/developers/plugins/examples/ai-assistant)** - Network requests and streaming
+- **[Editor API Reference](/developers/plugins/api-reference/editor)** - Complete editor API
+
+---
+
+**Ready for more?** Continue to [File Explorer Example](/developers/plugins/examples/file-explorer) to build tree view interfaces.

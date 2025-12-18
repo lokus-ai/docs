@@ -1,0 +1,791 @@
+---
+title: "CommandsAPI Reference"
+description: "Complete reference for the Lokus Plugin CommandsAPI"
+---
+
+# CommandsAPI
+
+The CommandsAPI provides a comprehensive system for registering, executing, and managing commands in Lokus. Commands are actions that can be triggered via the command palette, keyboard shortcuts, menus, or programmatically.
+
+## Quick Reference
+
+| Method | Description |
+|--------|-------------|
+| `register(command)` | Register a single command or array of commands |
+| `register(id, options)` | Register a command with ID and options |
+| `execute(commandId, ...args)` | Execute a command by ID |
+| `getAll()` | Get all registered commands |
+| `getByCategory(category)` | Get commands filtered by category |
+| `exists(commandId)` | Check if a command exists |
+| `registerWithPalette(command)` | Register a command visible in command palette |
+| `registerTextEditorCommand(command)` | Register a command that requires editor context |
+| `unregister(commandIds)` | Unregister one or more commands |
+
+---
+
+## Registration Methods
+
+### register(command)
+
+Registers one or more commands. Supports multiple signatures for flexibility.
+
+**Signature 1: Single Command Object**
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| command | `object` | Command definition object |
+
+**Signature 2: Array of Commands**
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| commands | `Array\\<object\\>` | Array of command definitions |
+
+**Signature 3: ID and Options**
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| id | `string` | Command ID |
+| options | `object` | Command options |
+
+**Command Definition:**
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| id | `string` | Yes | Unique command identifier (e.g., `'myPlugin.myCommand'`) |
+| name | `string` | No | Display name (used if title not provided) |
+| title | `string` | No | Command title shown in palette |
+| execute | `function` | Yes | Command handler function |
+| handler | `function` | Yes | Alias for execute |
+| callback | `function` | Yes | Alias for execute (legacy) |
+| description | `string` | No | Command description |
+| category | `string` | No | Command category for grouping |
+| icon | `string` | No | Icon identifier |
+| shortcut | `string` | No | Keyboard shortcut (e.g., `'Ctrl+Shift+P'`) |
+| showInPalette | `boolean` | No | Show in command palette (default: true) |
+| requiresEditor | `boolean` | No | Requires active editor |
+
+**Returns:** `Disposable` - Disposable object to unregister the command(s)
+
+**Example 1: Single Command**
+```javascript
+const disposable = api.commands.register({
+  id: 'myPlugin.hello',
+  title: 'Say Hello',
+  description: 'Shows a greeting message',
+  category: 'My Plugin',
+  icon: 'wave',
+  shortcut: 'Ctrl+Shift+H',
+  execute: () => {
+    api.ui.showInformationMessage('Hello from my plugin!');
+  }
+});
+
+// Later, to unregister:
+disposable.dispose();
+```
+
+**Example 2: Multiple Commands**
+```javascript
+api.commands.register([
+  {
+    id: 'myPlugin.start',
+    title: 'Start Process',
+    execute: () => startProcess()
+  },
+  {
+    id: 'myPlugin.stop',
+    title: 'Stop Process',
+    execute: () => stopProcess()
+  },
+  {
+    id: 'myPlugin.restart',
+    title: 'Restart Process',
+    execute: async () => {
+      await stopProcess();
+      await startProcess();
+    }
+  }
+]);
+```
+
+**Example 3: ID and Options Signature**
+```javascript
+api.commands.register('myPlugin.format', {
+  title: 'Format Document',
+  description: 'Format the current document',
+  requiresEditor: true,
+  execute: (editor) => {
+    // Format logic
+  }
+});
+```
+
+**Example 4: Command with Arguments**
+```javascript
+api.commands.register({
+  id: 'myPlugin.openFile',
+  title: 'Open File',
+  execute: async (filePath) => {
+    if (!filePath) {
+      filePath = await api.ui.showOpenDialog({
+        canSelectFiles: true,
+        canSelectMany: false
+      });
+    }
+    // Open file logic
+  }
+});
+```
+
+---
+
+### execute(commandId, ...args)
+
+Executes a registered command by its ID.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| commandId | `string` | Command ID to execute |
+| args | `...any` | Arguments to pass to command handler |
+
+**Returns:** `Promise\\<any\\>` - Result returned by the command handler
+
+**Throws:** Error if command not found or execution fails
+
+**Example:**
+```javascript
+// Execute command without arguments
+await api.commands.execute('myPlugin.hello');
+
+// Execute command with arguments
+const result = await api.commands.execute('myPlugin.processFile', '/path/to/file.txt');
+
+// Handle errors
+try {
+  await api.commands.execute('myPlugin.riskyOperation');
+} catch (error) {
+  api.ui.showErrorMessage(`Command failed: $\\{error.message\\}`);
+}
+```
+
+---
+
+### getAll()
+
+Gets all registered commands.
+
+**Returns:** `Array\\<CommandInfo\\>` - Array of command information objects
+
+**CommandInfo Structure:**
+```typescript
+interface CommandInfo {
+  id: string
+  title: string
+  category?: string
+  description?: string
+  pluginId: string
+  icon?: string
+  showInPalette?: boolean
+}
+```
+
+**Example:**
+```javascript
+const allCommands = api.commands.getAll();
+
+console.log(`Total commands: $\\{allCommands.length\\}`);
+
+allCommands.forEach(cmd => {
+  console.log(`${cmd.id}: ${cmd.title} (${cmd.category || 'Uncategorized'})`);
+});
+
+// Filter commands by plugin
+const myCommands = allCommands.filter(cmd => cmd.pluginId === 'myPlugin');
+```
+
+---
+
+### getByCategory(category)
+
+Gets commands filtered by category.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| category | `string` | Category name to filter by |
+
+**Returns:** `Array\\<CommandInfo\\>` - Array of matching commands
+
+**Example:**
+```javascript
+const editingCommands = api.commands.getByCategory('Editing');
+const myPluginCommands = api.commands.getByCategory('My Plugin');
+
+// Display in UI
+const items = editingCommands.map(cmd => ({
+  label: cmd.title,
+  description: cmd.description,
+  id: cmd.id
+}));
+
+const selected = await api.ui.showQuickPick(items, {
+  title: 'Select Command'
+});
+
+if (selected) {
+  await api.commands.execute(selected.id);
+}
+```
+
+---
+
+### exists(commandId)
+
+Checks if a command exists.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| commandId | `string` | Command ID to check |
+
+**Returns:** `boolean` - True if command exists
+
+**Example:**
+```javascript
+if (api.commands.exists('myPlugin.advancedFeature')) {
+  // Feature is available
+  await api.commands.execute('myPlugin.advancedFeature');
+} else {
+  // Fallback behavior
+  api.ui.showWarningMessage('Advanced feature not available');
+}
+
+// Before registering
+if (!api.commands.exists('myPlugin.myCommand')) {
+  api.commands.register({
+    id: 'myPlugin.myCommand',
+    title: 'My Command',
+    execute: () => {}
+  });
+}
+```
+
+---
+
+### registerWithPalette(command)
+
+Registers a command that is explicitly visible in the command palette. This is a convenience method that sets `showInPalette: true`.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| command | `object` | Command definition (same as `register()`) |
+
+**Returns:** `Disposable` - Disposable to unregister command
+
+**Example:**
+```javascript
+// These are equivalent:
+api.commands.registerWithPalette({
+  id: 'myPlugin.paletteCommand',
+  title: 'My Palette Command',
+  execute: () => {}
+});
+
+// Same as:
+api.commands.register({
+  id: 'myPlugin.paletteCommand',
+  title: 'My Palette Command',
+  showInPalette: true,
+  execute: () => {}
+});
+```
+
+---
+
+### registerTextEditorCommand(command)
+
+Registers a command that requires an active text editor. The command will only be enabled when the editor is available, and the editor instance will be passed to the handler.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| command | `object` | Command definition (same as `register()`) |
+
+**Returns:** `Disposable` - Disposable to unregister command
+
+**Example:**
+```javascript
+api.commands.registerTextEditorCommand({
+  id: 'myPlugin.transformSelection',
+  title: 'Transform Selection',
+  execute: async (editor) => {
+    // Editor is guaranteed to be available
+    const selection = await editor.getSelection();
+    if (selection) {
+      const transformed = selection.toUpperCase();
+      await editor.replaceSelection(transformed);
+    }
+  }
+});
+```
+
+---
+
+### unregister(commandIds)
+
+Unregisters one or more commands.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| commandIds | `string \| Array\\<string\\>` | Command ID(s) to unregister |
+
+**Returns:** `Array\\<object\\>` - Array of unregistered command objects
+
+**Example:**
+```javascript
+// Unregister single command
+api.commands.unregister('myPlugin.tempCommand');
+
+// Unregister multiple commands
+api.commands.unregister([
+  'myPlugin.command1',
+  'myPlugin.command2',
+  'myPlugin.command3'
+]);
+
+// Using disposable (recommended)
+const disposable = api.commands.register({
+  id: 'myPlugin.myCommand',
+  title: 'My Command',
+  execute: () => {}
+});
+
+// Later
+disposable.dispose(); // Automatically calls unregister
+```
+
+---
+
+## Events
+
+The CommandsAPI emits events that you can listen to:
+
+```javascript
+// Command registered
+api.commands.on('command_registered', ({ id, command }) => {
+  console.log(`Command registered: $\\{id\\}`);
+});
+
+// Command unregistered
+api.commands.on('command_unregistered', ({ id, command }) => {
+  console.log(`Command unregistered: $\\{id\\}`);
+});
+
+// Command error
+api.commands.on('command_error', ({ commandId, error }) => {
+  console.error(`Command ${commandId} failed:`, error);
+});
+```
+
+---
+
+## Command Patterns
+
+### 1. Command with Configuration
+
+Commands that depend on configuration:
+
+```javascript
+api.commands.register({
+  id: 'myPlugin.configuredAction',
+  title: 'Configured Action',
+  execute: async () => {
+    const config = await api.config.get('myPlugin.setting', 'default');
+
+    if (!config) {
+      const shouldConfigure = await api.ui.showConfirm({
+        title: 'Configuration Required',
+        message: 'This command requires configuration. Configure now?'
+      });
+
+      if (shouldConfigure) {
+        await api.commands.execute('myPlugin.configure');
+      }
+      return;
+    }
+
+    // Execute with configuration
+    performAction(config);
+  }
+});
+```
+
+### 2. Command Chain
+
+Commands that trigger other commands:
+
+```javascript
+api.commands.register({
+  id: 'myPlugin.fullProcess',
+  title: 'Run Full Process',
+  execute: async () => {
+    await api.ui.withProgress(
+      { title: 'Running full process...', location: 'notification' },
+      async (progress) => {
+        progress.report({ message: 'Step 1: Initializing...' });
+        await api.commands.execute('myPlugin.initialize');
+
+        progress.report({ message: 'Step 2: Processing...' });
+        await api.commands.execute('myPlugin.process');
+
+        progress.report({ message: 'Step 3: Finalizing...' });
+        await api.commands.execute('myPlugin.finalize');
+      }
+    );
+
+    api.ui.showInformationMessage('Process completed!');
+  }
+});
+```
+
+### 3. Conditional Commands
+
+Commands with conditional behavior:
+
+```javascript
+api.commands.register({
+  id: 'myPlugin.smartCommand',
+  title: 'Smart Command',
+  execute: async (context) => {
+    // Determine behavior based on context
+    if (context?.type === 'file') {
+      await handleFile(context.file);
+    } else if (context?.type === 'folder') {
+      await handleFolder(context.folder);
+    } else {
+      // No context, show picker
+      const action = await api.ui.showQuickPick(
+        ['Process File', 'Process Folder', 'Process All'],
+        { title: 'Select Action' }
+      );
+
+      if (action === 'Process File') {
+        const files = await api.ui.showOpenDialog({ canSelectFiles: true });
+        if (files) await handleFile(files[0]);
+      } else if (action === 'Process Folder') {
+        const folders = await api.ui.showOpenDialog({ canSelectFolders: true });
+        if (folders) await handleFolder(folders[0]);
+      } else {
+        await handleAll();
+      }
+    }
+  }
+});
+```
+
+### 4. Async Commands with Error Handling
+
+Robust async command pattern:
+
+```javascript
+api.commands.register({
+  id: 'myPlugin.asyncOperation',
+  title: 'Async Operation',
+  execute: async () => {
+    try {
+      const result = await api.ui.withProgress(
+        { title: 'Processing...', cancellable: true },
+        async (progress, token) => {
+          const data = await fetchData();
+
+          if (token.isCancellationRequested) {
+            return null;
+          }
+
+          progress.report({ message: 'Processing data...' });
+          const processed = await processData(data);
+
+          if (token.isCancellationRequested) {
+            return null;
+          }
+
+          progress.report({ message: 'Saving...' });
+          await saveData(processed);
+
+          return processed;
+        }
+      );
+
+      if (result) {
+        api.ui.showInformationMessage('Operation completed successfully');
+      } else {
+        api.ui.showWarningMessage('Operation cancelled');
+      }
+    } catch (error) {
+      api.ui.showErrorMessage(`Operation failed: $\\{error.message\\}`);
+      console.error('Async operation error:', error);
+    }
+  }
+});
+```
+
+### 5. Commands with Arguments from Quick Pick
+
+Interactive command with user selection:
+
+```javascript
+api.commands.register({
+  id: 'myPlugin.selectAndProcess',
+  title: 'Select and Process',
+  execute: async (preselectedItem) => {
+    let item = preselectedItem;
+
+    if (!item) {
+      // Show picker if no preselection
+      const items = await getAvailableItems();
+      item = await api.ui.showQuickPick(
+        items.map(i => ({
+          label: i.name,
+          description: i.description,
+          value: i
+        })),
+        { title: 'Select Item to Process' }
+      );
+    }
+
+    if (!item) return; // User cancelled
+
+    // Process the item
+    await processItem(item.value || item);
+  }
+});
+
+// Can be called programmatically with argument
+await api.commands.execute('myPlugin.selectAndProcess', specificItem);
+
+// Or from palette, will show picker
+// User runs: "Select and Process" from command palette
+```
+
+---
+
+## Best Practices
+
+### 1. Command Naming
+
+Use a consistent naming convention:
+```
+pluginId.category.action
+```
+
+Examples:
+- `myPlugin.file.open`
+- `myPlugin.editor.format`
+- `myPlugin.view.toggle`
+
+### 2. Command Categories
+
+Group related commands with categories:
+
+```javascript
+const category = 'My Plugin';
+
+api.commands.register([
+  { id: 'myPlugin.action1', title: 'Action 1', category, execute: () => {} },
+  { id: 'myPlugin.action2', title: 'Action 2', category, execute: () => {} },
+  { id: 'myPlugin.action3', title: 'Action 3', category, execute: () => {} }
+]);
+```
+
+### 3. Error Handling
+
+Always handle errors gracefully:
+
+```javascript
+api.commands.register({
+  id: 'myPlugin.riskyOperation',
+  title: 'Risky Operation',
+  execute: async () => {
+    try {
+      await performRiskyOperation();
+    } catch (error) {
+      api.ui.showErrorMessage(`Operation failed: $\\{error.message\\}`);
+      console.error('Command error:', error);
+
+      // Optionally offer recovery
+      const retry = await api.ui.showConfirm({
+        title: 'Retry?',
+        message: 'The operation failed. Would you like to retry?'
+      });
+
+      if (retry) {
+        await api.commands.execute('myPlugin.riskyOperation');
+      }
+    }
+  }
+});
+```
+
+### 4. Clean Up on Deactivation
+
+Store disposables and clean up:
+
+```javascript
+const disposables = [];
+
+export function activate(api) {
+  disposables.push(
+    api.commands.register({ id: 'cmd1', execute: () => {} }),
+    api.commands.register({ id: 'cmd2', execute: () => {} }),
+    api.commands.register({ id: 'cmd3', execute: () => {} })
+  );
+}
+
+export function deactivate() {
+  disposables.forEach(d => d.dispose());
+}
+```
+
+### 5. Provide User Feedback
+
+Always provide feedback for command execution:
+
+```javascript
+api.commands.register({
+  id: 'myPlugin.process',
+  title: 'Process Files',
+  execute: async () => {
+    const files = await api.ui.showOpenDialog({ canSelectMany: true });
+
+    if (!files || files.length === 0) {
+      api.ui.showWarningMessage('No files selected');
+      return;
+    }
+
+    const result = await api.ui.withProgress(
+      { title: `Processing ${files.length} files...` },
+      async (progress) => {
+        // Process files
+      }
+    );
+
+    api.ui.showInformationMessage(`Successfully processed ${files.length} files`);
+  }
+});
+```
+
+### 6. Make Commands Discoverable
+
+Use descriptive titles and categories:
+
+```javascript
+// Good
+api.commands.register({
+  id: 'myPlugin.exportToJson',
+  title: 'Export Data to JSON',
+  category: 'My Plugin',
+  description: 'Export current data to a JSON file',
+  icon: 'export',
+  execute: () => {}
+});
+
+// Bad
+api.commands.register({
+  id: 'myPlugin.exp',
+  title: 'Exp',
+  execute: () => {}
+});
+```
+
+---
+
+## Keyboard Shortcuts
+
+Commands can have keyboard shortcuts:
+
+```javascript
+api.commands.register({
+  id: 'myPlugin.quickAction',
+  title: 'Quick Action',
+  shortcut: 'Ctrl+Alt+Q', // Windows/Linux
+  // or
+  shortcut: 'Cmd+Alt+Q', // macOS
+  execute: () => {
+    // Quick action logic
+  }
+});
+```
+
+**Keyboard Shortcut Format:**
+- `Ctrl`, `Alt`, `Shift`, `Cmd` (modifiers)
+- `+` (separator)
+- Letter, number, or special key
+
+**Examples:**
+- `Ctrl+S` - Save
+- `Ctrl+Shift+P` - Command palette
+- `Alt+F4` - Close window
+- `Cmd+K Cmd+S` - Chord (two-part shortcut)
+
+---
+
+## Integration with Other APIs
+
+### Commands + UI
+
+```javascript
+api.commands.register({
+  id: 'myPlugin.showPanel',
+  title: 'Show My Panel',
+  execute: () => {
+    api.ui.addPanel({
+      id: 'my-panel',
+      title: 'My Panel',
+      position: 'sidebar-left',
+      component: MyPanelComponent
+    });
+  }
+});
+```
+
+### Commands + Configuration
+
+```javascript
+api.commands.register({
+  id: 'myPlugin.toggleFeature',
+  title: 'Toggle Feature',
+  execute: async () => {
+    const current = await api.config.get('myPlugin.feature', false);
+    await api.config.set('myPlugin.feature', !current);
+    api.ui.showInformationMessage(`Feature $\\{!current ? 'enabled' : 'disabled'\\}`);
+  }
+});
+```
+
+### Commands + Workspace
+
+```javascript
+api.commands.register({
+  id: 'myPlugin.analyzeWorkspace',
+  title: 'Analyze Workspace',
+  execute: async () => {
+    const files = await api.workspace.findFiles('**/*.js');
+    api.ui.showInformationMessage(`Found ${files.length} JavaScript files`);
+  }
+});
+```
+
+---
+
+## See Also
+
+- [UIAPI Reference](/developers/plugins/api-reference/ui-api)
+- [ConfigurationAPI Reference](/developers/plugins/api-reference/configuration-api)
+- [Getting Started Guide](/developers/plugins/getting-started)
+- [Plugin Lifecycle](/developers/plugins/lifecycle)

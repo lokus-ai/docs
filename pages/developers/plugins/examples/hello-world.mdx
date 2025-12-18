@@ -1,0 +1,306 @@
+---
+title: Hello World Plugin
+description: The simplest possible Lokus plugin - perfect for getting started
+---
+
+import { Callout } from 'nextra/components'
+import { FileTree } from 'nextra/components'
+
+# Hello World Plugin
+
+The simplest possible Lokus plugin. This example shows a notification when the plugin is activated and registers a basic command.
+
+<Callout type="info">
+This is the perfect first plugin to understand the basic structure and lifecycle.
+</Callout>
+
+## Features Demonstrated
+
+- ✅ Basic plugin structure
+- ✅ `activate()` and `deactivate()` lifecycle
+- ✅ Command registration
+- ✅ Notification display
+- ✅ Proper manifest configuration
+
+## Project Structure
+
+<FileTree>
+  <FileTree.Folder name="lokus-hello-world" defaultOpen>
+    <FileTree.File name="package.json" />
+    <FileTree.File name="manifest.json" />
+    <FileTree.File name="index.js" />
+    <FileTree.File name="README.md" />
+  </FileTree.Folder>
+</FileTree>
+
+## Complete Source Code
+
+### `package.json`
+
+```json filename="package.json"
+{
+  "name": "lokus-hello-world",
+  "version": "1.0.0",
+  "description": "A simple hello world plugin for Lokus",
+  "main": "index.js",
+  "keywords": ["lokus", "plugin", "hello-world"],
+  "author": "Your Name",
+  "license": "MIT",
+  "engines": {
+    "lokus": "^1.0.0"
+  },
+  "dependencies": {
+    "@lokus/plugin-sdk": "^1.0.0"
+  }
+}
+```
+
+### `manifest.json`
+
+```json filename="manifest.json"
+{
+  "id": "lokus-hello-world",
+  "name": "Hello World",
+  "version": "1.0.0",
+  "description": "A simple hello world plugin",
+  "author": "Your Name",
+  "main": "index.js",
+  "activationEvents": [
+    "onStartup"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "id": "hello-world.sayHello",
+        "title": "Say Hello",
+        "category": "Hello World"
+      }
+    ]
+  },
+  "permissions": []
+}
+```
+
+### `index.js`
+
+```javascript filename="index.js"
+/**
+ * Hello World Plugin for Lokus
+ *
+ * This is the simplest possible plugin that demonstrates:
+ * - Plugin activation and deactivation
+ * - Command registration
+ * - Notification display
+ */
+
+/**
+ * Called when the plugin is activated
+ * @param {Object} api - The Lokus Plugin API
+ */
+export function activate(api) {
+  console.log('Hello World plugin is now active!');
+
+  // Show a welcome notification
+  api.ui.showInformationMessage('Hello from Lokus Plugin!');
+
+  // Register a command
+  const disposable = api.commands.register({
+    id: 'hello-world.sayHello',
+    title: 'Say Hello',
+    execute: () => {
+      // Show a notification when the command is executed
+      api.ui.showInformationMessage('Hello, World! 👋');
+    }
+  });
+
+  // Return disposable for cleanup
+  return {
+    dispose: () => {
+      disposable.dispose();
+    }
+  };
+}
+
+/**
+ * Called when the plugin is deactivated
+ */
+export function deactivate() {
+  console.log('Hello World plugin has been deactivated');
+}
+```
+
+## Installation & Testing
+
+### Step 1: Create the Plugin
+
+```bash
+# Create plugin directory
+mkdir lokus-hello-world
+cd lokus-hello-world
+
+# Copy the files above
+# package.json, manifest.json, index.js
+
+# Install dependencies
+npm install
+```
+
+### Step 2: Link to Lokus
+
+```bash
+# In the plugin directory
+npm link
+
+# In Lokus plugins directory (~/.lokus/plugins or your configured path)
+npm link lokus-hello-world
+```
+
+### Step 3: Enable in Lokus
+
+1. Open Lokus
+2. Go to **Preferences > Plugins**
+3. Enable "Hello World"
+4. You should see the welcome notification
+
+### Step 4: Test the Command
+
+1. Open Command Palette (`Cmd+Shift+P` or `Ctrl+Shift+P`)
+2. Type "Say Hello"
+3. Press Enter
+4. You should see "Hello, World! 👋" notification
+
+## Code Walkthrough
+
+### The Activate Function
+
+```javascript
+export function activate(api) {
+  // This function is called when your plugin starts
+  // The 'api' parameter gives you access to all Lokus functionality
+}
+```
+
+The `activate` function is the entry point of your plugin. It receives the Lokus Plugin API object that provides access to all Lokus features.
+
+### Showing Notifications
+
+```javascript
+api.ui.showInformationMessage('Hello from Lokus Plugin!');
+```
+
+The `ui.showInformationMessage()` method displays a notification to the user. There are three types:
+- `showInformationMessage()` - Blue info notification
+- `showWarningMessage()` - Yellow warning notification
+- `showErrorMessage()` - Red error notification
+
+### Registering Commands
+
+```javascript
+const disposable = api.commands.register({
+  id: 'hello-world.sayHello',      // Unique command ID
+  title: 'Say Hello',               // Display name in command palette
+  execute: () => {                  // Function to run
+    api.ui.showInformationMessage('Hello, World! 👋');
+  }
+});
+```
+
+Commands are actions users can trigger from the command palette. Each command needs:
+- **id**: Unique identifier (convention: `plugin-name.command-name`)
+- **title**: What users see in the command palette
+- **execute**: Function that runs when the command is triggered
+
+### Cleanup with Disposables
+
+```javascript
+return {
+  dispose: () => {
+    disposable.dispose();
+  }
+};
+```
+
+The `activate` function should return a disposable object. When your plugin is deactivated, Lokus calls `dispose()` to clean up resources. This prevents memory leaks.
+
+### The Deactivate Function
+
+```javascript
+export function deactivate() {
+  // Called when plugin is disabled or Lokus closes
+}
+```
+
+The `deactivate` function is called when your plugin is disabled or Lokus closes. Use it for final cleanup if needed.
+
+## Common Mistakes
+
+<Callout type="warning">
+**Don't forget to return disposables!** If you don't return disposables from `activate()`, resources won't be cleaned up properly.
+</Callout>
+
+### ❌ Bad - No cleanup
+
+```javascript
+export function activate(api) {
+  api.commands.register({ /* ... */ });
+  // No return - resources leak!
+}
+```
+
+### ✅ Good - Proper cleanup
+
+```javascript
+export function activate(api) {
+  const disposable = api.commands.register({ /* ... */ });
+  return { dispose: () => disposable.dispose() };
+}
+```
+
+## Extension Ideas
+
+Once you understand this basic plugin, try adding:
+
+1. **Multiple Commands** - Register 2-3 different commands
+2. **User Input** - Use `api.ui.showInputBox()` to get user input
+3. **Configuration** - Add settings that users can customize
+4. **Keyboard Shortcuts** - Add shortcuts to your commands
+5. **Status Bar** - Show a status bar item with a message
+
+### Example: Adding User Input
+
+```javascript
+api.commands.register({
+  id: 'hello-world.sayHelloTo',
+  title: 'Say Hello To...',
+  execute: async () => {
+    const name = await api.ui.showInputBox({
+      prompt: 'Enter your name',
+      placeholder: 'John Doe'
+    });
+
+    if (name) {
+      api.ui.showInformationMessage(`Hello, ${name}! 👋`);
+    }
+  }
+});
+```
+
+## Next Steps
+
+Now that you understand the basics, try these examples:
+
+- **[Word Counter](/developers/plugins/examples/word-count)** - Learn about editor events and status bar
+- **[Custom Formatter](/developers/plugins/examples/custom-formatter)** - Manipulate editor content
+- **[API Reference](/developers/plugins/api-reference)** - Explore all available APIs
+
+## Complete Example Repository
+
+Find the complete, runnable example on GitHub:
+
+<Callout type="info">
+[github.com/lokus-ai/plugin-examples/hello-world](https://github.com/lokus-ai/plugin-examples/tree/main/hello-world)
+</Callout>
+
+---
+
+**Ready for more?** Continue to [Word Counter Example](/developers/plugins/examples/word-count) to learn about real-time editor events.

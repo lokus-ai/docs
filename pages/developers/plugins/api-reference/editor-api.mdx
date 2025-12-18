@@ -1,0 +1,1693 @@
+---
+title: "EditorAPI Reference"
+description: "Complete reference for the Lokus Plugin EditorAPI"
+---
+
+# EditorAPI
+
+The EditorAPI provides comprehensive access to TipTap editor functionality, enabling plugins to deeply integrate with the editor by registering custom nodes, marks, extensions, language providers, and more.
+
+## Overview
+
+Use EditorAPI when you need to:
+- Register custom TipTap nodes, marks, and extensions
+- Add slash commands and toolbar items
+- Manipulate editor content programmatically
+- Register language feature providers (completion, hover, definition, etc.)
+- Listen to editor events (selection changes, content updates)
+- Access and modify the active document
+
+## Content Methods
+
+### getContent()
+
+Get the current editor content as HTML.
+
+**Returns:** `Promise\\<string\\>` - The editor content as HTML
+
+**Example:**
+```javascript
+const html = await api.editor.getContent();
+console.log('Current content:', html);
+```
+
+**Throws:** Error if editor is not initialized
+
+---
+
+### setContent(content)
+
+Set the editor content.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| content | string | Yes | HTML or JSON content to set |
+
+**Returns:** `Promise\\<void\\>`
+
+**Example:**
+```javascript
+await api.editor.setContent('<p>Hello, World!</p>');
+```
+
+**Events Emitted:**
+- `content-changed` - When content is successfully set
+
+**Throws:** Error if editor is not initialized
+
+---
+
+### insertContent(content)
+
+Insert content at the current cursor position.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| content | string | Yes | HTML content to insert |
+
+**Returns:** `Promise\\<void\\>`
+
+**Example:**
+```javascript
+await api.editor.insertContent('<strong>Bold text</strong>');
+```
+
+**Events Emitted:**
+- `content-inserted` - When content is successfully inserted
+
+**Throws:** Error if editor is not initialized
+
+---
+
+### getTextInRange(range)
+
+Get text content within a specific range.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| range | Range | Yes | Range object with start and end positions |
+
+**Range Format:**
+```typescript
+{
+  start: { line: number, character: number },
+  end: { line: number, character: number }
+}
+```
+
+**Returns:** `Promise\\<string\\>` - Text content in the range
+
+**Example:**
+```javascript
+const range = {
+  start: { line: 0, character: 0 },
+  end: { line: 0, character: 10 }
+};
+const text = await api.editor.getTextInRange(range);
+```
+
+**Throws:** Error if editor is not initialized
+
+---
+
+### replaceText(range, text)
+
+Replace text in a specific range.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| range | Range | Yes | Range to replace |
+| text | string | Yes | New text to insert |
+
+**Returns:** `Promise\\<void\\>`
+
+**Example:**
+```javascript
+const range = {
+  start: { line: 0, character: 0 },
+  end: { line: 0, character: 5 }
+};
+await api.editor.replaceText(range, 'Hello');
+```
+
+**Events Emitted:**
+- `text-replaced` - When text is successfully replaced
+
+**Throws:** Error if editor is not initialized
+
+---
+
+## Selection Methods
+
+### getSelections()
+
+Get all current selections in the editor.
+
+**Returns:** `Promise\\<Selection[]\\>` - Array of selection objects
+
+**Selection Format:**
+```typescript
+{
+  start: { line: number, character: number },
+  end: { line: number, character: number },
+  anchor: { line: number, character: number },
+  active: { line: number, character: number },
+  isEmpty: boolean,
+  isSingleLine: boolean
+}
+```
+
+**Example:**
+```javascript
+const selections = await api.editor.getSelections();
+console.log('Current selection:', selections[0]);
+```
+
+**Note:** Currently only single selection is supported
+
+**Throws:** Error if editor is not initialized
+
+---
+
+### setSelection(selection)
+
+Set the current selection in the editor.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| selection | Selection | Yes | Selection object with start/end or anchor/active |
+
+**Returns:** `Promise\\<void\\>`
+
+**Example:**
+```javascript
+await api.editor.setSelection({
+  start: { line: 0, character: 0 },
+  end: { line: 0, character: 10 }
+});
+```
+
+**Events Emitted:**
+- `selection-changed` - When selection is updated
+
+**Throws:** Error if editor is not initialized
+
+---
+
+### setSelections(selections)
+
+Set multiple selections (currently only first selection is used).
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| selections | Selection[] | Yes | Array of selection objects |
+
+**Returns:** `Promise\\<void\\>`
+
+**Example:**
+```javascript
+await api.editor.setSelections([
+  {
+    start: { line: 0, character: 0 },
+    end: { line: 0, character: 10 }
+  }
+]);
+```
+
+**Throws:** Error if editor is not initialized
+
+---
+
+## Document Access Methods
+
+### getActiveEditor()
+
+Get the active text editor adapter.
+
+**Returns:** `Promise\\<TextEditor\\>` - TextEditor adapter or undefined
+
+**TextEditor Structure:**
+```typescript
+{
+  document: TextDocument,
+  selection: Selection,
+  selections: Selection[],
+  visibleRanges: Range[],
+  options: object,
+  viewColumn: number,
+  edit(callback): Promise<boolean>,
+  insertSnippet(snippet): Promise<boolean>,
+  setDecorations(decorationType, ranges): void,
+  revealRange(range): void,
+  show(): void,
+  hide(): void
+}
+```
+
+**Example:**
+```javascript
+const editor = await api.editor.getActiveEditor();
+if (editor) {
+  console.log('Active document:', editor.document.fileName);
+}
+```
+
+---
+
+### getActiveDocument()
+
+Get the active text document.
+
+**Returns:** `Promise\\<TextDocument\\>` - TextDocument adapter or undefined
+
+**TextDocument Structure:**
+```typescript
+{
+  uri: { toString(): string, path: string, scheme: string },
+  fileName: string,
+  isUntitled: boolean,
+  languageId: string,
+  version: number,
+  isDirty: boolean,
+  isClosed: boolean,
+  eol: number,
+  lineCount: number,
+  getText(range?): string,
+  lineAt(lineOrPosition): TextLine,
+  offsetAt(position): number,
+  positionAt(offset): Position,
+  validateRange(range): Range,
+  validatePosition(position): Position,
+  save(): Promise<boolean>
+}
+```
+
+**Example:**
+```javascript
+const doc = await api.editor.getActiveDocument();
+if (doc) {
+  const text = doc.getText();
+  console.log('Document content:', text);
+}
+```
+
+---
+
+### getVisibleEditors()
+
+Get all visible editors.
+
+**Returns:** `Promise\\<TextEditor[]\\>` - Array of visible editors
+
+**Example:**
+```javascript
+const editors = await api.editor.getVisibleEditors();
+console.log(`${editors.length} editors visible`);
+```
+
+---
+
+### getOpenDocuments()
+
+Get all open documents.
+
+**Returns:** `Promise\\<TextDocument[]\\>` - Array of open documents
+
+**Example:**
+```javascript
+const documents = await api.editor.getOpenDocuments();
+documents.forEach(doc => {
+  console.log('Open document:', doc.fileName);
+});
+```
+
+---
+
+### openDocument(uri, options)
+
+Open a document by URI.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| uri | string | Yes | Document URI to open |
+| options | object | No | Open options |
+
+**Returns:** `Promise\\<TextDocument\\>` - The opened document
+
+**Example:**
+```javascript
+const doc = await api.editor.openDocument('file:///path/to/file.md');
+```
+
+---
+
+### showDocument(document, options)
+
+Show a document in the editor.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| document | TextDocument | Yes | Document to show |
+| options | object | No | Show options (viewColumn, preserveFocus, preview, selection) |
+
+**Returns:** `Promise\\<TextEditor\\>` - The editor showing the document
+
+**Example:**
+```javascript
+const doc = await api.editor.openDocument('file:///path/to/file.md');
+const editor = await api.editor.showDocument(doc, {
+  viewColumn: 1,
+  preserveFocus: false
+});
+```
+
+---
+
+### createUntitledDocument(options)
+
+Create a new untitled document.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| options | object | No | Document options (language, content) |
+
+**Returns:** `Promise\\<TextDocument\\>` - The new untitled document
+
+**Example:**
+```javascript
+const doc = await api.editor.createUntitledDocument({
+  language: 'markdown',
+  content: '# New Document'
+});
+```
+
+---
+
+## Language Provider Methods
+
+### registerCompletionProvider(selector, provider, ...triggerCharacters)
+
+Register an autocomplete/completion provider.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| selector | string \| object | Yes | Document selector (language ID or `\\\`\{language, scheme, pattern\\\\}``) |
+| provider | object | Yes | Completion provider with provideCompletionItems method |
+| triggerCharacters | ...string | No | Characters that trigger completion |
+
+**Provider Interface:**
+```typescript
+{
+  provideCompletionItems(
+    document: TextDocument,
+    position: Position,
+    token: CancellationToken,
+    context: CompletionContext
+  ): CompletionItem[] | Promise<CompletionItem[]>
+}
+```
+
+**Returns:** `Disposable` - Disposable to unregister the provider
+
+**Example:**
+```javascript
+const disposable = api.editor.registerCompletionProvider(
+  'markdown',
+  {
+    provideCompletionItems(document, position) {
+      return [
+        {
+          label: 'mySnippet',
+          kind: 1, // Text
+          insertText: 'My custom snippet',
+          documentation: 'Inserts a custom snippet'
+        }
+      ];
+    }
+  },
+  '@' // Trigger on @ character
+);
+
+// Later, to unregister:
+disposable.dispose();
+```
+
+**Events Emitted:**
+- `completion-provider-registered` - When provider is registered
+- `completion-provider-unregistered` - When provider is disposed
+
+---
+
+### registerHoverProvider(selector, provider)
+
+Register a hover provider to show information when hovering over text.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| selector | string \| object | Yes | Document selector |
+| provider | object | Yes | Hover provider with provideHover method |
+
+**Provider Interface:**
+```typescript
+{
+  provideHover(
+    document: TextDocument,
+    position: Position,
+    token: CancellationToken
+  ): Hover | Promise<Hover>
+}
+```
+
+**Hover Format:**
+```typescript
+{
+  contents: string | string[],
+  range?: Range
+}
+```
+
+**Returns:** `Disposable` - Disposable to unregister
+
+**Example:**
+```javascript
+const disposable = api.editor.registerHoverProvider('markdown', {
+  provideHover(document, position) {
+    const wordRange = document.getWordRangeAtPosition(position);
+    const word = document.getText(wordRange);
+
+    return {
+      contents: [`Hover info for: $\\{word\\}`],
+      range: wordRange
+    };
+  }
+});
+```
+
+**Events Emitted:**
+- `hover-provider-registered` - When provider is registered
+- `hover-provider-unregistered` - When provider is disposed
+
+---
+
+### registerDefinitionProvider(selector, provider)
+
+Register a go-to-definition provider.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| selector | string \| object | Yes | Document selector |
+| provider | object | Yes | Definition provider with provideDefinition method |
+
+**Provider Interface:**
+```typescript
+{
+  provideDefinition(
+    document: TextDocument,
+    position: Position,
+    token: CancellationToken
+  ): Location | Location[] | Promise<Location | Location[]>
+}
+```
+
+**Location Format:**
+```typescript
+{
+  uri: string,
+  range: Range
+}
+```
+
+**Returns:** `Disposable` - Disposable to unregister
+
+**Example:**
+```javascript
+const disposable = api.editor.registerDefinitionProvider('markdown', {
+  provideDefinition(document, position) {
+    // Example: Jump to wiki link target
+    const word = document.getText(document.getWordRangeAtPosition(position));
+
+    if (word.startsWith('[[') && word.endsWith(']]')) {
+      const target = word.slice(2, -2);
+      return {
+        uri: `file:///workspace/${target}.md`,
+        range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } }
+      };
+    }
+
+    return null;
+  }
+});
+```
+
+**Events Emitted:**
+- `definition-provider-registered` - When provider is registered
+- `definition-provider-unregistered` - When provider is disposed
+
+---
+
+### registerCodeActionProvider(selector, provider, metadata)
+
+Register a code action provider (quick fixes, refactoring).
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| selector | string \| object | Yes | Document selector |
+| provider | object | Yes | Code action provider with provideCodeActions method |
+| metadata | object | No | Provider metadata (providedCodeActionKinds, etc.) |
+
+**Provider Interface:**
+```typescript
+{
+  provideCodeActions(
+    document: TextDocument,
+    range: Range,
+    context: CodeActionContext,
+    token: CancellationToken
+  ): CodeAction[] | Promise<CodeAction[]>
+}
+```
+
+**CodeAction Format:**
+```typescript
+{
+  title: string,
+  kind?: string, // 'quickfix', 'refactor', etc.
+  edit?: WorkspaceEdit,
+  command?: Command,
+  diagnostics?: Diagnostic[]
+}
+```
+
+**Returns:** `Disposable` - Disposable to unregister
+
+**Example:**
+```javascript
+const disposable = api.editor.registerCodeActionProvider(
+  'markdown',
+  {
+    provideCodeActions(document, range, context) {
+      const text = document.getText(range);
+
+      if (text.includes('TODO')) {
+        return [
+          {
+            title: 'Convert TODO to task',
+            kind: 'quickfix',
+            command: {
+              command: 'myPlugin.convertTodo',
+              arguments: [range]
+            }
+          }
+        ];
+      }
+
+      return [];
+    }
+  },
+  {
+    providedCodeActionKinds: ['quickfix']
+  }
+);
+```
+
+**Events Emitted:**
+- `code-action-provider-registered` - When provider is registered
+- `code-action-provider-unregistered` - When provider is disposed
+
+---
+
+### registerDocumentFormattingProvider(selector, provider)
+
+Register a document formatting provider.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| selector | string \| object | Yes | Document selector |
+| provider | object | Yes | Formatting provider with provideDocumentFormattingEdits method |
+
+**Provider Interface:**
+```typescript
+{
+  provideDocumentFormattingEdits(
+    document: TextDocument,
+    options: FormattingOptions,
+    token: CancellationToken
+  ): TextEdit[] | Promise<TextEdit[]>
+}
+```
+
+**FormattingOptions:**
+```typescript
+{
+  tabSize: number,
+  insertSpaces: boolean
+}
+```
+
+**TextEdit Format:**
+```typescript
+{
+  range: Range,
+  newText: string
+}
+```
+
+**Returns:** `Disposable` - Disposable to unregister
+
+**Example:**
+```javascript
+const disposable = api.editor.registerDocumentFormattingProvider('markdown', {
+  provideDocumentFormattingEdits(document, options) {
+    const text = document.getText();
+    const formatted = formatMarkdown(text);
+
+    return [
+      {
+        range: {
+          start: { line: 0, character: 0 },
+          end: { line: document.lineCount - 1, character: 9999 }
+        },
+        newText: formatted
+      }
+    ];
+  }
+});
+```
+
+**Events Emitted:**
+- `formatting-provider-registered` - When provider is registered
+- `formatting-provider-unregistered` - When provider is disposed
+
+---
+
+### registerFoldingRangeProvider(selector, provider)
+
+Register a folding range provider for code folding.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| selector | string \| object | Yes | Document selector |
+| provider | object | Yes | Folding range provider with provideFoldingRanges method |
+
+**Provider Interface:**
+```typescript
+{
+  provideFoldingRanges(
+    document: TextDocument,
+    context: FoldingContext,
+    token: CancellationToken
+  ): FoldingRange[] | Promise<FoldingRange[]>
+}
+```
+
+**FoldingRange Format:**
+```typescript
+{
+  start: number, // Line number
+  end: number,   // Line number
+  kind?: string  // 'comment', 'imports', 'region'
+}
+```
+
+**Returns:** `Disposable` - Disposable to unregister
+
+**Example:**
+```javascript
+const disposable = api.editor.registerFoldingRangeProvider('markdown', {
+  provideFoldingRanges(document) {
+    const ranges = [];
+    const text = document.getText();
+    const lines = text.split('\n');
+
+    // Find markdown headers for folding
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].startsWith('#')) {
+        const level = lines[i].match(/^#+/)[0].length;
+        let end = i + 1;
+
+        // Find next header of same or higher level
+        for (let j = i + 1; j < lines.length; j++) {
+          if (lines[j].startsWith('#')) {
+            const nextLevel = lines[j].match(/^#+/)[0].length;
+            if (nextLevel <= level) break;
+          }
+          end = j;
+        }
+
+        if (end > i + 1) {
+          ranges.push({ start: i, end: end, kind: 'region' });
+        }
+      }
+    }
+
+    return ranges;
+  }
+});
+```
+
+**Events Emitted:**
+- `folding-provider-registered` - When provider is registered
+- `folding-provider-unregistered` - When provider is disposed
+
+---
+
+### registerDocumentLinkProvider(selector, provider)
+
+Register a document link provider for clickable links.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| selector | string \| object | Yes | Document selector |
+| provider | object | Yes | Link provider with provideDocumentLinks method |
+
+**Provider Interface:**
+```typescript
+{
+  provideDocumentLinks(
+    document: TextDocument,
+    token: CancellationToken
+  ): DocumentLink[] | Promise<DocumentLink[]>,
+
+  resolveDocumentLink?(
+    link: DocumentLink,
+    token: CancellationToken
+  ): DocumentLink | Promise<DocumentLink>
+}
+```
+
+**DocumentLink Format:**
+```typescript
+{
+  range: Range,
+  target?: string,
+  tooltip?: string
+}
+```
+
+**Returns:** `Disposable` - Disposable to unregister
+
+**Example:**
+```javascript
+const disposable = api.editor.registerDocumentLinkProvider('markdown', {
+  provideDocumentLinks(document) {
+    const links = [];
+    const text = document.getText();
+    const regex = /\[\[([^\]]+)\]\]/g;
+    let match;
+
+    while ((match = regex.exec(text)) !== null) {
+      const linkText = match[1];
+      const start = document.positionAt(match.index);
+      const end = document.positionAt(match.index + match[0].length);
+
+      links.push({
+        range: { start, end },
+        target: `file:///workspace/${linkText}.md`,
+        tooltip: `Go to $\\{linkText\\}`
+      });
+    }
+
+    return links;
+  }
+});
+```
+
+**Events Emitted:**
+- `link-provider-registered` - When provider is registered
+- `link-provider-unregistered` - When provider is disposed
+
+---
+
+### getProviders(type)
+
+Get all registered providers of a specific type.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| type | string | Yes | Provider type ('completion', 'hover', 'definition', etc.) |
+
+**Returns:** `Array` - Array of provider registrations
+
+**Example:**
+```javascript
+const completionProviders = api.editor.getProviders('completion');
+console.log(`${completionProviders.length} completion providers registered`);
+```
+
+---
+
+### unregisterAllProviders(pluginId)
+
+Unregister all providers for a specific plugin.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| pluginId | string | Yes | Plugin ID |
+
+**Returns:** `void`
+
+**Example:**
+```javascript
+// Called automatically during plugin deactivation
+api.editor.unregisterAllProviders('my-plugin-id');
+```
+
+---
+
+## TipTap Extension Registration
+
+### registerNode(pluginId, nodeConfig)
+
+Register a custom TipTap node (block or inline element).
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| pluginId | string | Yes | Your plugin ID |
+| nodeConfig | object | Yes | Node configuration |
+
+**Node Configuration:**
+```typescript
+{
+  name: string,                    // Required: Unique node name
+  group?: string,                  // 'block' | 'inline'
+  content?: string,                // Content expression
+  marks?: string,                  // Allowed marks
+  inline?: boolean,
+  atom?: boolean,
+  selectable?: boolean,
+  draggable?: boolean,
+  attributes?: object,             // Attribute definitions
+  parseHTML?: Array<object>,       // HTML parsing rules
+  renderHTML?: Function,           // HTML rendering function
+  commands?: object,               // Editor commands
+  inputRules?: Array<object>,      // Input rules
+  pasteRules?: Array<object>,      // Paste rules
+  keyboardShortcuts?: object,      // Keyboard shortcuts
+  nodeView?: Function,             // Custom node view
+  onBeforeCreate?: Function,
+  onCreate?: Function,
+  onUpdate?: Function,
+  onDestroy?: Function
+}
+```
+
+**Returns:** `Disposable` - Disposable to unregister the node
+
+**Example:**
+```javascript
+const disposable = api.editor.registerNode('myPlugin', {
+  name: 'callout',
+  group: 'block',
+  content: 'block+',
+  attributes: {
+    type: {
+      default: 'info'
+    }
+  },
+  parseHTML: [
+    {
+      tag: 'div[data-callout]',
+      getAttrs: (dom) => ({
+        type: dom.getAttribute('data-callout')
+      })
+    }
+  ],
+  renderHTML: ({ HTMLAttributes }) => {
+    return ['div', { ...HTMLAttributes, 'data-callout': HTMLAttributes.type }, 0];
+  },
+  commands: {
+    setCallout: (attributes) => ({ commands }) => {
+      return commands.setNode('callout', attributes);
+    }
+  }
+});
+```
+
+**Events Emitted:**
+- `node-registered` - When node is successfully registered
+- `node-unregistered` - When node is unregistered
+
+**Throws:** Error if plugin ID is invalid or node name already exists
+
+---
+
+### registerMark(pluginId, markConfig)
+
+Register a custom TipTap mark (text formatting).
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| pluginId | string | Yes | Your plugin ID |
+| markConfig | object | Yes | Mark configuration |
+
+**Mark Configuration:**
+```typescript
+{
+  name: string,                    // Required: Unique mark name
+  inclusive?: boolean,
+  excludes?: string,
+  group?: string,
+  spanning?: boolean,
+  attributes?: object,
+  parseHTML?: Array<object>,
+  renderHTML?: Function,
+  commands?: object,
+  inputRules?: Array<object>,
+  keyboardShortcuts?: object
+}
+```
+
+**Returns:** `Disposable` - Disposable to unregister the mark
+
+**Example:**
+```javascript
+const disposable = api.editor.registerMark('myPlugin', {
+  name: 'colored',
+  attributes: {
+    color: {
+      default: 'red'
+    }
+  },
+  parseHTML: [
+    {
+      tag: 'span[data-color]',
+      getAttrs: (dom) => ({
+        color: dom.getAttribute('data-color')
+      })
+    }
+  ],
+  renderHTML: ({ HTMLAttributes }) => {
+    return ['span', {
+      style: `color: $\\{HTMLAttributes.color\\}`,
+      'data-color': HTMLAttributes.color
+    }, 0];
+  },
+  commands: {
+    setColor: (color) => ({ commands }) => {
+      return commands.setMark('colored', { color });
+    }
+  }
+});
+```
+
+**Events Emitted:**
+- `mark-registered` - When mark is successfully registered
+- `mark-unregistered` - When mark is unregistered
+
+---
+
+### registerExtension(pluginId, extensionConfig)
+
+Register a custom TipTap extension (functionality without DOM representation).
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| pluginId | string | Yes | Your plugin ID |
+| extensionConfig | object | Yes | Extension configuration |
+
+**Extension Configuration:**
+```typescript
+{
+  name: string,                    // Required: Unique extension name
+  priority?: number,               // Extension priority (default: 100)
+  options?: object,                // Extension options
+  commands?: object,               // Editor commands
+  keyboardShortcuts?: object,      // Keyboard shortcuts
+  inputRules?: Array<object>,      // Input rules
+  proseMirrorPlugins?: Array<Function>, // ProseMirror plugins
+  onBeforeCreate?: Function,
+  onCreate?: Function,
+  onUpdate?: Function,
+  onDestroy?: Function
+}
+```
+
+**Returns:** `Disposable` - Disposable to unregister the extension
+
+**Example:**
+```javascript
+const disposable = api.editor.registerExtension('myPlugin', {
+  name: 'wordCount',
+  onCreate({ editor }) {
+    this.wordCount = 0;
+  },
+  onUpdate({ editor }) {
+    const text = editor.state.doc.textContent;
+    this.wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
+    console.log('Word count:', this.wordCount);
+  }
+});
+```
+
+**Events Emitted:**
+- `extension-registered` - When extension is successfully registered
+- `extension-unregistered` - When extension is unregistered
+
+---
+
+### registerSlashCommand(pluginId, slashCommandConfig)
+
+Register a slash command for the editor.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| pluginId | string | Yes | Your plugin ID |
+| slashCommandConfig | object | Yes | Slash command configuration |
+
+**Slash Command Configuration:**
+```typescript
+{
+  id: string,                      // Required: Unique command ID
+  title: string,                   // Required: Display title
+  description?: string,            // Command description
+  icon?: string,                   // Icon name or SVG
+  group?: string,                  // Group name (default: pluginId)
+  order?: number,                  // Sort order (default: 100)
+  keywords?: string[],             // Search keywords
+  handler: Function,               // Required: Command handler
+  when?: string | Function         // Conditional expression
+}
+```
+
+**Handler Signature:**
+```typescript
+(editor: Editor) => void
+```
+
+**Returns:** `Disposable` - Disposable to unregister
+
+**Example:**
+```javascript
+const disposable = api.editor.registerSlashCommand('myPlugin', {
+  id: 'insertCallout',
+  title: 'Callout',
+  description: 'Insert a callout block',
+  icon: 'info',
+  group: 'blocks',
+  order: 50,
+  keywords: ['info', 'note', 'callout', 'alert'],
+  handler: (editor) => {
+    editor.chain()
+      .focus()
+      .insertContent('<div data-callout="info"><p>Note</p></div>')
+      .run();
+  }
+});
+```
+
+**Events Emitted:**
+- `slash-command-registered` - When command is registered
+- `slash-command-unregistered` - When command is unregistered
+
+---
+
+### registerInputRule(pluginId, inputRuleConfig)
+
+Register an input rule for automatic text transformation.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| pluginId | string | Yes | Your plugin ID |
+| inputRuleConfig | object | Yes | Input rule configuration |
+
+**Input Rule Configuration:**
+```typescript
+{
+  id: string,                      // Required: Unique rule ID
+  pattern: RegExp,                 // Required: Pattern to match
+  handler: Function,               // Required: Handler function
+  priority?: number,               // Priority (default: 100)
+  when?: string | Function         // Conditional expression
+}
+```
+
+**Returns:** `string` - Rule ID
+
+**Example:**
+```javascript
+const ruleId = api.editor.registerInputRule('myPlugin', {
+  id: 'autoEmoji',
+  pattern: /:smile:$/,
+  handler: ({ state, range, match }) => {
+    const tr = state.tr;
+    tr.insertText('😊', range.from, range.to);
+    return tr;
+  }
+});
+```
+
+**Events Emitted:**
+- `input-rule-registered` - When rule is registered
+
+---
+
+### registerKeyboardShortcut(pluginId, shortcutConfig)
+
+Register a keyboard shortcut.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| pluginId | string | Yes | Your plugin ID |
+| shortcutConfig | object | Yes | Shortcut configuration |
+
+**Shortcut Configuration:**
+```typescript
+{
+  key: string,                     // Required: Key combination (e.g., 'Mod-k')
+  handler: Function,               // Required: Handler function
+  when?: string | Function,        // Conditional expression
+  priority?: number                // Priority (default: 100)
+}
+```
+
+**Key Format:**
+- `Mod-k` - Command (Mac) or Ctrl (Windows/Linux) + k
+- `Shift-Enter` - Shift + Enter
+- `Alt-ArrowUp` - Alt + Up Arrow
+
+**Returns:** `string` - Shortcut ID
+
+**Example:**
+```javascript
+const shortcutId = api.editor.registerKeyboardShortcut('myPlugin', {
+  key: 'Mod-k',
+  handler: (editor) => {
+    // Insert a link
+    const url = prompt('Enter URL:');
+    if (url) {
+      editor.chain()
+        .focus()
+        .setLink({ href: url })
+        .run();
+    }
+    return true;
+  }
+});
+```
+
+**Events Emitted:**
+- `keyboard-shortcut-registered` - When shortcut is registered
+
+---
+
+### registerToolbarItem(pluginId, toolbarConfig)
+
+Register a toolbar item.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| pluginId | string | Yes | Your plugin ID |
+| toolbarConfig | object | Yes | Toolbar item configuration |
+
+**Toolbar Configuration:**
+```typescript
+{
+  id: string,                      // Required: Unique item ID
+  type?: string,                   // 'button' | 'dropdown' | 'separator'
+  title: string,                   // Required: Display title
+  icon?: string,                   // Icon name or SVG
+  group?: string,                  // Group name (default: 'editor')
+  order?: number,                  // Sort order (default: 100)
+  handler?: Function,              // Click handler (for button)
+  isActive?: Function,             // Check if button is active
+  isDisabled?: Function,           // Check if button is disabled
+  items?: Array<object>,           // Dropdown items
+  when?: string | Function         // Conditional expression
+}
+```
+
+**Returns:** `string` - Item ID
+
+**Example:**
+```javascript
+const itemId = api.editor.registerToolbarItem('myPlugin', {
+  id: 'insertCallout',
+  type: 'button',
+  title: 'Insert Callout',
+  icon: 'info',
+  group: 'insert',
+  order: 50,
+  handler: (editor) => {
+    editor.chain()
+      .focus()
+      .insertContent('<div data-callout="info"><p>Note</p></div>')
+      .run();
+  },
+  isDisabled: (editor) => !editor.can().insertContent('text')
+});
+```
+
+**Events Emitted:**
+- `toolbar-item-registered` - When item is registered
+
+---
+
+### registerNodeView(pluginId, nodeViewConfig)
+
+Register a custom node view for advanced rendering.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| pluginId | string | Yes | Your plugin ID |
+| nodeViewConfig | object | Yes | Node view configuration |
+
+**Node View Configuration:**
+```typescript
+{
+  name: string,                    // Required: Node name to render
+  component?: ReactComponent,      // React component
+  renderHTML?: Function,           // HTML rendering function
+  interactive?: boolean,           // Default: true
+  draggable?: boolean,             // Default: false
+  selectable?: boolean             // Default: true
+}
+```
+
+**Returns:** `string` - View ID
+
+**Example:**
+```javascript
+const viewId = api.editor.registerNodeView('myPlugin', {
+  name: 'callout',
+  component: CalloutComponent,
+  interactive: true,
+  draggable: false
+});
+```
+
+**Events Emitted:**
+- `node-view-registered` - When view is registered
+
+---
+
+### registerEditorCommand(pluginId, commandConfig)
+
+Register a custom editor command.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| pluginId | string | Yes | Your plugin ID |
+| commandConfig | object | Yes | Command configuration |
+
+**Command Configuration:**
+```typescript
+{
+  name: string,                    // Required: Command name
+  handler: Function,               // Required: Command handler
+  description?: string             // Command description
+}
+```
+
+**Returns:** `string` - Command ID
+
+**Example:**
+```javascript
+const commandId = api.editor.registerEditorCommand('myPlugin', {
+  name: 'insertTimestamp',
+  description: 'Insert current timestamp',
+  handler: (editor) => {
+    const timestamp = new Date().toISOString();
+    editor.chain()
+      .focus()
+      .insertContent(timestamp)
+      .run();
+  }
+});
+```
+
+**Events Emitted:**
+- `editor-command-registered` - When command is registered
+
+---
+
+### registerFormat(pluginId, formatConfig)
+
+Register a custom import/export format.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| pluginId | string | Yes | Your plugin ID |
+| formatConfig | object | Yes | Format configuration |
+
+**Format Configuration:**
+```typescript
+{
+  name: string,                    // Required: Format name
+  displayName: string,             // Required: Display name
+  extensions?: string[],           // File extensions
+  mimeTypes?: string[],            // MIME types
+  import?: Function,               // Import handler
+  export?: Function                // Export handler
+}
+```
+
+**Returns:** `string` - Format ID
+
+**Example:**
+```javascript
+const formatId = api.editor.registerFormat('myPlugin', {
+  name: 'org',
+  displayName: 'Org Mode',
+  extensions: ['.org'],
+  mimeTypes: ['text/org'],
+  import: (content) => {
+    // Convert Org Mode to HTML
+    return convertOrgToHTML(content);
+  },
+  export: (html) => {
+    // Convert HTML to Org Mode
+    return convertHTMLToOrg(html);
+  }
+});
+```
+
+**Events Emitted:**
+- `format-registered` - When format is registered
+
+---
+
+## Editor Event Listeners
+
+### onDidChangeActiveTextEditor(listener)
+
+Listen to active editor changes.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| listener | Function | Yes | Callback function |
+
+**Listener Signature:**
+```typescript
+(editor: TextEditor | undefined) => void
+```
+
+**Returns:** `Disposable` - Disposable to unregister
+
+**Example:**
+```javascript
+const disposable = api.editor.onDidChangeActiveTextEditor((editor) => {
+  if (editor) {
+    console.log('Active editor changed:', editor.document.fileName);
+  } else {
+    console.log('No active editor');
+  }
+});
+```
+
+---
+
+### onDidChangeTextEditorSelection(listener)
+
+Listen to selection changes.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| listener | Function | Yes | Callback function |
+
+**Listener Signature:**
+```typescript
+(event: TextEditorSelectionChangeEvent) => void
+```
+
+**Event Format:**
+```typescript
+{
+  textEditor: TextEditor,
+  selections: Selection[],
+  kind: number // 1 = Keyboard, 2 = Mouse, 3 = Command
+}
+```
+
+**Returns:** `Disposable` - Disposable to unregister
+
+**Example:**
+```javascript
+const disposable = api.editor.onDidChangeTextEditorSelection((event) => {
+  const selection = event.selections[0];
+  console.log('Selection changed:', selection.start, selection.end);
+});
+```
+
+---
+
+### onDidChangeTextDocument(listener)
+
+Listen to document content changes.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| listener | Function | Yes | Callback function |
+
+**Listener Signature:**
+```typescript
+(event: TextDocumentChangeEvent) => void
+```
+
+**Event Format:**
+```typescript
+{
+  document: TextDocument,
+  contentChanges: TextDocumentContentChangeEvent[],
+  reason: number | undefined
+}
+```
+
+**Returns:** `Disposable` - Disposable to unregister
+
+**Example:**
+```javascript
+const disposable = api.editor.onDidChangeTextDocument((event) => {
+  console.log('Document changed:', event.document.fileName);
+  console.log('Changes:', event.contentChanges.length);
+});
+```
+
+---
+
+### onDidChangeTextEditorVisibleRanges(listener)
+
+Listen to visible range changes (scrolling).
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| listener | Function | Yes | Callback function |
+
+**Listener Signature:**
+```typescript
+(event: TextEditorVisibleRangesChangeEvent) => void
+```
+
+**Event Format:**
+```typescript
+{
+  textEditor: TextEditor,
+  visibleRanges: Range[]
+}
+```
+
+**Returns:** `Disposable` - Disposable to unregister
+
+**Example:**
+```javascript
+const disposable = api.editor.onDidChangeTextEditorVisibleRanges((event) => {
+  console.log('Visible ranges changed');
+});
+```
+
+---
+
+## Utility Methods
+
+### getAllExtensions()
+
+Get all registered TipTap extensions.
+
+**Returns:** `Array` - Array of extension objects
+
+**Example:**
+```javascript
+const extensions = api.editor.getAllExtensions();
+console.log(`${extensions.length} extensions registered`);
+```
+
+---
+
+### getSlashCommands()
+
+Get all registered slash commands grouped by category.
+
+**Returns:** `Array\\<\\{group: string, commands: Array\\}\\>` - Grouped slash commands
+
+**Example:**
+```javascript
+const groups = api.editor.getSlashCommands();
+groups.forEach(group => {
+  console.log(`${group.group}: ${group.commands.length} commands`);
+});
+```
+
+---
+
+### getToolbarItems(group)
+
+Get toolbar items for a specific group.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| group | string | No | Group name (default: 'editor') |
+
+**Returns:** `Array` - Array of toolbar items, sorted by order
+
+**Example:**
+```javascript
+const items = api.editor.getToolbarItems('editor');
+console.log(`${items.length} toolbar items in editor group`);
+```
+
+---
+
+### getStats()
+
+Get statistics about registered extensions and providers.
+
+**Returns:** `object` - Statistics object
+
+**Statistics Format:**
+```typescript
+{
+  nodes: number,
+  marks: number,
+  extensions: number,
+  slashCommands: number,
+  inputRules: number,
+  keyboardShortcuts: number,
+  toolbarItems: number,
+  nodeViews: number,
+  editorCommands: number,
+  formats: number,
+  providers: number,
+  totalPlugins: number,
+  averageLoadTime: number,
+  errorStats: object,
+  quarantinedPlugins: string[]
+}
+```
+
+**Example:**
+```javascript
+const stats = api.editor.getStats();
+console.log('Editor API Statistics:', stats);
+console.log(`Total extensions: $\\{stats.nodes + stats.marks + stats.extensions\\}`);
+console.log(`Average load time: ${stats.averageLoadTime}ms`);
+```
+
+---
+
+### unregisterPlugin(pluginId)
+
+Unregister all contributions from a plugin.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| pluginId | string | Yes | Plugin ID |
+
+**Returns:** `void`
+
+**Example:**
+```javascript
+// Called automatically during plugin deactivation
+api.editor.unregisterPlugin('my-plugin-id');
+```
+
+**Events Emitted:**
+- `plugin-unregistered` - When plugin is fully unregistered
+
+---
+
+### hasPluginExtensions(pluginId)
+
+Check if a plugin has any registered extensions.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| pluginId | string | Yes | Plugin ID |
+
+**Returns:** `boolean` - True if plugin has extensions
+
+**Example:**
+```javascript
+if (api.editor.hasPluginExtensions('my-plugin-id')) {
+  console.log('Plugin has active extensions');
+}
+```
+
+---
+
+### getPluginContributions(pluginId)
+
+Get all contributions from a specific plugin.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| pluginId | string | Yes | Plugin ID |
+
+**Returns:** `Array\\<\\{type: string, id: string\\}\\>` - Array of contributions
+
+**Example:**
+```javascript
+const contributions = api.editor.getPluginContributions('my-plugin-id');
+contributions.forEach(contrib => {
+  console.log(`${contrib.type}: $\\{contrib.id\\}`);
+});
+```
+
+---
+
+## Related APIs
+
+- **[LanguagesAPI](/developers/plugins/api-reference/languages-api)** - Language features and providers
+- **[WorkspaceAPI](/developers/plugins/api-reference/workspace-api)** - Workspace management and file operations
+- **[CommandsAPI](/developers/plugins/api-reference/commands-api)** - Command registration and execution
+- **[ConfigurationAPI](/developers/plugins/api-reference/configuration-api)** - Plugin configuration management
+
+## See Also
+
+- [Editor Plugins Guide](/developers/plugins/editor-plugins)
+- [TipTap Extension Development](https://tiptap.dev/guide/custom-extensions)
+- [Plugin Architecture](/developers/plugins/architecture)

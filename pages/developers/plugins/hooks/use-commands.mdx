@@ -1,0 +1,643 @@
+---
+title: "useCommands"
+description: "React hooks for the command system"
+---
+
+# useCommands
+
+React hooks for working with the Lokus command system. These hooks provide real-time updates when commands are registered, unregistered, or cleared.
+
+## Import
+
+```javascript
+import {
+  useCommands,
+  useCommandExecute,
+  useAllCommands,
+  useCommandsByCategory,
+  useCommandExists
+} from '@lokus/plugin-sdk';
+```
+
+## Hooks
+
+### useCommands()
+
+Returns an array of commands that are visible in the command palette.
+
+**Returns:** `Command[]`
+
+**Updates when:**
+- Command is registered
+- Command is unregistered
+- Commands are cleared
+
+**Example:**
+```jsx
+import { useCommands } from '@lokus/plugin-sdk';
+
+function CommandPalette() {
+  const commands = useCommands();
+
+  return (
+    <div>
+      <h3>Available Commands ({commands.length})</h3>
+      <ul>
+        {commands.map(cmd => (
+          <li key={cmd.id}>
+            {cmd.icon && <span className="icon">{cmd.icon}</span>}
+            <strong>{cmd.title}</strong>
+            {cmd.description && <p>{cmd.description}</p>}
+            {cmd.category && <span className="badge">{cmd.category}</span>}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+---
+
+### useCommandExecute()
+
+Returns a stable callback function to execute commands by ID. The function accepts the command ID and any arguments to pass to the command handler.
+
+**Returns:** `(commandId: string, ...args: any[]) => Promise\<any\>`
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| commandId | string | The ID of the command to execute |
+| ...args | any[] | Arguments to pass to command handler |
+
+**Returns:** Promise that resolves with the command's return value
+
+**Example:**
+```jsx
+import { useCommandExecute } from '@lokus/plugin-sdk';
+
+function QuickActions() {
+  const execute = useCommandExecute();
+
+  const handleNewNote = async () => {
+    try {
+      await execute('file.new');
+      console.log('New note created');
+    } catch (error) {
+      console.error('Failed to create note:', error);
+    }
+  };
+
+  const handleSave = async () => {
+    await execute('file.save');
+  };
+
+  const handleCustomCommand = async () => {
+    // Pass arguments to command
+    const result = await execute('myPlugin.process', 'arg1', 'arg2');
+    console.log('Result:', result);
+  };
+
+  return (
+    <div className="quick-actions">
+      <button onClick={handleNewNote}>New Note</button>
+      <button onClick={handleSave}>Save</button>
+      <button onClick={handleCustomCommand}>Process</button>
+    </div>
+  );
+}
+```
+
+**Error Handling:**
+```jsx
+import { useCommandExecute } from '@lokus/plugin-sdk';
+import { useState } from 'react';
+
+function SafeCommandButton({ commandId, label }) {
+  const execute = useCommandExecute();
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleClick = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      await execute(commandId);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div>
+      <button onClick={handleClick} disabled={loading}>
+        {loading ? 'Running...' : label}
+      </button>
+      {error && <p className="error">{error}</p>}
+    </div>
+  );
+}
+```
+
+---
+
+### useAllCommands()
+
+Returns ALL registered commands, including those hidden from the command palette (`showInPalette: false`).
+
+**Returns:** `Command[]`
+
+**Updates when:**
+- Command is registered
+- Command is unregistered
+- Commands are cleared
+
+**Use cases:**
+- Admin/debug panels
+- Plugin management UIs
+- Command discovery tools
+- Testing interfaces
+
+**Example:**
+```jsx
+import { useAllCommands } from '@lokus/plugin-sdk';
+
+function CommandDebugger() {
+  const allCommands = useAllCommands();
+
+  const paletteCommands = allCommands.filter(cmd => cmd.showInPalette !== false);
+  const hiddenCommands = allCommands.filter(cmd => cmd.showInPalette === false);
+
+  return (
+    <div>
+      <h3>All Commands ({allCommands.length})</h3>
+
+      <section>
+        <h4>Palette Commands ({paletteCommands.length})</h4>
+        <ul>
+          {paletteCommands.map(cmd => (
+            <li key={cmd.id}>{cmd.title}</li>
+          ))}
+        </ul>
+      </section>
+
+      <section>
+        <h4>Hidden Commands ({hiddenCommands.length})</h4>
+        <ul>
+          {hiddenCommands.map(cmd => (
+            <li key={cmd.id}>{cmd.id}</li>
+          ))}
+        </ul>
+      </section>
+    </div>
+  );
+}
+```
+
+---
+
+### useCommandsByCategory(category)
+
+Filter commands by category. Returns only commands that match the specified category and are visible in the palette.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| category | string | Category name to filter by |
+
+**Returns:** `Command[]`
+
+**Updates when:**
+- Command is registered
+- Command is unregistered
+- Commands are cleared
+- Category parameter changes
+
+**Example:**
+```jsx
+import { useCommandsByCategory } from '@lokus/plugin-sdk';
+
+function CategoryView({ category }) {
+  const commands = useCommandsByCategory(category);
+
+  return (
+    <div>
+      <h3>{category} Commands ({commands.length})</h3>
+      <ul>
+        {commands.map(cmd => (
+          <li key={cmd.id}>
+            <strong>{cmd.title}</strong>
+            <p>{cmd.description}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+// Usage
+function CommandsByCategory() {
+  return (
+    <div>
+      <CategoryView category="editor" />
+      <CategoryView category="file" />
+      <CategoryView category="git" />
+    </div>
+  );
+}
+```
+
+**Tabbed Interface Example:**
+```jsx
+import { useCommandsByCategory } from '@lokus/plugin-sdk';
+import { useState } from 'react';
+
+function TabbedCommands() {
+  const [activeTab, setActiveTab] = useState('editor');
+
+  const editorCommands = useCommandsByCategory('editor');
+  const fileCommands = useCommandsByCategory('file');
+  const gitCommands = useCommandsByCategory('git');
+
+  const tabs = [
+    { id: 'editor', label: 'Editor', commands: editorCommands },
+    { id: 'file', label: 'File', commands: fileCommands },
+    { id: 'git', label: 'Git', commands: gitCommands },
+  ];
+
+  const activeCommands = tabs.find(t => t.id === activeTab)?.commands || [];
+
+  return (
+    <div>
+      <div className="tabs">
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={activeTab === tab.id ? 'active' : ''}
+          >
+            {tab.label} ({tab.commands.length})
+          </button>
+        ))}
+      </div>
+
+      <ul>
+        {activeCommands.map(cmd => (
+          <li key={cmd.id}>{cmd.title}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+---
+
+### useCommandExists(commandId)
+
+Check if a command is currently registered. Useful for conditional rendering based on plugin availability.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| commandId | string | Command ID to check |
+
+**Returns:** `boolean` - `true` if command exists, `false` otherwise
+
+**Updates when:**
+- Command is registered
+- Command is unregistered
+- Commands are cleared
+- commandId parameter changes
+
+**Example:**
+```jsx
+import { useCommandExists, useCommandExecute } from '@lokus/plugin-sdk';
+
+function GitFeature() {
+  const hasGitCommit = useCommandExists('git.commit');
+  const hasGitPush = useCommandExists('git.push');
+  const execute = useCommandExecute();
+
+  if (!hasGitCommit) {
+    return (
+      <div className="warning">
+        Git plugin not available. Please install the Git plugin to use this feature.
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <button onClick={() => execute('git.commit')}>
+        Commit Changes
+      </button>
+      {hasGitPush && (
+        <button onClick={() => execute('git.push')}>
+          Push to Remote
+        </button>
+      )}
+    </div>
+  );
+}
+```
+
+**Graceful Degradation:**
+```jsx
+import { useCommandExists } from '@lokus/plugin-sdk';
+
+function FeatureDetection() {
+  const hasAdvancedFeature = useCommandExists('premium.advancedFeature');
+
+  return (
+    <div>
+      <h3>Available Features</h3>
+      <ul>
+        <li>Basic Editing</li>
+        <li>File Management</li>
+        {hasAdvancedFeature && (
+          <li>Advanced Analytics</li>
+        )}
+      </ul>
+    </div>
+  );
+}
+```
+
+## Command Interface
+
+```typescript
+interface Command {
+  id: string;              // Unique command identifier
+  title: string;           // Display name in palette
+  handler: Function;       // Function to execute
+  category?: string;       // Command category
+  description?: string;    // Help text
+  icon?: string;          // Icon name or emoji
+  showInPalette?: boolean; // Show in command palette (default: true)
+  pluginId?: string;      // Plugin that registered this command
+}
+```
+
+## Common Patterns
+
+### Pattern 1: Search and Filter Commands
+
+```jsx
+import { useCommands } from '@lokus/plugin-sdk';
+import { useState, useMemo } from 'react';
+
+function SearchableCommands() {
+  const commands = useCommands();
+  const [search, setSearch] = useState('');
+
+  const filtered = useMemo(() => {
+    const term = search.toLowerCase();
+    return commands.filter(cmd =>
+      cmd.title.toLowerCase().includes(term) ||
+      cmd.description?.toLowerCase().includes(term)
+    );
+  }, [commands, search]);
+
+  return (
+    <div>
+      <input
+        type="text"
+        placeholder="Search commands..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
+      <p>{filtered.length} results</p>
+      <ul>
+        {filtered.map(cmd => (
+          <li key={cmd.id}>{cmd.title}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+### Pattern 2: Command Keyboard Shortcuts
+
+```jsx
+import { useCommandExecute } from '@lokus/plugin-sdk';
+import { useEffect } from 'react';
+
+function KeyboardShortcuts() {
+  const execute = useCommandExecute();
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Ctrl/Cmd + S to save
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        execute('file.save');
+      }
+
+      // Ctrl/Cmd + N to create new
+      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        execute('file.new');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [execute]);
+
+  return <div>Keyboard shortcuts active</div>;
+}
+```
+
+### Pattern 3: Recent Commands List
+
+```jsx
+import { useCommandExecute, useAllCommands } from '@lokus/plugin-sdk';
+import { useState, useCallback } from 'react';
+
+function RecentCommands() {
+  const execute = useCommandExecute();
+  const allCommands = useAllCommands();
+  const [recent, setRecent] = useState([]);
+
+  const executeAndTrack = useCallback(async (commandId) => {
+    await execute(commandId);
+
+    setRecent(prev => {
+      const filtered = prev.filter(id => id !== commandId);
+      return [commandId, ...filtered].slice(0, 5); // Keep last 5
+    });
+  }, [execute]);
+
+  const recentCommands = recent
+    .map(id => allCommands.find(cmd => cmd.id === id))
+    .filter(Boolean);
+
+  return (
+    <div>
+      <h3>Recent Commands</h3>
+      <ul>
+        {recentCommands.map(cmd => (
+          <li key={cmd.id}>
+            <button onClick={() => executeAndTrack(cmd.id)}>
+              {cmd.title}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+### Pattern 4: Command Groups
+
+```jsx
+import { useAllCommands } from '@lokus/plugin-sdk';
+import { useMemo } from 'react';
+
+function GroupedCommands() {
+  const commands = useAllCommands();
+
+  const grouped = useMemo(() => {
+    const groups = {};
+    commands.forEach(cmd => {
+      const category = cmd.category || 'Other';
+      if (!groups[category]) {
+        groups[category] = [];
+      }
+      groups[category].push(cmd);
+    });
+    return groups;
+  }, [commands]);
+
+  return (
+    <div>
+      {Object.entries(grouped).map(([category, cmds]) => (
+        <section key={category}>
+          <h3>{category} ({cmds.length})</h3>
+          <ul>
+            {cmds.map(cmd => (
+              <li key={cmd.id}>{cmd.title}</li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </div>
+  );
+}
+```
+
+### Pattern 5: Command Availability Indicator
+
+```jsx
+import { useCommandExists } from '@lokus/plugin-sdk';
+
+function PluginStatus() {
+  const hasGit = useCommandExists('git.status');
+  const hasLinter = useCommandExists('lint.check');
+  const hasFormatter = useCommandExists('format.document');
+
+  return (
+    <div className="plugin-status">
+      <h3>Available Features</h3>
+      <ul>
+        <li className={hasGit ? 'available' : 'unavailable'}>
+          Git Integration {hasGit ? '✓' : '✗'}
+        </li>
+        <li className={hasLinter ? 'available' : 'unavailable'}>
+          Code Linting {hasLinter ? '✓' : '✗'}
+        </li>
+        <li className={hasFormatter ? 'available' : 'unavailable'}>
+          Code Formatting {hasFormatter ? '✓' : '✗'}
+        </li>
+      </ul>
+    </div>
+  );
+}
+```
+
+## Best Practices
+
+### 1. Use Specific Hooks for Better Performance
+
+```jsx
+// Good - only checks one command
+const exists = useCommandExists('myPlugin.command');
+
+// Less efficient - loads all commands
+const commands = useAllCommands();
+const exists = commands.some(cmd => cmd.id === 'myPlugin.command');
+```
+
+### 2. Handle Async Command Execution
+
+Always handle errors and loading states when executing commands:
+
+```jsx
+const [loading, setLoading] = useState(false);
+const [error, setError] = useState(null);
+
+const handleCommand = async () => {
+  setLoading(true);
+  setError(null);
+  try {
+    await execute('myCommand');
+  } catch (err) {
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+};
+```
+
+### 3. Memoize Filtered Lists
+
+Use `useMemo` for expensive filtering operations:
+
+```jsx
+const filtered = useMemo(() => {
+  return commands.filter(cmd => /* expensive filter */);
+}, [commands, dependencies]);
+```
+
+### 4. Check Command Existence Before Execution
+
+Prevent errors by checking if optional commands exist:
+
+```jsx
+const hasCommand = useCommandExists('optional.feature');
+
+const handleClick = () => {
+  if (hasCommand) {
+    execute('optional.feature');
+  } else {
+    showMessage('Feature not available');
+  }
+};
+```
+
+### 5. Use Categories for Organization
+
+Always set categories when registering commands:
+
+```javascript
+// In your plugin activation
+lokus.commands.register({
+  id: 'myPlugin.action',
+  title: 'My Action',
+  category: 'myPlugin', // Makes filtering easier
+  handler: () => { /* ... */ }
+});
+```
+
+## Related
+
+- [Commands API](/developers/plugins/api-reference/commands) - Register and manage commands
+- [UI Plugins](/developers/plugins/ui-plugins) - Building plugin UIs
+- [React Hooks Overview](/developers/plugins/hooks) - All available hooks

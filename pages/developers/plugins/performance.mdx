@@ -246,7 +246,7 @@ export default class TextAnalyzerPlugin implements Plugin {
         const stats = this.analyzer!.analyze(content)
 
         context.api.ui.showNotification(
-          `Words: ${stats.words}, Characters: ${stats.characters}`,
+          `Words: ${stats.words}, Characters: $\\{stats.characters\\}`,
           'info'
         )
       }

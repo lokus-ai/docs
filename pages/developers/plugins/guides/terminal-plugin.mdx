@@ -1,0 +1,811 @@
+---
+title: Working with Terminals
+description: Complete tutorial for building terminal-integrated plugins in Lokus with terminal creation, command execution, and interactive workflows.
+keywords: [lokus, terminal, shell, command execution, terminal api, automation]
+---
+
+import { Callout } from 'nextra/components'
+import { Tabs} from 'nextra/components'
+
+# Working with Terminals
+
+This tutorial teaches you how to integrate terminals into your Lokus plugins. You'll learn to create terminals, execute commands, capture output, and build interactive terminal workflows.
+
+## What You'll Build
+
+We'll create a **"Git Helper"** plugin that:
+- Opens terminals for Git operations
+- Executes Git commands with real-time output
+- Provides quick actions for common Git workflows
+- Shows terminal status in the status bar
+- Handles multiple terminals for different repositories
+
+## Prerequisites
+
+- Completed the [Getting Started](/developers/plugins/getting-started) guide
+- Basic understanding of Git commands
+- Familiarity with terminal/shell operations
+
+## Step 1: Project Setup
+
+Create a new plugin:
+
+```bash
+npx lokus-plugin create git-helper --template basic-typescript
+cd git-helper
+npm install
+```
+
+## Step 2: Understanding the Terminal API
+
+The Terminal API provides these core methods:
+
+```typescript
+interface TerminalAPI {
+  // Create a new terminal
+  createTerminal(options: TerminalOptions): Terminal
+
+  // Get active terminal
+  getActiveTerminal(): Terminal | undefined
+
+  // Get all terminals
+  getTerminals(): Terminal[]
+
+  // Event: terminal opened
+  onDidOpenTerminal(listener: (terminal: Terminal) => void): Disposable
+
+  // Event: terminal closed
+  onDidCloseTerminal(listener: (terminal: Terminal) => void): Disposable
+
+  // Event: active terminal changed
+  onDidChangeActiveTerminal(listener: (terminal: Terminal) => void): Disposable
+}
+
+interface Terminal {
+  id: string
+  name: string
+  shellPath?: string
+  cwd?: string
+
+  // Send text to terminal
+  sendText(text: string, addNewLine?: boolean): void
+
+  // Show terminal
+  show(preserveFocus?: boolean): void
+
+  // Hide terminal
+  hide(): void
+
+  // Dispose terminal
+  dispose(): void
+}
+```
+
+## Step 3: Create Your First Terminal
+
+Let's start with a simple command to open a Git terminal:
+
+```typescript filename="src/index.ts"
+import { LokusPlugin } from '@lokus/plugin-api'
+
+export function activate(context: LokusPlugin.ExtensionContext) {
+  // Register command to open Git terminal
+  const openGitTerminal = context.commands.register({
+    id: 'git-helper.openTerminal',
+    title: 'Git: Open Terminal',
+    category: 'Git Helper',
+    handler: async () => {
+      // Get current workspace folder
+      const workspaceFolder = context.workspace.getWorkspaceFolder()
+
+      if (!workspaceFolder) {
+        context.ui.showErrorMessage('No workspace folder open')
+        return
+      }
+
+      // Create terminal
+      const terminal = context.terminal.createTerminal({
+        name: 'Git Terminal',
+        cwd: workspaceFolder.uri.fsPath,
+        shellPath: '/bin/bash', // Or detect shell
+        env: {
+          // Optional: custom environment variables
+          GIT_PAGER: 'cat',
+        },
+      })
+
+      // Show the terminal
+      terminal.show()
+
+      // Send initial command
+      terminal.sendText('git status', true)
+    },
+  })
+
+  context.subscriptions.push(openGitTerminal)
+}
+
+export function deactivate() {
+  // Cleanup handled automatically
+}
+```
+
+<Callout type="info">
+**Terminal Options:**
+- `name` - Display name in terminal tab
+- `cwd` - Starting directory (working directory)
+- `shellPath` - Custom shell (defaults to system shell)
+- `shellArgs` - Arguments to pass to shell
+- `env` - Environment variables
+</Callout>
+
+## Step 4: Execute Commands and Capture Output
+
+For automated workflows, you'll want to execute commands and handle their output:
+
+```typescript filename="src/utils/gitRunner.ts"
+import { LokusPlugin } from '@lokus/plugin-api'
+
+export class GitRunner {
+  private terminal: ReturnType<LokusPlugin.TerminalAPI['createTerminal']> | null = null
+
+  constructor(
+    private context: LokusPlugin.ExtensionContext,
+    private workspaceRoot: string
+  ) {}
+
+  /**
+   * Execute a Git command
+   */
+  async executeCommand(command: string, showTerminal: boolean = true): Promise<void> {
+    // Create or reuse terminal
+    if (!this.terminal) {
+      this.terminal = this.context.terminal.createTerminal({
+        name: 'Git Helper',
+        cwd: this.workspaceRoot,
+      })
+    }
+
+    if (showTerminal) {
+      this.terminal.show()
+    }
+
+    // Send command
+    this.terminal.sendText(command, true)
+  }
+
+  /**
+   * Execute multiple commands in sequence
+   */
+  async executeSequence(commands: string[], showTerminal: boolean = true): Promise<void> {
+    if (!this.terminal) {
+      this.terminal = this.context.terminal.createTerminal({
+        name: 'Git Helper',
+        cwd: this.workspaceRoot,
+      })
+    }
+
+    if (showTerminal) {
+      this.terminal.show()
+    }
+
+    // Send each command with delay for readability
+    for (const command of commands) {
+      this.terminal.sendText(command, true)
+      // Small delay so commands don't run too fast
+      await new Promise(resolve => setTimeout(resolve, 100))
+    }
+  }
+
+  /**
+   * Dispose terminal
+   */
+  dispose(): void {
+    if (this.terminal) {
+      this.terminal.dispose()
+      this.terminal = null
+    }
+  }
+}
+```
+
+Now use it in your commands:
+
+```typescript filename="src/index.ts"
+import { GitRunner } from './utils/gitRunner'
+
+let gitRunner: GitRunner | null = null
+
+export function activate(context: LokusPlugin.ExtensionContext) {
+  const workspaceFolder = context.workspace.getWorkspaceFolder()
+
+  if (workspaceFolder) {
+    gitRunner = new GitRunner(context, workspaceFolder.uri.fsPath)
+  }
+
+  // Git Status command
+  const gitStatus = context.commands.register({
+    id: 'git-helper.status',
+    title: 'Git: Status',
+    handler: async () => {
+      if (!gitRunner) {
+        context.ui.showErrorMessage('No workspace folder open')
+        return
+      }
+
+      await gitRunner.executeCommand('git status')
+    },
+  })
+
+  // Git Pull command
+  const gitPull = context.commands.register({
+    id: 'git-helper.pull',
+    title: 'Git: Pull',
+    handler: async () => {
+      if (!gitRunner) return
+
+      await gitRunner.executeCommand('git pull')
+    },
+  })
+
+  // Git Push command
+  const gitPush = context.commands.register({
+    id: 'git-helper.push',
+    title: 'Git: Push',
+    handler: async () => {
+      if (!gitRunner) return
+
+      await gitRunner.executeCommand('git push')
+    },
+  })
+
+  context.subscriptions.push(gitStatus, gitPull, gitPush)
+}
+
+export function deactivate() {
+  gitRunner?.dispose()
+}
+```
+
+## Step 5: Build Interactive Workflows
+
+Create a workflow that prompts for input and executes commands:
+
+```typescript filename="src/workflows/commitWorkflow.ts"
+import { LokusPlugin } from '@lokus/plugin-api'
+import { GitRunner } from '../utils/gitRunner'
+
+export async function commitWorkflow(
+  context: LokusPlugin.ExtensionContext,
+  gitRunner: GitRunner
+): Promise<void> {
+  // Step 1: Show current status
+  await gitRunner.executeCommand('git status', false)
+
+  // Step 2: Ask user what to do
+  const action = await context.ui.showQuickPick(
+    ['Stage all changes', 'Stage specific files', 'Cancel'],
+    {
+      title: 'What would you like to do?',
+      placeholder: 'Select an action',
+    }
+  )
+
+  if (action === 'Cancel' || !action) {
+    return
+  }
+
+  // Step 3: Stage files
+  if (action === 'Stage all changes') {
+    await gitRunner.executeCommand('git add .', false)
+  } else if (action === 'Stage specific files') {
+    const files = await context.ui.showInputBox({
+      prompt: 'Enter files to stage (space-separated)',
+      placeholder: 'file1.md file2.md',
+    })
+
+    if (!files) return
+
+    await gitRunner.executeCommand(`git add $\\{files\\}`, false)
+  }
+
+  // Step 4: Get commit message
+  const message = await context.ui.showInputBox({
+    prompt: 'Enter commit message',
+    placeholder: 'feat: add new feature',
+  })
+
+  if (!message) {
+    context.ui.showWarningMessage('Commit cancelled - no message provided')
+    return
+  }
+
+  // Step 5: Commit
+  await gitRunner.executeCommand(`git commit -m "${message}"`, true)
+
+  // Step 6: Ask about pushing
+  const shouldPush = await context.ui.showQuickPick(['Yes', 'No'], {
+    title: 'Push to remote?',
+    placeholder: 'Would you like to push now?',
+  })
+
+  if (shouldPush === 'Yes') {
+    await gitRunner.executeCommand('git push', true)
+    context.ui.showInformationMessage('Changes committed and pushed!')
+  } else {
+    context.ui.showInformationMessage('Changes committed locally')
+  }
+}
+```
+
+Register the workflow:
+
+```typescript filename="src/index.ts"
+import { commitWorkflow } from './workflows/commitWorkflow'
+
+const gitCommit = context.commands.register({
+  id: 'git-helper.commit',
+  title: 'Git: Quick Commit',
+  handler: async () => {
+    if (!gitRunner) {
+      context.ui.showErrorMessage('No workspace folder open')
+      return
+    }
+
+    await commitWorkflow(context, gitRunner)
+  },
+})
+
+context.subscriptions.push(gitCommit)
+```
+
+## Step 6: Monitor Terminal Events
+
+Listen to terminal lifecycle events:
+
+```typescript filename="src/index.ts"
+export function activate(context: LokusPlugin.ExtensionContext) {
+  // ... previous code ...
+
+  // Track terminal count in status bar
+  let terminalCount = context.terminal.getTerminals().length
+
+  const statusBarItem = context.statusBar.createItem({
+    id: 'git-helper.terminal-count',
+    text: `$(terminal) $\\{terminalCount\\}`,
+    tooltip: 'Git Helper Terminals',
+    priority: 100,
+  })
+
+  statusBarItem.show()
+
+  // Listen for terminal open
+  const onOpen = context.terminal.onDidOpenTerminal(terminal => {
+    if (terminal.name.startsWith('Git')) {
+      terminalCount++
+      statusBarItem.text = `$(terminal) $\\{terminalCount\\}`
+    }
+  })
+
+  // Listen for terminal close
+  const onClose = context.terminal.onDidCloseTerminal(terminal => {
+    if (terminal.name.startsWith('Git')) {
+      terminalCount--
+      statusBarItem.text = `$(terminal) $\\{terminalCount\\}`
+    }
+  })
+
+  // Listen for active terminal change
+  const onChange = context.terminal.onDidChangeActiveTerminal(terminal => {
+    if (terminal?.name.startsWith('Git')) {
+      statusBarItem.text = `$(terminal) ${terminalCount} (${terminal.name})`
+    }
+  })
+
+  context.subscriptions.push(statusBarItem, onOpen, onClose, onChange)
+}
+```
+
+## Step 7: Handle Multiple Terminals
+
+Manage multiple terminals for different purposes:
+
+```typescript filename="src/managers/TerminalManager.ts"
+import { LokusPlugin } from '@lokus/plugin-api'
+
+export class TerminalManager {
+  private terminals: Map<string, ReturnType<LokusPlugin.TerminalAPI['createTerminal']>> = new Map()
+
+  constructor(private context: LokusPlugin.ExtensionContext) {}
+
+  /**
+   * Get or create a terminal by name
+   */
+  getTerminal(name: string, cwd?: string): ReturnType<LokusPlugin.TerminalAPI['createTerminal']> {
+    if (this.terminals.has(name)) {
+      return this.terminals.get(name)!
+    }
+
+    const terminal = this.context.terminal.createTerminal({
+      name,
+      cwd: cwd || this.context.workspace.getWorkspaceFolder()?.uri.fsPath,
+    })
+
+    this.terminals.set(name, terminal)
+    return terminal
+  }
+
+  /**
+   * Execute command in specific terminal
+   */
+  async executeIn(terminalName: string, command: string, show: boolean = true): Promise<void> {
+    const terminal = this.getTerminal(terminalName)
+
+    if (show) {
+      terminal.show()
+    }
+
+    terminal.sendText(command, true)
+  }
+
+  /**
+   * Close specific terminal
+   */
+  closeTerminal(name: string): void {
+    const terminal = this.terminals.get(name)
+    if (terminal) {
+      terminal.dispose()
+      this.terminals.delete(name)
+    }
+  }
+
+  /**
+   * Close all terminals
+   */
+  closeAll(): void {
+    this.terminals.forEach(terminal => terminal.dispose())
+    this.terminals.clear()
+  }
+
+  /**
+   * Get terminal names
+   */
+  getTerminalNames(): string[] {
+    return Array.from(this.terminals.keys())
+  }
+}
+```
+
+Use the manager:
+
+```typescript filename="src/index.ts"
+import { TerminalManager } from './managers/TerminalManager'
+
+let terminalManager: TerminalManager
+
+export function activate(context: LokusPlugin.ExtensionContext) {
+  terminalManager = new TerminalManager(context)
+
+  // Command to run tests in dedicated terminal
+  const runTests = context.commands.register({
+    id: 'git-helper.runTests',
+    title: 'Git: Run Tests',
+    handler: async () => {
+      await terminalManager.executeIn('Tests', 'npm test', true)
+    },
+  })
+
+  // Command to run linter in dedicated terminal
+  const runLint = context.commands.register({
+    id: 'git-helper.runLint',
+    title: 'Git: Run Linter',
+    handler: async () => {
+      await terminalManager.executeIn('Linter', 'npm run lint', true)
+    },
+  })
+
+  // Command to build in dedicated terminal
+  const runBuild = context.commands.register({
+    id: 'git-helper.runBuild',
+    title: 'Git: Build',
+    handler: async () => {
+      await terminalManager.executeIn('Build', 'npm run build', true)
+    },
+  })
+
+  context.subscriptions.push(runTests, runLint, runBuild)
+}
+
+export function deactivate() {
+  terminalManager?.closeAll()
+}
+```
+
+## Step 8: Update the Manifest
+
+Configure your plugin manifest:
+
+```json filename="plugin.json"
+{
+  "manifest": "2.0",
+  "id": "git-helper",
+  "name": "git-helper",
+  "displayName": "Git Helper",
+  "version": "0.1.0",
+  "description": "Git operations made easy with terminal integration",
+  "main": "./dist/index.js",
+  "lokusVersion": ">=1.0.0",
+  "capabilities": {
+    "terminal": true,
+    "commands": true,
+    "statusBar": true
+  },
+  "contributes": {
+    "commands": [
+      {
+        "id": "git-helper.openTerminal",
+        "title": "Open Terminal",
+        "category": "Git Helper"
+      },
+      {
+        "id": "git-helper.status",
+        "title": "Status",
+        "category": "Git Helper"
+      },
+      {
+        "id": "git-helper.commit",
+        "title": "Quick Commit",
+        "category": "Git Helper"
+      },
+      {
+        "id": "git-helper.pull",
+        "title": "Pull",
+        "category": "Git Helper"
+      },
+      {
+        "id": "git-helper.push",
+        "title": "Push",
+        "category": "Git Helper"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "git-helper.status",
+        "key": "ctrl+g s",
+        "mac": "cmd+g s"
+      },
+      {
+        "command": "git-helper.commit",
+        "key": "ctrl+g c",
+        "mac": "cmd+g c"
+      }
+    ]
+  }
+}
+```
+
+## Step 9: Build and Test
+
+Build and test your plugin:
+
+```bash
+# Build
+npm run build
+
+# Link for development
+npx lokus-plugin link
+
+# Restart Lokus
+```
+
+### Testing Your Terminal Plugin
+
+1. Open the command palette (`Cmd/Ctrl+Shift+P`)
+2. Search for "Git: Status" - should open terminal with `git status`
+3. Try "Git: Quick Commit" - should show interactive workflow
+4. Check status bar for terminal count indicator
+
+## Expected Output
+
+When running "Git: Quick Commit", users should see:
+
+```
+Step 1: Git status displayed
+Step 2: Quick pick: "What would you like to do?"
+  - Stage all changes
+  - Stage specific files
+  - Cancel
+
+Step 3: (If staging) Files staged
+Step 4: Input box: "Enter commit message"
+Step 5: Command executed: git commit -m "message"
+Step 6: Quick pick: "Push to remote?"
+  - Yes → git push
+  - No → Done
+
+Final: Success message
+```
+
+## Common Pitfalls
+
+<Callout type="warning">
+**Terminal Not Showing**
+
+If your terminal doesn't appear, make sure you're calling `show()`:
+```typescript
+const terminal = context.terminal.createTerminal({ name: 'Test' })
+terminal.show() // ✅ Required to display
+```
+</Callout>
+
+<Callout type="warning">
+**Commands Not Executing**
+
+Ensure `addNewLine` parameter is `true` (or omitted, as it defaults to true):
+```typescript
+terminal.sendText('git status')      // ✅ Defaults to true
+terminal.sendText('git status', true) // ✅ Explicit
+terminal.sendText('git status', false) // ⚠️ Won't execute, just types
+```
+</Callout>
+
+<Callout type="warning">
+**Working Directory Issues**
+
+Always set `cwd` to the correct workspace folder:
+```typescript
+const terminal = context.terminal.createTerminal({
+  name: 'Git',
+  cwd: context.workspace.getWorkspaceFolder()?.uri.fsPath, // ✅ Correct
+})
+```
+</Callout>
+
+## Advanced: Shell Detection
+
+Detect the user's preferred shell automatically:
+
+```typescript filename="src/utils/shellDetector.ts"
+import { LokusPlugin } from '@lokus/plugin-api'
+
+export async function detectShell(
+  context: LokusPlugin.ExtensionContext
+): Promise<string | undefined> {
+  // Check configuration first
+  const configShell = context.configuration.get<string>('terminal.integrated.shell')
+  if (configShell) {
+    return configShell
+  }
+
+  // Platform-specific defaults
+  const platform = process.platform
+
+  if (platform === 'win32') {
+    return 'powershell.exe'
+  } else if (platform === 'darwin') {
+    // Check for zsh (macOS default) or bash
+    const shell = process.env.SHELL || '/bin/zsh'
+    return shell
+  } else {
+    // Linux/Unix
+    return process.env.SHELL || '/bin/bash'
+  }
+}
+```
+
+Use it when creating terminals:
+
+```typescript
+const shellPath = await detectShell(context)
+
+const terminal = context.terminal.createTerminal({
+  name: 'Smart Terminal',
+  cwd: workspaceFolder.uri.fsPath,
+  shellPath,
+})
+```
+
+## Advanced: Command Validation
+
+Validate commands before executing:
+
+```typescript filename="src/utils/commandValidator.ts"
+export class CommandValidator {
+  /**
+   * Check if a command is safe to execute
+   */
+  static isSafeCommand(command: string): boolean {
+    // Dangerous patterns to avoid
+    const dangerousPatterns = [
+      /rm\s+-rf\s+\//, // Recursive delete from root
+      /:\(\)\{.*\}/, // Fork bomb
+      />\s*\/dev\/sda/, // Writing to disk
+      /dd\s+if=.*of=\/dev/, // Disk operations
+    ]
+
+    return !dangerousPatterns.some(pattern => pattern.test(command))
+  }
+
+  /**
+   * Sanitize command input
+   */
+  static sanitize(command: string): string {
+    // Remove potentially dangerous characters
+    return command
+      .replace(/[;&|`$]/g, '') // Remove command chaining
+      .trim()
+  }
+
+  /**
+   * Validate Git command
+   */
+  static isGitCommand(command: string): boolean {
+    return command.trim().startsWith('git ')
+  }
+}
+```
+
+Use validation in your workflows:
+
+```typescript
+import { CommandValidator } from './utils/commandValidator'
+
+const gitStatus = context.commands.register({
+  id: 'git-helper.customCommand',
+  title: 'Git: Run Custom Command',
+  handler: async () => {
+    const command = await context.ui.showInputBox({
+      prompt: 'Enter Git command',
+      placeholder: 'git log --oneline',
+    })
+
+    if (!command) return
+
+    // Validate command
+    if (!CommandValidator.isGitCommand(command)) {
+      context.ui.showErrorMessage('Only Git commands are allowed')
+      return
+    }
+
+    if (!CommandValidator.isSafeCommand(command)) {
+      context.ui.showErrorMessage('This command is not allowed for safety reasons')
+      return
+    }
+
+    // Execute if safe
+    await gitRunner.executeCommand(command)
+  },
+})
+```
+
+## Performance Tips
+
+1. **Reuse Terminals** - Don't create new terminals for every command
+2. **Batch Commands** - Execute multiple commands in sequence when possible
+3. **Use Background Execution** - Don't always show the terminal
+4. **Limit Terminal Count** - Close old terminals when creating new ones
+
+```typescript
+const MAX_TERMINALS = 5
+
+if (terminalManager.getTerminalNames().length >= MAX_TERMINALS) {
+  // Close oldest terminal
+  const oldest = terminalManager.getTerminalNames()[0]
+  terminalManager.closeTerminal(oldest)
+}
+```
+
+## Next Steps
+
+Now that you've built a terminal plugin, explore:
+
+- **[Testing Plugins](/developers/plugins/guides/testing-plugins)** - Write comprehensive tests
+- **[Terminal API Reference](/developers/plugins/api-reference/terminal)** - Full Terminal API documentation
+- **[Workspace API Reference](/developers/plugins/api-reference/workspace)** - Workspace file operations
+- **[Commands API Reference](/developers/plugins/api-reference/commands)** - Advanced command patterns
+
+## Complete Code Reference
+
+<Callout type="info">
+See the full working example in the [Lokus Plugin Examples](https://github.com/lokus-ai/plugin-examples/tree/main/git-helper) repository.
+</Callout>

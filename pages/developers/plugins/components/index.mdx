@@ -1,0 +1,299 @@
+---
+title: "Plugin UI Components"
+description: "Overview of UI components available to Lokus plugins"
+---
+
+# Plugin UI Components
+
+Lokus provides a comprehensive set of UI components that plugins can use to create rich, interactive user experiences. These components are designed to match Lokus's native look and feel while providing powerful functionality.
+
+## Available Components
+
+### TreeView
+Display hierarchical data in an expandable/collapsible tree structure. Perfect for file explorers, outline views, and nested data visualization.
+
+**Use Cases:**
+- File and folder browsers
+- Document outlines
+- Dependency trees
+- Hierarchical lists
+
+[View TreeView Documentation →](/developers/plugins/components/tree-view)
+
+---
+
+### QuickPick
+A searchable selection dialog for choosing from a list of items. Supports single and multiple selection with fuzzy filtering.
+
+**Use Cases:**
+- Command palettes
+- File pickers
+- Option selectors
+- Search interfaces
+
+[View QuickPick Documentation →](/developers/plugins/components/quick-pick)
+
+---
+
+### ProgressIndicator
+Show progress feedback for long-running operations with optional cancellation support.
+
+**Use Cases:**
+- File processing
+- API requests
+- Build operations
+- Background tasks
+
+[View ProgressIndicator Documentation →](/developers/plugins/components/progress-indicator)
+
+---
+
+### TerminalPanel
+An integrated terminal interface with tab support and command execution.
+
+**Use Cases:**
+- Command execution
+- Build tools
+- Git operations
+- Custom shells
+
+[View TerminalPanel Documentation →](/developers/plugins/components/terminal-panel)
+
+---
+
+### OutputPanel
+Display text output from your plugin with channel support and auto-scrolling.
+
+**Use Cases:**
+- Log messages
+- Build output
+- Debug information
+- Status messages
+
+[View OutputPanel Documentation →](/developers/plugins/components/output-panel)
+
+---
+
+## Quick Example
+
+Here's a simple example showing how to use multiple components together:
+
+```javascript
+export async function activate(api) {
+  // Create output channel
+  const output = api.ui.createOutputChannel('My Plugin');
+  output.appendLine('Plugin activated');
+
+  // Register tree view
+  const treeProvider = {
+    async getChildren(element) {
+      if (!element) {
+        return ['Item 1', 'Item 2', 'Item 3'];
+      }
+      return [];
+    },
+    async getTreeItem(element) {
+      return {
+        label: element,
+        collapsibleState: 0
+      };
+    },
+    on(event, handler) {
+      this.listeners = this.listeners || new Map();
+      this.listeners.set(event, handler);
+    },
+    off(event, handler) {
+      if (this.listeners) {
+        this.listeners.delete(event);
+      }
+    }
+  };
+
+  const treeDisposable = api.ui.registerTreeDataProvider('myView', treeProvider, {
+    title: 'My Tree View'
+  });
+
+  // Show progress for long operation
+  const result = await api.ui.withProgress(
+    {
+      location: 'notification',
+      title: 'Processing',
+      cancellable: true
+    },
+    async (progress, token) => {
+      for (let i = 0; i < 100; i++) {
+        if (token.isCancellationRequested) {
+          output.appendLine('Cancelled by user');
+          return null;
+        }
+        progress.report({
+          message: `Step ${i + 1}/100`,
+          increment: 1
+        });
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+      output.appendLine('Processing complete');
+      return 'Success';
+    }
+  );
+
+  // Show quick pick
+  const selected = await api.ui.showQuickPick(
+    [
+      { label: 'Option 1', description: 'First option' },
+      { label: 'Option 2', description: 'Second option' },
+      { label: 'Option 3', description: 'Third option' }
+    ],
+    {
+      title: 'Select an Option',
+      placeholder: 'Type to filter...'
+    }
+  );
+
+  if (selected) {
+    output.appendLine(`User selected: $\\{selected.label\\}`);
+    output.show();
+  }
+
+  return {
+    dispose: () => {
+      treeDisposable.dispose();
+      output.dispose();
+    }
+  };
+}
+```
+
+## Component Design Guidelines
+
+### Consistency
+All components follow Lokus's design system, using CSS variables for theming. They automatically adapt to light and dark themes.
+
+### Accessibility
+Components support keyboard navigation and screen readers:
+- Arrow keys for navigation
+- Enter to select
+- Escape to cancel
+- Tab for focus management
+
+### Performance
+Components are optimized for large datasets:
+- Virtual scrolling for long lists
+- Lazy loading for tree children
+- Debounced filtering
+
+### Responsiveness
+Components work across different screen sizes and adapt to available space.
+
+---
+
+## Styling
+
+All components use CSS variables from Lokus's theme system:
+
+```css
+/* Text colors */
+--text-normal
+--text-secondary
+--text-muted
+
+/* Background colors */
+--background-primary
+--background-secondary
+--background-modifier-hover
+--background-modifier-active
+
+/* Accent colors */
+--accent
+--accent-hover
+
+/* Border colors */
+--border
+--border-hover
+```
+
+You can customize component appearance by overriding these variables in your plugin's CSS.
+
+---
+
+## Events and Lifecycle
+
+Most components emit events that you can listen to:
+
+```javascript
+// Tree view changes
+provider.on('didChangeTreeData', () => {
+  // Handle data change
+});
+
+// Terminal output
+api.terminal.on('terminal-output', ({ terminalId, output }) => {
+  // Handle output
+});
+
+// Output channel updates
+api.ui.on('output-channel-update', ({ name, lines }) => {
+  // Handle update
+});
+```
+
+Always clean up event listeners in your plugin's `deactivate()` function.
+
+---
+
+## Best Practices
+
+### 1. Use the Right Component
+Choose the component that best fits your use case:
+- **TreeView**: Hierarchical data
+- **QuickPick**: Selection from list
+- **ProgressIndicator**: Long operations
+- **TerminalPanel**: Command execution
+- **OutputPanel**: Text logging
+
+### 2. Provide User Feedback
+Always give users feedback about what's happening:
+- Show progress for operations that take >1 second
+- Display success/error messages
+- Use output channels for detailed logs
+
+### 3. Handle Errors Gracefully
+Catch and display errors appropriately:
+
+```javascript
+try {
+  await riskyOperation();
+} catch (error) {
+  output.appendLine(`Error: $\\{error.message\\}`);
+  output.show();
+  api.ui.showErrorMessage('Operation failed');
+}
+```
+
+### 4. Clean Up Resources
+Always dispose of components when done:
+
+```javascript
+export function deactivate() {
+  treeDisposable.dispose();
+  terminal.dispose();
+  output.dispose();
+}
+```
+
+### 5. Test with Different Data
+Test your components with:
+- Empty data
+- Large datasets (1000+ items)
+- Deeply nested structures
+- Special characters
+- Long text strings
+
+---
+
+## See Also
+
+- [UIAPI Reference](/developers/plugins/api-reference/ui-api)
+- [Data Providers Guide](/developers/plugins/data-providers)
+- [UI Plugins Guide](/developers/plugins/ui-plugins)
+- [Getting Started](/developers/plugins/getting-started)

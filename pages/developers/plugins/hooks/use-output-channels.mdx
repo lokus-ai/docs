@@ -1,0 +1,612 @@
+---
+title: "useOutputChannels"
+description: "React hook for output channel management"
+---
+
+# useOutputChannels
+
+React hook for accessing and managing output channel state. Provides real-time updates when channels are created, disposed, or shown.
+
+## Import
+
+```javascript
+import { useOutputChannels } from '@lokus/plugin-sdk';
+```
+
+## Usage
+
+```jsx
+import { useOutputChannels } from '@lokus/plugin-sdk';
+
+function OutputPanel() {
+  const {
+    channels,
+    activeChannel,
+    getChannelOutput,
+    clearChannel,
+    showChannel
+  } = useOutputChannels();
+
+  return (
+    <div>
+      <h3>Output Channels ({channels.length})</h3>
+      {activeChannel && (
+        <p>Active: {activeChannel.name}</p>
+      )}
+    </div>
+  );
+}
+```
+
+## Return Object
+
+The hook returns an object with the following properties and methods:
+
+### Properties
+
+#### channels
+**Type:** `OutputChannel[]`
+
+Array of all registered output channels.
+
+**Updates when:**
+- Channel is created
+- Channel is disposed
+
+```jsx
+function ChannelList() {
+  const { channels } = useOutputChannels();
+
+  return (
+    <ul>
+      {channels.map(channel => (
+        <li key={channel.name}>
+          {channel.name} ({channel.pluginId})
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+#### activeChannel
+**Type:** `OutputChannel | null`
+
+The currently active/visible channel, or `null` if no channel is active.
+
+**Updates when:**
+- Channel is shown
+- Channel is disposed (if it was active)
+
+```jsx
+function ActiveChannel() {
+  const { activeChannel, getChannelOutput } = useOutputChannels();
+
+  if (!activeChannel) {
+    return <p>No active channel</p>;
+  }
+
+  const output = getChannelOutput(activeChannel.name);
+
+  return (
+    <div>
+      <h4>{activeChannel.name}</h4>
+      <pre>{output}</pre>
+    </div>
+  );
+}
+```
+
+### Methods
+
+#### getChannelOutput(channelName)
+
+Get the output content for a specific channel.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| channelName | string | Channel name |
+
+**Returns:** `string` - Channel output content
+
+**Example:**
+```jsx
+function ChannelViewer({ channelName }) {
+  const { getChannelOutput } = useOutputChannels();
+  const output = getChannelOutput(channelName);
+
+  return (
+    <div className="channel-output">
+      <h4>{channelName}</h4>
+      <pre>{output || 'No output'}</pre>
+    </div>
+  );
+}
+```
+
+#### clearChannel(channelName)
+
+Clear all content from a specific channel.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| channelName | string | Channel name |
+
+**Returns:** `void`
+
+**Example:**
+```jsx
+function ChannelControls({ channelName }) {
+  const { clearChannel } = useOutputChannels();
+
+  return (
+    <button onClick={() => clearChannel(channelName)}>
+      Clear Channel
+    </button>
+  );
+}
+```
+
+#### showChannel(channelName, preserveFocus)
+
+Show/activate a specific channel.
+
+**Parameters:**
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| channelName | string | - | Channel name |
+| preserveFocus | boolean | false | Keep current focus |
+
+**Returns:** `void`
+
+**Example:**
+```jsx
+function ChannelTabs() {
+  const { channels, activeChannel, showChannel } = useOutputChannels();
+
+  return (
+    <div className="tabs">
+      {channels.map(channel => (
+        <button
+          key={channel.name}
+          className={activeChannel?.name === channel.name ? 'active' : ''}
+          onClick={() => showChannel(channel.name)}
+        >
+          {channel.name}
+        </button>
+      ))}
+    </div>
+  );
+}
+```
+
+## OutputChannel Interface
+
+```typescript
+interface OutputChannel {
+  name: string;        // Unique channel name
+  pluginId: string;    // Plugin that created this channel
+}
+```
+
+## Events Subscribed
+
+The hook automatically subscribes to these output channel manager events:
+
+- `channel-created` - New channel created
+- `channel-disposed` - Channel disposed
+- `channel-shown` - Channel became active
+
+All event subscriptions are automatically cleaned up when the component unmounts.
+
+## Common Patterns
+
+### Pattern 1: Channel Manager UI
+
+```jsx
+import { useOutputChannels } from '@lokus/plugin-sdk';
+
+function OutputChannelManager() {
+  const {
+    channels,
+    activeChannel,
+    showChannel,
+    clearChannel,
+    getChannelOutput
+  } = useOutputChannels();
+
+  return (
+    <div className="output-manager">
+      <div className="channel-tabs">
+        {channels.map(channel => (
+          <button
+            key={channel.name}
+            className={activeChannel?.name === channel.name ? 'active' : ''}
+            onClick={() => showChannel(channel.name)}
+          >
+            {channel.name}
+          </button>
+        ))}
+      </div>
+
+      {activeChannel && (
+        <div className="channel-content">
+          <div className="toolbar">
+            <button onClick={() => clearChannel(activeChannel.name)}>
+              Clear
+            </button>
+          </div>
+          <pre className="output">
+            {getChannelOutput(activeChannel.name)}
+          </pre>
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+### Pattern 2: Multi-Channel Viewer
+
+```jsx
+import { useOutputChannels } from '@lokus/plugin-sdk';
+
+function MultiChannelViewer() {
+  const { channels, getChannelOutput } = useOutputChannels();
+
+  return (
+    <div className="multi-viewer">
+      {channels.map(channel => {
+        const output = getChannelOutput(channel.name);
+        return (
+          <div key={channel.name} className="channel-panel">
+            <h4>{channel.name}</h4>
+            <pre>{output || 'No output'}</pre>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+```
+
+### Pattern 3: Channel Search
+
+```jsx
+import { useOutputChannels } from '@lokus/plugin-sdk';
+import { useMemo, useState } from 'react';
+
+function SearchableChannels() {
+  const { channels, showChannel, getChannelOutput } = useOutputChannels();
+  const [search, setSearch] = useState('');
+
+  const results = useMemo(() => {
+    const term = search.toLowerCase();
+    return channels.filter(channel => {
+      const output = getChannelOutput(channel.name);
+      return (
+        channel.name.toLowerCase().includes(term) ||
+        output.toLowerCase().includes(term)
+      );
+    });
+  }, [channels, search, getChannelOutput]);
+
+  return (
+    <div>
+      <input
+        type="text"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Search channels..."
+      />
+      <ul>
+        {results.map(channel => (
+          <li key={channel.name} onClick={() => showChannel(channel.name)}>
+            {channel.name}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+### Pattern 4: Channel Output Monitor
+
+```jsx
+import { useOutputChannels } from '@lokus/plugin-sdk';
+import { useState, useEffect } from 'react';
+
+function OutputMonitor({ channelName }) {
+  const { getChannelOutput } = useOutputChannels();
+  const [lines, setLines] = useState([]);
+
+  useEffect(() => {
+    const output = getChannelOutput(channelName);
+    const outputLines = output.split('\n').slice(-100); // Last 100 lines
+    setLines(outputLines);
+  }, [channelName, getChannelOutput]);
+
+  return (
+    <div className="output-monitor">
+      <h4>{channelName} Monitor</h4>
+      <div className="lines">
+        {lines.map((line, i) => (
+          <div key={i} className="line">{line}</div>
+        ))}
+      </div>
+    </div>
+  );
+}
+```
+
+### Pattern 5: Channel Status Indicator
+
+```jsx
+import { useOutputChannels } from '@lokus/plugin-sdk';
+
+function ChannelStatusBar() {
+  const { channels, activeChannel } = useOutputChannels();
+
+  return (
+    <div className="status-bar">
+      <span>{channels.length} channels</span>
+      {activeChannel && (
+        <span> | Active: {activeChannel.name}</span>
+      )}
+    </div>
+  );
+}
+```
+
+### Pattern 6: Plugin-Specific Channels
+
+```jsx
+import { useOutputChannels } from '@lokus/plugin-sdk';
+import { useMemo } from 'react';
+
+function PluginChannels({ pluginId }) {
+  const { channels, showChannel } = useOutputChannels();
+
+  const pluginChannels = useMemo(() => {
+    return channels.filter(c => c.pluginId === pluginId);
+  }, [channels, pluginId]);
+
+  if (pluginChannels.length === 0) {
+    return <p>No channels for this plugin</p>;
+  }
+
+  return (
+    <div>
+      <h4>{pluginId} Channels</h4>
+      <ul>
+        {pluginChannels.map(channel => (
+          <li key={channel.name}>
+            <button onClick={() => showChannel(channel.name)}>
+              {channel.name}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+### Pattern 7: Auto-Refresh Output
+
+```jsx
+import { useOutputChannels } from '@lokus/plugin-sdk';
+import { useState, useEffect } from 'react';
+
+function LiveChannel({ channelName, refreshInterval = 1000 }) {
+  const { getChannelOutput } = useOutputChannels();
+  const [output, setOutput] = useState('');
+
+  useEffect(() => {
+    const update = () => {
+      setOutput(getChannelOutput(channelName));
+    };
+
+    update(); // Initial update
+    const timer = setInterval(update, refreshInterval);
+
+    return () => clearInterval(timer);
+  }, [channelName, refreshInterval, getChannelOutput]);
+
+  return (
+    <div className="live-channel">
+      <h4>{channelName} (Live)</h4>
+      <pre>{output}</pre>
+    </div>
+  );
+}
+```
+
+### Pattern 8: Output with Filtering
+
+```jsx
+import { useOutputChannels } from '@lokus/plugin-sdk';
+import { useMemo, useState } from 'react';
+
+function FilteredOutput({ channelName }) {
+  const { getChannelOutput } = useOutputChannels();
+  const [level, setLevel] = useState('all'); // all, error, warning, info
+
+  const filtered = useMemo(() => {
+    const output = getChannelOutput(channelName);
+    const lines = output.split('\n');
+
+    if (level === 'all') return lines;
+
+    return lines.filter(line => {
+      const lower = line.toLowerCase();
+      return lower.includes(level);
+    });
+  }, [channelName, level, getChannelOutput]);
+
+  return (
+    <div>
+      <select value={level} onChange={(e) => setLevel(e.target.value)}>
+        <option value="all">All Messages</option>
+        <option value="error">Errors Only</option>
+        <option value="warning">Warnings Only</option>
+        <option value="info">Info Only</option>
+      </select>
+      <pre>
+        {filtered.map((line, i) => (
+          <div key={i}>{line}</div>
+        ))}
+      </pre>
+    </div>
+  );
+}
+```
+
+## Best Practices
+
+### 1. Check Channel Existence
+Verify channel exists before operating on it:
+
+```jsx
+const channel = channels.find(c => c.name === channelName);
+if (!channel) {
+  console.warn('Channel not found:', channelName);
+  return;
+}
+```
+
+### 2. Handle Empty Channel List
+Gracefully handle when no channels exist:
+
+```jsx
+if (channels.length === 0) {
+  return <p>No output channels available</p>;
+}
+```
+
+### 3. Limit Output Display
+For large outputs, only render what's visible:
+
+```jsx
+const visibleOutput = useMemo(() => {
+  const output = getChannelOutput(channelName);
+  const lines = output.split('\n');
+  return lines.slice(-200).join('\n'); // Last 200 lines
+}, [channelName, getChannelOutput]);
+```
+
+### 4. Use preserveFocus Appropriately
+Preserve focus when showing channels programmatically:
+
+```jsx
+// Don't steal focus during background updates
+showChannel(channelName, true);
+```
+
+### 5. Clear Old Output
+Periodically clear old output to prevent memory issues:
+
+```jsx
+useEffect(() => {
+  const timer = setInterval(() => {
+    channels.forEach(channel => {
+      const output = getChannelOutput(channel.name);
+      if (output.length > 500000) { // 500KB
+        clearChannel(channel.name);
+      }
+    });
+  }, 300000); // Every 5 minutes
+
+  return () => clearInterval(timer);
+}, [channels, getChannelOutput, clearChannel]);
+```
+
+### 6. Optimize Re-renders
+Use `useMemo` for expensive computations:
+
+```jsx
+const processedOutput = useMemo(() => {
+  const output = getChannelOutput(channelName);
+  // Expensive processing
+  return processOutput(output);
+}, [channelName, getChannelOutput]);
+```
+
+## Differences from Terminals
+
+While similar, output channels and terminals serve different purposes:
+
+| Feature | Output Channels | Terminals |
+|---------|----------------|-----------|
+| Purpose | Read-only logging | Interactive shell |
+| Input | Write-only (plugin) | Bidirectional |
+| Use Case | Build output, logs | Shell commands, REPL |
+| User Interaction | View only | Can type commands |
+
+### When to Use Output Channels
+
+Use output channels for:
+- Build/compile output
+- Test results
+- Plugin logging
+- Background task status
+- Read-only information display
+
+### When to Use Terminals
+
+Use terminals for:
+- Interactive shell access
+- Command execution
+- REPL environments
+- User input required
+
+## Performance Considerations
+
+### Virtualize Large Outputs
+For very large outputs, use virtualization:
+
+```jsx
+import { useOutputChannels } from '@lokus/plugin-sdk';
+import { FixedSizeList } from 'react-window';
+
+function VirtualizedOutput({ channelName }) {
+  const { getChannelOutput } = useOutputChannels();
+  const lines = getChannelOutput(channelName).split('\n');
+
+  return (
+    <FixedSizeList
+      height={600}
+      itemCount={lines.length}
+      itemSize={20}
+    >
+      {({ index, style }) => (
+        <div style={style}>{lines[index]}</div>
+      )}
+    </FixedSizeList>
+  );
+}
+```
+
+### Debounce Output Updates
+Debounce rapid updates:
+
+```jsx
+import { useDebounce } from 'use-debounce';
+
+function DebouncedOutput({ channelName }) {
+  const { getChannelOutput } = useOutputChannels();
+  const output = getChannelOutput(channelName);
+  const [debouncedOutput] = useDebounce(output, 100);
+
+  return <pre>{debouncedOutput}</pre>;
+}
+```
+
+## Related
+
+- [Output Channels API](/developers/plugins/api-reference/output-channels) - Create and manage channels
+- [Terminal Hook](/developers/plugins/hooks/use-terminals) - Similar hook for terminals
+- [React Hooks Overview](/developers/plugins/hooks) - All available hooks

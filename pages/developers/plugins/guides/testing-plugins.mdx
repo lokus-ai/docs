@@ -1,0 +1,1087 @@
+---
+title: Testing Plugins
+description: Comprehensive guide to testing Lokus plugins with Vitest including unit tests, mocking APIs, testing commands, providers, and lifecycle hooks.
+keywords: [lokus, plugin testing, vitest, unit tests, mocking, test coverage, plugin development]
+---
+
+import { Callout } from 'nextra/components'
+import { Tabs} from 'nextra/components'
+
+# Testing Plugins
+
+This guide covers everything you need to write comprehensive tests for your Lokus plugins using Vitest. You'll learn how to set up testing, mock APIs, and test all aspects of your plugin.
+
+## What You'll Learn
+
+- Setting up Vitest for plugin testing
+- Mocking the Lokus Plugin API
+- Testing commands and handlers
+- Testing tree data providers
+- Testing lifecycle hooks (activate/deactivate)
+- Achieving high test coverage
+- Best practices and patterns
+
+## Prerequisites
+
+- Completed the [Getting Started](/developers/plugins/getting-started) guide
+- Basic understanding of unit testing concepts
+- Familiarity with Vitest or Jest (similar syntax)
+
+## Step 1: Project Setup
+
+Create a new plugin with testing configured:
+
+```bash
+npx lokus-plugin create my-testable-plugin --template basic-typescript
+cd my-testable-plugin
+npm install
+```
+
+The TypeScript template includes Vitest pre-configured. If you need to add it manually:
+
+```bash
+npm install -D vitest @vitest/ui @testing-library/react
+```
+
+## Step 2: Understanding the Test Structure
+
+Your test files should mirror your source structure:
+
+```
+my-testable-plugin/
+├── src/
+│   ├── index.ts
+│   ├── commands/
+│   │   └── myCommand.ts
+│   └── providers/
+│       └── myProvider.ts
+└── test/
+    ├── setup.ts                 # Test setup and mocks
+    ├── index.test.ts            # Test plugin lifecycle
+    ├── commands/
+    │   └── myCommand.test.ts
+    └── providers/
+        └── myProvider.test.ts
+```
+
+## Step 3: Configure Vitest
+
+Your `vitest.config.ts` should look like this:
+
+```typescript filename="vitest.config.ts"
+import { defineConfig } from 'vitest/config'
+import path from 'path'
+
+export default defineConfig({
+  test: {
+    globals: true,
+    environment: 'node',
+    setupFiles: ['./test/setup.ts'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      exclude: [
+        'node_modules/**',
+        'test/**',
+        'dist/**',
+        '**/*.test.ts',
+      ],
+    },
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+})
+```
+
+Update `package.json` scripts:
+
+```json filename="package.json"
+{
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage"
+  }
+}
+```
+
+## Step 4: Create Test Setup and Mocks
+
+Create a comprehensive mock of the Lokus API:
+
+<Tabs items={['setup.ts', 'Mock API Types']}>
+<Tabs.Tab>
+
+```typescript filename="test/setup.ts"
+import { vi } from 'vitest'
+
+// Mock Lokus Plugin API
+export const mockContext = {
+  plugin: {
+    id: 'test-plugin',
+    name: 'test-plugin',
+    version: '1.0.0',
+  },
+  subscriptions: [] as Array<{ dispose: () => void }>,
+
+  // Commands API
+  commands: {
+    register: vi.fn((command) => ({
+      dispose: vi.fn(),
+    })),
+    execute: vi.fn(),
+  },
+
+  // Editor API
+  editor: {
+    getContent: vi.fn().mockResolvedValue('<p>Test content</p>'),
+    setContent: vi.fn().mockResolvedValue(undefined),
+    insertContent: vi.fn().mockResolvedValue(undefined),
+    getActiveEditor: vi.fn().mockResolvedValue({
+      document: {
+        getText: vi.fn(() => 'Test document'),
+        uri: { fsPath: '/test/file.md' },
+      },
+      selection: {
+        start: { line: 0, character: 0 },
+        end: { line: 0, character: 0 },
+      },
+    }),
+    registerNode: vi.fn(() => ({ dispose: vi.fn() })),
+    registerMark: vi.fn(() => ({ dispose: vi.fn() })),
+    registerSlashCommand: vi.fn(() => ({ dispose: vi.fn() })),
+    onDidChangeActiveTextEditor: vi.fn(() => ({ dispose: vi.fn() })),
+    onDidChangeTextDocument: vi.fn(() => ({ dispose: vi.fn() })),
+  },
+
+  // UI API
+  ui: {
+    showInformationMessage: vi.fn(),
+    showWarningMessage: vi.fn(),
+    showErrorMessage: vi.fn(),
+    showQuickPick: vi.fn(),
+    showInputBox: vi.fn(),
+    registerTreeDataProvider: vi.fn(() => ({ dispose: vi.fn() })),
+  },
+
+  // Workspace API
+  workspace: {
+    getWorkspaceFolder: vi.fn(() => ({
+      uri: { fsPath: '/test/workspace' },
+      name: 'test-workspace',
+    })),
+    openDocument: vi.fn().mockResolvedValue(undefined),
+    saveDocument: vi.fn().mockResolvedValue(true),
+    findFiles: vi.fn().mockResolvedValue([]),
+    onDidChangeWorkspaceFolders: vi.fn(() => ({ dispose: vi.fn() })),
+    onDidSaveTextDocument: vi.fn(() => ({ dispose: vi.fn() })),
+  },
+
+  // Terminal API
+  terminal: {
+    createTerminal: vi.fn((options) => ({
+      id: 'test-terminal-1',
+      name: options.name || 'Terminal',
+      sendText: vi.fn(),
+      show: vi.fn(),
+      hide: vi.fn(),
+      dispose: vi.fn(),
+    })),
+    getActiveTerminal: vi.fn(),
+    getTerminals: vi.fn(() => []),
+    onDidOpenTerminal: vi.fn(() => ({ dispose: vi.fn() })),
+    onDidCloseTerminal: vi.fn(() => ({ dispose: vi.fn() })),
+    onDidChangeActiveTerminal: vi.fn(() => ({ dispose: vi.fn() })),
+  },
+
+  // Configuration API
+  configuration: {
+    get: vi.fn((key, defaultValue) => defaultValue),
+    set: vi.fn().mockResolvedValue(undefined),
+    has: vi.fn(() => true),
+    onDidChange: vi.fn(() => ({ dispose: vi.fn() })),
+  },
+
+  // Status Bar API
+  statusBar: {
+    createItem: vi.fn((options) => ({
+      id: options.id,
+      text: options.text || '',
+      tooltip: options.tooltip,
+      command: options.command,
+      show: vi.fn(),
+      hide: vi.fn(),
+      dispose: vi.fn(),
+    })),
+  },
+
+  // Storage API
+  storage: {
+    get: vi.fn(),
+    set: vi.fn().mockResolvedValue(undefined),
+    delete: vi.fn().mockResolvedValue(undefined),
+    clear: vi.fn().mockResolvedValue(undefined),
+    keys: vi.fn(() => []),
+  },
+
+  // Environment API
+  env: {
+    openExternal: vi.fn().mockResolvedValue(true),
+    clipboard: {
+      readText: vi.fn().mockResolvedValue(''),
+      writeText: vi.fn().mockResolvedValue(undefined),
+    },
+  },
+}
+
+// Reset all mocks before each test
+export function resetMocks() {
+  vi.clearAllMocks()
+  mockContext.subscriptions = []
+}
+```
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+```typescript filename="test/types.ts"
+import { mockContext } from './setup'
+
+// Type for mock context
+export type MockContext = typeof mockContext
+
+// Helper to create a mock context with custom overrides
+export function createMockContext(overrides?: Partial<MockContext>): MockContext {
+  return {
+    ...mockContext,
+    ...overrides,
+  }
+}
+```
+
+</Tabs.Tab>
+</Tabs>
+
+<Callout type="info">
+**Mock Setup Tips:**
+- Use `vi.fn()` for all methods that can be called
+- Use `mockResolvedValue()` for async methods
+- Return disposables for event listeners
+- Keep mocks simple and focused
+</Callout>
+
+## Step 5: Testing Plugin Lifecycle
+
+Test your plugin's `activate()` and `deactivate()` functions:
+
+```typescript filename="test/index.test.ts"
+import { describe, test, expect, beforeEach } from 'vitest'
+import { activate, deactivate } from '../src/index'
+import { mockContext, resetMocks } from './setup'
+
+describe('Plugin Lifecycle', () => {
+  beforeEach(() => {
+    resetMocks()
+  })
+
+  describe('activate()', () => {
+    test('should activate without errors', () => {
+      expect(() => activate(mockContext)).not.toThrow()
+    })
+
+    test('should register all commands', () => {
+      activate(mockContext)
+
+      expect(mockContext.commands.register).toHaveBeenCalled()
+      expect(mockContext.commands.register).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: expect.stringContaining('test-plugin'),
+          title: expect.any(String),
+          handler: expect.any(Function),
+        })
+      )
+    })
+
+    test('should add disposables to subscriptions', () => {
+      activate(mockContext)
+
+      expect(mockContext.subscriptions.length).toBeGreaterThan(0)
+      expect(mockContext.subscriptions[0]).toHaveProperty('dispose')
+    })
+
+    test('should initialize providers', () => {
+      activate(mockContext)
+
+      expect(mockContext.ui.registerTreeDataProvider).toHaveBeenCalled()
+    })
+
+    test('should create status bar items', () => {
+      activate(mockContext)
+
+      expect(mockContext.statusBar.createItem).toHaveBeenCalled()
+    })
+  })
+
+  describe('deactivate()', () => {
+    test('should deactivate without errors', () => {
+      activate(mockContext)
+      expect(() => deactivate()).not.toThrow()
+    })
+
+    test('should clean up resources', () => {
+      // Activate plugin first
+      activate(mockContext)
+
+      // Mock a disposable
+      const disposable = { dispose: vi.fn() }
+      mockContext.subscriptions.push(disposable)
+
+      // Deactivate
+      deactivate()
+
+      // Verify cleanup (if your deactivate does this)
+      // expect(disposable.dispose).toHaveBeenCalled()
+    })
+  })
+})
+```
+
+## Step 6: Testing Commands
+
+Test command registration and execution:
+
+```typescript filename="test/commands/myCommand.test.ts"
+import { describe, test, expect, beforeEach, vi } from 'vitest'
+import { mockContext, resetMocks } from '../setup'
+
+describe('MyCommand', () => {
+  beforeEach(() => {
+    resetMocks()
+  })
+
+  test('should register command correctly', () => {
+    // Your plugin's activate function
+    activate(mockContext)
+
+    expect(mockContext.commands.register).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'my-plugin.myCommand',
+        title: 'My Command',
+        category: 'My Plugin',
+      })
+    )
+  })
+
+  test('should execute command handler', async () => {
+    activate(mockContext)
+
+    // Get the registered command
+    const commandCall = mockContext.commands.register.mock.calls[0]
+    const commandConfig = commandCall[0]
+    const handler = commandConfig.handler
+
+    // Execute the handler
+    await handler()
+
+    // Verify expected behavior
+    expect(mockContext.ui.showInformationMessage).toHaveBeenCalledWith(
+      expect.stringContaining('Success')
+    )
+  })
+
+  test('should handle command errors gracefully', async () => {
+    activate(mockContext)
+
+    // Make workspace throw an error
+    mockContext.workspace.getWorkspaceFolder.mockReturnValue(undefined)
+
+    const commandCall = mockContext.commands.register.mock.calls[0]
+    const handler = commandCall[0].handler
+
+    await handler()
+
+    // Verify error message shown
+    expect(mockContext.ui.showErrorMessage).toHaveBeenCalledWith(
+      expect.stringContaining('No workspace')
+    )
+  })
+
+  test('should pass arguments to command handler', async () => {
+    activate(mockContext)
+
+    const commandCall = mockContext.commands.register.mock.calls[0]
+    const handler = commandCall[0].handler
+
+    const testArg = { id: '123', name: 'Test' }
+    await handler(testArg)
+
+    // Verify argument was used
+    expect(mockContext.editor.insertContent).toHaveBeenCalledWith(
+      expect.stringContaining('Test')
+    )
+  })
+})
+```
+
+<Callout type="warning">
+**Testing Async Handlers**
+
+Always use `async/await` or return the promise when testing async command handlers:
+```typescript
+await handler() // ✅ Correct
+handler()       // ❌ Won't wait for completion
+```
+</Callout>
+
+## Step 7: Testing Tree Data Providers
+
+Test tree view data providers thoroughly:
+
+```typescript filename="test/providers/BookmarkTreeProvider.test.ts"
+import { describe, test, expect, beforeEach, vi } from 'vitest'
+import { BookmarkTreeProvider } from '../../src/providers/BookmarkTreeProvider'
+import { Bookmark } from '../../src/models/Bookmark'
+
+describe('BookmarkTreeProvider', () => {
+  let provider: BookmarkTreeProvider
+
+  beforeEach(() => {
+    provider = new BookmarkTreeProvider()
+  })
+
+  describe('getChildren()', () => {
+    test('should return root bookmarks when element is undefined', async () => {
+      const children = await provider.getChildren()
+
+      expect(children).toBeDefined()
+      expect(Array.isArray(children)).toBe(true)
+      expect(children.length).toBeGreaterThan(0)
+    })
+
+    test('should return children of a folder', async () => {
+      const folder: Bookmark = {
+        id: 'folder-1',
+        label: 'My Folder',
+        type: 'folder',
+        children: [
+          { id: 'page-1', label: 'Page 1', type: 'page', path: '/page1.md' },
+          { id: 'page-2', label: 'Page 2', type: 'page', path: '/page2.md' },
+        ],
+      }
+
+      const children = await provider.getChildren(folder)
+
+      expect(children).toHaveLength(2)
+      expect(children[0].id).toBe('page-1')
+      expect(children[1].id).toBe('page-2')
+    })
+
+    test('should return empty array for leaf nodes', async () => {
+      const page: Bookmark = {
+        id: 'page-1',
+        label: 'Page 1',
+        type: 'page',
+        path: '/page1.md',
+      }
+
+      const children = await provider.getChildren(page)
+
+      expect(children).toEqual([])
+    })
+  })
+
+  describe('getTreeItem()', () => {
+    test('should return tree item for a folder', async () => {
+      const folder: Bookmark = {
+        id: 'folder-1',
+        label: 'My Folder',
+        type: 'folder',
+        icon: '📁',
+        children: [{ id: 'page-1', label: 'Page 1', type: 'page', path: '/page1.md' }],
+      }
+
+      const treeItem = await provider.getTreeItem(folder)
+
+      expect(treeItem.label).toBe('My Folder')
+      expect(treeItem.collapsibleState).toBe(1) // Collapsed
+      expect(treeItem.iconPath).toBe('📁')
+      expect(treeItem.contextValue).toBe('folder')
+      expect(treeItem.command).toBeUndefined() // Folders don't have commands
+    })
+
+    test('should return tree item for a page', async () => {
+      const page: Bookmark = {
+        id: 'page-1',
+        label: 'Page 1',
+        type: 'page',
+        path: '/page1.md',
+        icon: '📄',
+      }
+
+      const treeItem = await provider.getTreeItem(page)
+
+      expect(treeItem.label).toBe('Page 1')
+      expect(treeItem.collapsibleState).toBe(0) // None (leaf node)
+      expect(treeItem.iconPath).toBe('📄')
+      expect(treeItem.contextValue).toBe('page')
+      expect(treeItem.command).toBeDefined()
+      expect(treeItem.command?.id).toBe('bookmark-manager.openBookmark')
+    })
+
+    test('should include description for folders', async () => {
+      const folder: Bookmark = {
+        id: 'folder-1',
+        label: 'My Folder',
+        type: 'folder',
+        children: [
+          { id: 'p1', label: 'Page 1', type: 'page', path: '/p1.md' },
+          { id: 'p2', label: 'Page 2', type: 'page', path: '/p2.md' },
+        ],
+      }
+
+      const treeItem = await provider.getTreeItem(folder)
+
+      expect(treeItem.description).toBe('2 items')
+    })
+  })
+
+  describe('getParent()', () => {
+    test('should return parent of a nested bookmark', async () => {
+      const child: Bookmark = {
+        id: 'page-1',
+        label: 'Page 1',
+        type: 'page',
+        path: '/page1.md',
+      }
+
+      const parent = await provider.getParent(child)
+
+      expect(parent).toBeDefined()
+      expect(parent?.type).toBe('folder')
+    })
+
+    test('should return undefined for root bookmarks', async () => {
+      const rootBookmark: Bookmark = {
+        id: 'root-1',
+        label: 'Root Bookmark',
+        type: 'page',
+        path: '/root.md',
+      }
+
+      const parent = await provider.getParent(rootBookmark)
+
+      expect(parent).toBeUndefined()
+    })
+  })
+
+  describe('refresh()', () => {
+    test('should emit onDidChangeTreeData event', () => {
+      const listener = vi.fn()
+      provider.onDidChangeTreeData(listener)
+
+      provider.refresh()
+
+      expect(listener).toHaveBeenCalledWith(undefined)
+    })
+
+    test('should emit event with specific element', () => {
+      const listener = vi.fn()
+      provider.onDidChangeTreeData(listener)
+
+      const bookmark: Bookmark = {
+        id: 'test',
+        label: 'Test',
+        type: 'folder',
+      }
+
+      provider.refresh(bookmark)
+
+      expect(listener).toHaveBeenCalledWith(bookmark)
+    })
+  })
+
+  describe('addBookmark()', () => {
+    test('should add bookmark to root', () => {
+      const newBookmark: Bookmark = {
+        id: 'new-1',
+        label: 'New Bookmark',
+        type: 'page',
+        path: '/new.md',
+      }
+
+      provider.addBookmark(newBookmark)
+
+      const rootBookmarks = await provider.getChildren()
+      expect(rootBookmarks).toContainEqual(newBookmark)
+    })
+
+    test('should add bookmark to parent folder', async () => {
+      const parent: Bookmark = {
+        id: 'folder-1',
+        label: 'Folder',
+        type: 'folder',
+        children: [],
+      }
+
+      const newBookmark: Bookmark = {
+        id: 'new-1',
+        label: 'New Bookmark',
+        type: 'page',
+        path: '/new.md',
+      }
+
+      provider.addBookmark(newBookmark, parent)
+
+      const children = await provider.getChildren(parent)
+      expect(children).toContainEqual(newBookmark)
+    })
+
+    test('should trigger refresh after adding', () => {
+      const listener = vi.fn()
+      provider.onDidChangeTreeData(listener)
+
+      const newBookmark: Bookmark = {
+        id: 'new-1',
+        label: 'New',
+        type: 'page',
+        path: '/new.md',
+      }
+
+      provider.addBookmark(newBookmark)
+
+      expect(listener).toHaveBeenCalled()
+    })
+  })
+
+  describe('removeBookmark()', () => {
+    test('should remove bookmark from root', async () => {
+      const bookmark: Bookmark = {
+        id: 'remove-me',
+        label: 'Remove Me',
+        type: 'page',
+        path: '/remove.md',
+      }
+
+      provider.addBookmark(bookmark)
+      provider.removeBookmark(bookmark)
+
+      const rootBookmarks = await provider.getChildren()
+      expect(rootBookmarks).not.toContainEqual(bookmark)
+    })
+
+    test('should trigger refresh after removing', () => {
+      const listener = vi.fn()
+      provider.onDidChangeTreeData(listener)
+
+      const bookmark: Bookmark = {
+        id: 'remove-me',
+        label: 'Remove Me',
+        type: 'page',
+        path: '/remove.md',
+      }
+
+      provider.addBookmark(bookmark)
+      vi.clearAllMocks()
+
+      provider.removeBookmark(bookmark)
+
+      expect(listener).toHaveBeenCalled()
+    })
+  })
+})
+```
+
+## Step 8: Testing Terminal Integration
+
+Test terminal-related functionality:
+
+```typescript filename="test/terminal/GitRunner.test.ts"
+import { describe, test, expect, beforeEach, vi } from 'vitest'
+import { GitRunner } from '../../src/utils/gitRunner'
+import { mockContext, resetMocks } from '../setup'
+
+describe('GitRunner', () => {
+  let gitRunner: GitRunner
+
+  beforeEach(() => {
+    resetMocks()
+    gitRunner = new GitRunner(mockContext, '/test/workspace')
+  })
+
+  describe('executeCommand()', () => {
+    test('should create terminal on first use', async () => {
+      await gitRunner.executeCommand('git status')
+
+      expect(mockContext.terminal.createTerminal).toHaveBeenCalledWith({
+        name: 'Git Helper',
+        cwd: '/test/workspace',
+      })
+    })
+
+    test('should reuse existing terminal', async () => {
+      await gitRunner.executeCommand('git status')
+      await gitRunner.executeCommand('git log')
+
+      // Should only create terminal once
+      expect(mockContext.terminal.createTerminal).toHaveBeenCalledTimes(1)
+    })
+
+    test('should send command to terminal', async () => {
+      await gitRunner.executeCommand('git status')
+
+      const terminal = mockContext.terminal.createTerminal.mock.results[0].value
+      expect(terminal.sendText).toHaveBeenCalledWith('git status', true)
+    })
+
+    test('should show terminal when showTerminal is true', async () => {
+      await gitRunner.executeCommand('git status', true)
+
+      const terminal = mockContext.terminal.createTerminal.mock.results[0].value
+      expect(terminal.show).toHaveBeenCalled()
+    })
+
+    test('should not show terminal when showTerminal is false', async () => {
+      await gitRunner.executeCommand('git status', false)
+
+      const terminal = mockContext.terminal.createTerminal.mock.results[0].value
+      expect(terminal.show).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('executeSequence()', () => {
+    test('should execute commands in order', async () => {
+      const commands = ['git add .', 'git commit -m "test"', 'git push']
+
+      await gitRunner.executeSequence(commands)
+
+      const terminal = mockContext.terminal.createTerminal.mock.results[0].value
+      expect(terminal.sendText).toHaveBeenCalledTimes(3)
+      expect(terminal.sendText).toHaveBeenNthCalledWith(1, 'git add .', true)
+      expect(terminal.sendText).toHaveBeenNthCalledWith(2, 'git commit -m "test"', true)
+      expect(terminal.sendText).toHaveBeenNthCalledWith(3, 'git push', true)
+    })
+  })
+
+  describe('dispose()', () => {
+    test('should dispose terminal', async () => {
+      await gitRunner.executeCommand('git status')
+
+      const terminal = mockContext.terminal.createTerminal.mock.results[0].value
+
+      gitRunner.dispose()
+
+      expect(terminal.dispose).toHaveBeenCalled()
+    })
+
+    test('should handle dispose when no terminal exists', () => {
+      expect(() => gitRunner.dispose()).not.toThrow()
+    })
+  })
+})
+```
+
+## Step 9: Testing Event Listeners
+
+Test that event listeners are registered correctly:
+
+```typescript filename="test/events/listeners.test.ts"
+import { describe, test, expect, beforeEach, vi } from 'vitest'
+import { activate } from '../../src/index'
+import { mockContext, resetMocks } from '../setup'
+
+describe('Event Listeners', () => {
+  beforeEach(() => {
+    resetMocks()
+  })
+
+  test('should register document change listener', () => {
+    activate(mockContext)
+
+    expect(mockContext.editor.onDidChangeTextDocument).toHaveBeenCalled()
+  })
+
+  test('should register workspace folder listener', () => {
+    activate(mockContext)
+
+    expect(mockContext.workspace.onDidChangeWorkspaceFolders).toHaveBeenCalled()
+  })
+
+  test('should register terminal listeners', () => {
+    activate(mockContext)
+
+    expect(mockContext.terminal.onDidOpenTerminal).toHaveBeenCalled()
+    expect(mockContext.terminal.onDidCloseTerminal).toHaveBeenCalled()
+  })
+
+  test('should handle document change events', async () => {
+    activate(mockContext)
+
+    // Get the listener function
+    const listenerCall = mockContext.editor.onDidChangeTextDocument.mock.calls[0]
+    const listener = listenerCall[0]
+
+    // Simulate event
+    const event = {
+      document: {
+        uri: { fsPath: '/test/file.md' },
+        getText: () => 'Changed content',
+      },
+      contentChanges: [],
+    }
+
+    await listener(event)
+
+    // Verify your plugin handled the event
+    // (depends on your implementation)
+  })
+
+  test('should clean up listeners on deactivate', () => {
+    activate(mockContext)
+
+    const disposables = mockContext.subscriptions
+
+    deactivate()
+
+    // Verify disposables were cleaned up
+    disposables.forEach(disposable => {
+      if (disposable.dispose) {
+        expect(disposable.dispose).toHaveBeenCalled()
+      }
+    })
+  })
+})
+```
+
+## Step 10: Running Tests
+
+Run your tests with various options:
+
+```bash
+# Run all tests once
+npm test
+
+# Watch mode (re-runs on file changes)
+npm run test:watch
+
+# UI mode (browser-based test runner)
+npm run test:ui
+
+# Generate coverage report
+npm run test:coverage
+```
+
+### Coverage Report
+
+After running with coverage, you'll see:
+
+```
+File                    | % Stmts | % Branch | % Funcs | % Lines
+------------------------|---------|----------|---------|--------
+All files               |   87.50 |    75.00 |   90.00 |   87.50
+ src/index.ts           |  100.00 |   100.00 |  100.00 |  100.00
+ src/commands/          |   85.00 |    70.00 |   85.00 |   85.00
+ src/providers/         |   90.00 |    80.00 |   95.00 |   90.00
+```
+
+<Callout type="info">
+**Coverage Goals:**
+- Aim for 80%+ overall coverage
+- 100% coverage for critical business logic
+- Don't obsess over 100% everywhere
+- Focus on testing behavior, not implementation
+</Callout>
+
+## Best Practices
+
+### 1. Test Behavior, Not Implementation
+
+```typescript
+// ❌ Bad - Tests implementation details
+test('should call internal method', () => {
+  expect(myObject._internalMethod).toHaveBeenCalled()
+})
+
+// ✅ Good - Tests observable behavior
+test('should update UI when data changes', async () => {
+  await myObject.updateData(newData)
+  expect(mockContext.ui.showInformationMessage).toHaveBeenCalledWith('Updated!')
+})
+```
+
+### 2. Use Descriptive Test Names
+
+```typescript
+// ❌ Bad
+test('test1', () => {})
+
+// ✅ Good
+test('should show error message when workspace folder is undefined', () => {})
+```
+
+### 3. Arrange-Act-Assert Pattern
+
+```typescript
+test('should add bookmark to folder', async () => {
+  // Arrange
+  const provider = new BookmarkTreeProvider()
+  const folder = { id: 'f1', label: 'Folder', type: 'folder', children: [] }
+  const bookmark = { id: 'b1', label: 'Bookmark', type: 'page', path: '/b1.md' }
+
+  // Act
+  provider.addBookmark(bookmark, folder)
+
+  // Assert
+  const children = await provider.getChildren(folder)
+  expect(children).toContainEqual(bookmark)
+})
+```
+
+### 4. Isolate Tests
+
+```typescript
+describe('MyFeature', () => {
+  // ✅ Good - Each test is independent
+  beforeEach(() => {
+    resetMocks()
+    provider = new BookmarkTreeProvider()
+  })
+
+  test('test 1', () => {
+    // Doesn't affect test 2
+  })
+
+  test('test 2', () => {
+    // Doesn't depend on test 1
+  })
+})
+```
+
+### 5. Test Edge Cases
+
+```typescript
+describe('addBookmark()', () => {
+  test('should handle empty label', () => {
+    const bookmark = { id: '1', label: '', type: 'page', path: '/test.md' }
+    expect(() => provider.addBookmark(bookmark)).not.toThrow()
+  })
+
+  test('should handle undefined parent', () => {
+    const bookmark = { id: '1', label: 'Test', type: 'page', path: '/test.md' }
+    expect(() => provider.addBookmark(bookmark, undefined)).not.toThrow()
+  })
+
+  test('should handle deeply nested structures', async () => {
+    const level1 = { id: 'l1', label: 'L1', type: 'folder', children: [] }
+    const level2 = { id: 'l2', label: 'L2', type: 'folder', children: [] }
+    const level3 = { id: 'l3', label: 'L3', type: 'page', path: '/l3.md' }
+
+    provider.addBookmark(level2, level1)
+    provider.addBookmark(level3, level2)
+
+    const children = await provider.getChildren(level2)
+    expect(children).toContainEqual(level3)
+  })
+})
+```
+
+## Common Testing Patterns
+
+### Testing Async Operations
+
+```typescript
+test('should wait for async operation', async () => {
+  const result = await myAsyncFunction()
+  expect(result).toBe('expected')
+})
+
+test('should handle rejected promises', async () => {
+  await expect(myFailingAsyncFunction()).rejects.toThrow('Error message')
+})
+```
+
+### Testing Timers
+
+```typescript
+import { vi } from 'vitest'
+
+test('should debounce calls', async () => {
+  vi.useFakeTimers()
+
+  const callback = vi.fn()
+  const debounced = debounce(callback, 100)
+
+  debounced()
+  debounced()
+  debounced()
+
+  expect(callback).not.toHaveBeenCalled()
+
+  vi.advanceTimersByTime(100)
+
+  expect(callback).toHaveBeenCalledTimes(1)
+
+  vi.useRealTimers()
+})
+```
+
+### Testing Error Handling
+
+```typescript
+test('should handle API errors gracefully', async () => {
+  mockContext.workspace.openDocument.mockRejectedValue(new Error('File not found'))
+
+  await myCommand()
+
+  expect(mockContext.ui.showErrorMessage).toHaveBeenCalledWith(
+    expect.stringContaining('File not found')
+  )
+})
+```
+
+## Continuous Integration
+
+Add GitHub Actions workflow:
+
+```yaml filename=".github/workflows/test.yml"
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - run: npm ci
+      - run: npm test
+      - run: npm run test:coverage
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/coverage-final.json
+```
+
+## Next Steps
+
+Now that you know how to test plugins:
+
+- **[Editor Extension Tutorial](/developers/plugins/guides/editor-extension)** - Build and test editor features
+- **[Tree View Tutorial](/developers/plugins/guides/tree-view-plugin)** - Build and test tree views
+- **[Terminal Tutorial](/developers/plugins/guides/terminal-plugin)** - Build and test terminal features
+- **[Publishing Guide](/developers/plugins/publishing)** - Publish your tested plugin
+
+## Complete Test Suite Example
+
+<Callout type="info">
+See a complete test suite in the [Lokus Plugin Examples](https://github.com/lokus-ai/plugin-examples/tree/main/tested-plugin) repository.
+</Callout>

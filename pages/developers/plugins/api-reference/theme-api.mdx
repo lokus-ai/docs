@@ -1,0 +1,579 @@
+---
+title: "ThemeAPI Reference"
+description: "Register custom themes and manage theme settings in Lokus plugins"
+keywords: [lokus, plugin api, themes, styling, colors, appearance]
+---
+
+# ThemeAPI
+
+Register custom themes and manage theme settings. Access via `context.themes`.
+
+## Overview
+
+The ThemeAPI allows plugins to:
+- Register custom color themes
+- Get active theme information
+- Set active theme programmatically
+- Listen for theme changes
+
+Themes control the appearance of Lokus, including editor colors, UI colors, and syntax highlighting.
+
+## Methods
+
+### registerTheme(theme)
+
+Register a custom theme.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| theme | ThemeContribution | Yes | Theme definition |
+
+**ThemeContribution Interface:**
+
+```typescript
+interface ThemeContribution {
+  id: string;                    // Unique theme identifier
+  label: string;                 // Display name
+  uiTheme: 'vs' | 'vs-dark' | 'hc-black' | 'hc-light';  // Base theme
+  path?: string;                 // Path to theme JSON file
+  colors?: Record<string, string>;        // Color customizations
+  tokenColors?: TokenColor[];    // Syntax highlighting rules
+}
+
+interface TokenColor {
+  name?: string;
+  scope: string | string[];
+  settings: {
+    foreground?: string;
+    background?: string;
+    fontStyle?: string;
+  };
+}
+```
+
+**Returns:** Disposable to unregister the theme.
+
+**Example:**
+
+```typescript
+// Register theme with inline colors
+const disposable = context.themes.registerTheme({
+  id: 'my-theme',
+  label: 'My Custom Theme',
+  uiTheme: 'vs-dark',
+  colors: {
+    'editor.background': '#1e1e1e',
+    'editor.foreground': '#d4d4d4',
+    'editor.lineHighlightBackground': '#2a2a2a'
+  },
+  tokenColors: [
+    {
+      name: 'Comment',
+      scope: ['comment', 'punctuation.definition.comment'],
+      settings: {
+        foreground: '#6A9955'
+      }
+    },
+    {
+      name: 'String',
+      scope: 'string',
+      settings: {
+        foreground: '#CE9178'
+      }
+    }
+  ]
+});
+
+// Unregister later
+disposable.dispose();
+```
+
+---
+
+### getThemes()
+
+Get all registered themes.
+
+**Returns:** Array of theme information objects.
+
+**Example:**
+
+```typescript
+const themes = context.themes.getThemes();
+themes.forEach(theme => {
+  context.logger.info(`Theme: ${theme.label} (${theme.id})`);
+  context.logger.info(`  Base: $\\{theme.uiTheme\\}`);
+  context.logger.info(`  Plugin: $\\{theme.pluginId\\}`);
+});
+```
+
+---
+
+### getTheme(themeId)
+
+Get a specific theme by ID.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| themeId | string | Yes | Theme identifier |
+
+**Returns:** Theme contribution object or `undefined`.
+
+**Example:**
+
+```typescript
+const theme = context.themes.getTheme('my-theme');
+if (theme) {
+  context.logger.info(`Found theme: $\\{theme.label\\}`);
+  context.logger.info(`Colors: $\\{Object.keys(theme.colors).length\\}`);
+}
+```
+
+---
+
+### getActiveTheme()
+
+Get the currently active theme ID.
+
+**Returns:** Promise resolving to active theme ID.
+
+**Example:**
+
+```typescript
+const activeThemeId = await context.themes.getActiveTheme();
+context.logger.info(`Active theme: $\\{activeThemeId\\}`);
+```
+
+---
+
+### setActiveTheme(themeId)
+
+Set the active theme.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| themeId | string | Yes | Theme ID to activate |
+
+**Returns:** Promise that resolves when theme is applied.
+
+**Example:**
+
+```typescript
+try {
+  await context.themes.setActiveTheme('my-theme');
+  context.ui.showInformationMessage('Theme applied!');
+} catch (error) {
+  context.ui.showErrorMessage(`Theme not found: $\\{error.message\\}`);
+}
+```
+
+---
+
+## Events
+
+### onDidChangeActiveTheme(listener)
+
+Listen for active theme changes.
+
+**Parameters:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| listener | function | Callback receiving `\\\{ themeId, previousThemeId \\\}` |
+
+**Returns:** Disposable to stop listening.
+
+**Example:**
+
+```typescript
+const disposable = context.themes.onDidChangeActiveTheme(({ themeId, previousThemeId }) => {
+  context.logger.info(`Theme changed: ${previousThemeId} → $\\{themeId\\}`);
+});
+
+// Stop listening later
+disposable.dispose();
+```
+
+---
+
+## Complete Example
+
+```typescript
+export default class ThemePlugin {
+  private context: PluginContext;
+
+  constructor(context: PluginContext) {
+    this.context = context;
+  }
+
+  async activate(): Promise<void> {
+    // Register dark theme
+    context.themes.registerTheme({
+      id: 'myPlugin.dark',
+      label: 'My Dark Theme',
+      uiTheme: 'vs-dark',
+      colors: {
+        // Editor colors
+        'editor.background': '#1a1a1a',
+        'editor.foreground': '#e0e0e0',
+        'editor.lineHighlightBackground': '#252525',
+        'editor.selectionBackground': '#264f78',
+
+        // UI colors
+        'activityBar.background': '#1a1a1a',
+        'sideBar.background': '#1e1e1e',
+        'statusBar.background': '#1a1a1a'
+      },
+      tokenColors: [
+        {
+          name: 'Keyword',
+          scope: 'keyword',
+          settings: { foreground: '#569cd6' }
+        },
+        {
+          name: 'String',
+          scope: 'string',
+          settings: { foreground: '#ce9178' }
+        },
+        {
+          name: 'Comment',
+          scope: 'comment',
+          settings: { foreground: '#6a9955', fontStyle: 'italic' }
+        }
+      ]
+    });
+
+    // Register light theme
+    context.themes.registerTheme({
+      id: 'myPlugin.light',
+      label: 'My Light Theme',
+      uiTheme: 'vs',
+      colors: {
+        'editor.background': '#ffffff',
+        'editor.foreground': '#000000',
+        'editor.lineHighlightBackground': '#f0f0f0'
+      },
+      tokenColors: [
+        {
+          name: 'Keyword',
+          scope: 'keyword',
+          settings: { foreground: '#0000ff' }
+        }
+      ]
+    });
+
+    // Register commands
+    context.commands.register([
+      {
+        id: 'myPlugin.activateDarkTheme',
+        name: 'Activate Dark Theme',
+        execute: () => this.activateTheme('myPlugin.dark')
+      },
+      {
+        id: 'myPlugin.activateLightTheme',
+        name: 'Activate Light Theme',
+        execute: () => this.activateTheme('myPlugin.light')
+      },
+      {
+        id: 'myPlugin.listThemes',
+        name: 'List All Themes',
+        execute: () => this.listThemes()
+      }
+    ]);
+
+    // Listen for theme changes
+    context.themes.onDidChangeActiveTheme(({ themeId, previousThemeId }) => {
+      context.logger.info(`Theme changed from ${previousThemeId} to $\\{themeId\\}`);
+    });
+  }
+
+  async activateTheme(themeId: string): Promise<void> {
+    try {
+      await context.themes.setActiveTheme(themeId);
+      const theme = context.themes.getTheme(themeId);
+      context.ui.showInformationMessage(`Activated: $\\{theme?.label\\}`);
+    } catch (error) {
+      context.ui.showErrorMessage(`Failed to activate theme: $\\{error.message\\}`);
+    }
+  }
+
+  async listThemes(): Promise<void> {
+    const themes = context.themes.getThemes();
+    const activeId = await context.themes.getActiveTheme();
+
+    const items = themes.map(theme => ({
+      label: theme.label,
+      description: theme.id === activeId ? '(Active)' : '',
+      id: theme.id
+    }));
+
+    const selected = await context.ui.showQuickPick(items, {
+      title: 'Select Theme'
+    });
+
+    if (selected) {
+      await this.activateTheme(selected.id);
+    }
+  }
+
+  async deactivate(): Promise<void> {
+    // Themes are automatically unregistered
+  }
+}
+```
+
+---
+
+## Advanced Example: Theme Manager
+
+```typescript
+export default class ThemeManagerPlugin {
+  private context: PluginContext;
+  private themes: Map<string, ThemeContribution>;
+
+  constructor(context: PluginContext) {
+    this.context = context;
+    this.themes = new Map();
+  }
+
+  async activate(): Promise<void> {
+    // Register multiple theme variants
+    this.registerThemeVariant('dark', {
+      primary: '#569cd6',
+      secondary: '#ce9178',
+      accent: '#4ec9b0',
+      background: '#1a1a1a',
+      foreground: '#e0e0e0'
+    });
+
+    this.registerThemeVariant('light', {
+      primary: '#0000ff',
+      secondary: '#a31515',
+      accent: '#008000',
+      background: '#ffffff',
+      foreground: '#000000'
+    });
+
+    this.registerThemeVariant('ocean', {
+      primary: '#82aaff',
+      secondary: '#c792ea',
+      accent: '#89ddff',
+      background: '#0f111a',
+      foreground: '#d6deeb'
+    });
+
+    // Register commands
+    context.commands.register([
+      {
+        id: 'myPlugin.switchTheme',
+        name: 'Switch Theme',
+        execute: () => this.switchTheme()
+      },
+      {
+        id: 'myPlugin.toggleTheme',
+        name: 'Toggle Dark/Light',
+        execute: () => this.toggleTheme()
+      }
+    ]);
+
+    // Auto-switch based on time of day
+    this.setupAutoSwitch();
+  }
+
+  registerThemeVariant(name: string, colors: any): void {
+    const isDark = name === 'dark' || name === 'ocean';
+
+    const theme: ThemeContribution = {
+      id: `myPlugin.$\\{name\\}`,
+      label: `My ${name.charAt(0).toUpperCase() + name.slice(1)} Theme`,
+      uiTheme: isDark ? 'vs-dark' : 'vs',
+      colors: {
+        'editor.background': colors.background,
+        'editor.foreground': colors.foreground,
+        'editor.lineHighlightBackground': this.lighten(colors.background, 5),
+        'editor.selectionBackground': colors.primary + '40',
+        'editorCursor.foreground': colors.accent,
+        'editorLineNumber.foreground': this.lighten(colors.background, 30),
+        'editorWhitespace.foreground': this.lighten(colors.background, 20)
+      },
+      tokenColors: [
+        {
+          scope: 'keyword',
+          settings: { foreground: colors.primary, fontStyle: 'bold' }
+        },
+        {
+          scope: 'string',
+          settings: { foreground: colors.secondary }
+        },
+        {
+          scope: ['entity.name.function', 'support.function'],
+          settings: { foreground: colors.accent }
+        },
+        {
+          scope: 'comment',
+          settings: { foreground: this.lighten(colors.background, 40), fontStyle: 'italic' }
+        }
+      ]
+    };
+
+    context.themes.registerTheme(theme);
+    this.themes.set(theme.id, theme);
+  }
+
+  async switchTheme(): Promise<void> {
+    const themeList = Array.from(this.themes.values());
+    const current = await context.themes.getActiveTheme();
+
+    const items = themeList.map(t => ({
+      label: t.label,
+      description: t.id === current ? '(Active)' : '',
+      id: t.id
+    }));
+
+    const selected = await context.ui.showQuickPick(items, {
+      title: 'Select Theme'
+    });
+
+    if (selected) {
+      await context.themes.setActiveTheme(selected.id);
+    }
+  }
+
+  async toggleTheme(): Promise<void> {
+    const current = await context.themes.getActiveTheme();
+    const isDark = current.includes('.dark') || current.includes('.ocean');
+    const newTheme = isDark ? 'myPlugin.light' : 'myPlugin.dark';
+
+    await context.themes.setActiveTheme(newTheme);
+  }
+
+  setupAutoSwitch(): void {
+    // Switch theme based on time of day
+    const checkTime = () => {
+      const hour = new Date().getHours();
+      const shouldBeDark = hour < 6 || hour >= 18;
+
+      context.themes.getActiveTheme().then(current => {
+        const isDark = current.includes('.dark') || current.includes('.ocean');
+        if (shouldBeDark !== isDark) {
+          const newTheme = shouldBeDark ? 'myPlugin.dark' : 'myPlugin.light';
+          context.themes.setActiveTheme(newTheme);
+        }
+      });
+    };
+
+    // Check every hour
+    setInterval(checkTime, 60 * 60 * 1000);
+    checkTime(); // Initial check
+  }
+
+  lighten(color: string, percent: number): string {
+    // Simple color lightening utility
+    const num = parseInt(color.replace('#', ''), 16);
+    const amt = Math.round(2.55 * percent);
+    const R = (num >> 16) + amt;
+    const G = (num >> 8 & 0x00FF) + amt;
+    const B = (num & 0x0000FF) + amt;
+    return '#' + (
+      0x1000000 +
+      (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+      (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+      (B < 255 ? B < 1 ? 0 : B : 255)
+    ).toString(16).slice(1);
+  }
+
+  async deactivate(): Promise<void> {
+    // Themes automatically unregistered
+  }
+}
+```
+
+---
+
+## Best Practices
+
+1. **Use Base Theme**: Start with appropriate base theme
+   ```typescript
+   uiTheme: 'vs-dark'  // For dark themes
+   uiTheme: 'vs'       // For light themes
+   ```
+
+2. **Provide Full Color Set**: Define all editor colors
+   ```typescript
+   colors: {
+     'editor.background': '...',
+     'editor.foreground': '...',
+     'editor.lineHighlightBackground': '...',
+     // ... more colors
+   }
+   ```
+
+3. **Comprehensive Token Colors**: Cover common scopes
+   ```typescript
+   tokenColors: [
+     { scope: 'keyword', ... },
+     { scope: 'string', ... },
+     { scope: 'comment', ... },
+     { scope: 'entity.name.function', ... }
+   ]
+   ```
+
+4. **Test Both Modes**: Create light and dark variants
+   ```typescript
+   registerTheme({ id: 'theme-dark', uiTheme: 'vs-dark', ... });
+   registerTheme({ id: 'theme-light', uiTheme: 'vs', ... });
+   ```
+
+5. **Handle Errors**: Check theme existence before activation
+   ```typescript
+   const theme = context.themes.getTheme(themeId);
+   if (!theme) {
+     context.ui.showErrorMessage('Theme not found');
+     return;
+   }
+   ```
+
+---
+
+## Color Reference
+
+Common editor color keys:
+
+```typescript
+{
+  // Editor
+  'editor.background': '#1e1e1e',
+  'editor.foreground': '#d4d4d4',
+  'editor.selectionBackground': '#264f78',
+  'editor.lineHighlightBackground': '#2a2a2a',
+  'editorCursor.foreground': '#aeafad',
+
+  // Line numbers
+  'editorLineNumber.foreground': '#858585',
+  'editorLineNumber.activeForeground': '#c6c6c6',
+
+  // Gutter
+  'editorGutter.background': '#1e1e1e',
+
+  // Selection
+  'editor.selectionHighlightBackground': '#add6ff26',
+
+  // UI
+  'activityBar.background': '#333333',
+  'sideBar.background': '#252526',
+  'statusBar.background': '#007acc'
+}
+```
+
+---
+
+## See Also
+
+- [ConfigurationAPI Reference](/developers/plugins/api-reference/configuration-api) - Settings management
+- [UIAPI Reference](/developers/plugins/api-reference/ui-api) - UI components

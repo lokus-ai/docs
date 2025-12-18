@@ -442,7 +442,7 @@ await api.ui.withProgress({
 
     await processFile(files[i])
     progress.report({
-      message: `Processing ${files[i].name}`,
+      message: `Processing $\\{files[i].name\\}`,
       increment: (100 / files.length)
     })
   }

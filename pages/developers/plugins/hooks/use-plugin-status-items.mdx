@@ -1,0 +1,692 @@
+---
+title: "usePluginStatusItems"
+description: "React hook for status bar items"
+---
+
+# usePluginStatusItems
+
+React hook for accessing plugin status bar items. Provides real-time updates when status items are registered, updated, or removed.
+
+## Import
+
+```javascript
+import {
+  usePluginStatusItems,
+  registerStatusItem,
+  unregisterStatusItem,
+  updateStatusItem,
+  getAllStatusItems,
+  clearPluginStatusItems
+} from '@lokus/plugin-sdk';
+```
+
+## Hook Usage
+
+### usePluginStatusItems()
+
+Returns an array of all visible status bar items, sorted by priority (highest first).
+
+**Returns:** `StatusItem[]` - Visible status items sorted by priority
+
+**Updates when:**
+- Status item is registered
+- Status item is unregistered
+- Status item is updated
+- Plugin status items are cleared
+
+**Filtering:**
+- Only returns items where `_visible !== false`
+- Automatically sorted by priority (higher priority first)
+
+**Example:**
+```jsx
+import { usePluginStatusItems } from '@lokus/plugin-sdk';
+
+function StatusBar() {
+  const items = usePluginStatusItems();
+
+  return (
+    <div className="status-bar">
+      <div className="status-left">
+        {items.filter(i => i.alignment === 'left').map(item => (
+          <StatusBarItem key={item.id} item={item} />
+        ))}
+      </div>
+      <div className="status-right">
+        {items.filter(i => i.alignment === 'right').map(item => (
+          <StatusBarItem key={item.id} item={item} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StatusBarItem({ item }) {
+  return (
+    <div
+      className="status-item"
+      onClick={item.command ? () => executeCommand(item.command) : null}
+      style={{ color: item.color }}
+    >
+      {item.text}
+      {item.tooltip && <span className="tooltip">{item.tooltip}</span>}
+    </div>
+  );
+}
+```
+
+## Module Functions
+
+These functions manage status bar items and can be used from anywhere in your plugin (not just React components).
+
+### registerStatusItem(item)
+
+Register a new status bar item.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| item | StatusItem | Status item configuration |
+
+**StatusItem Configuration:**
+```typescript
+interface StatusItem {
+  id: string;              // Unique item ID
+  text: string;            // Display text
+  pluginId: string;        // Your plugin ID
+  priority?: number;       // Display priority (higher = left, default: 0)
+  alignment?: string;      // 'left' or 'right' (default: 'left')
+  color?: string;          // Text color
+  backgroundColor?: string; // Background color
+  tooltip?: string;        // Hover tooltip
+  command?: string;        // Command ID to execute on click
+  _visible?: boolean;      // Visibility (default: true)
+}
+```
+
+**Example:**
+```javascript
+import { registerStatusItem } from '@lokus/plugin-sdk';
+
+// Register a status item
+registerStatusItem({
+  id: 'myPlugin.status',
+  text: '✓ Ready',
+  pluginId: 'myPlugin',
+  priority: 10,
+  alignment: 'left',
+  color: '#00ff00',
+  tooltip: 'Plugin is ready',
+  command: 'myPlugin.showStatus'
+});
+```
+
+### unregisterStatusItem(id)
+
+Remove a status bar item.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| id | string | Status item ID |
+
+**Example:**
+```javascript
+import { unregisterStatusItem } from '@lokus/plugin-sdk';
+
+// Remove status item
+unregisterStatusItem('myPlugin.status');
+```
+
+### updateStatusItem(id, updates)
+
+Update an existing status item.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| id | string | Status item ID |
+| updates | `Partial\\<StatusItem\\>` | Fields to update |
+
+**Example:**
+```javascript
+import { updateStatusItem } from '@lokus/plugin-sdk';
+
+// Update text
+updateStatusItem('myPlugin.status', {
+  text: '⚡ Processing...',
+  color: '#ffff00'
+});
+
+// Update visibility
+updateStatusItem('myPlugin.status', {
+  _visible: false // Hide item
+});
+```
+
+### getAllStatusItems()
+
+Get all status items (including hidden ones).
+
+**Returns:** `StatusItem[]`
+
+**Example:**
+```javascript
+import { getAllStatusItems } from '@lokus/plugin-sdk';
+
+// Check all items
+const items = getAllStatusItems();
+console.log(`Total status items: $\\{items.length\\}`);
+```
+
+### clearPluginStatusItems(pluginId)
+
+Remove all status items for a specific plugin.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| pluginId | string | Plugin ID |
+
+**Example:**
+```javascript
+import { clearPluginStatusItems } from '@lokus/plugin-sdk';
+
+// Clean up on deactivation
+export function deactivate() {
+  clearPluginStatusItems('myPlugin');
+}
+```
+
+## StatusItem Interface
+
+```typescript
+interface StatusItem {
+  id: string;              // Unique identifier
+  text: string;            // Display text (can include icons/emoji)
+  pluginId: string;        // Plugin that created this item
+  priority?: number;       // Display order (higher = leftmost, default: 0)
+  alignment?: string;      // 'left' or 'right' (default: 'left')
+  color?: string;          // Text color (CSS color)
+  backgroundColor?: string; // Background color (CSS color)
+  tooltip?: string;        // Tooltip on hover
+  command?: string;        // Command to execute on click
+  _visible?: boolean;      // Whether item is visible (default: true)
+}
+```
+
+## Common Patterns
+
+### Pattern 1: Dynamic Status Display
+
+```javascript
+import {
+  registerStatusItem,
+  updateStatusItem,
+  unregisterStatusItem
+} from '@lokus/plugin-sdk';
+
+class StatusManager {
+  constructor(pluginId) {
+    this.pluginId = pluginId;
+    this.itemId = `${pluginId}.status`;
+
+    registerStatusItem({
+      id: this.itemId,
+      text: '⏳ Initializing...',
+      pluginId: this.pluginId,
+      priority: 5
+    });
+  }
+
+  setReady() {
+    updateStatusItem(this.itemId, {
+      text: '✓ Ready',
+      color: '#00ff00',
+      tooltip: 'Plugin is ready'
+    });
+  }
+
+  setWorking(message) {
+    updateStatusItem(this.itemId, {
+      text: `⚡ $\\{message\\}`,
+      color: '#ffff00',
+      tooltip: 'Working...'
+    });
+  }
+
+  setError(message) {
+    updateStatusItem(this.itemId, {
+      text: `✗ Error`,
+      color: '#ff0000',
+      tooltip: message
+    });
+  }
+
+  hide() {
+    updateStatusItem(this.itemId, { _visible: false });
+  }
+
+  show() {
+    updateStatusItem(this.itemId, { _visible: true });
+  }
+
+  dispose() {
+    unregisterStatusItem(this.itemId);
+  }
+}
+
+// Usage
+const status = new StatusManager('myPlugin');
+status.setWorking('Processing...');
+// Later...
+status.setReady();
+```
+
+### Pattern 2: Progress Status Item
+
+```javascript
+import { registerStatusItem, updateStatusItem } from '@lokus/plugin-sdk';
+
+function showProgress(taskName, pluginId) {
+  const itemId = `${pluginId}.progress`;
+
+  registerStatusItem({
+    id: itemId,
+    text: `⏳ ${taskName} 0%`,
+    pluginId,
+    priority: 10
+  });
+
+  return {
+    update(percentage) {
+      const bars = Math.floor(percentage / 10);
+      const progress = '█'.repeat(bars) + '░'.repeat(10 - bars);
+      updateStatusItem(itemId, {
+        text: `${progress} ${percentage}%`,
+        tooltip: `${taskName}: ${percentage}%`
+      });
+    },
+    complete() {
+      updateStatusItem(itemId, {
+        text: `✓ ${taskName} Complete`,
+        color: '#00ff00'
+      });
+      setTimeout(() => unregisterStatusItem(itemId), 2000);
+    }
+  };
+}
+
+// Usage
+const progress = showProgress('Building', 'myPlugin');
+progress.update(50);
+progress.complete();
+```
+
+### Pattern 3: Clickable Status Item
+
+```javascript
+import { registerStatusItem } from '@lokus/plugin-sdk';
+
+// Register status item with command
+registerStatusItem({
+  id: 'myPlugin.gitStatus',
+  text: '⎇ main',
+  pluginId: 'myPlugin',
+  tooltip: 'Click to view git status',
+  command: 'myPlugin.showGitStatus',
+  priority: 15
+});
+
+// Register the command handler
+lokus.commands.register({
+  id: 'myPlugin.showGitStatus',
+  title: 'Show Git Status',
+  handler: () => {
+    // Show git status panel
+  }
+});
+```
+
+### Pattern 4: Status Bar with Multiple Items
+
+```javascript
+import { registerStatusItem } from '@lokus/plugin-sdk';
+
+class MultiStatusManager {
+  constructor(pluginId) {
+    this.pluginId = pluginId;
+
+    // Left side items
+    registerStatusItem({
+      id: `${pluginId}.mode`,
+      text: 'Edit',
+      pluginId,
+      alignment: 'left',
+      priority: 20
+    });
+
+    // Right side items
+    registerStatusItem({
+      id: `${pluginId}.line`,
+      text: 'Ln 1, Col 1',
+      pluginId,
+      alignment: 'right',
+      priority: 10
+    });
+
+    registerStatusItem({
+      id: `${pluginId}.language`,
+      text: 'Markdown',
+      pluginId,
+      alignment: 'right',
+      priority: 9
+    });
+  }
+
+  updateMode(mode) {
+    updateStatusItem(`${this.pluginId}.mode`, {
+      text: mode
+    });
+  }
+
+  updatePosition(line, col) {
+    updateStatusItem(`${this.pluginId}.line`, {
+      text: `Ln ${line}, Col $\\{col\\}`
+    });
+  }
+
+  updateLanguage(lang) {
+    updateStatusItem(`${this.pluginId}.language`, {
+      text: lang
+    });
+  }
+}
+```
+
+### Pattern 5: Temporary Status Messages
+
+```javascript
+import { registerStatusItem, unregisterStatusItem } from '@lokus/plugin-sdk';
+
+function showTemporaryStatus(message, duration = 3000, pluginId) {
+  const itemId = `${pluginId}.temp-$\\{Date.now()\\}`;
+
+  registerStatusItem({
+    id: itemId,
+    text: message,
+    pluginId,
+    priority: 100 // High priority for visibility
+  });
+
+  setTimeout(() => {
+    unregisterStatusItem(itemId);
+  }, duration);
+}
+
+// Usage
+showTemporaryStatus('✓ File saved', 2000, 'myPlugin');
+showTemporaryStatus('⚠ Warning: Unsaved changes', 5000, 'myPlugin');
+```
+
+### Pattern 6: Status Item with Counter
+
+```jsx
+import {
+  usePluginStatusItems,
+  registerStatusItem,
+  updateStatusItem
+} from '@lokus/plugin-sdk';
+import { useEffect, useState } from 'react';
+
+function CounterStatus({ pluginId }) {
+  const [count, setCount] = useState(0);
+  const itemId = `${pluginId}.counter`;
+
+  useEffect(() => {
+    registerStatusItem({
+      id: itemId,
+      text: `Items: $\\{count\\}`,
+      pluginId,
+      priority: 5
+    });
+
+    return () => unregisterStatusItem(itemId);
+  }, []);
+
+  useEffect(() => {
+    updateStatusItem(itemId, {
+      text: `Items: $\\{count\\}`
+    });
+  }, [count]);
+
+  return (
+    <button onClick={() => setCount(c => c + 1)}>
+      Increment Counter
+    </button>
+  );
+}
+```
+
+### Pattern 7: Priority-Based Display
+
+```jsx
+import { usePluginStatusItems } from '@lokus/plugin-sdk';
+
+function PriorityStatusBar() {
+  const items = usePluginStatusItems();
+
+  // Items are already sorted by priority (highest first)
+  // Show only top 5 items
+  const visible = items.slice(0, 5);
+
+  return (
+    <div className="status-bar">
+      {visible.map(item => (
+        <div key={item.id} className="status-item">
+          {item.text}
+        </div>
+      ))}
+      {items.length > 5 && (
+        <div className="status-item">
+          +{items.length - 5} more
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+### Pattern 8: Animated Status Item
+
+```javascript
+import { registerStatusItem, updateStatusItem } from '@lokus/plugin-sdk';
+
+class AnimatedStatus {
+  constructor(pluginId) {
+    this.pluginId = pluginId;
+    this.itemId = `${pluginId}.animated`;
+    this.frame = 0;
+    this.frames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+
+    registerStatusItem({
+      id: this.itemId,
+      text: this.frames[0] + ' Loading...',
+      pluginId
+    });
+  }
+
+  start() {
+    this.timer = setInterval(() => {
+      this.frame = (this.frame + 1) % this.frames.length;
+      updateStatusItem(this.itemId, {
+        text: this.frames[this.frame] + ' Loading...'
+      });
+    }, 100);
+  }
+
+  stop(message = 'Done') {
+    clearInterval(this.timer);
+    updateStatusItem(this.itemId, {
+      text: `✓ $\\{message\\}`
+    });
+    setTimeout(() => unregisterStatusItem(this.itemId), 2000);
+  }
+}
+
+// Usage
+const spinner = new AnimatedStatus('myPlugin');
+spinner.start();
+// Later...
+spinner.stop('Complete');
+```
+
+## Best Practices
+
+### 1. Use Unique IDs
+Always use unique IDs prefixed with your plugin ID:
+
+```javascript
+// Good - namespaced ID
+const itemId = `${pluginId}.status`;
+
+// Bad - may conflict
+const itemId = 'status';
+```
+
+### 2. Clean Up on Deactivation
+Always remove status items when plugin deactivates:
+
+```javascript
+export function deactivate() {
+  clearPluginStatusItems('myPlugin');
+}
+```
+
+### 3. Use Priorities Wisely
+Set appropriate priorities for visibility:
+
+```javascript
+// High priority - important info
+registerStatusItem({
+  id: 'myPlugin.error',
+  text: '✗ Error',
+  priority: 100 // Show leftmost
+});
+
+// Normal priority
+registerStatusItem({
+  id: 'myPlugin.status',
+  text: '✓ Ready',
+  priority: 10
+});
+
+// Low priority - supplementary info
+registerStatusItem({
+  id: 'myPlugin.info',
+  text: 'Info',
+  priority: 1
+});
+```
+
+### 4. Keep Text Concise
+Status bar space is limited. Use short text:
+
+```javascript
+// Good - concise
+text: 'Ln 42, Col 8'
+
+// Too long
+text: 'Current Line: 42, Current Column: 8'
+```
+
+### 5. Use Colors Meaningfully
+Use colors to convey status:
+
+```javascript
+// Success
+color: '#00ff00'
+
+// Warning
+color: '#ffff00'
+
+// Error
+color: '#ff0000'
+
+// Info
+color: '#0099ff'
+```
+
+### 6. Provide Tooltips
+Add helpful tooltips for context:
+
+```javascript
+registerStatusItem({
+  id: 'myPlugin.status',
+  text: '✓',
+  tooltip: 'All tests passed (42/42)'
+});
+```
+
+### 7. Use Commands for Interaction
+Make items clickable when appropriate:
+
+```javascript
+registerStatusItem({
+  id: 'myPlugin.errors',
+  text: '3 errors',
+  command: 'myPlugin.showErrors',
+  tooltip: 'Click to view errors'
+});
+```
+
+### 8. Toggle Visibility Instead of Unregistering
+For temporary hiding, use visibility:
+
+```javascript
+// Hide temporarily
+updateStatusItem(itemId, { _visible: false });
+
+// Show again
+updateStatusItem(itemId, { _visible: true });
+```
+
+## Performance Considerations
+
+### Throttle Updates
+Don't update too frequently:
+
+```javascript
+let lastUpdate = 0;
+
+function updateThrottled(itemId, updates) {
+  const now = Date.now();
+  if (now - lastUpdate > 100) { // Max 10 updates/second
+    updateStatusItem(itemId, updates);
+    lastUpdate = now;
+  }
+}
+```
+
+### Batch Updates
+If updating multiple fields, do it in one call:
+
+```javascript
+// Good - single update
+updateStatusItem(itemId, {
+  text: 'New text',
+  color: '#00ff00',
+  tooltip: 'New tooltip'
+});
+
+// Less efficient - multiple updates
+updateStatusItem(itemId, { text: 'New text' });
+updateStatusItem(itemId, { color: '#00ff00' });
+updateStatusItem(itemId, { tooltip: 'New tooltip' });
+```
+
+## Related
+
+- [Status Bar API](/developers/plugins/api-reference/status-bar) - Status bar API reference
+- [Progress Hook](/developers/plugins/hooks/use-plugin-progress) - Progress indicators
+- [React Hooks Overview](/developers/plugins/hooks) - All available hooks

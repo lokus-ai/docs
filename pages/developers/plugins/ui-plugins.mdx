@@ -306,7 +306,7 @@ class StatusBarPlugin implements Plugin {
     const wordCount = content.split(/\s+/).length
 
     this.statusItem!.text = `$(file-text) ${wordCount} words`
-    this.statusItem!.tooltip = `Word count: ${wordCount}`
+    this.statusItem!.tooltip = `Word count: $\\{wordCount\\}`
   }
 }
 ```

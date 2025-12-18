@@ -61,7 +61,8 @@ Official plugin registry at `registry.lokus.dev` with:
 ### Plugin Statistics
 
 - **500+ plugins** in official marketplace
-- **8 specialized APIs** covering all extension points
+- **14 specialized APIs** covering all extension points
+- **95+ editor methods** for deep TipTap integration
 - **50+ events** for lifecycle hooks
 - **100+ contribution points** for UI integration
 - **`<50ms`** average activation time
@@ -185,6 +186,54 @@ export default class MyPlugin implements Plugin {
 }
 ```
 
+## Plugin Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Lokus Application                    │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐   │
+│  │   Editor    │  │     UI      │  │  Workspace  │   │
+│  │   (TipTap)  │  │  Components │  │   Manager   │   │
+│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘   │
+│         │                │                │           │
+├─────────┼────────────────┼────────────────┼───────────┤
+│         │   Plugin API Bridge            │           │
+│         │   (LokusPluginAPI)             │           │
+├─────────┼────────────────┼────────────────┼───────────┤
+│         │                │                │           │
+│  ┌──────▼──────┐  ┌──────▼──────┐  ┌──────▼──────┐   │
+│  │  EditorAPI  │  │    UIAPI    │  │ WorkspaceAPI│   │
+│  │   (95+)     │  │  (panels,   │  │  (files,    │   │
+│  │   methods   │  │   dialogs)  │  │   editors)  │   │
+│  └─────────────┘  └─────────────┘  └─────────────┘   │
+│                                                         │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐   │
+│  │ TerminalAPI │  │   TaskAPI   │  │  DebugAPI   │   │
+│  │ (terminals) │  │   (tasks)   │  │  (debugger) │   │
+│  └─────────────┘  └─────────────┘  └─────────────┘   │
+│                                                         │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐   │
+│  │ StorageAPI  │  │FilesystemAPI│  │ NetworkAPI  │   │
+│  │   (K-V)     │  │   (safe)    │  │   (fetch)   │   │
+│  └─────────────┘  └─────────────┘  └─────────────┘   │
+│                                                         │
+├─────────────────────────────────────────────────────────┤
+│              Plugin Runtime Environment                 │
+│              (Sandboxed, Permission-based)              │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│   ┌──────────┐  ┌──────────┐  ┌──────────┐           │
+│   │ Plugin A │  │ Plugin B │  │ Plugin C │           │
+│   │          │  │          │  │          │           │
+│   │ context  │  │ context  │  │ context  │           │
+│   │   .api   │  │   .api   │  │   .api   │           │
+│   └──────────┘  └──────────┘  └──────────┘           │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+```
+
 ## Core Concepts
 
 ### Plugin Lifecycle
@@ -197,6 +246,8 @@ Plugins follow a well-defined lifecycle:
 4. **Deactivation** - Plugin cleanup and resource disposal
 5. **Uninstallation** - Plugin removed from system
 
+See [Plugin Lifecycle](/developers/plugins/lifecycle) for detailed information on lifecycle hooks and resource management.
+
 ### Security Model
 
 All plugins run in sandboxed environments with:
@@ -207,28 +258,62 @@ All plugins run in sandboxed environments with:
 
 ### API Surface
 
-Lokus provides 8 comprehensive APIs:
-- **Commands API** - Register and execute commands
-- **Editor API** - Manipulate editor content
-- **UI API** - Create panels and dialogs
-- **Workspace API** - Access files and folders
-- **File System API** - Read and write files
-- **Network API** - Make HTTP requests
-- **Storage API** - Persist plugin data
-- **Events API** - Subscribe to system events
+Lokus provides 14 comprehensive APIs for complete extensibility:
+
+**Core APIs:**
+- **[EditorAPI](/developers/plugins/api-reference/editor-api)** - 95+ methods for TipTap editor integration, custom nodes, marks, extensions, slash commands, and toolbar items
+- **[UIAPI](/developers/plugins/api-reference/ui-api)** - Notifications, dialogs, panels, tree views, status bars, webviews, and progress indicators
+- **[CommandsAPI](/developers/plugins/api-reference/commands-api)** - Register commands, keyboard shortcuts, and command palette integration
+- **[WorkspaceAPI](/developers/plugins/api-reference/workspace-api)** - Access workspace files, folders, active editors, and file events
+- **[ConfigurationAPI](/developers/plugins/api-reference/configuration-api)** - Read/write plugin settings with change notifications
+
+**Language & Editor Features:**
+- **[LanguagesAPI](/developers/plugins/api-reference/languages-api)** - Completion providers, hover information, code actions, formatters, and linters
+
+**Terminal & Tasks:**
+- **[TerminalAPI](/developers/plugins/api-reference/terminal-api)** - Create terminals, send commands, listen for terminal events
+- **[TaskAPI](/developers/plugins/api-reference/task-api)** - Task providers, task execution, and task events
+
+**Debugging & Themes:**
+- **[DebugAPI](/developers/plugins/api-reference/debug-api)** - Debug adapters, debug configurations, and debugging sessions
+- **[ThemeAPI](/developers/plugins/api-reference/theme-api)** - Register themes, customize colors, theme change events
+
+**Storage & Files:**
+- **[StorageAPI](/developers/plugins/api-reference/storage-api)** - Key-value storage with multiple databases
+- **[FilesystemAPI](/developers/plugins/api-reference/filesystem-api)** - Safe file operations within plugin directory
+
+**Network & System:**
+- **[NetworkAPI](/developers/plugins/api-reference/network-api)** - HTTP requests with fetch API
+- **[ClipboardAPI](/developers/plugins/api-reference/clipboard-api)** - Read/write system clipboard
 
 ## Next Steps
 
-Dive deeper into specific topics:
+### Learn the Basics
+- **[Getting Started](/developers/plugins/getting-started)** - Build your first plugin in minutes
+- **[Plugin Manifest](/developers/plugins/manifest)** - Configure your plugin with manifest reference
+- **[Plugin Lifecycle](/developers/plugins/lifecycle)** - Understand activation, deactivation, and resource management
 
+### Explore the APIs
+- **[API Reference Overview](/developers/plugins/api-reference)** - Browse all 14 APIs with examples
+- **[EditorAPI](/developers/plugins/api-reference/editor-api)** - Deep TipTap editor integration (95+ methods)
+- **[UIAPI](/developers/plugins/api-reference/ui-api)** - Build rich UI components
+- **[TerminalAPI](/developers/plugins/api-reference/terminal-api)** - Terminal integration
+- **[Complete API List](/developers/plugins/api-reference)** - See all available APIs
+
+### Dive Deeper
+- **[Tutorials & Guides](/developers/plugins/guides)** - Step-by-step tutorials for common tasks
+- **[Examples](/developers/plugins/examples)** - Real-world plugin examples
+- **[UI Components](/developers/plugins/components)** - React components for plugin UIs
+- **[React Hooks](/developers/plugins/hooks)** - Custom hooks for plugin development
+
+### Advanced Topics
 - **[Architecture](/developers/plugins/architecture)** - Deep dive into plugin architecture and runtime
 - **[MCP Integration](/developers/plugins/mcp-integration)** - Build AI-powered plugins with Model Context Protocol
 - **[Performance](/developers/plugins/performance)** - Optimization techniques and best practices
-- **[Advanced Topics](/developers/plugins/advanced)** - Advanced patterns, testing, and distribution
+- **[Publishing](/developers/plugins/publishing)** - Share your plugin on the marketplace
 
 ## Additional Resources
 
-- [Getting Started Guide](/developers/plugins/getting-started) - Build your first plugin
-- [API Reference](/developers/plugins/api) - Complete API documentation
-- [Plugin Examples](https://github.com/lokus-ai/plugin-examples) - Sample plugins
 - [CLI Tool](/developers/plugins/cli) - Command-line tools for development
+- [Plugin Examples](https://github.com/lokus-ai/plugin-examples) - Sample plugins on GitHub
+- [TypeScript Definitions](https://www.npmjs.com/package/@lokus/plugin-sdk) - Full type definitions for TypeScript

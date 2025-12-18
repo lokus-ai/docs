@@ -47,11 +47,11 @@ npx lokus-plugin create <plugin-name> [options]
 
 | Option | Description |
 |--------|-------------|
-| `-t, --template <name>` | Template to use (see below) |
+| `-t, --template \<name\>` | Template to use (see below) |
 | `--skip-prompts` | Skip interactive prompts, use defaults |
-| `--author <name>` | Plugin author name |
-| `--description <desc>` | Plugin description |
-| `--display-name <name>` | Human-readable plugin name |
+| `--author \<name\>` | Plugin author name |
+| `--description \<desc\>` | Plugin description |
+| `--display-name \<name\>` | Human-readable plugin name |
 
 ### Available Templates
 
@@ -114,7 +114,7 @@ npx lokus-plugin build [options]
 
 | Option | Description |
 |--------|-------------|
-| `-p, --path <path>` | Plugin directory (default: `.`) |
+| `-p, --path \<path\>` | Plugin directory (default: `.`) |
 | `--watch` | Watch mode for continuous building |
 | `--minify` | Minify output |
 | `--sourcemap` | Generate source maps |
@@ -151,7 +151,7 @@ npx lokus-plugin dev [options]
 
 | Option | Description |
 |--------|-------------|
-| `-p, --path <path>` | Plugin directory (default: `.`) |
+| `-p, --path \<path\>` | Plugin directory (default: `.`) |
 | `--verbose` | Enable verbose logging |
 | `--clean` | Clean build artifacts before starting |
 
@@ -182,7 +182,7 @@ npx lokus-plugin validate [options]
 
 | Option | Description |
 |--------|-------------|
-| `-p, --path <path>` | Plugin directory (default: `.`) |
+| `-p, --path \<path\>` | Plugin directory (default: `.`) |
 
 ### Output
 
@@ -223,12 +223,12 @@ npx lokus-plugin link [options]
 
 | Option | Description |
 |--------|-------------|
-| `-p, --path <path>` | Plugin directory (default: `.`) |
+| `-p, --path \<path\>` | Plugin directory (default: `.`) |
 
 ### What it does
 
 1. Reads the plugin ID from `plugin.json`
-2. Creates a symlink at `~/.lokus/plugins/<plugin-id>` pointing to your plugin directory
+2. Creates a symlink at `~/.lokus/plugins/\<plugin-id\>` pointing to your plugin directory
 3. Lokus will now load your plugin on startup
 
 ### Examples
@@ -270,8 +270,8 @@ npx lokus-plugin package [options]
 
 | Option | Description |
 |--------|-------------|
-| `-p, --path <path>` | Plugin directory (default: `.`) |
-| `-o, --output <dir>` | Output directory |
+| `-p, --path \<path\>` | Plugin directory (default: `.`) |
+| `-o, --output \<dir\>` | Output directory |
 
 ### What it includes
 
@@ -307,10 +307,10 @@ npx lokus-plugin publish [options]
 
 | Option | Description |
 |--------|-------------|
-| `-p, --path <path>` | Plugin directory (default: `.`) |
-| `-r, --registry <url>` | Registry URL (default: `https://lokusmd.com`) |
+| `-p, --path \<path\>` | Plugin directory (default: `.`) |
+| `-r, --registry \<url\>` | Registry URL (default: `https://lokusmd.com`) |
 | `--dry-run` | Simulate without publishing |
-| `--tag <tag>` | Version tag (e.g., `beta`, `latest`) |
+| `--tag \<tag\>` | Version tag (e.g., `beta`, `latest`) |
 
 ### Prerequisites
 
@@ -353,7 +353,7 @@ npx lokus-plugin login [options]
 
 | Option | Description |
 |--------|-------------|
-| `--token <token>` | API token (or set via prompt) |
+| `--token \<token\>` | API token (or set via prompt) |
 
 ### Getting a Token
 
@@ -424,7 +424,7 @@ npx lokus-plugin info [plugin-id] [options]
 
 | Option | Description |
 |--------|-------------|
-| `-p, --path <path>` | Plugin directory (default: `.`) |
+| `-p, --path \<path\>` | Plugin directory (default: `.`) |
 
 ### Examples
 

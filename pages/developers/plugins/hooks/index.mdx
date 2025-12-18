@@ -1,0 +1,362 @@
+---
+title: "React Hooks"
+description: "React hooks for building reactive plugin UIs"
+---
+
+# React Hooks
+
+React hooks for building reactive plugin user interfaces. These hooks provide real-time updates when Lokus state changes, making it easy to build responsive UI components.
+
+## Available Hooks
+
+### Command Hooks
+- `useCommands()` - Get commands visible in palette
+- `useCommandExecute()` - Get command execution function
+- `useAllCommands()` - Get all registered commands
+- `useCommandsByCategory()` - Filter commands by category
+- `useCommandExists()` - Check if command exists
+
+[View Command Hooks Documentation](/developers/plugins/hooks/use-commands)
+
+### Terminal Hook
+- `useTerminals()` - Access terminal state and operations
+
+[View Terminal Hook Documentation](/developers/plugins/hooks/use-terminals)
+
+### Output Channel Hook
+- `useOutputChannels()` - Access output channel state
+
+[View Output Channel Documentation](/developers/plugins/hooks/use-output-channels)
+
+### Progress Hook
+- `usePluginProgress()` - Display progress indicators
+
+[View Progress Hook Documentation](/developers/plugins/hooks/use-plugin-progress)
+
+### TreeView Hooks
+- `usePluginTreeViews()` - Get all tree view providers
+- `usePluginTreeViewsByPlugin()` - Get tree views for a plugin
+- `useTreeViewExists()` - Check if tree view exists
+
+[View TreeView Hooks Documentation](/developers/plugins/hooks/use-plugin-tree-views)
+
+### Status Bar Hook
+- `usePluginStatusItems()` - Access status bar items
+
+[View Status Bar Hook Documentation](/developers/plugins/hooks/use-plugin-status-items)
+
+## When to Use Hooks vs Direct API
+
+### Use Hooks When:
+1. Building React components that need real-time updates
+2. Displaying dynamic lists of commands, terminals, channels, etc.
+3. Creating UI that reacts to Lokus state changes
+4. Building plugin settings panels or status displays
+
+### Use Direct API When:
+1. Performing one-time operations (creating terminal, registering command)
+2. Handling events in non-React code
+3. Writing activation/deactivation logic
+4. Implementing background tasks
+
+## Common Patterns
+
+### Pattern 1: Display Command List
+
+```jsx
+import { useCommands } from '@lokus/plugin-sdk';
+
+function CommandList() {
+  const commands = useCommands();
+
+  return (
+    <ul>
+      {commands.map(cmd => (
+        <li key={cmd.id}>
+          <strong>{cmd.title}</strong>
+          {cmd.description && <p>{cmd.description}</p>}
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+### Pattern 2: Execute Command on Click
+
+```jsx
+import { useCommandExecute } from '@lokus/plugin-sdk';
+
+function QuickAction() {
+  const execute = useCommandExecute();
+
+  const handleRun = async () => {
+    try {
+      await execute('myPlugin.action');
+      console.log('Command executed successfully');
+    } catch (error) {
+      console.error('Command failed:', error);
+    }
+  };
+
+  return <button onClick={handleRun}>Run Action</button>;
+}
+```
+
+### Pattern 3: Terminal Status Display
+
+```jsx
+import { useTerminals } from '@lokus/plugin-sdk';
+
+function TerminalStatus() {
+  const { terminals, activeTerminal } = useTerminals();
+
+  return (
+    <div>
+      <p>Active Terminals: {terminals.length}</p>
+      {activeTerminal && (
+        <p>Current: {activeTerminal.name}</p>
+      )}
+    </div>
+  );
+}
+```
+
+### Pattern 4: Conditional Rendering
+
+```jsx
+import { useCommandExists } from '@lokus/plugin-sdk';
+
+function OptionalFeature() {
+  const hasGitCommand = useCommandExists('git.commit');
+
+  if (!hasGitCommand) {
+    return <p>Git plugin not available</p>;
+  }
+
+  return <GitCommitButton />;
+}
+```
+
+### Pattern 5: Progress Indicator
+
+```jsx
+import { usePluginProgress } from '@lokus/plugin-sdk';
+
+function ProgressList() {
+  const items = usePluginProgress();
+
+  return (
+    <div>
+      {items.map(item => (
+        <div key={item.id}>
+          <strong>{item.title}</strong>
+          <progress value={item.percentage} max={100} />
+          <p>{item.message}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+### Pattern 6: Filter by Category
+
+```jsx
+import { useCommandsByCategory } from '@lokus/plugin-sdk';
+
+function EditorCommands() {
+  const editorCommands = useCommandsByCategory('editor');
+
+  return (
+    <div>
+      <h3>Editor Commands ({editorCommands.length})</h3>
+      <ul>
+        {editorCommands.map(cmd => (
+          <li key={cmd.id}>{cmd.title}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+## Best Practices
+
+### 1. Use Specific Hooks
+Use the most specific hook for your needs. For example, use `useCommandExists()` instead of `useAllCommands()` when you only need to check existence.
+
+```jsx
+// Good - efficient
+const exists = useCommandExists('myPlugin.command');
+
+// Less efficient - loads all commands
+const commands = useAllCommands();
+const exists = commands.some(cmd => cmd.id === 'myPlugin.command');
+```
+
+### 2. Memoize Expensive Computations
+Use `useMemo` for expensive filtering or sorting operations:
+
+```jsx
+import { useCommands } from '@lokus/plugin-sdk';
+import { useMemo } from 'react';
+
+function FilteredCommands({ searchTerm }) {
+  const commands = useCommands();
+
+  const filtered = useMemo(() => {
+    return commands.filter(cmd =>
+      cmd.title.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [commands, searchTerm]);
+
+  return <CommandList commands={filtered} />;
+}
+```
+
+### 3. Handle Async Operations Properly
+Use proper error handling and loading states:
+
+```jsx
+import { useCommandExecute } from '@lokus/plugin-sdk';
+import { useState } from 'react';
+
+function AsyncCommand() {
+  const execute = useCommandExecute();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleClick = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      await execute('longRunningCommand');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div>
+      <button onClick={handleClick} disabled={loading}>
+        {loading ? 'Running...' : 'Run Command'}
+      </button>
+      {error && <p className="error">{error}</p>}
+    </div>
+  );
+}
+```
+
+### 4. Combine Multiple Hooks
+You can use multiple hooks together for complex UIs:
+
+```jsx
+import {
+  useCommands,
+  useCommandExecute,
+  useTerminals
+} from '@lokus/plugin-sdk';
+
+function DevTools() {
+  const commands = useCommands();
+  const execute = useCommandExecute();
+  const { terminals, sendText } = useTerminals();
+
+  const runInTerminal = async (commandId) => {
+    await execute(commandId);
+    if (terminals.length > 0) {
+      sendText(terminals[0].id, 'Command executed');
+    }
+  };
+
+  return (
+    <div>
+      <h3>Commands ({commands.length})</h3>
+      <h3>Terminals ({terminals.length})</h3>
+    </div>
+  );
+}
+```
+
+### 5. Clean Up Side Effects
+Hooks automatically handle cleanup, but be mindful of your own side effects:
+
+```jsx
+import { useTerminals } from '@lokus/plugin-sdk';
+import { useEffect } from 'react';
+
+function TerminalMonitor() {
+  const { terminals } = useTerminals();
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      console.log('Active terminals:', terminals.length);
+    }, 1000);
+
+    return () => clearInterval(timer); // Clean up
+  }, [terminals]);
+
+  return <div>Monitoring {terminals.length} terminals</div>;
+}
+```
+
+## Performance Considerations
+
+### Minimize Re-renders
+Hooks trigger re-renders when their state changes. Use them strategically:
+
+```jsx
+// This component re-renders every time ANY command changes
+function AllCommands() {
+  const commands = useAllCommands();
+  return <div>{commands.length} commands</div>;
+}
+
+// This only re-renders when a specific command's existence changes
+function CommandChecker() {
+  const exists = useCommandExists('specific.command');
+  return <div>{exists ? 'Available' : 'Not available'}</div>;
+}
+```
+
+### Use Categories for Large Lists
+Filter by category to reduce data size:
+
+```jsx
+// Better for large command sets
+const editorCommands = useCommandsByCategory('editor');
+
+// More data than needed if you only need editor commands
+const allCommands = useCommands();
+```
+
+## TypeScript Support
+
+All hooks have TypeScript definitions. Import types from the SDK:
+
+```tsx
+import {
+  useCommands,
+  Command,
+  Terminal,
+  OutputChannel
+} from '@lokus/plugin-sdk';
+
+function TypedComponent() {
+  const commands: Command[] = useCommands();
+  // Full type safety and autocomplete
+
+  return <div>{commands.length}</div>;
+}
+```
+
+## Next Steps
+
+- [Command Hooks](/developers/plugins/hooks/use-commands) - Working with commands
+- [Terminal Hook](/developers/plugins/hooks/use-terminals) - Terminal management
+- [TreeView Hooks](/developers/plugins/hooks/use-plugin-tree-views) - Custom tree views
+- [UI Plugins Guide](/developers/plugins/ui-plugins) - Building plugin UIs

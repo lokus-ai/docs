@@ -194,7 +194,7 @@ const CustomShortcuts = Extension.create({
         const { state } = this.editor
         const { from, to } = state.selection
         const text = state.doc.textBetween(from, to, '\n')
-        return this.editor.commands.insertContentAt(to, `\n${text}`)
+        return this.editor.commands.insertContentAt(to, `\n$\\{text\\}`)
       },
 
       // Tab - Indent

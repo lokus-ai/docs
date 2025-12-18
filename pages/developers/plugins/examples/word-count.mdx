@@ -1,0 +1,475 @@
+---
+title: Word Counter Plugin
+description: A real-time word counter that displays in the status bar
+---
+
+import { Callout } from 'nextra/components'
+import { FileTree } from 'nextra/components'
+
+# Word Counter Plugin
+
+A plugin that counts words in the active document and displays the count in the status bar. Updates in real-time as you type.
+
+<Callout type="info">
+This example demonstrates editor events, status bar integration, and document change tracking.
+</Callout>
+
+## Features Demonstrated
+
+- ✅ Status bar item creation
+- ✅ Editor event listeners (`onUpdate`)
+- ✅ Document text extraction
+- ✅ Real-time updates
+- ✅ Proper resource cleanup
+
+## Project Structure
+
+<FileTree>
+  <FileTree.Folder name="lokus-word-counter" defaultOpen>
+    <FileTree.File name="package.json" />
+    <FileTree.File name="manifest.json" />
+    <FileTree.File name="index.js" />
+    <FileTree.File name="README.md" />
+  </FileTree.Folder>
+</FileTree>
+
+## Complete Source Code
+
+### `package.json`
+
+```json filename="package.json"
+{
+  "name": "lokus-word-counter",
+  "version": "1.0.0",
+  "description": "Real-time word counter for Lokus",
+  "main": "index.js",
+  "keywords": ["lokus", "plugin", "word-count", "status-bar"],
+  "author": "Your Name",
+  "license": "MIT",
+  "engines": {
+    "lokus": "^1.0.0"
+  },
+  "dependencies": {
+    "@lokus/plugin-sdk": "^1.0.0"
+  }
+}
+```
+
+### `manifest.json`
+
+```json filename="manifest.json"
+{
+  "id": "lokus-word-counter",
+  "name": "Word Counter",
+  "version": "1.0.0",
+  "description": "Displays word and character count in the status bar",
+  "author": "Your Name",
+  "main": "index.js",
+  "activationEvents": [
+    "onStartup"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "id": "word-counter.toggle",
+        "title": "Toggle Word Counter",
+        "category": "Word Counter"
+      },
+      {
+        "id": "word-counter.showStats",
+        "title": "Show Document Statistics",
+        "category": "Word Counter"
+      }
+    ]
+  },
+  "permissions": []
+}
+```
+
+### `index.js`
+
+```javascript filename="index.js"
+/**
+ * Word Counter Plugin for Lokus
+ *
+ * Counts words, characters, and lines in the active document
+ * and displays them in the status bar in real-time.
+ */
+
+/**
+ * Called when the plugin is activated
+ * @param {Object} api - The Lokus Plugin API
+ */
+export function activate(api) {
+  console.log('Word Counter plugin activated');
+
+  // Create status bar item
+  const statusBarItem = api.ui.registerStatusBarItem({
+    id: 'word-counter.status',
+    text: '0 words',
+    tooltip: 'Word count',
+    alignment: 2, // Right side
+    priority: 100
+  });
+
+  // Track enabled state
+  let isEnabled = true;
+
+  /**
+   * Count words, characters, and lines in text
+   * @param {string} text - The text to analyze
+   * @returns {Object} Statistics object
+   */
+  function countStats(text) {
+    // Count words (split by whitespace, filter empty strings)
+    const words = text
+      .trim()
+      .split(/\s+/)
+      .filter(word => word.length > 0);
+
+    // Count characters (excluding whitespace)
+    const characters = text.replace(/\s/g, '').length;
+
+    // Count characters (including whitespace)
+    const charactersWithSpaces = text.length;
+
+    // Count lines
+    const lines = text.split('\n').length;
+
+    return {
+      words: words.length,
+      characters,
+      charactersWithSpaces,
+      lines
+    };
+  }
+
+  /**
+   * Update the status bar with current document stats
+   */
+  async function updateWordCount() {
+    if (!isEnabled) {
+      return;
+    }
+
+    try {
+      // Get the current editor text
+      const text = await api.editor.getText();
+
+      if (!text) {
+        statusBarItem.text = '0 words';
+        statusBarItem.tooltip = 'No active document';
+        return;
+      }
+
+      // Calculate statistics
+      const stats = countStats(text);
+
+      // Update status bar text
+      statusBarItem.text = `${stats.words} words`;
+
+      // Update tooltip with detailed stats
+      statusBarItem.tooltip = [
+        `Words: $\\{stats.words\\}`,
+        `Characters: $\\{stats.characters\\}`,
+        `Characters (with spaces): $\\{stats.charactersWithSpaces\\}`,
+        `Lines: $\\{stats.lines\\}`
+      ].join('\n');
+
+    } catch (error) {
+      console.error('Error updating word count:', error);
+      statusBarItem.text = 'Error';
+      statusBarItem.tooltip = 'Failed to count words';
+    }
+  }
+
+  // Update word count when editor content changes
+  const updateDisposable = api.editor.onUpdate(() => {
+    updateWordCount();
+  });
+
+  // Initial update
+  updateWordCount();
+
+  // Register toggle command
+  const toggleCommand = api.commands.register({
+    id: 'word-counter.toggle',
+    title: 'Toggle Word Counter',
+    execute: () => {
+      isEnabled = !isEnabled;
+
+      if (isEnabled) {
+        statusBarItem.show();
+        updateWordCount();
+        api.ui.showInformationMessage('Word counter enabled');
+      } else {
+        statusBarItem.hide();
+        api.ui.showInformationMessage('Word counter disabled');
+      }
+    }
+  });
+
+  // Register stats command
+  const statsCommand = api.commands.register({
+    id: 'word-counter.showStats',
+    title: 'Show Document Statistics',
+    execute: async () => {
+      try {
+        const text = await api.editor.getText();
+
+        if (!text) {
+          api.ui.showInformationMessage('No active document');
+          return;
+        }
+
+        const stats = countStats(text);
+
+        // Show detailed stats in a notification
+        const message = [
+          `Document Statistics:`,
+          ``,
+          `Words: $\\{stats.words\\}`,
+          `Characters: $\\{stats.characters\\}`,
+          `Characters (with spaces): $\\{stats.charactersWithSpaces\\}`,
+          `Lines: $\\{stats.lines\\}`,
+          ``,
+          `Average words per line: $\\{(stats.words / stats.lines).toFixed(1)\\}`
+        ].join('\n');
+
+        // Create an output channel for detailed stats
+        const outputChannel = api.ui.createOutputChannel('Word Counter');
+        outputChannel.clear();
+        outputChannel.appendLine(message);
+        outputChannel.show();
+
+      } catch (error) {
+        api.ui.showErrorMessage('Failed to calculate statistics');
+      }
+    }
+  });
+
+  // Return cleanup function
+  return {
+    dispose: () => {
+      // Clean up all resources
+      updateDisposable.dispose();
+      toggleCommand.dispose();
+      statsCommand.dispose();
+      statusBarItem.dispose();
+      console.log('Word Counter plugin deactivated');
+    }
+  };
+}
+
+/**
+ * Called when the plugin is deactivated
+ */
+export function deactivate() {
+  // Additional cleanup if needed
+}
+```
+
+## Installation & Testing
+
+### Step 1: Create the Plugin
+
+```bash
+# Create plugin directory
+mkdir lokus-word-counter
+cd lokus-word-counter
+
+# Copy the files above
+# Install dependencies
+npm install
+```
+
+### Step 2: Link to Lokus
+
+```bash
+npm link
+# In Lokus plugins directory
+npm link lokus-word-counter
+```
+
+### Step 3: Test It
+
+1. Open Lokus and enable the plugin
+2. Open a document
+3. Look at the bottom-right status bar - you'll see "0 words"
+4. Start typing - the count updates in real-time!
+5. Hover over the word count to see detailed statistics
+6. Try the commands:
+   - "Toggle Word Counter" to enable/disable
+   - "Show Document Statistics" for detailed stats
+
+## Code Walkthrough
+
+### Creating a Status Bar Item
+
+```javascript
+const statusBarItem = api.ui.registerStatusBarItem({
+  id: 'word-counter.status',      // Unique ID
+  text: '0 words',                 // Display text
+  tooltip: 'Word count',           // Hover tooltip
+  alignment: 2,                    // Right side (1 = left, 2 = right)
+  priority: 100                    // Higher = more left/right
+});
+```
+
+Status bar items appear at the bottom of Lokus. Set `alignment: 1` for left side or `alignment: 2` for right side.
+
+### Listening to Editor Updates
+
+```javascript
+const updateDisposable = api.editor.onUpdate(() => {
+  updateWordCount();
+});
+```
+
+`onUpdate` fires whenever the editor content changes. This is how we get real-time updates.
+
+<Callout type="warning">
+**Performance tip:** If your update function is expensive, consider debouncing it to avoid running on every keystroke.
+</Callout>
+
+### Getting Editor Text
+
+```javascript
+const text = await api.editor.getText();
+```
+
+`getText()` returns the entire document content as a string. It's async because it may need to fetch content from the renderer process.
+
+### Counting Words
+
+```javascript
+const words = text
+  .trim()                          // Remove leading/trailing whitespace
+  .split(/\s+/)                    // Split on any whitespace
+  .filter(word => word.length > 0); // Remove empty strings
+```
+
+This handles multiple spaces, tabs, and newlines correctly.
+
+### Updating Status Bar
+
+```javascript
+statusBarItem.text = `${stats.words} words`;
+statusBarItem.tooltip = 'Detailed stats...';
+```
+
+You can update the status bar text and tooltip at any time. Changes appear immediately.
+
+### Creating Output Channels
+
+```javascript
+const outputChannel = api.ui.createOutputChannel('Word Counter');
+outputChannel.appendLine(message);
+outputChannel.show();
+```
+
+Output channels are like console windows that plugins can write to. Great for detailed information!
+
+## Performance Optimization
+
+The current implementation updates on every keystroke. For large documents, you might want to debounce:
+
+```javascript
+// Add this helper function
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
+// Use it like this
+const debouncedUpdate = debounce(updateWordCount, 300);
+
+const updateDisposable = api.editor.onUpdate(() => {
+  debouncedUpdate();
+});
+```
+
+This waits 300ms after the user stops typing before updating.
+
+## Extension Ideas
+
+Try adding these features:
+
+1. **Reading Time** - Calculate estimated reading time (words / 200)
+2. **Character Goal** - Allow users to set a word count goal
+3. **Progress Bar** - Show progress toward goal in status bar
+4. **Language Detection** - Show which language is being used
+5. **Selection Count** - Show word count for selected text only
+6. **Export Stats** - Save statistics to a file
+
+### Example: Reading Time
+
+```javascript
+function calculateReadingTime(wordCount) {
+  const wordsPerMinute = 200;
+  const minutes = Math.ceil(wordCount / wordsPerMinute);
+  return `${minutes} min read`;
+}
+
+// In updateWordCount():
+const readingTime = calculateReadingTime(stats.words);
+statusBarItem.text = `${stats.words} words (${readingTime})`;
+```
+
+### Example: Selection Count
+
+```javascript
+// Add this to activate():
+const selectionDisposable = api.editor.onDidChangeTextEditorSelection(
+  async (event) => {
+    const selection = await api.editor.getSelection();
+    if (selection && !selection.isEmpty) {
+      const selectedText = await api.editor.getTextInRange(
+        selection.start,
+        selection.end
+      );
+      const stats = countStats(selectedText);
+      statusBarItem.text = `${stats.words} words (selected)`;
+    } else {
+      updateWordCount();
+    }
+  }
+);
+```
+
+## Common Issues
+
+### Issue: Status bar doesn't appear
+
+**Solution:** Make sure you call `.show()` on the status bar item:
+
+```javascript
+statusBarItem.show();
+```
+
+### Issue: Count doesn't update
+
+**Solution:** Ensure your `onUpdate` listener is properly registered and not disposed early.
+
+### Issue: Memory leak on hot reload
+
+**Solution:** Always return disposables from `activate()` and call `.dispose()` on them.
+
+## Next Steps
+
+Now that you understand events and status bar:
+
+- **[Custom Formatter](/developers/plugins/examples/custom-formatter)** - Learn to manipulate editor content
+- **[File Explorer](/developers/plugins/examples/file-explorer)** - Build tree view UIs
+- **[Editor API Reference](/developers/plugins/api-reference/editor)** - Deep dive into editor API
+
+---
+
+**Ready for more?** Continue to [Custom Formatter Example](/developers/plugins/examples/custom-formatter) to learn about editor manipulation.

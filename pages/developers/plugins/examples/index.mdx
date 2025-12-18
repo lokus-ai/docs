@@ -1,0 +1,136 @@
+---
+title: Plugin Examples
+description: Complete, working examples of Lokus plugins demonstrating various features
+---
+
+# Plugin Examples
+
+This section contains complete, production-ready plugin examples that demonstrate the full capabilities of the Lokus Plugin SDK. Each example is fully functional and can be copied directly to create your own plugins.
+
+## Example Complexity Levels
+
+Our examples are organized from simple to advanced:
+
+### Beginner
+
+- **[Hello World](/developers/plugins/examples/hello-world)** - The simplest possible plugin
+  - Shows a notification when activated
+  - Demonstrates basic plugin structure
+  - Perfect first example
+
+### Intermediate
+
+- **[Word Counter](/developers/plugins/examples/word-count)** - Status bar integration
+  - Real-time word counting
+  - Status bar item updates
+  - Editor event listeners
+  - Document change tracking
+
+- **[Custom Formatter](/developers/plugins/examples/custom-formatter)** - Editor manipulation
+  - Custom text formatting
+  - Command registration
+  - Editor selection handling
+  - Text transformation
+
+### Advanced
+
+- **[File Explorer](/developers/plugins/examples/file-explorer)** - Tree view UI
+  - Complete file tree view
+  - Tree data provider
+  - File system operations
+  - Custom icons and context menus
+
+- **[AI Assistant](/developers/plugins/examples/ai-assistant)** - Network & streaming
+  - OpenAI API integration
+  - Streaming responses
+  - Progress indicators
+  - Error handling
+  - Configuration management
+
+## What Each Example Includes
+
+Every example in this section provides:
+
+1. **Complete Source Code** - Copy-paste ready, fully commented
+2. **Full Manifest** - Complete `manifest.json` with all required fields
+3. **Feature List** - What the plugin demonstrates
+4. **Installation Guide** - How to install and test
+5. **Code Walkthrough** - Explanation of key concepts
+6. **Common Pitfalls** - What to watch out for
+7. **Extension Ideas** - How to build on the example
+
+## Using These Examples
+
+### Quick Start
+
+```bash
+# Create a new plugin from an example
+npm create lokus-plugin@latest my-plugin
+
+# Or manually copy an example
+mkdir my-plugin
+cd my-plugin
+# Copy the code from the example
+npm install
+npm run dev
+```
+
+### Testing Examples
+
+All examples can be tested immediately:
+
+```bash
+# Link the plugin to Lokus
+npm link
+
+# In Lokus plugins directory
+npm link plugin-name
+
+# Restart Lokus and enable the plugin
+```
+
+## Example Features Matrix
+
+| Example | Commands | Status Bar | Tree View | Network | Editor API | Config |
+|---------|----------|------------|-----------|---------|------------|--------|
+| Hello World | ✓ | - | - | - | - | - |
+| Word Counter | - | ✓ | - | - | ✓ | - |
+| Custom Formatter | ✓ | - | - | - | ✓ | ✓ |
+| File Explorer | ✓ | - | ✓ | - | - | ✓ |
+| AI Assistant | ✓ | ✓ | - | ✓ | ✓ | ✓ |
+
+## Learning Path
+
+We recommend following this path:
+
+1. **Start with Hello World** to understand basic structure
+2. **Try Word Counter** to learn about editor events
+3. **Build Custom Formatter** to manipulate editor content
+4. **Create File Explorer** to work with tree views
+5. **Implement AI Assistant** to integrate external services
+
+## Common Patterns
+
+All examples demonstrate these best practices:
+
+- **Error Handling** - Proper try-catch blocks
+- **Cleanup** - Disposing resources in `deactivate()`
+- **TypeScript** - Type-safe code with JSDoc comments
+- **Async/Await** - Modern async patterns
+- **Event Listeners** - Proper listener registration and cleanup
+- **User Feedback** - Notifications, progress indicators, and status updates
+
+## Need Help?
+
+- Check the [API Reference](/developers/plugins/api-reference) for detailed API documentation
+- Review [Architecture](/developers/plugins/architecture) to understand plugin internals
+- See [Best Practices](/developers/plugins/guides/best-practices) for production tips
+- Join our [Discord community](https://discord.gg/lokus) for support
+
+## Contributing Examples
+
+Have a great plugin example? We'd love to include it! See our [contribution guide](/contributing) for details.
+
+---
+
+Ready to build? Pick an example and start coding!

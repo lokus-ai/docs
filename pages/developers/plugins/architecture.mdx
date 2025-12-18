@@ -106,7 +106,7 @@ class PluginHost {
       get(target, prop) {
         // Check permissions before allowing access
         if (!plugin.hasPermission(prop)) {
-          throw new PermissionError(`Missing permission: ${prop}`)
+          throw new PermissionError(`Missing permission: $\\{prop\\}`)
         }
 
         // Wrap API calls with monitoring
@@ -194,7 +194,7 @@ Plugins must declare required permissions in their manifest:
 function enforcePermission(plugin: Plugin, permission: string) {
   if (!plugin.manifest.permissions.includes(permission)) {
     throw new PermissionError(
-      `Plugin "${plugin.id}" requires permission: ${permission}`
+      `Plugin "${plugin.id}" requires permission: $\\{permission\\}`
     )
   }
 

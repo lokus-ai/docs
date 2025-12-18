@@ -1,0 +1,601 @@
+---
+title: "usePluginProgress"
+description: "React hook for progress indicators"
+---
+
+# usePluginProgress
+
+React hook for accessing and displaying plugin progress indicators. Provides real-time updates when progress items are started, updated, or ended.
+
+## Import
+
+```javascript
+import {
+  usePluginProgress,
+  startProgress,
+  updateProgress,
+  endProgress,
+  getAllProgressItems
+} from '@lokus/plugin-sdk';
+```
+
+## Hook Usage
+
+### usePluginProgress()
+
+Returns an array of all active progress items.
+
+**Returns:** `ProgressItem[]`
+
+**Updates when:**
+- Progress item is started
+- Progress item is updated
+- Progress item is ended
+
+```jsx
+import { usePluginProgress } from '@lokus/plugin-sdk';
+
+function ProgressIndicator() {
+  const items = usePluginProgress();
+
+  return (
+    <div className="progress-list">
+      {items.map(item => (
+        <div key={item.id} className="progress-item">
+          <strong>{item.title}</strong>
+          {item.message && <p>{item.message}</p>}
+          {item.percentage !== undefined && (
+            <progress value={item.percentage} max={100} />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+## Module Functions
+
+These functions manage progress items and can be used from anywhere in your plugin (not just React components).
+
+### startProgress(id, item)
+
+Start a new progress operation.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| id | string | Unique progress ID |
+| item | ProgressConfig | Progress configuration |
+
+**ProgressConfig:**
+```typescript
+interface ProgressConfig {
+  title: string;              // Progress title
+  message?: string;           // Current message
+  percentage?: number;        // Progress percentage (0-100)
+  cancellable?: boolean;      // Can user cancel?
+  location?: string;          // Display location (default: 'notification')
+  onCancel?: () => void;      // Cancel callback
+}
+```
+
+**Example:**
+```javascript
+import { startProgress } from '@lokus/plugin-sdk';
+
+// Start a progress operation
+startProgress('build-123', {
+  title: 'Building Project',
+  message: 'Compiling files...',
+  percentage: 0,
+  cancellable: true,
+  location: 'notification',
+  onCancel: () => {
+    console.log('Build cancelled');
+    // Stop build process
+  }
+});
+```
+
+### updateProgress(id, updates)
+
+Update an existing progress item.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| id | string | Progress ID |
+| updates | `Partial\\<ProgressItem\\>` | Fields to update |
+
+**Example:**
+```javascript
+import { updateProgress } from '@lokus/plugin-sdk';
+
+// Update progress
+updateProgress('build-123', {
+  message: 'Compiling module 2/5...',
+  percentage: 40
+});
+
+// Later...
+updateProgress('build-123', {
+  message: 'Finalizing...',
+  percentage: 90
+});
+```
+
+### endProgress(id)
+
+End/remove a progress operation.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| id | string | Progress ID |
+
+**Example:**
+```javascript
+import { endProgress } from '@lokus/plugin-sdk';
+
+// Complete the progress
+endProgress('build-123');
+```
+
+### getAllProgressItems()
+
+Get all active progress items (non-React).
+
+**Returns:** `ProgressItem[]`
+
+**Example:**
+```javascript
+import { getAllProgressItems } from '@lokus/plugin-sdk';
+
+// Check active progress
+const items = getAllProgressItems();
+console.log(`${items.length} operations in progress`);
+```
+
+## ProgressItem Interface
+
+```typescript
+interface ProgressItem {
+  id: string;              // Unique identifier
+  title: string;           // Progress title
+  message?: string;        // Current status message
+  percentage?: number;     // Progress (0-100), undefined for indeterminate
+  cancellable?: boolean;   // Whether user can cancel
+  location?: string;       // Display location
+  onCancel?: () => void;   // Cancel handler
+}
+```
+
+## Common Patterns
+
+### Pattern 1: Basic Progress Display
+
+```jsx
+import { usePluginProgress } from '@lokus/plugin-sdk';
+
+function SimpleProgress() {
+  const items = usePluginProgress();
+
+  if (items.length === 0) {
+    return null; // Nothing in progress
+  }
+
+  return (
+    <div className="progress-overlay">
+      {items.map(item => (
+        <div key={item.id}>
+          <h4>{item.title}</h4>
+          {item.percentage !== undefined ? (
+            <progress value={item.percentage} max={100}>
+              {item.percentage}%
+            </progress>
+          ) : (
+            <div className="spinner">Loading...</div>
+          )}
+          {item.message && <p>{item.message}</p>}
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+### Pattern 2: Progress with Cancel Button
+
+```jsx
+import { usePluginProgress } from '@lokus/plugin-sdk';
+
+function CancellableProgress() {
+  const items = usePluginProgress();
+
+  return (
+    <div className="progress-list">
+      {items.map(item => (
+        <div key={item.id} className="progress-item">
+          <div className="progress-header">
+            <strong>{item.title}</strong>
+            {item.cancellable && item.onCancel && (
+              <button onClick={item.onCancel}>Cancel</button>
+            )}
+          </div>
+          <progress value={item.percentage} max={100} />
+          <span>{item.percentage}%</span>
+          {item.message && <p>{item.message}</p>}
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+### Pattern 3: Build Process Progress
+
+```javascript
+import { startProgress, updateProgress, endProgress } from '@lokus/plugin-sdk';
+
+async function buildProject(files) {
+  const progressId = 'build-' + Date.now();
+
+  startProgress(progressId, {
+    title: 'Building Project',
+    message: 'Starting build...',
+    percentage: 0,
+    cancellable: true,
+    onCancel: () => {
+      // Set cancellation flag
+      buildCancelled = true;
+    }
+  });
+
+  try {
+    for (let i = 0; i < files.length; i++) {
+      if (buildCancelled) break;
+
+      updateProgress(progressId, {
+        message: `Building ${files[i].name}...`,
+        percentage: Math.round((i / files.length) * 100)
+      });
+
+      await buildFile(files[i]);
+    }
+
+    updateProgress(progressId, {
+      message: 'Build complete!',
+      percentage: 100
+    });
+
+    // Keep success message visible briefly
+    setTimeout(() => endProgress(progressId), 2000);
+  } catch (error) {
+    updateProgress(progressId, {
+      message: `Build failed: $\\{error.message\\}`,
+      percentage: undefined
+    });
+    setTimeout(() => endProgress(progressId), 5000);
+  }
+}
+```
+
+### Pattern 4: Indeterminate Progress
+
+```javascript
+import { startProgress, endProgress } from '@lokus/plugin-sdk';
+
+async function analyzeCode() {
+  const progressId = 'analyze-' + Date.now();
+
+  // No percentage = indeterminate/spinner
+  startProgress(progressId, {
+    title: 'Analyzing Code',
+    message: 'Running analysis...',
+    cancellable: false
+  });
+
+  try {
+    await runAnalysis();
+    endProgress(progressId);
+  } catch (error) {
+    endProgress(progressId);
+    throw error;
+  }
+}
+```
+
+### Pattern 5: Multiple Concurrent Progress
+
+```jsx
+import { usePluginProgress } from '@lokus/plugin-sdk';
+
+function MultiProgress() {
+  const items = usePluginProgress();
+
+  // Group by location
+  const notification = items.filter(i => i.location === 'notification');
+  const statusBar = items.filter(i => i.location === 'statusBar');
+
+  return (
+    <>
+      {notification.length > 0 && (
+        <div className="notification-progress">
+          {notification.map(item => (
+            <ProgressCard key={item.id} item={item} />
+          ))}
+        </div>
+      )}
+
+      {statusBar.length > 0 && (
+        <div className="status-bar-progress">
+          {statusBar[0].title} - {statusBar[0].percentage}%
+        </div>
+      )}
+    </>
+  );
+}
+```
+
+### Pattern 6: Progress with Time Estimate
+
+```jsx
+import { usePluginProgress } from '@lokus/plugin-sdk';
+import { useState, useEffect } from 'react';
+
+function ProgressWithETA({ item }) {
+  const [startTime] = useState(Date.now());
+  const [eta, setEta] = useState(null);
+
+  useEffect(() => {
+    if (item.percentage && item.percentage > 0) {
+      const elapsed = Date.now() - startTime;
+      const total = (elapsed / item.percentage) * 100;
+      const remaining = total - elapsed;
+      setEta(Math.round(remaining / 1000)); // seconds
+    }
+  }, [item.percentage, startTime]);
+
+  return (
+    <div className="progress-with-eta">
+      <strong>{item.title}</strong>
+      <progress value={item.percentage} max={100} />
+      <div className="stats">
+        <span>{item.percentage}%</span>
+        {eta && <span>ETA: {eta}s</span>}
+      </div>
+    </div>
+  );
+}
+```
+
+### Pattern 7: Step-by-Step Progress
+
+```javascript
+import { startProgress, updateProgress, endProgress } from '@lokus/plugin-sdk';
+
+async function multiStepOperation() {
+  const progressId = 'multistep-' + Date.now();
+  const steps = [
+    { name: 'Initialize', weight: 10 },
+    { name: 'Process Data', weight: 50 },
+    { name: 'Generate Output', weight: 30 },
+    { name: 'Finalize', weight: 10 }
+  ];
+
+  startProgress(progressId, {
+    title: 'Processing',
+    message: 'Starting...',
+    percentage: 0
+  });
+
+  let completed = 0;
+
+  for (const step of steps) {
+    updateProgress(progressId, {
+      message: step.name,
+      percentage: completed
+    });
+
+    await performStep(step);
+    completed += step.weight;
+  }
+
+  updateProgress(progressId, {
+    message: 'Complete!',
+    percentage: 100
+  });
+
+  setTimeout(() => endProgress(progressId), 1000);
+}
+```
+
+### Pattern 8: Status Bar Integration
+
+```jsx
+import { usePluginProgress } from '@lokus/plugin-sdk';
+
+function StatusBarProgress() {
+  const items = usePluginProgress();
+
+  if (items.length === 0) {
+    return null;
+  }
+
+  // Show only first item in status bar
+  const item = items[0];
+
+  return (
+    <div className="status-bar-item">
+      {item.percentage !== undefined ? (
+        <>
+          <div
+            className="progress-bar"
+            style={{ width: `${item.percentage}%` }}
+          />
+          <span>{item.title} - {item.percentage}%</span>
+        </>
+      ) : (
+        <>
+          <div className="spinner-small" />
+          <span>{item.title}</span>
+        </>
+      )}
+    </div>
+  );
+}
+```
+
+## Best Practices
+
+### 1. Use Unique IDs
+Always use unique IDs for progress items:
+
+```javascript
+// Good - unique ID
+const progressId = `build-${Date.now()}-$\\{Math.random()\\}`;
+
+// Bad - same ID may conflict
+const progressId = 'build';
+```
+
+### 2. Clean Up Progress Items
+Always end progress when operation completes:
+
+```javascript
+const progressId = 'task-123';
+
+try {
+  startProgress(progressId, { title: 'Working...' });
+  await doWork();
+} finally {
+  endProgress(progressId); // Always clean up
+}
+```
+
+### 3. Provide Meaningful Messages
+Update messages to reflect current operation:
+
+```javascript
+updateProgress(id, {
+  message: 'Downloading file 3/10...',
+  percentage: 30
+});
+```
+
+### 4. Handle Cancellation
+If progress is cancellable, respect cancellation:
+
+```javascript
+let cancelled = false;
+
+startProgress(id, {
+  title: 'Task',
+  cancellable: true,
+  onCancel: () => {
+    cancelled = true;
+  }
+});
+
+for (const item of items) {
+  if (cancelled) break; // Stop if cancelled
+  await processItem(item);
+}
+```
+
+### 5. Use Appropriate Percentage Types
+- Determinate (0-100): When you know total work
+- Indeterminate (undefined): When duration is unknown
+
+```javascript
+// Known duration
+startProgress(id, {
+  title: 'Uploading',
+  percentage: 0 // Will update to 100
+});
+
+// Unknown duration
+startProgress(id, {
+  title: 'Analyzing',
+  // No percentage = spinner
+});
+```
+
+### 6. Don't Show Too Many Progress Items
+Limit visible progress items to avoid cluttering UI:
+
+```jsx
+function ProgressList() {
+  const items = usePluginProgress();
+  const visible = items.slice(0, 3); // Show max 3
+
+  return (
+    <div>
+      {visible.map(item => <ProgressItem key={item.id} item={item} />)}
+      {items.length > 3 && (
+        <p>{items.length - 3} more operations...</p>
+      )}
+    </div>
+  );
+}
+```
+
+### 7. Show Success/Error States
+Keep progress visible briefly after completion:
+
+```javascript
+// Success
+updateProgress(id, {
+  message: 'Complete!',
+  percentage: 100
+});
+setTimeout(() => endProgress(id), 2000);
+
+// Error
+updateProgress(id, {
+  message: 'Failed!',
+  percentage: undefined
+});
+setTimeout(() => endProgress(id), 5000);
+```
+
+## Performance Considerations
+
+### Throttle Updates
+Don't update progress too frequently:
+
+```javascript
+let lastUpdate = 0;
+
+function updateProgressThrottled(id, updates) {
+  const now = Date.now();
+  if (now - lastUpdate > 100) { // Max 10 updates/second
+    updateProgress(id, updates);
+    lastUpdate = now;
+  }
+}
+```
+
+### Batch Updates
+If possible, batch multiple updates:
+
+```javascript
+// Instead of many small updates
+for (let i = 0; i < 1000; i++) {
+  updateProgress(id, { percentage: i / 10 });
+}
+
+// Update less frequently
+for (let i = 0; i < 1000; i++) {
+  if (i % 10 === 0) { // Every 10 items
+    updateProgress(id, { percentage: i / 10 });
+  }
+}
+```
+
+## Related
+
+- [Progress API](/developers/plugins/api-reference/progress) - Progress API reference
+- [Status Bar Hook](/developers/plugins/hooks/use-plugin-status-items) - Status bar integration
+- [React Hooks Overview](/developers/plugins/hooks) - All available hooks

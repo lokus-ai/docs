@@ -1,0 +1,638 @@
+---
+title: "TerminalPanel Component"
+description: "Integrated terminal interface for command execution"
+---
+
+# TerminalPanel Component
+
+The TerminalPanel provides an integrated terminal interface within Lokus, allowing plugins to execute commands, display output, and interact with shell environments. It supports multiple terminal tabs, color-coded output, and command input.
+
+## Usage
+
+Create a terminal using `api.ui.createTerminal()`:
+
+```javascript
+const terminal = api.ui.createTerminal(options);
+```
+
+## Parameters
+
+```typescript
+interface TerminalOptions {
+  name?: string;           // Terminal name (shown in tab)
+  shellPath?: string;      // Path to shell executable
+  shellArgs?: string[];    // Shell arguments
+  cwd?: string;            // Working directory
+  env?: object;            // Environment variables
+}
+```
+
+### Available Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `name` | `string` | `'Terminal'` | Display name for the terminal tab |
+| `shellPath` | `string` | System default | Path to shell executable (e.g., `/bin/bash`) |
+| `shellArgs` | `string[]` | `[]` | Arguments to pass to shell |
+| `cwd` | `string` | Current directory | Working directory for terminal |
+| `env` | `object` | Process env | Environment variables |
+
+## Terminal Object
+
+The returned terminal object provides the following methods:
+
+```typescript
+interface Terminal {
+  id: string;
+  name: string;
+  sendText(text: string, addNewLine?: boolean): void;
+  show(preserveFocus?: boolean): void;
+  hide(): void;
+  dispose(): void;
+}
+```
+
+### Methods
+
+| Method | Parameters | Description |
+|--------|------------|-------------|
+| `sendText` | `text: string, addNewLine?: boolean` | Send text to terminal (adds newline by default) |
+| `show` | `preserveFocus?: boolean` | Show terminal panel (steals focus unless `preserveFocus` is true) |
+| `hide` | - | Hide terminal panel |
+| `dispose` | - | Close and dispose terminal |
+
+## Basic Example
+
+```javascript
+export function activate(api) {
+  // Create terminal
+  const terminal = api.ui.createTerminal({
+    name: 'My Plugin',
+    cwd: api.workspace.rootPath
+  });
+
+  // Show terminal
+  terminal.show();
+
+  // Execute command
+  terminal.sendText('npm install');
+
+  return {
+    dispose: () => terminal.dispose()
+  };
+}
+```
+
+## Command Execution
+
+### Simple Command
+
+```javascript
+const terminal = api.ui.createTerminal({
+  name: 'Build',
+  cwd: projectPath
+});
+
+terminal.show();
+terminal.sendText('npm run build');
+```
+
+### Multiple Commands
+
+```javascript
+terminal.sendText('cd /path/to/project', true);
+terminal.sendText('npm install', true);
+terminal.sendText('npm test', true);
+```
+
+### Without Newline
+
+Use `addNewLine: false` to type without executing:
+
+```javascript
+// Type without executing
+terminal.sendText('git commit -m "', false);
+terminal.sendText('My commit message', false);
+terminal.sendText('"', true);
+```
+
+## Multiple Terminals
+
+The terminal panel supports multiple tabs:
+
+```javascript
+export function activate(api) {
+  // Build terminal
+  const buildTerminal = api.ui.createTerminal({
+    name: 'Build',
+    cwd: api.workspace.rootPath
+  });
+
+  // Test terminal
+  const testTerminal = api.ui.createTerminal({
+    name: 'Test',
+    cwd: api.workspace.rootPath
+  });
+
+  // Dev server terminal
+  const serverTerminal = api.ui.createTerminal({
+    name: 'Dev Server',
+    cwd: api.workspace.rootPath
+  });
+
+  // Register commands
+  api.commands.registerCommand('myPlugin.runBuild', () => {
+    buildTerminal.show();
+    buildTerminal.sendText('npm run build');
+  });
+
+  api.commands.registerCommand('myPlugin.runTests', () => {
+    testTerminal.show();
+    testTerminal.sendText('npm test');
+  });
+
+  api.commands.registerCommand('myPlugin.startServer', () => {
+    serverTerminal.show();
+    serverTerminal.sendText('npm run dev');
+  });
+
+  return {
+    dispose: () => {
+      buildTerminal.dispose();
+      testTerminal.dispose();
+      serverTerminal.dispose();
+    }
+  };
+}
+```
+
+## Custom Shell
+
+Use a specific shell:
+
+```javascript
+// Use zsh
+const terminal = api.ui.createTerminal({
+  name: 'Zsh Terminal',
+  shellPath: '/bin/zsh',
+  shellArgs: ['-l']
+});
+
+// Use bash
+const bashTerminal = api.ui.createTerminal({
+  name: 'Bash',
+  shellPath: '/bin/bash',
+  shellArgs: ['--login']
+});
+
+// Use fish
+const fishTerminal = api.ui.createTerminal({
+  name: 'Fish',
+  shellPath: '/usr/local/bin/fish'
+});
+```
+
+## Environment Variables
+
+Pass custom environment variables:
+
+```javascript
+const terminal = api.ui.createTerminal({
+  name: 'Production Build',
+  env: {
+    NODE_ENV: 'production',
+    API_KEY: 'your-api-key',
+    DEBUG: '*'
+  }
+});
+
+terminal.show();
+terminal.sendText('npm run build');
+```
+
+## Working Directory
+
+Set the initial working directory:
+
+```javascript
+const terminal = api.ui.createTerminal({
+  name: 'Project Terminal',
+  cwd: '/path/to/project/subfolder'
+});
+
+terminal.show();
+terminal.sendText('pwd');  // Will show /path/to/project/subfolder
+```
+
+## Events
+
+Listen to terminal events:
+
+```javascript
+// Terminal created
+api.terminal.on('terminal-created', ({ terminal }) => {
+  console.log('Terminal created:', terminal.name);
+});
+
+// Terminal disposed
+api.terminal.on('terminal-disposed', ({ terminalId }) => {
+  console.log('Terminal closed:', terminalId);
+});
+
+// Terminal output
+api.terminal.on('terminal-output', ({ terminalId, output }) => {
+  console.log(`Output from ${terminalId}:`, output);
+});
+
+// Terminal data (input)
+api.terminal.on('terminal-data', ({ terminalId, data }) => {
+  console.log(`Input to ${terminalId}:`, data);
+});
+
+// Active terminal changed
+api.terminal.on('active-terminal-changed', ({ terminal }) => {
+  console.log('Active terminal:', terminal?.name);
+});
+```
+
+## Output Types
+
+Terminal output is color-coded by type:
+
+```typescript
+interface TerminalOutput {
+  text: string;
+  type: 'info' | 'error' | 'warning' | 'success' | 'input';
+}
+```
+
+| Type | Color | Usage |
+|------|-------|-------|
+| `info` | Default | Regular output |
+| `error` | Red | Error messages |
+| `warning` | Yellow | Warning messages |
+| `success` | Green | Success messages |
+| `input` | Blue | User input |
+
+## Real-World Examples
+
+### Build System
+
+```javascript
+class BuildPlugin {
+  constructor(api) {
+    this.api = api;
+    this.terminal = null;
+  }
+
+  activate() {
+    this.terminal = this.api.ui.createTerminal({
+      name: 'Build Output',
+      cwd: this.api.workspace.rootPath
+    });
+
+    // Register build command
+    this.api.commands.registerCommand('build.run', () => {
+      this.runBuild();
+    });
+
+    // Register clean command
+    this.api.commands.registerCommand('build.clean', () => {
+      this.cleanBuild();
+    });
+  }
+
+  async runBuild() {
+    this.terminal.show();
+    this.terminal.sendText('echo "Starting build..."');
+    this.terminal.sendText('npm run build');
+    this.terminal.sendText('echo "Build complete!"');
+  }
+
+  async cleanBuild() {
+    this.terminal.show();
+    this.terminal.sendText('rm -rf dist');
+    this.terminal.sendText('npm run build');
+  }
+
+  deactivate() {
+    if (this.terminal) {
+      this.terminal.dispose();
+    }
+  }
+}
+```
+
+### Git Integration
+
+```javascript
+class GitPlugin {
+  activate(api) {
+    this.gitTerminal = api.ui.createTerminal({
+      name: 'Git',
+      cwd: api.workspace.rootPath
+    });
+
+    // Register git commands
+    api.commands.registerCommand('git.status', () => {
+      this.gitTerminal.show();
+      this.gitTerminal.sendText('git status');
+    });
+
+    api.commands.registerCommand('git.log', () => {
+      this.gitTerminal.show();
+      this.gitTerminal.sendText('git log --oneline --graph -10');
+    });
+
+    api.commands.registerCommand('git.pull', () => {
+      this.gitTerminal.show();
+      this.gitTerminal.sendText('git pull');
+    });
+
+    api.commands.registerCommand('git.push', () => {
+      this.gitTerminal.show();
+      this.gitTerminal.sendText('git push');
+    });
+  }
+}
+```
+
+### Task Runner
+
+```javascript
+class TaskRunner {
+  activate(api) {
+    this.terminals = new Map();
+
+    // Register task runner
+    api.commands.registerCommand('tasks.run', async () => {
+      const tasks = await this.loadTasks();
+      const selected = await api.ui.showQuickPick(
+        tasks.map(t => ({ label: t.name, description: t.command })),
+        { title: 'Run Task' }
+      );
+
+      if (selected) {
+        this.runTask(api, tasks.find(t => t.name === selected.label));
+      }
+    });
+  }
+
+  runTask(api, task) {
+    // Create or reuse terminal for this task
+    if (!this.terminals.has(task.name)) {
+      this.terminals.set(
+        task.name,
+        api.ui.createTerminal({
+          name: task.name,
+          cwd: task.cwd || api.workspace.rootPath,
+          env: task.env
+        })
+      );
+    }
+
+    const terminal = this.terminals.get(task.name);
+    terminal.show();
+    terminal.sendText(task.command);
+  }
+
+  async loadTasks() {
+    // Load tasks from configuration
+    return [
+      { name: 'Build', command: 'npm run build' },
+      { name: 'Test', command: 'npm test' },
+      { name: 'Lint', command: 'npm run lint' },
+      { name: 'Dev Server', command: 'npm run dev' }
+    ];
+  }
+}
+```
+
+### Interactive Shell
+
+```javascript
+async function interactiveSetup(api) {
+  const terminal = api.ui.createTerminal({
+    name: 'Setup Wizard',
+    cwd: api.workspace.rootPath
+  });
+
+  terminal.show();
+
+  // Run interactive setup
+  terminal.sendText('npx create-lokus-plugin');
+
+  // Listen for completion
+  api.terminal.on('terminal-output', ({ terminalId, output }) => {
+    if (terminalId === terminal.id && output.text.includes('Setup complete')) {
+      api.ui.showInformationMessage('Plugin setup completed!');
+    }
+  });
+}
+```
+
+## Panel Visibility
+
+Control terminal panel visibility:
+
+```javascript
+// Show terminal (steal focus)
+terminal.show();
+
+// Show without stealing focus
+terminal.show(true);
+
+// Hide panel
+terminal.hide();
+
+// Check if terminal is visible
+const isVisible = api.terminal.isTerminalVisible();
+```
+
+## Terminal Management
+
+Get information about terminals:
+
+```javascript
+// Get all terminals
+const terminals = api.terminal.getTerminals();
+
+// Get active terminal
+const active = api.terminal.getActiveTerminal();
+
+// Find terminal by ID
+const terminal = terminals.find(t => t.id === 'some-id');
+
+// Dispose specific terminal
+api.terminal.disposeTerminal(terminalId);
+```
+
+## Styling
+
+The TerminalPanel uses the following CSS variables:
+
+```css
+/* Panel */
+--background-primary          /* Panel background */
+--border                      /* Border color */
+
+/* Tabs */
+--background-secondary        /* Tab background */
+--background-modifier-hover   /* Tab hover */
+--background-modifier-active  /* Active tab */
+--text-normal                 /* Tab text */
+
+/* Output */
+--text-normal                 /* Default text */
+--text-error                  /* Error text */
+--text-warning                /* Warning text */
+--text-success                /* Success text */
+--text-muted                  /* Input text */
+
+/* Input */
+--background-modifier-border  /* Input border */
+
+/* Scrollbar */
+--scrollbar-thumb-bg          /* Scrollbar color */
+```
+
+## Best Practices
+
+### 1. Use Descriptive Names
+
+Give terminals meaningful names:
+
+```javascript
+// Good
+const terminal = api.ui.createTerminal({ name: 'Build Output' });
+
+// Less helpful
+const terminal = api.ui.createTerminal({ name: 'Terminal' });
+```
+
+### 2. Reuse Terminals
+
+Don't create a new terminal for every command:
+
+```javascript
+// Good: Reuse terminal
+if (!this.buildTerminal) {
+  this.buildTerminal = api.ui.createTerminal({ name: 'Build' });
+}
+this.buildTerminal.show();
+this.buildTerminal.sendText('npm run build');
+
+// Bad: Create new terminal each time
+const terminal = api.ui.createTerminal({ name: 'Build' });
+terminal.show();
+terminal.sendText('npm run build');
+```
+
+### 3. Clean Up Terminals
+
+Dispose terminals when plugin deactivates:
+
+```javascript
+export function deactivate() {
+  if (this.terminal) {
+    this.terminal.dispose();
+  }
+}
+```
+
+### 4. Set Working Directory
+
+Always set appropriate working directory:
+
+```javascript
+const terminal = api.ui.createTerminal({
+  name: 'Project Terminal',
+  cwd: api.workspace.rootPath  // Use workspace root
+});
+```
+
+### 5. Preserve Focus When Appropriate
+
+Don't steal focus for background tasks:
+
+```javascript
+// Background task - don't steal focus
+terminal.show(true);
+terminal.sendText('npm run watch');
+
+// User-initiated - okay to steal focus
+terminal.show();
+terminal.sendText('npm test');
+```
+
+## Performance Tips
+
+### 1. Limit Terminal Count
+
+Don't create too many terminals:
+
+```javascript
+// Good: Manage terminal lifecycle
+const MAX_TERMINALS = 5;
+if (this.terminals.size >= MAX_TERMINALS) {
+  const oldest = this.terminals.values().next().value;
+  oldest.dispose();
+}
+```
+
+### 2. Batch Commands
+
+Send multiple commands efficiently:
+
+```javascript
+// Good: Send as one
+terminal.sendText('cd /project && npm install && npm test');
+
+// Less efficient: Multiple calls
+terminal.sendText('cd /project');
+terminal.sendText('npm install');
+terminal.sendText('npm test');
+```
+
+## Troubleshooting
+
+### Terminal not showing
+Call `show()` after creating terminal:
+```javascript
+terminal.show();
+```
+
+### Commands not executing
+Ensure `addNewLine` is true (default) or explicitly add newline:
+```javascript
+terminal.sendText('command', true);
+```
+
+### Wrong working directory
+Set `cwd` option when creating terminal:
+```javascript
+const terminal = api.ui.createTerminal({ cwd: '/correct/path' });
+```
+
+### Environment variables not working
+Ensure `env` object is provided and contains necessary variables:
+```javascript
+const terminal = api.ui.createTerminal({
+  env: { NODE_ENV: 'production' }
+});
+```
+
+## Limitations
+
+1. **No direct output capture**: Output is displayed in panel but not returned programmatically
+2. **No interactive input**: Cannot programmatically respond to prompts (use `sendText` for predefined responses)
+3. **Platform-specific shells**: Shell availability varies by platform
+
+For programmatic output capture, use `api.ui.createOutputChannel()` instead.
+
+## See Also
+
+- [UIAPI Reference](/developers/plugins/api-reference/ui-api)
+- [TerminalAPI Reference](/developers/plugins/api-reference/terminal-api)
+- [OutputPanel Component](/developers/plugins/components/output-panel)
+- [Component Overview](/developers/plugins/components)

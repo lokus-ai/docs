@@ -1,0 +1,608 @@
+---
+title: "StorageAPI Reference"
+description: "Key-value storage for persisting plugin data in Lokus"
+keywords: [lokus, plugin api, storage, database, persistence, data]
+---
+
+# StorageAPI
+
+Key-value storage for persisting plugin data. Access via `context.storage`.
+
+## Overview
+
+The StorageAPI provides a simple key-value store for plugins to persist data. Each plugin has its own isolated storage namespace. Data is stored in IndexedDB (with localStorage fallback) and persists across Lokus sessions.
+
+**Use Cases:**
+- Plugin settings and preferences
+- Cached data
+- User-generated content
+- Session state
+
+## Methods
+
+### get(key)
+
+Retrieve a value from storage.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| key | string | Yes | Storage key |
+
+**Returns:** Promise resolving to stored value or `undefined`.
+
+**Example:**
+
+```typescript
+const settings = await context.storage.get('settings');
+if (settings) {
+  context.logger.info('Loaded settings:', settings);
+} else {
+  context.logger.info('No settings found');
+}
+
+// With default value
+const theme = await context.storage.get('theme') ?? 'dark';
+```
+
+---
+
+### set(key, value)
+
+Store a value in storage.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| key | string | Yes | Storage key |
+| value | any | Yes | Value to store (must be JSON serializable) |
+
+**Returns:** Promise that resolves when stored.
+
+**Example:**
+
+```typescript
+// Store simple value
+await context.storage.set('theme', 'dark');
+
+// Store object
+await context.storage.set('settings', {
+  autoSave: true,
+  fontSize: 14,
+  theme: 'dark'
+});
+
+// Store array
+await context.storage.set('recentFiles', [
+  '/path/to/file1.md',
+  '/path/to/file2.md'
+]);
+
+context.ui.showInformationMessage('Settings saved');
+```
+
+---
+
+### delete(key)
+
+Delete a value from storage.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| key | string | Yes | Storage key |
+
+**Returns:** Promise that resolves when deleted.
+
+**Example:**
+
+```typescript
+await context.storage.delete('cache');
+context.logger.info('Cache cleared');
+
+// Check if exists before deleting
+const keys = await context.storage.keys();
+if (keys.includes('oldData')) {
+  await context.storage.delete('oldData');
+}
+```
+
+---
+
+### keys()
+
+Get all storage keys.
+
+**Returns:** Promise resolving to array of keys.
+
+**Example:**
+
+```typescript
+const keys = await context.storage.keys();
+context.logger.info(`Storage contains ${keys.length} keys:`, keys);
+
+// List all stored data
+for (const key of keys) {
+  const value = await context.storage.get(key);
+  context.logger.info(`${key}:`, value);
+}
+```
+
+---
+
+### clear()
+
+Clear all storage data for this plugin.
+
+**Returns:** Promise that resolves when cleared.
+
+**Example:**
+
+```typescript
+// Clear all plugin data
+await context.storage.clear();
+context.ui.showInformationMessage('All data cleared');
+
+// With confirmation
+const confirmed = await context.ui.showConfirm({
+  title: 'Clear Storage',
+  message: 'This will delete all plugin data. Continue?'
+});
+
+if (confirmed) {
+  await context.storage.clear();
+}
+```
+
+---
+
+### getDatabase(name)
+
+Get a named database for more advanced storage.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| name | string | Yes | Database name |
+
+**Returns:** Promise resolving to Database object with same methods as StorageAPI.
+
+**Example:**
+
+```typescript
+// Get separate databases for different purposes
+const settingsDb = await context.storage.getDatabase('settings');
+const cacheDb = await context.storage.getDatabase('cache');
+
+await settingsDb.set('theme', 'dark');
+await cacheDb.set('lastFetch', Date.now());
+
+// Clear only cache
+await cacheDb.clear();
+```
+
+---
+
+## Complete Example
+
+```typescript
+export default class SettingsPlugin {
+  private context: PluginContext;
+  private settings: any;
+
+  constructor(context: PluginContext) {
+    this.context = context;
+  }
+
+  async activate(): Promise<void> {
+    // Load settings on activation
+    await this.loadSettings();
+
+    // Register commands
+    context.commands.register([
+      {
+        id: 'myPlugin.openSettings',
+        name: 'Open Settings',
+        execute: () => this.openSettings()
+      },
+      {
+        id: 'myPlugin.resetSettings',
+        name: 'Reset Settings',
+        execute: () => this.resetSettings()
+      },
+      {
+        id: 'myPlugin.exportSettings',
+        name: 'Export Settings',
+        execute: () => this.exportSettings()
+      }
+    ]);
+
+    context.logger.info('Settings loaded:', this.settings);
+  }
+
+  async loadSettings(): Promise<void> {
+    // Load with defaults
+    this.settings = await context.storage.get('settings') ?? {
+      autoSave: true,
+      fontSize: 14,
+      theme: 'dark',
+      keybindings: []
+    };
+  }
+
+  async saveSettings(): Promise<void> {
+    await context.storage.set('settings', this.settings);
+    context.ui.showInformationMessage('Settings saved');
+  }
+
+  async openSettings(): Promise<void> {
+    // Show settings UI (simplified)
+    const autoSave = await context.ui.showQuickPick([
+      { label: 'Enabled', value: true },
+      { label: 'Disabled', value: false }
+    ], {
+      title: 'Auto Save'
+    });
+
+    if (autoSave) {
+      this.settings.autoSave = autoSave.value;
+      await this.saveSettings();
+    }
+  }
+
+  async resetSettings(): Promise<void> {
+    const confirmed = await context.ui.showConfirm({
+      title: 'Reset Settings',
+      message: 'Reset all settings to defaults?'
+    });
+
+    if (confirmed) {
+      await context.storage.delete('settings');
+      await this.loadSettings();
+      context.ui.showInformationMessage('Settings reset');
+    }
+  }
+
+  async exportSettings(): Promise<void> {
+    const json = JSON.stringify(this.settings, null, 2);
+    await context.clipboard.writeText(json);
+    context.ui.showInformationMessage('Settings copied to clipboard');
+  }
+
+  async deactivate(): Promise<void> {
+    // Save on deactivation
+    await this.saveSettings();
+  }
+}
+```
+
+---
+
+## Advanced Example: Cache Manager
+
+```typescript
+export default class CachePlugin {
+  private context: PluginContext;
+  private cache: Map<string, any>;
+  private cacheDb: any;
+
+  constructor(context: PluginContext) {
+    this.context = context;
+    this.cache = new Map();
+  }
+
+  async activate(): Promise<void> {
+    // Use separate database for cache
+    this.cacheDb = await context.storage.getDatabase('cache');
+
+    // Load cache into memory
+    await this.loadCache();
+
+    // Register commands
+    context.commands.register([
+      {
+        id: 'myPlugin.clearCache',
+        name: 'Clear Cache',
+        execute: () => this.clearCache()
+      },
+      {
+        id: 'myPlugin.viewCache',
+        name: 'View Cache Stats',
+        execute: () => this.viewCache()
+      }
+    ]);
+
+    // Auto-cleanup old cache entries
+    this.setupAutoCleanup();
+  }
+
+  async loadCache(): Promise<void> {
+    const keys = await this.cacheDb.keys();
+
+    for (const key of keys) {
+      const entry = await this.cacheDb.get(key);
+
+      // Check expiry
+      if (entry.expires && entry.expires < Date.now()) {
+        await this.cacheDb.delete(key);
+      } else {
+        this.cache.set(key, entry.data);
+      }
+    }
+
+    context.logger.info(`Loaded ${this.cache.size} cache entries`);
+  }
+
+  async getCached(key: string): Promise<any> {
+    // Check memory cache first
+    if (this.cache.has(key)) {
+      const entry = await this.cacheDb.get(key);
+      if (entry && (!entry.expires || entry.expires > Date.now())) {
+        return entry.data;
+      }
+    }
+    return undefined;
+  }
+
+  async setCached(key: string, data: any, ttl?: number): Promise<void> {
+    const entry = {
+      data,
+      created: Date.now(),
+      expires: ttl ? Date.now() + ttl : undefined
+    };
+
+    this.cache.set(key, data);
+    await this.cacheDb.set(key, entry);
+  }
+
+  async clearCache(): Promise<void> {
+    const confirmed = await context.ui.showConfirm({
+      title: 'Clear Cache',
+      message: 'This will delete all cached data. Continue?'
+    });
+
+    if (confirmed) {
+      this.cache.clear();
+      await this.cacheDb.clear();
+      context.ui.showInformationMessage('Cache cleared');
+    }
+  }
+
+  async viewCache(): Promise<void> {
+    const keys = await this.cacheDb.keys();
+    let totalSize = 0;
+
+    const stats = [];
+    for (const key of keys) {
+      const entry = await this.cacheDb.get(key);
+      const size = JSON.stringify(entry).length;
+      totalSize += size;
+
+      stats.push({
+        key,
+        size: `${(size / 1024).toFixed(2)} KB`,
+        expires: entry.expires ? new Date(entry.expires).toISOString() : 'Never'
+      });
+    }
+
+    context.logger.info('Cache Stats:');
+    context.logger.info(`Total entries: $\\{keys.length\\}`);
+    context.logger.info(`Total size: ${(totalSize / 1024).toFixed(2)} KB`);
+    context.logger.info('Entries:', stats);
+
+    context.ui.showInformationMessage(
+      `Cache: ${keys.length} entries (${(totalSize / 1024).toFixed(2)} KB)`
+    );
+  }
+
+  setupAutoCleanup(): void {
+    // Clean up expired entries every hour
+    setInterval(async () => {
+      const keys = await this.cacheDb.keys();
+      let deleted = 0;
+
+      for (const key of keys) {
+        const entry = await this.cacheDb.get(key);
+        if (entry.expires && entry.expires < Date.now()) {
+          await this.cacheDb.delete(key);
+          this.cache.delete(key);
+          deleted++;
+        }
+      }
+
+      if (deleted > 0) {
+        context.logger.info(`Cleaned up ${deleted} expired cache entries`);
+      }
+    }, 60 * 60 * 1000);
+  }
+
+  async deactivate(): Promise<void> {
+    // Cache persists automatically
+  }
+}
+```
+
+---
+
+## Advanced Example: Data Sync
+
+```typescript
+export default class DataSyncPlugin {
+  private context: PluginContext;
+  private localDb: any;
+  private syncDb: any;
+
+  constructor(context: PluginContext) {
+    this.context = context;
+  }
+
+  async activate(): Promise<void> {
+    // Separate databases for local and sync data
+    this.localDb = await context.storage.getDatabase('local');
+    this.syncDb = await context.storage.getDatabase('sync');
+
+    // Register commands
+    context.commands.register([
+      {
+        id: 'myPlugin.sync',
+        name: 'Sync Data',
+        execute: () => this.syncData()
+      },
+      {
+        id: 'myPlugin.viewSyncStatus',
+        name: 'View Sync Status',
+        execute: () => this.viewSyncStatus()
+      }
+    ]);
+  }
+
+  async saveLocal(key: string, data: any): Promise<void> {
+    await this.localDb.set(key, {
+      data,
+      modified: Date.now(),
+      synced: false
+    });
+  }
+
+  async syncData(): Promise<void> {
+    const keys = await this.localDb.keys();
+    let synced = 0;
+
+    for (const key of keys) {
+      const entry = await this.localDb.get(key);
+
+      if (!entry.synced) {
+        // Simulate remote sync
+        await this.syncToRemote(key, entry.data);
+
+        // Mark as synced
+        await this.localDb.set(key, {
+          ...entry,
+          synced: true,
+          syncedAt: Date.now()
+        });
+
+        synced++;
+      }
+    }
+
+    context.ui.showInformationMessage(`Synced ${synced} items`);
+  }
+
+  async syncToRemote(key: string, data: any): Promise<void> {
+    // Store in sync database
+    await this.syncDb.set(key, {
+      data,
+      syncedAt: Date.now()
+    });
+  }
+
+  async viewSyncStatus(): Promise<void> {
+    const localKeys = await this.localDb.keys();
+    const unsyncedCount = (await Promise.all(
+      localKeys.map(async k => {
+        const entry = await this.localDb.get(k);
+        return !entry.synced;
+      })
+    )).filter(Boolean).length;
+
+    context.ui.showInformationMessage(
+      `${unsyncedCount} items pending sync`
+    );
+  }
+
+  async deactivate(): Promise<void> {
+    // Auto-sync on deactivation
+    await this.syncData();
+  }
+}
+```
+
+---
+
+## Best Practices
+
+1. **Use Descriptive Keys**: Make keys readable and organized
+   ```typescript
+   await storage.set('settings.appearance.theme', 'dark');
+   await storage.set('cache.lastFetch', timestamp);
+   ```
+
+2. **Handle Missing Data**: Provide defaults
+   ```typescript
+   const settings = await storage.get('settings') ?? defaultSettings;
+   ```
+
+3. **Serialize Carefully**: Ensure data is JSON-serializable
+   ```typescript
+   // ✓ Good
+   await storage.set('data', { name: 'John', age: 30 });
+
+   // ✗ Bad - functions not serializable
+   await storage.set('handler', () => {});
+   ```
+
+4. **Clean Up Old Data**: Remove unused entries
+   ```typescript
+   async cleanup() {
+     const keys = await storage.keys();
+     for (const key of keys) {
+       if (key.startsWith('temp_')) {
+         await storage.delete(key);
+       }
+     }
+   }
+   ```
+
+5. **Use Separate Databases**: Organize by purpose
+   ```typescript
+   const settingsDb = await storage.getDatabase('settings');
+   const cacheDb = await storage.getDatabase('cache');
+   ```
+
+6. **Handle Errors**: Wrap storage calls in try-catch
+   ```typescript
+   try {
+     await storage.set('data', value);
+   } catch (error) {
+     context.logger.error('Storage failed:', error);
+   }
+   ```
+
+---
+
+## Storage Limits
+
+- **Per-plugin limit**: ~10MB (IndexedDB)
+- **localStorage fallback**: ~5MB
+- **Key size**: Unlimited
+- **Value size**: Limited by total quota
+
+**Large Data Handling:**
+```typescript
+// Split large data into chunks
+const data = largeObject;
+const chunks = chunkData(data, 1024 * 100); // 100KB chunks
+
+for (let i = 0; i < chunks.length; i++) {
+  await storage.set(`data_chunk_$\\{i\\}`, chunks[i]);
+}
+
+// Retrieve and reassemble
+const keys = await storage.keys();
+const dataKeys = keys.filter(k => k.startsWith('data_chunk_'));
+const chunks = await Promise.all(dataKeys.map(k => storage.get(k)));
+const reconstructed = reassembleChunks(chunks);
+```
+
+---
+
+## See Also
+
+- [FilesystemAPI Reference](/developers/plugins/api-reference/filesystem-api) - File storage
+- [NetworkAPI Reference](/developers/plugins/api-reference/network-api) - Remote data
+- [ConfigurationAPI Reference](/developers/plugins/api-reference/configuration-api) - User settings

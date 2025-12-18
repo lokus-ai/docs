@@ -1,0 +1,905 @@
+---
+title: "LanguagesAPI Reference"
+description: "Complete reference for the Lokus Plugin LanguagesAPI"
+---
+
+# LanguagesAPI
+
+The LanguagesAPI provides language feature support for plugins, enabling registration of completion providers, hover providers, formatters, and custom language definitions.
+
+## Overview
+
+Use LanguagesAPI when you need to:
+- Register autocomplete/completion providers
+- Provide hover information for symbols
+- Add go-to-definition support
+- Register code actions (quick fixes)
+- Add document formatting capabilities
+- Define custom language configurations
+- Register new language types
+
+## Completion Provider Methods
+
+### registerCompletionProvider(selector, provider, ...triggerCharacters)
+
+Register an autocomplete/completion provider for providing suggestions.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| selector | string \| object | Yes | Document selector (language ID or `\\\`\{language, scheme, pattern\\\\}``) |
+| provider | object | Yes | Completion provider with provideCompletionItems method |
+| triggerCharacters | ...string | No | Characters that trigger completion |
+
+**Document Selector Format:**
+```typescript
+// String (language ID):
+"markdown"
+
+// Object:
+{
+  language?: string,   // Language ID
+  scheme?: string,     // URI scheme ('file', 'untitled')
+  pattern?: string     // Glob pattern
+}
+```
+
+**Provider Interface:**
+```typescript
+{
+  provideCompletionItems(
+    document: TextDocument,
+    position: Position,
+    token: CancellationToken,
+    context: CompletionContext
+  ): CompletionItem[] | Promise<CompletionItem[]>
+}
+```
+
+**CompletionItem Format:**
+```typescript
+{
+  label: string,                    // Display label
+  kind?: number,                    // Type (1=Text, 2=Method, 3=Function, etc.)
+  detail?: string,                  // Additional info
+  documentation?: string,           // Documentation
+  insertText?: string,              // Text to insert (default: label)
+  filterText?: string,              // Text for filtering
+  sortText?: string,                // Text for sorting
+  preselect?: boolean,              // Preselect this item
+  command?: Command                 // Command to execute after insertion
+}
+```
+
+**CompletionContext Format:**
+```typescript
+{
+  triggerKind: number,              // 1=Invoked, 2=TriggerCharacter, 3=TriggerForIncompleteCompletions
+  triggerCharacter?: string         // Character that triggered completion
+}
+```
+
+**Returns:** `Disposable` - Disposable to unregister the provider
+
+**Example:**
+```javascript
+const disposable = api.languages.registerCompletionProvider(
+  'markdown',
+  {
+    provideCompletionItems(document, position, token, context) {
+      // Provide emoji completions
+      if (context.triggerCharacter === ':') {
+        return [
+          {
+            label: ':smile:',
+            kind: 1, // Text
+            insertText: '😊',
+            documentation: 'Smiling face'
+          },
+          {
+            label: ':heart:',
+            kind: 1,
+            insertText: '❤️',
+            documentation: 'Red heart'
+          }
+        ];
+      }
+
+      return [];
+    }
+  },
+  ':' // Trigger on colon
+);
+
+// Later, to unregister:
+disposable.dispose();
+```
+
+---
+
+## Hover Provider Methods
+
+### registerHoverProvider(selector, provider)
+
+Register a hover provider to show information when hovering over text.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| selector | string \| object | Yes | Document selector |
+| provider | object | Yes | Hover provider with provideHover method |
+
+**Provider Interface:**
+```typescript
+{
+  provideHover(
+    document: TextDocument,
+    position: Position,
+    token: CancellationToken
+  ): Hover | null | Promise<Hover | null>
+}
+```
+
+**Hover Format:**
+```typescript
+{
+  contents: string | string[] | MarkdownString,
+  range?: Range                  // Range to highlight
+}
+```
+
+**Returns:** `Disposable` - Disposable to unregister the provider
+
+**Example:**
+```javascript
+const disposable = api.languages.registerHoverProvider('markdown', {
+  provideHover(document, position, token) {
+    const text = document.getText();
+    const offset = document.offsetAt(position);
+
+    // Find wiki links at cursor position
+    const wikiLinkRegex = /\[\[([^\]]+)\]\]/g;
+    let match;
+
+    while ((match = wikiLinkRegex.exec(text)) !== null) {
+      const start = match.index;
+      const end = match.index + match[0].length;
+
+      if (offset >= start && offset <= end) {
+        const pageName = match[1];
+        return {
+          contents: [
+            `**Wiki Link**`,
+            `Page: $\\{pageName\\}`,
+            `Click to navigate`
+          ],
+          range: {
+            start: document.positionAt(start),
+            end: document.positionAt(end)
+          }
+        };
+      }
+    }
+
+    return null;
+  }
+});
+```
+
+---
+
+## Definition Provider Methods
+
+### registerDefinitionProvider(selector, provider)
+
+Register a go-to-definition provider.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| selector | string \| object | Yes | Document selector |
+| provider | object | Yes | Definition provider with provideDefinition method |
+
+**Provider Interface:**
+```typescript
+{
+  provideDefinition(
+    document: TextDocument,
+    position: Position,
+    token: CancellationToken
+  ): Location | Location[] | null | Promise<Location | Location[] | null>
+}
+```
+
+**Location Format:**
+```typescript
+{
+  uri: string,                     // File URI
+  range: Range                     // Range in target document
+}
+```
+
+**Returns:** `Disposable` - Disposable to unregister the provider
+
+**Example:**
+```javascript
+const disposable = api.languages.registerDefinitionProvider('markdown', {
+  async provideDefinition(document, position, token) {
+    const text = document.getText();
+    const offset = document.offsetAt(position);
+
+    // Find wiki link at cursor
+    const wikiLinkRegex = /\[\[([^\]]+)\]\]/g;
+    let match;
+
+    while ((match = wikiLinkRegex.exec(text)) !== null) {
+      const start = match.index;
+      const end = match.index + match[0].length;
+
+      if (offset >= start && offset <= end) {
+        const pageName = match[1];
+        const targetUri = `file:///workspace/${pageName}.md`;
+
+        // Check if file exists
+        const exists = await api.workspace.findFiles(targetUri);
+        if (exists.length > 0) {
+          return {
+            uri: targetUri,
+            range: {
+              start: { line: 0, character: 0 },
+              end: { line: 0, character: 0 }
+            }
+          };
+        }
+      }
+    }
+
+    return null;
+  }
+});
+```
+
+---
+
+## Code Action Provider Methods
+
+### registerCodeActionProvider(selector, provider, metadata)
+
+Register a code action provider (quick fixes, refactorings).
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| selector | string \| object | Yes | Document selector |
+| provider | object | Yes | Code action provider with provideCodeActions method |
+| metadata | object | No | Provider metadata |
+
+**Provider Interface:**
+```typescript
+{
+  provideCodeActions(
+    document: TextDocument,
+    range: Range,
+    context: CodeActionContext,
+    token: CancellationToken
+  ): CodeAction[] | Promise<CodeAction[]>
+}
+```
+
+**CodeAction Format:**
+```typescript
+{
+  title: string,                   // Required: Action title
+  kind?: string,                   // Action kind ('quickfix', 'refactor', 'refactor.extract', 'refactor.inline', 'refactor.rewrite', 'source', 'source.organizeImports')
+  edit?: WorkspaceEdit,            // Workspace edit to apply
+  command?: Command,               // Command to execute
+  diagnostics?: Diagnostic[],      // Diagnostics this action resolves
+  isPreferred?: boolean            // Prefer this action
+}
+```
+
+**CodeActionContext Format:**
+```typescript
+{
+  diagnostics: Diagnostic[],       // Diagnostics at range
+  only?: string,                   // Requested action kind
+  triggerKind: number              // 1=Invoked, 2=Automatic
+}
+```
+
+**Metadata Format:**
+```typescript
+{
+  providedCodeActionKinds?: string[]  // Action kinds this provider can return
+}
+```
+
+**Returns:** `Disposable` - Disposable to unregister the provider
+
+**Example:**
+```javascript
+const disposable = api.languages.registerCodeActionProvider(
+  'markdown',
+  {
+    provideCodeActions(document, range, context, token) {
+      const text = document.getText(range);
+      const actions = [];
+
+      // Quick fix: Convert TODO to task
+      if (text.includes('TODO:')) {
+        actions.push({
+          title: 'Convert TODO to task',
+          kind: 'quickfix',
+          edit: {
+            changes: {
+              [document.uri.toString()]: [
+                {
+                  range: range,
+                  newText: text.replace('TODO:', '- [ ]')
+                }
+              ]
+            }
+          },
+          isPreferred: true
+        });
+      }
+
+      // Refactor: Extract to callout
+      if (text.length > 10) {
+        actions.push({
+          title: 'Extract to callout',
+          kind: 'refactor.extract',
+          command: {
+            command: 'myPlugin.extractToCallout',
+            arguments: [document.uri, range]
+          }
+        });
+      }
+
+      return actions;
+    }
+  },
+  {
+    providedCodeActionKinds: ['quickfix', 'refactor.extract']
+  }
+);
+```
+
+---
+
+## Formatting Provider Methods
+
+### registerDocumentFormattingProvider(selector, provider)
+
+Register a document formatting provider.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| selector | string \| object | Yes | Document selector |
+| provider | object | Yes | Formatting provider with provideDocumentFormattingEdits method |
+
+**Provider Interface:**
+```typescript
+{
+  provideDocumentFormattingEdits(
+    document: TextDocument,
+    options: FormattingOptions,
+    token: CancellationToken
+  ): TextEdit[] | Promise<TextEdit[]>
+}
+```
+
+**FormattingOptions Format:**
+```typescript
+{
+  tabSize: number,                 // Number of spaces per tab
+  insertSpaces: boolean            // Use spaces instead of tabs
+}
+```
+
+**TextEdit Format:**
+```typescript
+{
+  range: Range,                    // Range to replace
+  newText: string                  // New text
+}
+```
+
+**Returns:** `Disposable` - Disposable to unregister the provider
+
+**Example:**
+```javascript
+const disposable = api.languages.registerDocumentFormattingProvider('markdown', {
+  provideDocumentFormattingEdits(document, options, token) {
+    const text = document.getText();
+
+    // Format markdown: normalize headers, fix spacing, etc.
+    const formatted = text
+      .split('\n')
+      .map(line => {
+        // Ensure space after # in headers
+        if (/^#+[^ ]/.test(line)) {
+          return line.replace(/^(#+)/, '$1 ');
+        }
+        return line;
+      })
+      .join('\n');
+
+    // Return single edit replacing entire document
+    return [
+      {
+        range: {
+          start: { line: 0, character: 0 },
+          end: { line: document.lineCount - 1, character: 9999 }
+        },
+        newText: formatted
+      }
+    ];
+  }
+});
+```
+
+---
+
+### registerRangeFormattingProvider(selector, provider)
+
+Register a range formatting provider for formatting selected text.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| selector | string \| object | Yes | Document selector |
+| provider | object | Yes | Range formatting provider with provideDocumentRangeFormattingEdits method |
+
+**Provider Interface:**
+```typescript
+{
+  provideDocumentRangeFormattingEdits(
+    document: TextDocument,
+    range: Range,
+    options: FormattingOptions,
+    token: CancellationToken
+  ): TextEdit[] | Promise<TextEdit[]>
+}
+```
+
+**Returns:** `Disposable` - Disposable to unregister the provider
+
+**Example:**
+```javascript
+const disposable = api.languages.registerRangeFormattingProvider('markdown', {
+  provideDocumentRangeFormattingEdits(document, range, options, token) {
+    const text = document.getText(range);
+
+    // Format only the selected range
+    const formatted = text
+      .split('\n')
+      .map(line => line.trim())
+      .join('\n');
+
+    return [
+      {
+        range: range,
+        newText: formatted
+      }
+    ];
+  }
+});
+```
+
+---
+
+## Language Configuration Methods
+
+### registerLanguage(language)
+
+Register a new language definition.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| language | object | Yes | Language definition |
+
+**Language Definition Format:**
+```typescript
+{
+  id: string,                      // Required: Unique language identifier
+  extensions?: string[],           // File extensions (e.g., ['.md', '.markdown'])
+  aliases?: string[],              // Language aliases
+  configuration?: object           // Language configuration
+}
+```
+
+**Returns:** `Disposable` - Disposable to unregister the language
+
+**Example:**
+```javascript
+const disposable = api.languages.registerLanguage({
+  id: 'my-lang',
+  extensions: ['.mylang', '.ml'],
+  aliases: ['MyLang', 'my-language'],
+  configuration: {
+    comments: {
+      lineComment: '//',
+      blockComment: ['/*', '*/']
+    },
+    brackets: [
+      ['{', '}'],
+      ['[', ']'],
+      ['(', ')']
+    ],
+    autoClosingPairs: [
+      { open: '{', close: '}' },
+      { open: '[', close: ']' },
+      { open: '(', close: ')' },
+      { open: '"', close: '"' },
+      { open: "'", close: "'" }
+    ]
+  }
+});
+```
+
+**Events Emitted:**
+- `language_registered` - When language is registered
+- `did_change_languages` - When language registry changes
+
+**Throws:** Error if language ID already exists
+
+---
+
+### setLanguageConfiguration(languageId, configuration)
+
+Set or update language configuration.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| languageId | string | Yes | Language identifier |
+| configuration | object | Yes | Language configuration |
+
+**Configuration Format:**
+```typescript
+{
+  comments?: {
+    lineComment?: string,          // Line comment prefix (e.g., '//')
+    blockComment?: [string, string] // Block comment [start, end]
+  },
+  brackets?: Array<[string, string]>, // Bracket pairs
+  autoClosingPairs?: Array<{
+    open: string,
+    close: string,
+    notIn?: string[]               // Don't auto-close in these contexts
+  }>,
+  surroundingPairs?: Array<{
+    open: string,
+    close: string
+  }>,
+  wordPattern?: string             // Regex pattern for word boundaries
+}
+```
+
+**Returns:** `Disposable` - Disposable to unregister the configuration
+
+**Example:**
+```javascript
+const disposable = api.languages.setLanguageConfiguration('markdown', {
+  comments: {
+    lineComment: '//',
+    blockComment: ['<!--', '-->']
+  },
+  brackets: [
+    ['[', ']'],
+    ['(', ')'],
+    ['{', '}']
+  ],
+  autoClosingPairs: [
+    { open: '[', close: ']' },
+    { open: '(', close: ')' },
+    { open: '{', close: '}' },
+    { open: '"', close: '"', notIn: ['string'] },
+    { open: "'", close: "'", notIn: ['string', 'comment'] },
+    { open: '`', close: '`', notIn: ['string', 'comment'] }
+  ],
+  surroundingPairs: [
+    { open: '[', close: ']' },
+    { open: '(', close: ')' },
+    { open: '{', close: '}' },
+    { open: '"', close: '"' },
+    { open: "'", close: "'" },
+    { open: '`', close: '`' },
+    { open: '*', close: '*' },
+    { open: '_', close: '_' }
+  ],
+  wordPattern: '[a-zA-Z0-9_-]+'
+});
+```
+
+**Events Emitted:**
+- `language_configuration_set` - When configuration is set
+- `language_configuration_removed` - When configuration is removed (on dispose)
+
+**Throws:** Error if language ID is not provided
+
+---
+
+### getLanguages()
+
+Get all registered languages.
+
+**Returns:** `Array\\<object\\>` - Array of language definitions
+
+**Language Object Format:**
+```typescript
+{
+  id: string,
+  extensions: string[],
+  aliases: string[],
+  configuration?: object
+}
+```
+
+**Example:**
+```javascript
+const languages = api.languages.getLanguages();
+console.log('Registered languages:');
+languages.forEach(lang => {
+  console.log(`- ${lang.id} (${lang.extensions.join(', ')})`);
+});
+```
+
+---
+
+## Event Listeners
+
+### onDidChangeLanguages(listener)
+
+Subscribe to language registry changes.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| listener | Function | Yes | Callback function |
+
+**Listener Signature:**
+```typescript
+() => void
+```
+
+**Returns:** `Disposable` - Disposable to unsubscribe
+
+**Example:**
+```javascript
+const disposable = api.languages.onDidChangeLanguages(() => {
+  console.log('Language registry updated');
+  const languages = api.languages.getLanguages();
+  console.log(`Total languages: $\\{languages.length\\}`);
+});
+
+// Later, to unsubscribe:
+disposable.dispose();
+```
+
+---
+
+## Cleanup Methods
+
+### unregisterAll(pluginId)
+
+Unregister all providers, languages, and configurations for a plugin.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| pluginId | string | Yes | Plugin ID |
+
+**Returns:** `void`
+
+**Example:**
+```javascript
+// Called automatically during plugin deactivation
+api.languages.unregisterAll('my-plugin-id');
+```
+
+**Events Emitted:**
+- `did_change_languages` - When cleanup is complete
+
+---
+
+## Complete Example: Custom Language Support
+
+Here's a complete example showing how to add comprehensive language support for a custom language:
+
+```javascript
+export function activate(api) {
+  const disposables = [];
+
+  // 1. Register the language
+  disposables.push(
+    api.languages.registerLanguage({
+      id: 'todolang',
+      extensions: ['.todo'],
+      aliases: ['TodoLang', 'TODO Language']
+    })
+  );
+
+  // 2. Set language configuration
+  disposables.push(
+    api.languages.setLanguageConfiguration('todolang', {
+      comments: {
+        lineComment: '#'
+      },
+      brackets: [
+        ['[', ']'],
+        ['(', ')']
+      ],
+      autoClosingPairs: [
+        { open: '[', close: ']' },
+        { open: '(', close: ')' }
+      ]
+    })
+  );
+
+  // 3. Register completion provider
+  disposables.push(
+    api.languages.registerCompletionProvider(
+      'todolang',
+      {
+        provideCompletionItems(document, position) {
+          const line = document.lineAt(position.line).text;
+
+          // Suggest priority levels
+          if (line.includes('priority:')) {
+            return [
+              { label: 'high', kind: 1, insertText: 'high' },
+              { label: 'medium', kind: 1, insertText: 'medium' },
+              { label: 'low', kind: 1, insertText: 'low' }
+            ];
+          }
+
+          // Suggest status values
+          if (line.includes('status:')) {
+            return [
+              { label: 'pending', kind: 1, insertText: 'pending' },
+              { label: 'in-progress', kind: 1, insertText: 'in-progress' },
+              { label: 'completed', kind: 1, insertText: 'completed' }
+            ];
+          }
+
+          return [];
+        }
+      },
+      ':' // Trigger on colon
+    )
+  );
+
+  // 4. Register hover provider
+  disposables.push(
+    api.languages.registerHoverProvider('todolang', {
+      provideHover(document, position) {
+        const line = document.lineAt(position.line).text;
+
+        // Show info for priority levels
+        if (line.includes('priority:')) {
+          return {
+            contents: [
+              '**Priority Levels**',
+              '- `high`: Urgent tasks',
+              '- `medium`: Normal tasks',
+              '- `low`: Optional tasks'
+            ]
+          };
+        }
+
+        return null;
+      }
+    })
+  );
+
+  // 5. Register formatting provider
+  disposables.push(
+    api.languages.registerDocumentFormattingProvider('todolang', {
+      provideDocumentFormattingEdits(document, options) {
+        const text = document.getText();
+        const lines = text.split('\n');
+
+        // Sort tasks by priority
+        const formatted = lines
+          .sort((a, b) => {
+            const getPriority = (line) => {
+              if (line.includes('priority:high')) return 0;
+              if (line.includes('priority:medium')) return 1;
+              if (line.includes('priority:low')) return 2;
+              return 3;
+            };
+            return getPriority(a) - getPriority(b);
+          })
+          .join('\n');
+
+        return [
+          {
+            range: {
+              start: { line: 0, character: 0 },
+              end: { line: document.lineCount - 1, character: 9999 }
+            },
+            newText: formatted
+          }
+        ];
+      }
+    })
+  );
+
+  // 6. Register code action provider
+  disposables.push(
+    api.languages.registerCodeActionProvider('todolang', {
+      provideCodeActions(document, range) {
+        const text = document.getText(range);
+        const actions = [];
+
+        // Quick fix: Add priority
+        if (!text.includes('priority:')) {
+          actions.push({
+            title: 'Add priority',
+            kind: 'quickfix',
+            edit: {
+              changes: {
+                [document.uri.toString()]: [
+                  {
+                    range: {
+                      start: range.end,
+                      end: range.end
+                    },
+                    newText: ' priority:medium'
+                  }
+                ]
+              }
+            }
+          });
+        }
+
+        // Quick fix: Mark as completed
+        if (text.includes('status:pending')) {
+          actions.push({
+            title: 'Mark as completed',
+            kind: 'quickfix',
+            edit: {
+              changes: {
+                [document.uri.toString()]: [
+                  {
+                    range: range,
+                    newText: text.replace('status:pending', 'status:completed')
+                  }
+                ]
+              }
+            }
+          });
+        }
+
+        return actions;
+      }
+    })
+  );
+
+  // Return deactivation function
+  return {
+    deactivate() {
+      disposables.forEach(d => d.dispose());
+    }
+  };
+}
+```
+
+---
+
+## Related APIs
+
+- **[EditorAPI](/developers/plugins/api-reference/editor-api)** - Editor integration and language providers
+- **[WorkspaceAPI](/developers/plugins/api-reference/workspace-api)** - Workspace management and file operations
+- **[CommandsAPI](/developers/plugins/api-reference/commands-api)** - Command registration
+- **[ConfigurationAPI](/developers/plugins/api-reference/configuration-api)** - Configuration management
+
+## See Also
+
+- [Editor Plugins Guide](/developers/plugins/editor-plugins)
+- [Language Server Protocol](https://microsoft.github.io/language-server-protocol/)
+- [Plugin Architecture](/developers/plugins/architecture)

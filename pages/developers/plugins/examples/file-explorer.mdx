@@ -1,0 +1,742 @@
+---
+title: File Explorer Plugin
+description: A complete file tree view with file operations
+---
+
+import { Callout } from 'nextra/components'
+import { FileTree } from 'nextra/components'
+
+# File Explorer Plugin
+
+A full-featured file explorer that displays your workspace files in a tree view with file operations like create, delete, and rename.
+
+<Callout type="info">
+This example demonstrates tree views, tree data providers, file system operations, and custom UI components.
+</Callout>
+
+## Features Demonstrated
+
+- ✅ Tree view registration
+- ✅ Tree data provider implementation
+- ✅ File system operations (read, create, delete, rename)
+- ✅ Context menus
+- ✅ Icons for different file types
+- ✅ Refresh functionality
+- ✅ User input dialogs
+
+## Project Structure
+
+<FileTree>
+  <FileTree.Folder name="lokus-file-explorer" defaultOpen>
+    <FileTree.File name="package.json" />
+    <FileTree.File name="manifest.json" />
+    <FileTree.File name="index.js" />
+    <FileTree.File name="FileTreeProvider.js" />
+    <FileTree.File name="icons.js" />
+    <FileTree.File name="README.md" />
+  </FileTree.Folder>
+</FileTree>
+
+## Complete Source Code
+
+### `package.json`
+
+```json filename="package.json"
+{
+  "name": "lokus-file-explorer",
+  "version": "1.0.0",
+  "description": "File tree view for Lokus workspace",
+  "main": "index.js",
+  "keywords": ["lokus", "plugin", "file-explorer", "tree-view"],
+  "author": "Your Name",
+  "license": "MIT",
+  "engines": {
+    "lokus": "^1.0.0"
+  },
+  "dependencies": {
+    "@lokus/plugin-sdk": "^1.0.0"
+  }
+}
+```
+
+### `manifest.json`
+
+```json filename="manifest.json"
+{
+  "id": "lokus-file-explorer",
+  "name": "File Explorer",
+  "version": "1.0.0",
+  "description": "Browse and manage workspace files in a tree view",
+  "author": "Your Name",
+  "main": "index.js",
+  "activationEvents": [
+    "onStartup"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "id": "file-explorer.refresh",
+        "title": "Refresh File Explorer",
+        "category": "File Explorer",
+        "icon": "refresh"
+      },
+      {
+        "id": "file-explorer.newFile",
+        "title": "New File",
+        "category": "File Explorer",
+        "icon": "file-plus"
+      },
+      {
+        "id": "file-explorer.newFolder",
+        "title": "New Folder",
+        "category": "File Explorer",
+        "icon": "folder-plus"
+      },
+      {
+        "id": "file-explorer.delete",
+        "title": "Delete",
+        "category": "File Explorer",
+        "icon": "trash"
+      },
+      {
+        "id": "file-explorer.rename",
+        "title": "Rename",
+        "category": "File Explorer",
+        "icon": "edit"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "fileExplorer",
+          "name": "Files",
+          "icon": "folder"
+        }
+      ]
+    }
+  },
+  "permissions": [
+    "workspace:read",
+    "workspace:write"
+  ]
+}
+```
+
+### `icons.js`
+
+```javascript filename="icons.js"
+/**
+ * Icon mappings for different file types
+ */
+
+const extensionIcons = {
+  // Documents
+  'md': 'file-text',
+  'txt': 'file-text',
+  'pdf': 'file-text',
+
+  // Code
+  'js': 'file-code',
+  'ts': 'file-code',
+  'jsx': 'file-code',
+  'tsx': 'file-code',
+  'json': 'file-code',
+  'html': 'file-code',
+  'css': 'file-code',
+  'py': 'file-code',
+  'rb': 'file-code',
+  'go': 'file-code',
+  'rs': 'file-code',
+
+  // Images
+  'png': 'image',
+  'jpg': 'image',
+  'jpeg': 'image',
+  'gif': 'image',
+  'svg': 'image',
+  'webp': 'image',
+
+  // Archives
+  'zip': 'archive',
+  'tar': 'archive',
+  'gz': 'archive',
+  'rar': 'archive',
+
+  // Config
+  'yaml': 'settings',
+  'yml': 'settings',
+  'toml': 'settings',
+  'ini': 'settings',
+  'env': 'settings',
+};
+
+/**
+ * Get icon for a file based on its extension
+ * @param {string} fileName - Name of the file
+ * @param {boolean} isDirectory - Whether it's a directory
+ * @returns {string} Icon name
+ */
+export function getFileIcon(fileName, isDirectory) {
+  if (isDirectory) {
+    return 'folder';
+  }
+
+  const extension = fileName.split('.').pop()?.toLowerCase();
+  return extensionIcons[extension] || 'file';
+}
+
+/**
+ * Check if a file should be hidden
+ * @param {string} fileName - Name of the file
+ * @returns {boolean} True if file should be hidden
+ */
+export function shouldHideFile(fileName) {
+  const hiddenPatterns = [
+    /^\./,           // Hidden files (.git, .env, etc)
+    /^node_modules$/,
+    /^dist$/,
+    /^build$/,
+    /\.log$/,
+  ];
+
+  return hiddenPatterns.some(pattern => pattern.test(fileName));
+}
+```
+
+### `FileTreeProvider.js`
+
+```javascript filename="FileTreeProvider.js"
+/**
+ * File Tree Data Provider
+ * Provides data for the file tree view
+ */
+
+import { getFileIcon, shouldHideFile } from './icons.js';
+
+export class FileTreeProvider {
+  constructor(workspace) {
+    this.workspace = workspace;
+    this._onDidChangeTreeData = [];
+  }
+
+  /**
+   * Register a listener for tree data changes
+   * @param {Function} listener - Callback when tree data changes
+   * @returns {Object} Disposable to unregister the listener
+   */
+  onDidChangeTreeData(listener) {
+    this._onDidChangeTreeData.push(listener);
+    return {
+      dispose: () => {
+        const index = this._onDidChangeTreeData.indexOf(listener);
+        if (index > -1) {
+          this._onDidChangeTreeData.splice(index, 1);
+        }
+      }
+    };
+  }
+
+  /**
+   * Refresh the tree view
+   * @param {any} element - Element to refresh (undefined = refresh all)
+   */
+  refresh(element) {
+    this._onDidChangeTreeData.forEach(listener => listener(element));
+  }
+
+  /**
+   * Get children for a tree element
+   * @param {Object} element - Parent element or undefined for root
+   * @returns {Promise<Array>} Array of child elements
+   */
+  async getChildren(element) {
+    if (!this.workspace.workspaceFolders || this.workspace.workspaceFolders.length === 0) {
+      return [];
+    }
+
+    // Root level - return workspace folders
+    if (!element) {
+      const rootPath = this.workspace.workspaceFolders[0].uri.path;
+      return this._readDirectory(rootPath);
+    }
+
+    // Get children of a directory
+    if (element.isDirectory) {
+      return this._readDirectory(element.path);
+    }
+
+    return [];
+  }
+
+  /**
+   * Get tree item representation for an element
+   * @param {Object} element - Element to get tree item for
+   * @returns {Object} Tree item configuration
+   */
+  getTreeItem(element) {
+    return {
+      label: element.name,
+      collapsibleState: element.isDirectory ? 1 : 0, // 0=none, 1=collapsed, 2=expanded
+      icon: element.icon,
+      tooltip: element.path,
+      command: element.isDirectory ? undefined : {
+        id: 'workbench.action.openFile',
+        arguments: [element.path]
+      },
+      contextValue: element.isDirectory ? 'folder' : 'file'
+    };
+  }
+
+  /**
+   * Read directory and return file/folder objects
+   * @param {string} dirPath - Directory path to read
+   * @returns {Promise<Array>} Array of file/folder objects
+   */
+  async _readDirectory(dirPath) {
+    try {
+      // Use Tauri's file system API
+      const { readDir } = await import('@tauri-apps/plugin-fs');
+      const entries = await readDir(dirPath);
+
+      // Filter and map entries
+      const items = entries
+        .filter(entry => !shouldHideFile(entry.name))
+        .map(entry => ({
+          name: entry.name,
+          path: `${dirPath}/$\\{entry.name\\}`,
+          isDirectory: entry.isDirectory,
+          icon: getFileIcon(entry.name, entry.isDirectory)
+        }))
+        .sort((a, b) => {
+          // Directories first, then alphabetically
+          if (a.isDirectory !== b.isDirectory) {
+            return a.isDirectory ? -1 : 1;
+          }
+          return a.name.localeCompare(b.name);
+        });
+
+      return items;
+
+    } catch (error) {
+      console.error('Error reading directory:', error);
+      return [];
+    }
+  }
+}
+```
+
+### `index.js`
+
+```javascript filename="index.js"
+/**
+ * File Explorer Plugin for Lokus
+ *
+ * Provides a tree view for browsing workspace files
+ */
+
+import { FileTreeProvider } from './FileTreeProvider.js';
+
+/**
+ * Called when the plugin is activated
+ */
+export function activate(api) {
+  console.log('File Explorer plugin activated');
+
+  // Check if workspace is available
+  if (!api.workspace.workspaceFolders || api.workspace.workspaceFolders.length === 0) {
+    api.ui.showInformationMessage('No workspace folder open. File Explorer requires an open workspace.');
+    return;
+  }
+
+  // Create tree data provider
+  const treeProvider = new FileTreeProvider(api.workspace);
+
+  // Register tree view
+  const treeDisposable = api.ui.registerTreeDataProvider('fileExplorer', treeProvider, {
+    title: 'Files'
+  });
+
+  // Track selected item for context commands
+  let selectedItem = null;
+
+  // Register refresh command
+  const refreshCommand = api.commands.register({
+    id: 'file-explorer.refresh',
+    title: 'Refresh File Explorer',
+    execute: () => {
+      treeProvider.refresh();
+      api.ui.showInformationMessage('File explorer refreshed');
+    }
+  });
+
+  // Register new file command
+  const newFileCommand = api.commands.register({
+    id: 'file-explorer.newFile',
+    title: 'New File',
+    execute: async (item) => {
+      try {
+        // Get parent directory
+        const parentDir = item?.isDirectory ? item.path : getParentDir(item?.path);
+
+        if (!parentDir) {
+          api.ui.showErrorMessage('Could not determine parent directory');
+          return;
+        }
+
+        // Prompt for file name
+        const fileName = await api.ui.showInputBox({
+          prompt: 'Enter file name',
+          placeholder: 'example.md'
+        });
+
+        if (!fileName) return;
+
+        // Create the file
+        const { writeTextFile } = await import('@tauri-apps/plugin-fs');
+        const filePath = `${parentDir}/$\\{fileName\\}`;
+        await writeTextFile(filePath, '');
+
+        // Refresh tree
+        treeProvider.refresh();
+
+        api.ui.showInformationMessage(`Created $\\{fileName\\}`);
+
+      } catch (error) {
+        api.ui.showErrorMessage(`Failed to create file: $\\{error.message\\}`);
+      }
+    }
+  });
+
+  // Register new folder command
+  const newFolderCommand = api.commands.register({
+    id: 'file-explorer.newFolder',
+    title: 'New Folder',
+    execute: async (item) => {
+      try {
+        const parentDir = item?.isDirectory ? item.path : getParentDir(item?.path);
+
+        if (!parentDir) {
+          api.ui.showErrorMessage('Could not determine parent directory');
+          return;
+        }
+
+        const folderName = await api.ui.showInputBox({
+          prompt: 'Enter folder name',
+          placeholder: 'my-folder'
+        });
+
+        if (!folderName) return;
+
+        const { mkdir } = await import('@tauri-apps/plugin-fs');
+        const folderPath = `${parentDir}/$\\{folderName\\}`;
+        await mkdir(folderPath);
+
+        treeProvider.refresh();
+        api.ui.showInformationMessage(`Created folder $\\{folderName\\}`);
+
+      } catch (error) {
+        api.ui.showErrorMessage(`Failed to create folder: $\\{error.message\\}`);
+      }
+    }
+  });
+
+  // Register delete command
+  const deleteCommand = api.commands.register({
+    id: 'file-explorer.delete',
+    title: 'Delete',
+    execute: async (item) => {
+      if (!item) {
+        api.ui.showWarningMessage('No file or folder selected');
+        return;
+      }
+
+      try {
+        // Confirm deletion
+        const confirmed = await api.ui.showConfirm({
+          title: 'Delete',
+          message: `Are you sure you want to delete ${item.name}?`,
+          confirmText: 'Delete',
+          cancelText: 'Cancel'
+        });
+
+        if (!confirmed) return;
+
+        // Delete the file/folder
+        const { remove } = await import('@tauri-apps/plugin-fs');
+        await remove(item.path, { recursive: item.isDirectory });
+
+        treeProvider.refresh();
+        api.ui.showInformationMessage(`Deleted $\\{item.name\\}`);
+
+      } catch (error) {
+        api.ui.showErrorMessage(`Failed to delete: $\\{error.message\\}`);
+      }
+    }
+  });
+
+  // Register rename command
+  const renameCommand = api.commands.register({
+    id: 'file-explorer.rename',
+    title: 'Rename',
+    execute: async (item) => {
+      if (!item) {
+        api.ui.showWarningMessage('No file or folder selected');
+        return;
+      }
+
+      try {
+        const newName = await api.ui.showInputBox({
+          prompt: 'Enter new name',
+          placeholder: item.name,
+          value: item.name
+        });
+
+        if (!newName || newName === item.name) return;
+
+        const { rename } = await import('@tauri-apps/plugin-fs');
+        const parentDir = getParentDir(item.path);
+        const newPath = `${parentDir}/$\\{newName\\}`;
+
+        await rename(item.path, newPath);
+
+        treeProvider.refresh();
+        api.ui.showInformationMessage(`Renamed to $\\{newName\\}`);
+
+      } catch (error) {
+        api.ui.showErrorMessage(`Failed to rename: $\\{error.message\\}`);
+      }
+    }
+  });
+
+  // Helper function to get parent directory
+  function getParentDir(path) {
+    if (!path) return api.workspace.workspaceFolders?.[0]?.uri?.path;
+    const parts = path.split('/');
+    parts.pop();
+    return parts.join('/');
+  }
+
+  // Return cleanup function
+  return {
+    dispose: () => {
+      treeDisposable.dispose();
+      refreshCommand.dispose();
+      newFileCommand.dispose();
+      newFolderCommand.dispose();
+      deleteCommand.dispose();
+      renameCommand.dispose();
+      console.log('File Explorer plugin deactivated');
+    }
+  };
+}
+
+/**
+ * Called when the plugin is deactivated
+ */
+export function deactivate() {
+  // Additional cleanup if needed
+}
+```
+
+## Installation & Testing
+
+### Step 1: Create Plugin
+
+```bash
+mkdir lokus-file-explorer
+cd lokus-file-explorer
+
+# Copy all files
+npm install
+```
+
+### Step 2: Link and Enable
+
+```bash
+npm link
+# In Lokus plugins directory
+npm link lokus-file-explorer
+```
+
+### Step 3: Test Features
+
+1. Open a workspace folder in Lokus
+2. Enable the File Explorer plugin
+3. You should see a "Files" tree view in the sidebar
+4. Try these operations:
+   - Click files to open them
+   - Right-click to see context menu
+   - Create new files/folders
+   - Rename items
+   - Delete items
+   - Refresh the view
+
+## Code Walkthrough
+
+### Tree Data Provider
+
+The tree data provider is the core of tree views:
+
+```javascript
+class FileTreeProvider {
+  // Called when tree needs to be refreshed
+  onDidChangeTreeData(listener) { }
+
+  // Returns children for an element
+  async getChildren(element) { }
+
+  // Returns tree item configuration
+  getTreeItem(element) { }
+}
+```
+
+### Registering the Tree View
+
+```javascript
+api.ui.registerTreeDataProvider('fileExplorer', treeProvider, {
+  title: 'Files'
+});
+```
+
+The first parameter must match the `id` in `manifest.json` views contribution.
+
+### Tree Item Configuration
+
+```javascript
+{
+  label: 'file.js',              // Display name
+  collapsibleState: 1,           // 0=none, 1=collapsed, 2=expanded
+  icon: 'file-code',             // Icon name
+  tooltip: '/path/to/file.js',   // Hover text
+  command: {                     // Command to run on click
+    id: 'workbench.action.openFile',
+    arguments: ['/path/to/file.js']
+  },
+  contextValue: 'file'           // For context menu filtering
+}
+```
+
+### File System Operations
+
+Using Tauri's file system plugin:
+
+```javascript
+// Read directory
+const { readDir } = await import('@tauri-apps/plugin-fs');
+const entries = await readDir(dirPath);
+
+// Create file
+const { writeTextFile } = await import('@tauri-apps/plugin-fs');
+await writeTextFile(filePath, content);
+
+// Create folder
+const { mkdir } = await import('@tauri-apps/plugin-fs');
+await mkdir(folderPath);
+
+// Delete
+const { remove } = await import('@tauri-apps/plugin-fs');
+await remove(path, { recursive: true });
+
+// Rename
+const { rename } = await import('@tauri-apps/plugin-fs');
+await rename(oldPath, newPath);
+```
+
+### Refreshing the Tree
+
+```javascript
+treeProvider.refresh();  // Refresh entire tree
+treeProvider.refresh(element);  // Refresh specific element
+```
+
+This triggers `onDidChangeTreeData` listeners, causing the tree to reload.
+
+## Extension Ideas
+
+Add more features:
+
+1. **File Search** - Search within tree
+2. **Drag & Drop** - Move files by dragging
+3. **Copy/Paste** - File clipboard operations
+4. **Icons by Type** - More detailed file type icons
+5. **Git Status** - Show git status in tree
+6. **File Watchers** - Auto-refresh on changes
+
+### Example: Git Status
+
+```javascript
+async function getGitStatus(filePath) {
+  const { Command } = await import('@tauri-apps/plugin-shell');
+  const result = await Command.create('git', ['status', '--porcelain', filePath]).execute();
+
+  if (result.stdout.startsWith('M ')) return 'modified';
+  if (result.stdout.startsWith('A ')) return 'added';
+  if (result.stdout.startsWith('D ')) return 'deleted';
+  return 'unmodified';
+}
+
+// In getTreeItem:
+const gitStatus = await getGitStatus(element.path);
+return {
+  label: element.name,
+  description: gitStatus === 'modified' ? 'M' : undefined,
+  // ... rest of config
+};
+```
+
+## Performance Tips
+
+For large directories:
+
+1. **Lazy Loading** - Only load children when expanded
+2. **Virtual Scrolling** - Tree view handles this automatically
+3. **Caching** - Cache directory contents
+4. **Filtering** - Hide node_modules, .git, etc.
+
+```javascript
+// Cache implementation
+const cache = new Map();
+
+async function _readDirectory(dirPath) {
+  if (cache.has(dirPath)) {
+    return cache.get(dirPath);
+  }
+
+  const entries = await readDir(dirPath);
+  cache.set(dirPath, entries);
+  return entries;
+}
+```
+
+## Common Issues
+
+<Callout type="warning">
+**Issue:** Tree view doesn't appear
+
+**Solution:** Make sure view ID in `registerTreeDataProvider` matches the ID in `manifest.json`
+</Callout>
+
+### Issue: Files don't open on click
+
+Add a command to handle file opening:
+
+```javascript
+command: {
+  id: 'file-explorer.openFile',
+  arguments: [element.path]
+}
+```
+
+### Issue: Tree doesn't refresh after operations
+
+Always call `treeProvider.refresh()` after file operations.
+
+## Next Steps
+
+- **[AI Assistant](/developers/plugins/examples/ai-assistant)** - Network requests and streaming
+- **[UI API Reference](/developers/plugins/api-reference/ui)** - Complete UI API docs
+- **[Tree View Guide](/developers/plugins/guides/tree-views)** - Advanced tree view patterns
+
+---
+
+**Ready for advanced topics?** Continue to [AI Assistant Example](/developers/plugins/examples/ai-assistant) for network integration.

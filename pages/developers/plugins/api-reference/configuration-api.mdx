@@ -1,0 +1,812 @@
+---
+title: "ConfigurationAPI Reference"
+description: "Complete reference for the Lokus Plugin ConfigurationAPI"
+---
+
+# ConfigurationAPI
+
+The ConfigurationAPI provides plugins with access to read and write configuration values. It supports both global and scoped configurations, with change notifications to react to configuration updates.
+
+## Quick Reference
+
+| Method | Description |
+|--------|-------------|
+| `get(key, defaultValue)` | Get a configuration value |
+| `set(key, value)` | Set a configuration value |
+| `update(key, value)` | Update a configuration value (alias for set) |
+| `has(key)` | Check if a configuration key exists |
+| `inspect(key)` | Inspect configuration value with scope details |
+| `getConfiguration(section)` | Get configuration object for a section |
+| `onDidChange(callback)` | Register a configuration change listener |
+
+---
+
+## Reading Configuration
+
+### get(key, defaultValue)
+
+Gets a configuration value by key.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| key | `string` | Configuration key (can be dot-notation for nested values) |
+| defaultValue | `any` | Default value if key doesn't exist |
+
+**Returns:** `Promise\\<any\\>` - Configuration value or default value
+
+**Example:**
+```javascript
+// Simple key
+const fontSize = await api.config.get('editor.fontSize', 14);
+
+// Nested key (dot notation)
+const theme = await api.config.get('workbench.colorTheme', 'dark');
+
+// Plugin-specific configuration
+const apiKey = await api.config.get('myPlugin.apiKey', '');
+const enabled = await api.config.get('myPlugin.features.advanced', false);
+
+// Complex values
+const settings = await api.config.get('myPlugin.settings', {
+  timeout: 5000,
+  retries: 3,
+  cache: true
+});
+```
+
+---
+
+### has(key)
+
+Checks if a configuration key exists.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| key | `string` | Configuration key to check |
+
+**Returns:** `Promise\\<boolean\\>` - True if key exists
+
+**Example:**
+```javascript
+// Check before using
+if (await api.config.has('myPlugin.apiKey')) {
+  const apiKey = await api.config.get('myPlugin.apiKey');
+  // Use API key
+} else {
+  api.ui.showWarningMessage('API key not configured');
+}
+
+// Conditional feature activation
+if (await api.config.has('myPlugin.betaFeatures')) {
+  const betaEnabled = await api.config.get('myPlugin.betaFeatures');
+  if (betaEnabled) {
+    activateBetaFeatures();
+  }
+}
+```
+
+---
+
+### inspect(key)
+
+Inspects a configuration value to see its scope and source.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| key | `string` | Configuration key to inspect |
+
+**Returns:** `Promise\\<ConfigurationInspection\\>` - Configuration inspection details
+
+**ConfigurationInspection Structure:**
+```typescript
+interface ConfigurationInspection {
+  key: string
+  defaultValue?: any
+  globalValue?: any
+  workspaceValue?: any
+  workspaceFolderValue?: any
+}
+```
+
+**Example:**
+```javascript
+const inspection = await api.config.inspect('editor.fontSize');
+
+console.log('Key:', inspection.key);
+console.log('Default value:', inspection.defaultValue);
+console.log('Global value:', inspection.globalValue);
+console.log('Workspace value:', inspection.workspaceValue);
+
+// Determine effective value
+const effectiveValue =
+  inspection.workspaceFolderValue ??
+  inspection.workspaceValue ??
+  inspection.globalValue ??
+  inspection.defaultValue;
+
+console.log('Effective value:', effectiveValue);
+```
+
+---
+
+## Writing Configuration
+
+### set(key, value)
+
+Sets a configuration value.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| key | `string` | Configuration key |
+| value | `any` | Value to set (must be JSON-serializable) |
+
+**Returns:** `Promise\\<void\\>`
+
+**Example:**
+```javascript
+// Set simple value
+await api.config.set('myPlugin.enabled', true);
+
+// Set nested configuration
+await api.config.set('myPlugin.settings', {
+  timeout: 10000,
+  retries: 5,
+  cache: true
+});
+
+// Update array
+const favorites = await api.config.get('myPlugin.favorites', []);
+favorites.push('newItem');
+await api.config.set('myPlugin.favorites', favorites);
+
+// With user confirmation
+const confirmed = await api.ui.showConfirm({
+  title: 'Update Configuration',
+  message: 'This will change your settings. Continue?'
+});
+
+if (confirmed) {
+  await api.config.set('myPlugin.mode', 'advanced');
+  api.ui.showInformationMessage('Configuration updated');
+}
+```
+
+---
+
+### update(key, value)
+
+Updates a configuration value. This is an alias for `set()`.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| key | `string` | Configuration key |
+| value | `any` | Value to set |
+
+**Returns:** `Promise\\<void\\>`
+
+**Example:**
+```javascript
+// These are equivalent:
+await api.config.set('myPlugin.setting', 'value');
+await api.config.update('myPlugin.setting', 'value');
+
+// Update with notification
+await api.config.update('myPlugin.theme', 'dark');
+api.ui.showInformationMessage('Theme updated to dark mode');
+```
+
+---
+
+## Scoped Configuration
+
+### getConfiguration(section)
+
+Gets a configuration object scoped to a specific section. This provides namespaced access to configuration values.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| section | `string` | Configuration section (e.g., `'editor'`, `'myPlugin'`) |
+
+**Returns:** `object` - Configuration object with methods:
+- `get(key, defaultValue)` - Get value within section
+- `has(key)` - Check if key exists within section
+- `update(key, value, target)` - Update value within section
+
+**Example:**
+```javascript
+// Get scoped configuration
+const editorConfig = api.config.getConfiguration('editor');
+const fontSize = await editorConfig.get('fontSize', 14);
+const tabSize = await editorConfig.get('tabSize', 2);
+
+// Plugin-scoped configuration
+const myConfig = api.config.getConfiguration('myPlugin');
+
+// Read values within plugin scope
+const apiKey = await myConfig.get('apiKey', '');
+const timeout = await myConfig.get('timeout', 5000);
+
+// Check existence within scope
+if (await myConfig.has('apiKey')) {
+  // API key is configured
+}
+
+// Update within scope
+await myConfig.update('theme', 'dark');
+
+// Nested scope
+const featuresConfig = api.config.getConfiguration('myPlugin.features');
+const advancedEnabled = await featuresConfig.get('advanced', false);
+```
+
+---
+
+## Configuration Changes
+
+### onDidChange(callback)
+
+Registers a listener for configuration changes.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| callback | `function` | Callback function that receives `ConfigurationChangeEvent` |
+
+**ConfigurationChangeEvent:**
+```typescript
+interface ConfigurationChangeEvent {
+  affectsConfiguration(section: string): boolean
+}
+```
+
+**Returns:** `Disposable` - Disposable to unregister the listener
+
+**Example:**
+```javascript
+// Listen to all configuration changes
+const disposable = api.config.onDidChange((event) => {
+  if (event.affectsConfiguration('myPlugin')) {
+    console.log('My plugin configuration changed');
+    reloadConfiguration();
+  }
+});
+
+// Listen to specific section
+api.config.onDidChange((event) => {
+  if (event.affectsConfiguration('myPlugin.apiKey')) {
+    console.log('API key changed');
+    reinitializeAPI();
+  }
+
+  if (event.affectsConfiguration('myPlugin.theme')) {
+    console.log('Theme changed');
+    updateTheme();
+  }
+});
+
+// Clean up listener
+export function deactivate() {
+  disposable.dispose();
+}
+```
+
+---
+
+## Configuration Patterns
+
+### 1. Configuration-Driven Features
+
+Enable/disable features based on configuration:
+
+```javascript
+let featureDisposable = null;
+
+async function updateFeatureState() {
+  const enabled = await api.config.get('myPlugin.advancedFeature', false);
+
+  if (enabled && !featureDisposable) {
+    // Enable feature
+    featureDisposable = activateAdvancedFeature();
+  } else if (!enabled && featureDisposable) {
+    // Disable feature
+    featureDisposable.dispose();
+    featureDisposable = null;
+  }
+}
+
+export async function activate(api) {
+  // Initial state
+  await updateFeatureState();
+
+  // Watch for changes
+  api.config.onDidChange(async (event) => {
+    if (event.affectsConfiguration('myPlugin.advancedFeature')) {
+      await updateFeatureState();
+    }
+  });
+}
+```
+
+### 2. Configuration Validation
+
+Validate configuration values:
+
+```javascript
+async function validateConfiguration() {
+  const apiKey = await api.config.get('myPlugin.apiKey', '');
+  const timeout = await api.config.get('myPlugin.timeout', 5000);
+
+  const errors = [];
+
+  // Validate API key
+  if (!apiKey || apiKey.length < 10) {
+    errors.push('Invalid API key');
+  }
+
+  // Validate timeout
+  if (timeout < 1000 || timeout > 60000) {
+    errors.push('Timeout must be between 1000 and 60000ms');
+  }
+
+  if (errors.length > 0) {
+    api.ui.showErrorMessage(`Configuration errors: $\\{errors.join(', ')\\}`);
+    return false;
+  }
+
+  return true;
+}
+
+export async function activate(api) {
+  if (!await validateConfiguration()) {
+    api.ui.showErrorMessage('Plugin not activated due to configuration errors');
+    return;
+  }
+
+  // Continue activation...
+}
+```
+
+### 3. Configuration Migration
+
+Migrate old configuration to new format:
+
+```javascript
+async function migrateConfiguration() {
+  // Check for old configuration key
+  if (await api.config.has('myPlugin.oldSetting')) {
+    const oldValue = await api.config.get('myPlugin.oldSetting');
+
+    // Convert to new format
+    const newValue = convertOldToNew(oldValue);
+
+    // Set new configuration
+    await api.config.set('myPlugin.newSetting', newValue);
+
+    // Remove old configuration (set to undefined)
+    await api.config.set('myPlugin.oldSetting', undefined);
+
+    api.ui.showInformationMessage('Configuration migrated to new format');
+  }
+}
+
+export async function activate(api) {
+  await migrateConfiguration();
+  // Continue activation...
+}
+```
+
+### 4. Configuration Wizard
+
+Interactive configuration setup:
+
+```javascript
+async function configurationWizard() {
+  api.ui.showInformationMessage('Welcome! Let\'s configure your plugin.');
+
+  // Step 1: API Key
+  const apiKey = await api.ui.showInputBox({
+    title: 'API Configuration',
+    prompt: 'Enter your API key',
+    validateInput: (value) => {
+      if (!value || value.length < 10) {
+        return 'API key must be at least 10 characters';
+      }
+      return null;
+    }
+  });
+
+  if (!apiKey) return; // User cancelled
+
+  // Step 2: Choose mode
+  const mode = await api.ui.showQuickPick(
+    ['Basic', 'Advanced', 'Expert'],
+    { title: 'Select Mode' }
+  );
+
+  if (!mode) return;
+
+  // Step 3: Confirm
+  const confirmed = await api.ui.showConfirm({
+    title: 'Confirm Configuration',
+    message: `Save configuration with ${mode} mode?`
+  });
+
+  if (confirmed) {
+    await api.config.set('myPlugin.apiKey', apiKey);
+    await api.config.set('myPlugin.mode', mode.toLowerCase());
+    api.ui.showInformationMessage('Configuration saved!');
+  }
+}
+
+api.commands.register({
+  id: 'myPlugin.configure',
+  title: 'Configure Plugin',
+  execute: configurationWizard
+});
+```
+
+### 5. Configuration Presets
+
+Provide configuration presets:
+
+```javascript
+const presets = {
+  minimal: {
+    'myPlugin.features.advanced': false,
+    'myPlugin.features.experimental': false,
+    'myPlugin.logging': false,
+    'myPlugin.timeout': 5000
+  },
+  standard: {
+    'myPlugin.features.advanced': true,
+    'myPlugin.features.experimental': false,
+    'myPlugin.logging': true,
+    'myPlugin.timeout': 10000
+  },
+  power: {
+    'myPlugin.features.advanced': true,
+    'myPlugin.features.experimental': true,
+    'myPlugin.logging': true,
+    'myPlugin.timeout': 30000
+  }
+};
+
+async function applyPreset(presetName) {
+  const preset = presets[presetName];
+  if (!preset) {
+    throw new Error(`Unknown preset: $\\{presetName\\}`);
+  }
+
+  for (const [key, value] of Object.entries(preset)) {
+    await api.config.set(key, value);
+  }
+
+  api.ui.showInformationMessage(`Applied ${presetName} preset`);
+}
+
+api.commands.register({
+  id: 'myPlugin.applyPreset',
+  title: 'Apply Configuration Preset',
+  execute: async () => {
+    const preset = await api.ui.showQuickPick(
+      Object.keys(presets),
+      { title: 'Select Preset' }
+    );
+
+    if (preset) {
+      await applyPreset(preset);
+    }
+  }
+});
+```
+
+### 6. Configuration Cache
+
+Cache configuration values for performance:
+
+```javascript
+class ConfigurationCache {
+  constructor(api) {
+    this.api = api;
+    this.cache = new Map();
+
+    // Clear cache on configuration change
+    api.config.onDidChange(() => {
+      this.cache.clear();
+    });
+  }
+
+  async get(key, defaultValue) {
+    if (this.cache.has(key)) {
+      return this.cache.get(key);
+    }
+
+    const value = await this.api.config.get(key, defaultValue);
+    this.cache.set(key, value);
+    return value;
+  }
+
+  invalidate(key) {
+    if (key) {
+      this.cache.delete(key);
+    } else {
+      this.cache.clear();
+    }
+  }
+}
+
+const configCache = new ConfigurationCache(api);
+
+// Use cached configuration
+const value = await configCache.get('myPlugin.setting', 'default');
+```
+
+---
+
+## Configuration Schema
+
+While Lokus doesn't enforce a strict schema, it's recommended to document your plugin's configuration in your manifest:
+
+```json
+{
+  "name": "my-plugin",
+  "version": "1.0.0",
+  "contributes": {
+    "configuration": {
+      "title": "My Plugin",
+      "properties": {
+        "myPlugin.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable/disable the plugin"
+        },
+        "myPlugin.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "API key for external service"
+        },
+        "myPlugin.timeout": {
+          "type": "number",
+          "default": 5000,
+          "minimum": 1000,
+          "maximum": 60000,
+          "description": "Request timeout in milliseconds"
+        },
+        "myPlugin.mode": {
+          "type": "string",
+          "enum": ["basic", "advanced", "expert"],
+          "default": "basic",
+          "description": "Plugin operation mode"
+        },
+        "myPlugin.features": {
+          "type": "object",
+          "properties": {
+            "advanced": {
+              "type": "boolean",
+              "default": false
+            },
+            "experimental": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          "description": "Feature flags"
+        }
+      }
+    }
+  }
+}
+```
+
+---
+
+## Best Practices
+
+### 1. Use Namespaced Keys
+
+Always prefix configuration keys with your plugin ID:
+
+```javascript
+// Good
+await api.config.get('myPlugin.setting', 'default');
+
+// Bad (might conflict with other plugins)
+await api.config.get('setting', 'default');
+```
+
+### 2. Provide Default Values
+
+Always provide sensible defaults:
+
+```javascript
+// Good
+const timeout = await api.config.get('myPlugin.timeout', 5000);
+
+// Bad (might be undefined)
+const timeout = await api.config.get('myPlugin.timeout');
+```
+
+### 3. Validate User Input
+
+Validate configuration values before using them:
+
+```javascript
+const timeout = await api.config.get('myPlugin.timeout', 5000);
+
+if (typeof timeout !== 'number' || timeout < 1000 || timeout > 60000) {
+  api.ui.showWarningMessage('Invalid timeout, using default');
+  await api.config.set('myPlugin.timeout', 5000);
+}
+```
+
+### 4. React to Changes
+
+Listen for configuration changes and update behavior:
+
+```javascript
+let currentTimeout = await api.config.get('myPlugin.timeout', 5000);
+
+api.config.onDidChange(async (event) => {
+  if (event.affectsConfiguration('myPlugin.timeout')) {
+    currentTimeout = await api.config.get('myPlugin.timeout', 5000);
+    updateClientTimeout(currentTimeout);
+  }
+});
+```
+
+### 5. Document Configuration
+
+Provide clear documentation for all configuration options:
+
+```javascript
+/**
+ * Configuration Options:
+ *
+ * myPlugin.apiKey (string): API key for authentication
+ * myPlugin.timeout (number): Request timeout in milliseconds (1000-60000)
+ * myPlugin.mode (string): Operation mode ('basic', 'advanced', 'expert')
+ * myPlugin.features.advanced (boolean): Enable advanced features
+ * myPlugin.features.experimental (boolean): Enable experimental features
+ */
+```
+
+### 6. Use Scoped Configuration
+
+Use scoped configuration for cleaner code:
+
+```javascript
+// Instead of:
+const setting1 = await api.config.get('myPlugin.setting1');
+const setting2 = await api.config.get('myPlugin.setting2');
+const setting3 = await api.config.get('myPlugin.setting3');
+
+// Use:
+const config = api.config.getConfiguration('myPlugin');
+const setting1 = await config.get('setting1');
+const setting2 = await config.get('setting2');
+const setting3 = await config.get('setting3');
+```
+
+### 7. Handle Missing Configuration Gracefully
+
+Don't crash if configuration is missing:
+
+```javascript
+async function initialize() {
+  const apiKey = await api.config.get('myPlugin.apiKey', '');
+
+  if (!apiKey) {
+    api.ui.showWarningMessage(
+      'API key not configured. Some features will be unavailable.',
+      'Configure Now'
+    ).then((action) => {
+      if (action === 'Configure Now') {
+        api.commands.execute('myPlugin.configure');
+      }
+    });
+    return false;
+  }
+
+  return true;
+}
+```
+
+---
+
+## Configuration Storage
+
+Configuration is typically stored in:
+- **Global**: User's global Lokus settings
+- **Workspace**: Workspace-specific settings (if applicable)
+
+The ConfigurationAPI abstracts this storage, but you can inspect values at different scopes using `inspect()`:
+
+```javascript
+const inspection = await api.config.inspect('myPlugin.setting');
+
+// See value at each scope
+console.log('Global:', inspection.globalValue);
+console.log('Workspace:', inspection.workspaceValue);
+```
+
+---
+
+## Events
+
+The ConfigurationAPI emits events:
+
+```javascript
+// Configuration changed
+api.config.on('configuration-changed', (event) => {
+  console.log('Configuration changed');
+
+  if (event.affectsConfiguration('myPlugin')) {
+    // Handle change
+  }
+});
+```
+
+---
+
+## Integration with Other APIs
+
+### Configuration + Commands
+
+```javascript
+api.commands.register({
+  id: 'myPlugin.toggleFeature',
+  title: 'Toggle Advanced Feature',
+  execute: async () => {
+    const current = await api.config.get('myPlugin.advancedFeature', false);
+    await api.config.set('myPlugin.advancedFeature', !current);
+    api.ui.showInformationMessage(
+      `Advanced feature $\\{!current ? 'enabled' : 'disabled'\\}`
+    );
+  }
+});
+```
+
+### Configuration + UI
+
+```javascript
+api.commands.register({
+  id: 'myPlugin.settings',
+  title: 'Plugin Settings',
+  execute: async () => {
+    const config = api.config.getConfiguration('myPlugin');
+
+    const settings = await api.ui.showQuickPick([
+      { label: 'API Key', value: 'apiKey' },
+      { label: 'Timeout', value: 'timeout' },
+      { label: 'Mode', value: 'mode' }
+    ], { title: 'Select Setting to Edit' });
+
+    if (!settings) return;
+
+    if (settings.value === 'apiKey') {
+      const apiKey = await api.ui.showInputBox({
+        title: 'API Key',
+        prompt: 'Enter your API key',
+        value: await config.get('apiKey', '')
+      });
+      if (apiKey) await config.update('apiKey', apiKey);
+    }
+    // Handle other settings...
+  }
+});
+```
+
+---
+
+## See Also
+
+- [UIAPI Reference](/developers/plugins/api-reference/ui-api)
+- [CommandsAPI Reference](/developers/plugins/api-reference/commands-api)
+- [Plugin Manifest](/developers/plugins/manifest)
+- [Getting Started Guide](/developers/plugins/getting-started)

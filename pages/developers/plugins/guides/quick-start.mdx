@@ -1,0 +1,354 @@
+---
+title: Quick Start - Plugin Development
+description: Get a Lokus plugin running in under 5 minutes - install CLI, generate plugin, and see it work.
+keywords: [lokus, quick start, plugin cli, 5 minute tutorial, plugin setup]
+---
+
+import { Callout, Tabs} from 'nextra/components'
+
+# Quick Start Guide
+
+Get a plugin running in **under 5 minutes**. This guide gets you from zero to a working plugin as fast as possible.
+
+## What You'll Build
+
+A minimal plugin that:
+- ✅ Shows a notification when Lokus starts
+- ✅ Adds a custom command to the command palette
+- ✅ Demonstrates the plugin lifecycle
+
+**Time to complete:** 5 minutes
+
+---
+
+## Step 1: Install the CLI
+
+<Tabs items={['npm', 'yarn', 'pnpm']}>
+  <Tabs.Tab>
+    ```bash
+    npm install -g lokus-plugin-cli
+    ```
+  </Tabs.Tab>
+  <Tabs.Tab>
+    ```bash
+    yarn global add lokus-plugin-cli
+    ```
+  </Tabs.Tab>
+  <Tabs.Tab>
+    ```bash
+    pnpm add -g lokus-plugin-cli
+    ```
+  </Tabs.Tab>
+</Tabs>
+
+<Callout type="info">
+**Don't want to install globally?** Use `npx lokus-plugin` instead of installing globally.
+</Callout>
+
+---
+
+## Step 2: Create Your Plugin
+
+```bash
+# Create plugin with defaults (fastest way)
+npx lokus-plugin create my-first-plugin --skip-prompts
+
+# Navigate to the directory
+cd my-first-plugin
+```
+
+This generates:
+```
+my-first-plugin/
+├── src/
+│   └── index.ts          # Your plugin code
+├── dist/                  # Compiled output (after build)
+├── plugin.json           # Plugin manifest
+├── package.json
+├── tsconfig.json
+└── esbuild.config.js
+```
+
+---
+
+## Step 3: Install Dependencies
+
+```bash
+npm install
+```
+
+<Callout type="warning">
+This installs `lokus-plugin-sdk` - the TypeScript types and utilities for building plugins.
+</Callout>
+
+---
+
+## Step 4: Build the Plugin
+
+```bash
+npm run build
+```
+
+This compiles `src/index.ts` → `dist/index.js` using esbuild.
+
+**Expected output:**
+```
+✓ Build complete
+  dist/index.js  1.2kb
+```
+
+---
+
+## Step 5: Link for Development
+
+```bash
+npx lokus-plugin link
+```
+
+This creates a symlink at `~/.lokus/plugins/my-first-plugin` pointing to your plugin directory.
+
+<Callout>
+**What's a symlink?** It's like a shortcut that makes Lokus load your plugin directly from your development folder, so changes are reflected immediately (after rebuilding).
+</Callout>
+
+**Verify the link:**
+```bash
+ls -la ~/.lokus/plugins/
+# Should show: my-first-plugin -> /path/to/my-first-plugin
+```
+
+---
+
+## Step 6: Restart Lokus
+
+1. **Quit Lokus completely** (Command/Ctrl + Q on Mac/Windows)
+2. **Start Lokus** again
+
+Your plugin will load automatically!
+
+---
+
+## Step 7: Test Your Plugin
+
+### Check the Logs
+
+Open **Developer Tools** (View → Developer → Toggle Developer Tools) and look for:
+
+```
+[my-first-plugin] Plugin initialized
+[my-first-plugin] Plugin activated successfully
+```
+
+### Try the Command
+
+1. Open **Command Palette** (Cmd/Ctrl + Shift + P)
+2. Type "Say Hello"
+3. Press Enter
+
+You should see a notification: **"Hello from my-first-plugin!"**
+
+<Callout type="success">
+🎉 **Congratulations!** You've created and run your first Lokus plugin!
+</Callout>
+
+---
+
+## What's in the Generated Code?
+
+Let's look at `src/index.ts` (the generated code):
+
+```typescript filename="src/index.ts"
+import { PluginContext } from 'lokus-plugin-sdk';
+
+export default class MyFirstPlugin {
+  private context: PluginContext;
+  private logger: PluginContext['logger'];
+
+  constructor(context: PluginContext) {
+    this.context = context;
+    this.logger = context.logger;
+    this.logger.info('Plugin initialized');
+  }
+
+  async activate(activationContext: any): Promise<void> {
+    this.logger.info('Activating plugin...');
+
+    // Register a command
+    activationContext.commands.registerCommand(
+      'myFirstPlugin.sayHello',
+      {
+        name: 'Say Hello',
+        description: 'Shows a hello notification',
+        callback: () => {
+          this.context.ui.showInformationMessage(
+            'Hello from my-first-plugin!'
+          );
+          this.logger.info('Hello command executed');
+        }
+      }
+    );
+
+    this.logger.info('Plugin activated successfully');
+  }
+
+  async deactivate(): Promise<void> {
+    this.logger.info('Plugin deactivated');
+  }
+}
+```
+
+### Understanding the Structure
+
+| Part | Purpose |
+|------|---------|
+| `constructor()` | Called when Lokus loads the plugin. Initialize state here. |
+| `activate()` | Called after constructor. Register commands, UI, etc. |
+| `deactivate()` | Called when plugin is disabled. Cleanup resources. |
+| `context.logger` | Logging utility (info, warn, error, debug) |
+| `context.ui` | Show notifications and dialogs |
+| `activationContext.commands` | Register commands in the command palette |
+
+---
+
+## Making Changes
+
+### Edit the Plugin
+
+Open `src/index.ts` and change the message:
+
+```typescript filename="src/index.ts" {8}
+activationContext.commands.registerCommand(
+  'myFirstPlugin.sayHello',
+  {
+    name: 'Say Hello',
+    description: 'Shows a hello notification',
+    callback: () => {
+      this.context.ui.showInformationMessage(
+        'Hello from my amazing plugin!' // Changed!
+      );
+    }
+  }
+);
+```
+
+### Rebuild
+
+```bash
+npm run build
+```
+
+### Reload Lokus
+
+1. Quit Lokus (Cmd/Ctrl + Q)
+2. Start Lokus again
+3. Test the command again
+
+You should see your updated message!
+
+<Callout type="info">
+**Hot Reload Coming Soon**: In the future, Lokus will support hot reloading plugins without restarting.
+</Callout>
+
+---
+
+## Development Workflow
+
+Here's the typical workflow:
+
+```bash
+# 1. Make changes to src/index.ts
+# 2. Rebuild
+npm run build
+
+# 3. Restart Lokus
+
+# 4. Test your changes
+
+# Repeat!
+```
+
+<Callout type="warning">
+**Watch Mode**: Some templates include `npm run dev` which rebuilds automatically when files change. You still need to restart Lokus to see changes.
+</Callout>
+
+---
+
+## Common Issues
+
+### Plugin Doesn't Load
+
+**Check the symlink:**
+```bash
+ls -la ~/.lokus/plugins/my-first-plugin
+```
+
+**Verify build output:**
+```bash
+ls dist/index.js
+# Should exist
+```
+
+**Check Developer Console:**
+Open Developer Tools and look for errors in the Console tab.
+
+### Command Doesn't Appear
+
+1. Make sure you ran `npm run build`
+2. Restart Lokus completely (Cmd/Ctrl + Q, then reopen)
+3. Check Developer Console for errors
+
+### "Cannot find module 'lokus-plugin-sdk'"
+
+```bash
+npm install
+```
+
+---
+
+## Next Steps
+
+You now have a working plugin! Here's what to do next:
+
+<Callout>
+**Continue Learning**
+
+1. **[Your First Plugin](/developers/plugins/guides/first-plugin)** - Build a complete plugin from scratch with detailed explanations
+2. **[Adding Commands](/developers/plugins/guides/command-plugin)** - Learn about keyboard shortcuts and command palette
+3. **[UI Components](/developers/plugins/guides/ui-plugin)** - Create custom panels and status bar items
+
+**Reference Documentation**
+
+- [API Reference](/developers/plugins/api-reference) - Complete API documentation
+- [Plugin Manifest](/developers/plugins/manifest) - Manifest schema reference
+- [CLI Reference](/developers/plugins/cli) - All CLI commands
+</Callout>
+
+---
+
+## Cleanup
+
+To remove the plugin:
+
+```bash
+# Remove the symlink
+rm ~/.lokus/plugins/my-first-plugin
+
+# Restart Lokus
+```
+
+The plugin will no longer load.
+
+---
+
+## Summary
+
+You learned how to:
+- ✅ Install the plugin CLI
+- ✅ Generate a plugin from a template
+- ✅ Build and link a plugin for development
+- ✅ Test your plugin in Lokus
+- ✅ Make changes and rebuild
+
+**Time to complete:** 5 minutes ⏱️
+
+Ready for more? Head to **[Your First Plugin](/developers/plugins/guides/first-plugin)** to build a plugin from scratch with detailed explanations!

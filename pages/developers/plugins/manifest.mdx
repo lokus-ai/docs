@@ -414,6 +414,13 @@ Required permissions for plugin functionality.
     "commands:execute",
     "storage:read",
     "storage:write",
+    "terminal:create",
+    "terminal:sendText",
+    "debug:start",
+    "debug:stop",
+    "theme:register",
+    "languages:register",
+    "tasks:register",
     "shell:execute",
     "clipboard:read",
     "clipboard:write"
@@ -427,6 +434,7 @@ Required permissions for plugin functionality.
 - `editor:read` - Read editor content
 - `editor:write` - Modify editor content
 - `editor:create` - Create editors
+- `editor:extensions` - Register TipTap extensions
 
 **Filesystem Permissions:**
 - `filesystem:read` - Read files
@@ -441,15 +449,43 @@ Required permissions for plugin functionality.
 **Workspace Permissions:**
 - `workspace:read` - Read workspace settings
 - `workspace:write` - Modify workspace settings
+- `workspace:files` - Access workspace files
 
 **UI Permissions:**
-- `ui:create` - Create UI elements
+- `ui:create` - Create UI elements (panels, dialogs)
 - `ui:modify` - Modify existing UI
 - `ui:notifications` - Show notifications
+- `ui:statusBar` - Add status bar items
+- `ui:treeView` - Register tree views
+- `ui:webview` - Create webview panels
 
 **Command Permissions:**
 - `commands:register` - Register commands
 - `commands:execute` - Execute commands
+
+**Terminal Permissions:**
+- `terminal:create` - Create terminal instances
+- `terminal:sendText` - Send text to terminals
+- `terminal:close` - Close terminals
+
+**Task Permissions:**
+- `tasks:register` - Register task providers
+- `tasks:execute` - Execute tasks
+
+**Debug Permissions:**
+- `debug:start` - Start debug sessions
+- `debug:stop` - Stop debug sessions
+- `debug:register` - Register debug adapters
+
+**Theme Permissions:**
+- `theme:register` - Register color themes
+- `theme:modify` - Modify theme colors
+
+**Language Permissions:**
+- `languages:register` - Register language features
+- `languages:completion` - Provide completions
+- `languages:hover` - Provide hover information
+- `languages:formatting` - Provide formatting
 
 **Storage Permissions:**
 - `storage:read` - Read plugin storage
@@ -715,7 +751,7 @@ Provide code snippets.
 
 ### views
 
-Create custom views.
+Create custom views and tree views.
 
 ```json
 {
@@ -741,6 +777,62 @@ Create custom views.
   }
 }
 ```
+
+### statusBarItems
+
+Add items to the status bar.
+
+```json
+{
+  "contributes": {
+    "statusBarItems": [
+      {
+        "id": "myPlugin.status",
+        "alignment": "left",
+        "priority": 100,
+        "text": "$(check) Ready",
+        "tooltip": "Plugin is ready",
+        "command": "myPlugin.showInfo"
+      }
+    ]
+  }
+}
+```
+
+**Fields:**
+- `id` - Unique identifier
+- `alignment` - `left` or `right`
+- `priority` - Position order (higher = more left/right)
+- `text` - Display text (supports codicons: `$(icon-name)`)
+- `tooltip` - Hover tooltip
+- `command` - Command to execute on click
+
+### treeViews
+
+Register tree view providers.
+
+```json
+{
+  "contributes": {
+    "treeViews": [
+      {
+        "id": "myPlugin.explorer",
+        "name": "My Explorer",
+        "viewId": "myPlugin",
+        "canSelectMany": true,
+        "showCollapseAll": true
+      }
+    ]
+  }
+}
+```
+
+**Fields:**
+- `id` - Unique tree view identifier
+- `name` - Display name
+- `viewId` - Container view ID
+- `canSelectMany` - Allow multi-selection
+- `showCollapseAll` - Show collapse all button
 
 ## Dependencies
 

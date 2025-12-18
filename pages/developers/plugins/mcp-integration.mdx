@@ -104,7 +104,7 @@ export default class MyMCPPlugin implements Plugin {
           success: true,
           noteId: note.id,
           path: note.path,
-          message: `Created note "${args.title}" at ${note.path}`
+          message: `Created note "${args.title}" at $\\{note.path\\}`
         }
       })
       .build()
@@ -328,7 +328,7 @@ const enhancedTool = new MCPToolBuilder()
   .setCaching({
     enabled: true,
     ttl: 300000, // 5 minutes
-    keyGenerator: (args) => `search:${args.query}:${args.limit}`
+    keyGenerator: (args) => `search:${args.query}:$\\{args.limit\\}`
   })
   .setExecutor(async (args, context) => {
     // Check cache
@@ -523,7 +523,7 @@ const exportTool = new MCPToolBuilder()
       format: args.format,
       exportPath,
       fileSize: await getFileSize(exportPath),
-      message: `Note exported to ${exportPath}`
+      message: `Note exported to $\\{exportPath\\}`
     }
   })
   .build()

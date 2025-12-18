@@ -1,0 +1,924 @@
+---
+title: "UIAPI Reference"
+description: "Complete reference for the Lokus Plugin UIAPI"
+---
+
+# UIAPI
+
+The UIAPI provides comprehensive user interface components and interaction methods for plugins. It enables plugins to create rich user experiences through notifications, dialogs, panels, progress indicators, and more.
+
+## Quick Reference
+
+| Category | Methods |
+|----------|---------|
+| **Notifications** | `showInformationMessage`, `showWarningMessage`, `showErrorMessage`, `showNotification` |
+| **Dialogs** | `showInputBox`, `showPrompt`, `showConfirm`, `showDialog`, `showQuickPick`, `showOpenDialog`, `showSaveDialog` |
+| **Panels** | `addPanel`, `removePanel`, `updatePanel`, `registerPanel` |
+| **Progress** | `withProgress` |
+| **Tree Views** | `registerTreeDataProvider` |
+| **Status Bar** | `registerStatusBarItem` |
+| **Output** | `createOutputChannel` |
+| **Webviews** | `registerWebviewPanel` |
+| **Menus** | `registerMenu` |
+| **Toolbars** | `registerToolbar` |
+| **Terminal** | `createTerminal` |
+
+---
+
+## Notifications
+
+### showInformationMessage(message, ...items)
+
+Shows an information message to the user.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| message | `string` | Message to display |
+| items | `string[]` | Optional action buttons |
+
+**Returns:** `Promise\\<string | undefined\\>` - Selected item or undefined if dismissed
+
+**Example:**
+```javascript
+const result = await api.ui.showInformationMessage(
+  'File saved successfully',
+  'Open', 'Dismiss'
+);
+
+if (result === 'Open') {
+  // Handle open action
+}
+```
+
+---
+
+### showWarningMessage(message, ...items)
+
+Shows a warning message to the user.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| message | `string` | Warning message to display |
+| items | `string[]` | Optional action buttons |
+
+**Returns:** `Promise\\<string | undefined\\>` - Selected item or undefined
+
+**Example:**
+```javascript
+await api.ui.showWarningMessage('This action cannot be undone');
+```
+
+---
+
+### showErrorMessage(message, ...items)
+
+Shows an error message to the user.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| message | `string` | Error message to display |
+| items | `string[]` | Optional action buttons |
+
+**Returns:** `Promise\\<string | undefined\\>` - Selected item or undefined
+
+**Example:**
+```javascript
+await api.ui.showErrorMessage('Failed to load plugin configuration');
+```
+
+---
+
+### showNotification(message, type, actions)
+
+Shows a notification with optional type and action buttons.
+
+**Parameters:**
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| message | `string` | - | Notification message |
+| type | `string` | `'info'` | Notification type: `'info'`, `'warning'`, `'error'`, `'success'`, `'loading'`, `'progress'` |
+| actions | `Array\\<\\{id: string, label: string\\}\\>` | `[]` | Action buttons |
+
+**Returns:** `Promise\\<string | undefined\\>` - Selected action ID or undefined
+
+**Example:**
+```javascript
+const actionId = await api.ui.showNotification(
+  'Update available',
+  'info',
+  [
+    { id: 'install', label: 'Install Now' },
+    { id: 'later', label: 'Later' }
+  ]
+);
+
+if (actionId === 'install') {
+  // Install update
+}
+```
+
+---
+
+## Dialogs
+
+### showInputBox(options)
+
+Shows an input box to get text input from the user.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| options | `object` | Input box options |
+| options.title | `string` | Dialog title |
+| options.prompt | `string` | Prompt message |
+| options.placeholder | `string` | Placeholder text |
+| options.value | `string` | Default value |
+| options.validateInput | `function` | Validation function that returns error message or null |
+
+**Returns:** `Promise\\<string | null\\>` - User input or null if cancelled
+
+**Example:**
+```javascript
+const name = await api.ui.showInputBox({
+  title: 'Enter Name',
+  prompt: 'Please enter your name',
+  placeholder: 'John Doe',
+  validateInput: (value) => {
+    if (!value || value.trim().length === 0) {
+      return 'Name cannot be empty';
+    }
+    return null;
+  }
+});
+
+if (name) {
+  console.log('User entered:', name);
+}
+```
+
+---
+
+### showPrompt(options)
+
+Shows a prompt dialog for user input.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| options | `object` | Prompt options |
+| options.title | `string` | Dialog title |
+| options.message | `string` | Prompt message |
+| options.placeholder | `string` | Placeholder text |
+| options.defaultValue | `string` | Default value |
+| options.validate | `function` | Validation function |
+
+**Returns:** `Promise\\<string | null\\>` - User input or null if cancelled
+
+**Example:**
+```javascript
+const apiKey = await api.ui.showPrompt({
+  title: 'API Configuration',
+  message: 'Enter your API key',
+  placeholder: 'sk-...'
+});
+```
+
+---
+
+### showConfirm(options)
+
+Shows a confirmation dialog with OK and Cancel buttons.
+
+**Parameters:**
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| options | `object` | - | Confirm options |
+| options.title | `string` | - | Dialog title |
+| options.message | `string` | - | Confirmation message |
+| options.confirmText | `string` | `'OK'` | Confirm button text |
+| options.cancelText | `string` | `'Cancel'` | Cancel button text |
+
+**Returns:** `Promise\\<boolean\\>` - True if confirmed, false if cancelled
+
+**Example:**
+```javascript
+const confirmed = await api.ui.showConfirm({
+  title: 'Delete File',
+  message: 'Are you sure you want to delete this file?',
+  confirmText: 'Delete',
+  cancelText: 'Cancel'
+});
+
+if (confirmed) {
+  // Delete the file
+}
+```
+
+---
+
+### showDialog(options)
+
+Shows a modal dialog with custom buttons and options.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| options | `object` | Dialog options |
+| options.title | `string` | Dialog title |
+| options.message | `string` | Dialog message |
+| options.type | `string` | Dialog type: `'info'`, `'warning'`, `'error'` |
+| options.buttons | `Array\\<\\{id: string, label: string, primary: boolean\\}\\>` | Custom buttons |
+| options.defaultButton | `string` | Default button ID |
+| options.cancelButton | `string` | Cancel button ID |
+| options.detail | `string` | Additional detail text |
+| options.checkboxLabel | `string` | Optional checkbox label |
+| options.checkboxChecked | `boolean` | Initial checkbox state |
+| options.modal | `boolean` | Whether dialog is modal (default: true) |
+
+**Returns:** `Promise\\<\\{buttonId: string, checkboxChecked: boolean\\}\\>` - Dialog result
+
+**Example:**
+```javascript
+const result = await api.ui.showDialog({
+  title: 'Save Changes',
+  message: 'Do you want to save changes?',
+  type: 'warning',
+  buttons: [
+    { id: 'save', label: 'Save', primary: true },
+    { id: 'discard', label: 'Discard' },
+    { id: 'cancel', label: 'Cancel' }
+  ],
+  defaultButton: 'save',
+  cancelButton: 'cancel',
+  checkboxLabel: 'Always save automatically',
+  checkboxChecked: false
+});
+
+if (result.buttonId === 'save') {
+  // Save changes
+  if (result.checkboxChecked) {
+    // Enable auto-save
+  }
+}
+```
+
+---
+
+### showQuickPick(items, options)
+
+Shows a quick pick dialog for selecting from a list of items.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| items | `Array\\<string \| \\{label: string, description?: string, detail?: string\\}\\>` | Items to display |
+| options | `object` | Quick pick options |
+| options.title | `string` | Dialog title |
+| options.placeholder | `string` | Placeholder text |
+| options.canPickMany | `boolean` | Allow multiple selection |
+| options.matchOnDescription | `boolean` | Match on description during search |
+| options.matchOnDetail | `boolean` | Match on detail during search |
+
+**Returns:** `Promise\\<string | string[] | undefined\\>` - Selected item(s) or undefined
+
+**Example:**
+```javascript
+const selected = await api.ui.showQuickPick(
+  [
+    { label: 'Option 1', description: 'First option', detail: 'More details about option 1' },
+    { label: 'Option 2', description: 'Second option' },
+    { label: 'Option 3', description: 'Third option' }
+  ],
+  {
+    title: 'Select an Option',
+    placeholder: 'Type to search...',
+    canPickMany: false
+  }
+);
+
+if (selected) {
+  console.log('Selected:', selected.label);
+}
+```
+
+---
+
+### showOpenDialog(options)
+
+Shows a native file/folder open dialog.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| options | `object` | Open dialog options |
+| options.title | `string` | Dialog title |
+| options.defaultUri | `string` | Default path |
+| options.canSelectFiles | `boolean` | Allow file selection (default: true) |
+| options.canSelectFolders | `boolean` | Allow folder selection |
+| options.canSelectMany | `boolean` | Allow multiple selection |
+| options.filters | `object` | File type filters: `\\\{name: [extensions]\\\}` |
+
+**Returns:** `Promise\\<string[] | undefined\\>` - Array of selected paths or undefined
+
+**Example:**
+```javascript
+const files = await api.ui.showOpenDialog({
+  title: 'Select Files',
+  canSelectMany: true,
+  filters: {
+    'Images': ['png', 'jpg', 'jpeg', 'gif'],
+    'All Files': ['*']
+  }
+});
+
+if (files) {
+  console.log('Selected files:', files);
+}
+```
+
+---
+
+### showSaveDialog(options)
+
+Shows a native file save dialog.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| options | `object` | Save dialog options |
+| options.title | `string` | Dialog title |
+| options.defaultUri | `string` | Default path and filename |
+| options.filters | `object` | File type filters: `\\\{name: [extensions]\\\}` |
+
+**Returns:** `Promise\\<string | undefined\\>` - Selected save path or undefined
+
+**Example:**
+```javascript
+const savePath = await api.ui.showSaveDialog({
+  title: 'Save Export',
+  defaultUri: '/path/to/export.json',
+  filters: {
+    'JSON': ['json'],
+    'All Files': ['*']
+  }
+});
+
+if (savePath) {
+  // Save file to savePath
+}
+```
+
+---
+
+## Panels
+
+### addPanel(options)
+
+Adds a custom UI panel to Lokus.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| options | `object` | Panel options |
+| options.id | `string` | Unique panel ID |
+| options.title | `string` | Panel title |
+| options.position | `string` | Panel position: `'sidebar-left'`, `'sidebar-right'`, `'bottom'`, `'modal'` |
+| options.icon | `string` | Panel icon |
+| options.component | `React.Component` | React component to render |
+| options.props | `object` | Props to pass to component |
+
+**Returns:** `object` - Panel object
+
+**Example:**
+```javascript
+const panel = api.ui.addPanel({
+  id: 'my-panel',
+  title: 'My Panel',
+  position: 'sidebar-left',
+  icon: 'list',
+  component: MyPanelComponent,
+  props: { data: initialData }
+});
+```
+
+---
+
+### removePanel(id)
+
+Removes a panel by ID.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| id | `string` | Panel ID to remove |
+
+**Returns:** `boolean` - True if panel was removed
+
+**Example:**
+```javascript
+api.ui.removePanel('my-panel');
+```
+
+---
+
+### updatePanel(id, props)
+
+Updates panel props.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| id | `string` | Panel ID |
+| props | `object` | New props to merge |
+
+**Returns:** `object` - Updated panel object
+
+**Example:**
+```javascript
+api.ui.updatePanel('my-panel', {
+  data: updatedData,
+  loading: false
+});
+```
+
+---
+
+### registerPanel(definition)
+
+Registers a panel using SDK-style definition (returns disposable).
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| definition | `object` | Panel definition |
+| definition.id | `string` | Unique panel ID |
+| definition.title | `string` | Panel title |
+| definition.location | `string` | Panel location: `'sidebar'`, `'bottom'` |
+| definition.icon | `string` | Panel icon |
+| definition.component | `React.Component` | React component |
+| definition.initialState | `object` | Initial state/props |
+
+**Returns:** `Disposable` - Disposable to unregister panel
+
+**Example:**
+```javascript
+const disposable = api.ui.registerPanel({
+  id: 'my-panel',
+  title: 'My Panel',
+  location: 'sidebar',
+  icon: 'list',
+  component: MyPanelComponent,
+  initialState: { data: [] }
+});
+
+// Later, to remove:
+disposable.dispose();
+```
+
+---
+
+## Progress
+
+### withProgress(options, task)
+
+Shows a progress indicator while executing a task.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| options | `object` | Progress options |
+| options.location | `string` | Progress location: `'notification'`, `'window'`, `'statusBar'` |
+| options.title | `string` | Progress title |
+| options.cancellable | `boolean` | Whether progress can be cancelled |
+| task | `function` | Task function: `(progress, token) => Promise\<T\>` |
+
+**Task Function:**
+- `progress.report(value)` - Report progress with `\\\{message: string, increment: number\\\}`
+- `token.isCancellationRequested` - Boolean indicating cancellation
+- `token.onCancellationRequested(callback)` - Register cancellation handler
+
+**Returns:** `Promise\\<T\\>` - Result of task function
+
+**Example:**
+```javascript
+const result = await api.ui.withProgress(
+  {
+    location: 'notification',
+    title: 'Processing Files',
+    cancellable: true
+  },
+  async (progress, token) => {
+    for (let i = 0; i < 100; i++) {
+      if (token.isCancellationRequested) {
+        return null;
+      }
+
+      progress.report({
+        message: `Processing file ${i + 1}/100`,
+        increment: 1
+      });
+
+      await processFile(i);
+    }
+    return 'Complete';
+  }
+);
+```
+
+---
+
+## Tree Views
+
+### registerTreeDataProvider(viewId, provider, options)
+
+Registers a tree data provider for displaying hierarchical data.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| viewId | `string` | Unique view ID |
+| provider | `object` | Tree data provider implementation |
+| options | `object` | Tree view options |
+| options.title | `string` | Tree view title |
+
+**Provider Interface:**
+```typescript
+interface TreeDataProvider {
+  getChildren(element?: TreeItem): Promise<TreeItem[]>
+  getTreeItem(element: TreeItem): Promise<TreeItem>
+  onDidChangeTreeData?: Event<TreeItem | undefined>
+}
+
+interface TreeItem {
+  id: string
+  label: string
+  collapsibleState?: 'none' | 'collapsed' | 'expanded'
+  iconPath?: string
+  contextValue?: string
+  command?: { command: string, arguments: any[] }
+  children?: TreeItem[]
+}
+```
+
+**Returns:** `Disposable` - Disposable to unregister provider
+
+**Example:**
+```javascript
+const provider = {
+  getChildren: async (element) => {
+    if (!element) {
+      // Root level
+      return [
+        { id: 'folder1', label: 'Folder 1', collapsibleState: 'collapsed' },
+        { id: 'folder2', label: 'Folder 2', collapsibleState: 'collapsed' }
+      ];
+    }
+    // Child items
+    return [
+      { id: 'item1', label: 'Item 1', collapsibleState: 'none' },
+      { id: 'item2', label: 'Item 2', collapsibleState: 'none' }
+    ];
+  },
+  getTreeItem: async (element) => element
+};
+
+const disposable = api.ui.registerTreeDataProvider('myTreeView', provider, {
+  title: 'My Tree View'
+});
+```
+
+---
+
+## Status Bar
+
+### registerStatusBarItem(definition)
+
+Registers a status bar item.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| definition | `object` | Status bar item definition |
+| definition.id | `string` | Unique item ID |
+| definition.text | `string` | Display text |
+| definition.tooltip | `string` | Tooltip text |
+| definition.command | `string \| \\\{command: string, arguments: any[]\\\}` | Command to execute on click |
+| definition.alignment | `number` | Alignment: `1` (left), `2` (right) |
+| definition.priority | `number` | Priority for ordering (higher = left/top) |
+| definition.color | `string` | Text color |
+| definition.backgroundColor | `string` | Background color |
+
+**Returns:** `object` - Status bar item with `show()`, `hide()`, `dispose()` methods
+
+**Example:**
+```javascript
+const statusItem = api.ui.registerStatusBarItem({
+  id: 'my-status',
+  text: '$(check) Ready',
+  tooltip: 'Plugin is ready',
+  alignment: 2, // Right
+  priority: 100,
+  command: 'myPlugin.showInfo'
+});
+
+statusItem.show();
+
+// Update text
+statusItem.text = '$(sync~spin) Processing...';
+
+// Later
+statusItem.dispose();
+```
+
+---
+
+## Output Channels
+
+### createOutputChannel(name)
+
+Creates an output channel for displaying plugin output.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| name | `string` | Channel name |
+
+**Returns:** `object` - Output channel with methods:
+- `append(value)` - Append text without newline
+- `appendLine(value)` - Append text with newline
+- `replace(value)` - Replace entire content
+- `clear()` - Clear all content
+- `show(preserveFocus)` - Show the output channel
+- `hide()` - Hide the output channel
+- `dispose()` - Dispose the output channel
+
+**Example:**
+```javascript
+const output = api.ui.createOutputChannel('My Plugin');
+
+output.appendLine('Plugin initialized');
+output.appendLine('Processing...');
+output.show(true); // Show without stealing focus
+
+// Later
+output.appendLine('Complete!');
+output.dispose();
+```
+
+---
+
+## Webviews
+
+### registerWebviewPanel(definition)
+
+Registers a webview panel with custom HTML content.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| definition | `object` | Webview panel definition |
+| definition.id | `string` | Unique panel ID |
+| definition.title | `string` | Panel title |
+| definition.html | `string` | HTML content |
+
+**Returns:** `object` - Webview panel with methods:
+- `postMessage(message)` - Send message to webview
+- `onDidReceiveMessage(handler)` - Register message handler from webview
+- `dispose()` - Dispose the webview
+
+**Example:**
+```javascript
+const webview = api.ui.registerWebviewPanel({
+  id: 'my-webview',
+  title: 'My Webview',
+  html: `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <style>body { font-family: sans-serif; }</style>
+      </head>
+      <body>
+        <h1>Hello from Webview</h1>
+        <button id="btn">Send Message</button>
+        <script>
+          const vscode = acquireVsCodeApi();
+          document.getElementById('btn').addEventListener('click', () => {
+            vscode.postMessage({ type: 'buttonClicked' });
+          });
+        </script>
+      </body>
+    </html>
+  `
+});
+
+// Listen for messages from webview
+webview.onDidReceiveMessage((message) => {
+  if (message.type === 'buttonClicked') {
+    console.log('Button clicked in webview');
+  }
+});
+
+// Send message to webview
+webview.postMessage({ type: 'update', data: 'New data' });
+```
+
+---
+
+## Menus
+
+### registerMenu(definition)
+
+Registers a menu item contribution.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| definition | `object` | Menu definition |
+| definition.id | `string` | Unique menu ID |
+| definition.label | `string` | Menu label |
+| definition.group | `string` | Menu group |
+| definition.order | `number` | Order within group |
+| definition.when | `string` | Condition expression |
+| definition.submenu | `Array` | Submenu items |
+| definition.command | `string` | Command to execute |
+| definition.icon | `string` | Menu icon |
+
+**Returns:** `Disposable` - Disposable to unregister menu
+
+**Example:**
+```javascript
+const disposable = api.ui.registerMenu({
+  id: 'my-menu',
+  label: 'My Menu Item',
+  group: 'navigation',
+  order: 1,
+  command: 'myPlugin.action',
+  icon: 'settings'
+});
+```
+
+---
+
+## Toolbars
+
+### registerToolbar(definition)
+
+Registers a toolbar contribution.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| definition | `object` | Toolbar definition |
+| definition.id | `string` | Unique toolbar ID |
+| definition.title | `string` | Toolbar title |
+| definition.location | `string` | Toolbar location: `'editor'`, `'panel'`, `'sidebar'` |
+| definition.group | `string` | Toolbar group |
+| definition.order | `number` | Order within group |
+| definition.items | `Array` | Toolbar items |
+| definition.when | `string` | Condition expression |
+
+**Returns:** `Disposable` - Disposable to unregister toolbar
+
+**Example:**
+```javascript
+const disposable = api.ui.registerToolbar({
+  id: 'my-toolbar',
+  title: 'My Toolbar',
+  location: 'editor',
+  items: [
+    { command: 'myPlugin.action1', icon: 'play', tooltip: 'Action 1' },
+    { command: 'myPlugin.action2', icon: 'stop', tooltip: 'Action 2' }
+  ]
+});
+```
+
+---
+
+## Terminal
+
+### createTerminal(options)
+
+Creates a terminal instance.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| options | `object` | Terminal options |
+| options.name | `string` | Terminal name |
+| options.shellPath | `string` | Path to shell executable |
+| options.shellArgs | `Array\\<string\\>` | Shell arguments |
+| options.cwd | `string` | Working directory |
+| options.env | `object` | Environment variables |
+
+**Returns:** `object` - Terminal with methods:
+- `sendText(text, addNewLine)` - Send text to terminal
+- `show(preserveFocus)` - Show terminal
+- `hide()` - Hide terminal
+- `dispose()` - Dispose terminal
+
+**Example:**
+```javascript
+const terminal = api.ui.createTerminal({
+  name: 'My Plugin',
+  cwd: '/path/to/project'
+});
+
+terminal.show();
+terminal.sendText('npm install');
+```
+
+---
+
+## Events
+
+The UIAPI emits various events that you can listen to:
+
+```javascript
+// Panel events
+api.ui.on('panel_added', ({ id, panel }) => {});
+api.ui.on('panel_removed', ({ id }) => {});
+api.ui.on('panel_updated', ({ id, props }) => {});
+
+// Output channel events
+api.ui.on('output-channel-created', ({ name }) => {});
+api.ui.on('output-channel-update', ({ name, lines }) => {});
+api.ui.on('output-channel-show', ({ name }) => {});
+api.ui.on('output-channel-hide', ({ name }) => {});
+
+// Progress events
+api.ui.on('progress-start', ({ id, title }) => {});
+api.ui.on('progress-update', ({ id, message, percentage }) => {});
+api.ui.on('progress-end', ({ id }) => {});
+
+// Tree provider events
+api.ui.on('tree-provider-registered', ({ viewId, provider }) => {});
+api.ui.on('tree-provider-unregistered', ({ viewId }) => {});
+
+// Webview events
+api.ui.on('webview-registered', ({ panelId, panel }) => {});
+api.ui.on('webview-disposed', ({ panelId }) => {});
+```
+
+---
+
+## Best Practices
+
+### 1. Use Appropriate Message Types
+
+Choose the right notification type for your message:
+- **Information**: General status updates
+- **Warning**: Non-critical issues that need attention
+- **Error**: Critical failures that block functionality
+- **Success**: Confirmation of successful operations
+
+### 2. Provide User Choices
+
+When appropriate, offer action buttons for immediate user response:
+
+```javascript
+const action = await api.ui.showInformationMessage(
+  'Configuration updated',
+  'Reload Now', 'Later'
+);
+```
+
+### 3. Progress Feedback
+
+Use `withProgress` for long-running operations:
+
+```javascript
+await api.ui.withProgress(
+  { title: 'Loading...', cancellable: true },
+  async (progress, token) => {
+    // Your task
+  }
+);
+```
+
+### 4. Clean Up Resources
+
+Always dispose of UI components when your plugin deactivates:
+
+```javascript
+export function deactivate() {
+  statusItem.dispose();
+  outputChannel.dispose();
+  panelDisposable.dispose();
+}
+```
+
+### 5. Responsive UI
+
+Keep UI operations responsive and don't block the main thread for long periods.
+
+---
+
+## See Also
+
+- [CommandsAPI Reference](/developers/plugins/api-reference/commands-api)
+- [ConfigurationAPI Reference](/developers/plugins/api-reference/configuration-api)
+- [UI Plugins Guide](/developers/plugins/ui-plugins)
+- [Data Providers Guide](/developers/plugins/data-providers)

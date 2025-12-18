@@ -1,0 +1,923 @@
+---
+title: "WorkspaceAPI Reference"
+description: "Complete reference for the Lokus Plugin WorkspaceAPI"
+---
+
+# WorkspaceAPI
+
+The WorkspaceAPI provides workspace management capabilities, including file operations, workspace folder access, configuration management, and file system watching.
+
+## Overview
+
+Use WorkspaceAPI when you need to:
+- Access workspace folders and root path
+- Read and manage configuration settings
+- Open and manipulate text documents
+- Find files in the workspace
+- Watch for file system changes
+- Apply workspace edits
+- Listen to document events
+
+## Properties
+
+### workspaceFolders
+
+Get all workspace folders.
+
+**Type:** `WorkspaceFolder[]` (read-only)
+
+**WorkspaceFolder Format:**
+```typescript
+{
+  uri: {
+    toString(): string,
+    path: string,
+    scheme: string
+  },
+  name: string,
+  index: number
+}
+```
+
+**Example:**
+```javascript
+const folders = api.workspace.workspaceFolders;
+if (folders && folders.length > 0) {
+  console.log('Workspace folders:');
+  folders.forEach(folder => {
+    console.log(`- ${folder.name}: $\\{folder.uri.path\\}`);
+  });
+} else {
+  console.log('No workspace folders open');
+}
+```
+
+---
+
+### rootPath
+
+Get the root path of the workspace (deprecated but commonly used).
+
+**Type:** `string | null` (read-only)
+
+**Note:** This property is deprecated in favor of `workspaceFolders`, but is still widely used for backward compatibility.
+
+**Example:**
+```javascript
+const root = api.workspace.rootPath;
+if (root) {
+  console.log('Workspace root:', root);
+} else {
+  console.log('No workspace open');
+}
+```
+
+---
+
+## Configuration Methods
+
+### getConfiguration(section)
+
+Get configuration object for reading and updating settings.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| section | string | No | Configuration section (e.g., 'editor', 'myPlugin') |
+
+**Returns:** `Configuration` - Configuration object
+
+**Configuration Interface:**
+```typescript
+{
+  get<T>(key: string, defaultValue?: T): T,
+  has(key: string): boolean,
+  update(key: string, value: any, global?: boolean): Promise<void>
+}
+```
+
+**Example:**
+```javascript
+// Get entire configuration
+const config = api.workspace.getConfiguration();
+const fontSize = config.get('editor.fontSize', 14);
+
+// Get section-specific configuration
+const editorConfig = api.workspace.getConfiguration('editor');
+const theme = editorConfig.get('theme', 'light');
+
+// Update configuration
+await editorConfig.update('theme', 'dark');
+
+// Check if setting exists
+if (config.has('myPlugin.enabled')) {
+  const enabled = config.get('myPlugin.enabled');
+  console.log('Plugin enabled:', enabled);
+}
+```
+
+---
+
+## Document Methods
+
+### openTextDocument(uriOrOptions)
+
+Open a text document.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| uriOrOptions | string \| object | Yes | URI string or options object |
+
+**Options Format:**
+```typescript
+{
+  content?: string,                // Initial content for untitled documents
+  language?: string                // Language ID
+}
+```
+
+**Returns:** `Promise\\<TextDocument\\>` - The opened document
+
+**TextDocument Format:**
+```typescript
+{
+  uri: { toString(): string, path: string },
+  fileName: string,
+  languageId: string,
+  version: number,
+  isDirty: boolean,
+  isClosed: boolean,
+  getText(range?): string,
+  lineAt(lineOrPosition): TextLine,
+  lineCount: number
+}
+```
+
+**Example:**
+```javascript
+// Open existing file
+const doc = await api.workspace.openTextDocument('file:///workspace/notes.md');
+console.log('Opened:', doc.fileName);
+console.log('Content:', doc.getText());
+
+// Create untitled document
+const newDoc = await api.workspace.openTextDocument({
+  content: '# New Document\n\nStart writing...',
+  language: 'markdown'
+});
+```
+
+**Events Emitted:**
+- `open-document-request` - When document open is requested
+
+---
+
+### getWorkspaceFolder(uri)
+
+Get the workspace folder that contains a given URI.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| uri | string \| object | Yes | URI to check |
+
+**Returns:** `WorkspaceFolder | undefined` - Containing workspace folder
+
+**Example:**
+```javascript
+const uri = 'file:///workspace/docs/notes.md';
+const folder = api.workspace.getWorkspaceFolder(uri);
+
+if (folder) {
+  console.log('File is in workspace:', folder.name);
+  console.log('Workspace path:', folder.uri.path);
+} else {
+  console.log('File is outside workspace');
+}
+```
+
+---
+
+### asRelativePath(pathOrUri, includeWorkspaceFolder)
+
+Convert an absolute path to a workspace-relative path.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| pathOrUri | string \| object | Yes | Absolute path or URI |
+| includeWorkspaceFolder | boolean | No | Include workspace folder name (default: false) |
+
+**Returns:** `string` - Relative path or original path if not in workspace
+
+**Example:**
+```javascript
+const absolutePath = '/workspace/docs/notes.md';
+
+// Without workspace folder name
+const relative = api.workspace.asRelativePath(absolutePath);
+console.log(relative); // 'docs/notes.md'
+
+// With workspace folder name
+const relativeWithFolder = api.workspace.asRelativePath(absolutePath, true);
+console.log(relativeWithFolder); // 'MyWorkspace/docs/notes.md'
+```
+
+---
+
+## File Operations
+
+### findFiles(include, exclude, maxResults, token)
+
+Find files in the workspace.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| include | string | Yes | Glob pattern to match files |
+| exclude | string | No | Glob pattern to exclude files |
+| maxResults | number | No | Maximum number of results |
+| token | CancellationToken | No | Cancellation token |
+
+**Glob Patterns:**
+- `**/*.md` - All markdown files
+- `docs/**/*.txt` - All txt files in docs folder
+- `*.\\\{js,ts\\\}` - All JS and TS files in root
+- `**/test/**` - All files in test directories
+
+**Returns:** `Promise\\<string[]\\>` - Array of file paths
+
+**Example:**
+```javascript
+// Find all markdown files
+const mdFiles = await api.workspace.findFiles('**/*.md');
+console.log(`Found ${mdFiles.length} markdown files`);
+
+// Find JS files, exclude node_modules
+const jsFiles = await api.workspace.findFiles(
+  '**/*.js',
+  '**/node_modules/**',
+  100 // Max 100 results
+);
+
+// With cancellation
+const token = new CancellationTokenSource();
+setTimeout(() => token.cancel(), 5000); // Cancel after 5 seconds
+
+try {
+  const files = await api.workspace.findFiles('**/*', null, null, token.token);
+  console.log(`Found ${files.length} files`);
+} catch (error) {
+  if (token.token.isCancellationRequested) {
+    console.log('Search cancelled');
+  }
+}
+```
+
+---
+
+### applyEdit(edit)
+
+Apply a workspace edit (changes to multiple files).
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| edit | WorkspaceEdit | Yes | Edit to apply |
+
+**WorkspaceEdit Format:**
+```typescript
+{
+  changes?: {
+    [uri: string]: TextEdit[]      // Map of URI to edits
+  },
+  documentChanges?: Array<{
+    textDocument: { uri: string, version: number },
+    edits: TextEdit[]
+  }>
+}
+```
+
+**TextEdit Format:**
+```typescript
+{
+  range: Range,                    // Range to replace
+  newText: string                  // New text
+}
+```
+
+**Returns:** `Promise\\<boolean\\>` - True if edit was applied successfully
+
+**Example:**
+```javascript
+// Single file edit
+const edit = {
+  changes: {
+    'file:///workspace/notes.md': [
+      {
+        range: {
+          start: { line: 0, character: 0 },
+          end: { line: 0, character: 5 }
+        },
+        newText: 'Hello'
+      }
+    ]
+  }
+};
+
+const success = await api.workspace.applyEdit(edit);
+if (success) {
+  console.log('Edit applied successfully');
+} else {
+  console.log('Failed to apply edit');
+}
+
+// Multi-file edit
+const multiEdit = {
+  changes: {
+    'file:///workspace/file1.md': [
+      {
+        range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } },
+        newText: '# Updated\n'
+      }
+    ],
+    'file:///workspace/file2.md': [
+      {
+        range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } },
+        newText: '# Also Updated\n'
+      }
+    ]
+  }
+};
+
+await api.workspace.applyEdit(multiEdit);
+```
+
+**Events Emitted:**
+- `apply-edit-request` - When edit is requested
+
+---
+
+### saveAll(includeUntitled)
+
+Save all dirty files.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| includeUntitled | boolean | No | Include untitled documents (default: false) |
+
+**Returns:** `Promise\\<boolean\\>` - True if all files saved successfully
+
+**Example:**
+```javascript
+// Save all dirty files
+const success = await api.workspace.saveAll();
+if (success) {
+  console.log('All files saved');
+}
+
+// Save including untitled documents
+await api.workspace.saveAll(true);
+```
+
+**Events Emitted:**
+- `save-all-request` - When save all is requested
+
+---
+
+## File System Watching
+
+### createFileSystemWatcher(globPattern, ignoreCreateEvents, ignoreChangeEvents, ignoreDeleteEvents)
+
+Create a file system watcher for monitoring file changes.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| globPattern | string | Yes | Glob pattern to watch |
+| ignoreCreateEvents | boolean | No | Ignore file creation events |
+| ignoreChangeEvents | boolean | No | Ignore file change events |
+| ignoreDeleteEvents | boolean | No | Ignore file deletion events |
+
+**Returns:** `FileSystemWatcher` - Watcher object
+
+**FileSystemWatcher Interface:**
+```typescript
+{
+  onDidCreate(listener: (uri: string) => void): Disposable,
+  onDidChange(listener: (uri: string) => void): Disposable,
+  onDidDelete(listener: (uri: string) => void): Disposable,
+  dispose(): void
+}
+```
+
+**Example:**
+```javascript
+// Watch all markdown files
+const watcher = api.workspace.createFileSystemWatcher('**/*.md');
+
+// Listen to file creation
+const createDisposable = watcher.onDidCreate((uri) => {
+  console.log('File created:', uri);
+});
+
+// Listen to file changes
+const changeDisposable = watcher.onDidChange((uri) => {
+  console.log('File changed:', uri);
+});
+
+// Listen to file deletion
+const deleteDisposable = watcher.onDidDelete((uri) => {
+  console.log('File deleted:', uri);
+});
+
+// Later, dispose watchers
+createDisposable.dispose();
+changeDisposable.dispose();
+deleteDisposable.dispose();
+watcher.dispose();
+
+// Watch with selective events
+const changeOnlyWatcher = api.workspace.createFileSystemWatcher(
+  '**/*.json',
+  true,  // Ignore create
+  false, // Watch changes
+  true   // Ignore delete
+);
+
+changeOnlyWatcher.onDidChange((uri) => {
+  console.log('JSON file changed:', uri);
+});
+```
+
+---
+
+### registerTextDocumentContentProvider(scheme, provider)
+
+Register a content provider for virtual documents.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| scheme | string | Yes | URI scheme to handle |
+| provider | object | Yes | Content provider |
+
+**Provider Interface:**
+```typescript
+{
+  provideTextDocumentContent(
+    uri: string,
+    token: CancellationToken
+  ): string | Promise<string>
+}
+```
+
+**Returns:** `Disposable` - Disposable to unregister
+
+**Example:**
+```javascript
+const disposable = api.workspace.registerTextDocumentContentProvider('myscheme', {
+  provideTextDocumentContent(uri, token) {
+    // Generate content dynamically
+    return `# Virtual Document\n\nURI: ${uri}\nGenerated at: $\\{new Date().toISOString()\\}`;
+  }
+});
+
+// Open virtual document
+const doc = await api.workspace.openTextDocument('myscheme://virtual-doc');
+console.log(doc.getText());
+```
+
+---
+
+## Event Listeners
+
+### onDidOpenTextDocument(listener)
+
+Listen to document open events.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| listener | Function | Yes | Callback function |
+
+**Listener Signature:**
+```typescript
+(document: TextDocument) => void
+```
+
+**Returns:** `Disposable` - Disposable to unregister
+
+**Example:**
+```javascript
+const disposable = api.workspace.onDidOpenTextDocument((document) => {
+  console.log('Document opened:', document.fileName);
+  console.log('Language:', document.languageId);
+
+  // Perform actions on newly opened documents
+  if (document.languageId === 'markdown') {
+    console.log('Markdown document opened');
+  }
+});
+
+// Later, to unregister:
+disposable.dispose();
+```
+
+---
+
+### onDidCloseTextDocument(listener)
+
+Listen to document close events.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| listener | Function | Yes | Callback function |
+
+**Listener Signature:**
+```typescript
+(document: TextDocument) => void
+```
+
+**Returns:** `Disposable` - Disposable to unregister
+
+**Example:**
+```javascript
+const disposable = api.workspace.onDidCloseTextDocument((document) => {
+  console.log('Document closed:', document.fileName);
+
+  // Clean up document-specific resources
+  if (documentCache.has(document.uri.toString())) {
+    documentCache.delete(document.uri.toString());
+  }
+});
+```
+
+---
+
+### onDidSaveTextDocument(listener)
+
+Listen to document save events.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| listener | Function | Yes | Callback function |
+
+**Listener Signature:**
+```typescript
+(document: TextDocument) => void
+```
+
+**Returns:** `Disposable` - Disposable to unregister
+
+**Example:**
+```javascript
+const disposable = api.workspace.onDidSaveTextDocument((document) => {
+  console.log('Document saved:', document.fileName);
+
+  // Run post-save actions
+  if (document.languageId === 'markdown') {
+    console.log('Updating markdown index...');
+    // Update search index, regenerate preview, etc.
+  }
+});
+```
+
+---
+
+### onDidChangeTextDocument(listener)
+
+Listen to document content changes.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| listener | Function | Yes | Callback function |
+
+**Listener Signature:**
+```typescript
+(event: TextDocumentChangeEvent) => void
+```
+
+**Event Format:**
+```typescript
+{
+  document: TextDocument,
+  contentChanges: Array<{
+    range: Range,
+    rangeLength: number,
+    text: string
+  }>,
+  reason: number | undefined       // Change reason (1=Undo, 2=Redo)
+}
+```
+
+**Returns:** `Disposable` - Disposable to unregister
+
+**Example:**
+```javascript
+const disposable = api.workspace.onDidChangeTextDocument((event) => {
+  console.log('Document changed:', event.document.fileName);
+  console.log('Number of changes:', event.contentChanges.length);
+
+  // React to content changes
+  event.contentChanges.forEach(change => {
+    console.log('Changed text:', change.text);
+    console.log('At range:', change.range);
+  });
+
+  // Debounce expensive operations
+  clearTimeout(updateTimer);
+  updateTimer = setTimeout(() => {
+    updatePreview(event.document);
+  }, 500);
+});
+```
+
+---
+
+### onDidChangeWorkspaceFolders(listener)
+
+Listen to workspace folder changes.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| listener | Function | Yes | Callback function |
+
+**Listener Signature:**
+```typescript
+(event: WorkspaceFoldersChangeEvent) => void
+```
+
+**Event Format:**
+```typescript
+{
+  added: WorkspaceFolder[],        // Newly added folders
+  removed: WorkspaceFolder[]       // Removed folders
+}
+```
+
+**Returns:** `Disposable` - Disposable to unregister
+
+**Example:**
+```javascript
+const disposable = api.workspace.onDidChangeWorkspaceFolders((event) => {
+  console.log('Workspace folders changed');
+
+  event.added.forEach(folder => {
+    console.log('Added folder:', folder.name, folder.uri.path);
+    // Initialize folder-specific resources
+  });
+
+  event.removed.forEach(folder => {
+    console.log('Removed folder:', folder.name, folder.uri.path);
+    // Clean up folder-specific resources
+  });
+});
+```
+
+---
+
+## Complete Example: File Search and Analysis
+
+Here's a complete example showing how to search for files and analyze their content:
+
+```javascript
+export function activate(api) {
+  const disposables = [];
+
+  // Command to analyze workspace
+  const analyzeCommand = api.commands.registerCommand(
+    'myPlugin.analyzeWorkspace',
+    async () => {
+      try {
+        // Get workspace info
+        const folders = api.workspace.workspaceFolders;
+        if (!folders || folders.length === 0) {
+          api.window.showErrorMessage('No workspace open');
+          return;
+        }
+
+        console.log('Analyzing workspace:', folders[0].name);
+
+        // Find all markdown files
+        const mdFiles = await api.workspace.findFiles(
+          '**/*.md',
+          '**/node_modules/**'
+        );
+
+        console.log(`Found ${mdFiles.length} markdown files`);
+
+        // Analyze each file
+        const stats = {
+          totalFiles: mdFiles.length,
+          totalWords: 0,
+          totalLines: 0,
+          filesBySize: []
+        };
+
+        for (const filePath of mdFiles) {
+          // Open document
+          const doc = await api.workspace.openTextDocument(filePath);
+          const text = doc.getText();
+
+          // Count words and lines
+          const words = text.split(/\s+/).filter(w => w.length > 0).length;
+          const lines = doc.lineCount;
+
+          stats.totalWords += words;
+          stats.totalLines += lines;
+          stats.filesBySize.push({
+            path: api.workspace.asRelativePath(filePath),
+            words,
+            lines
+          });
+        }
+
+        // Sort by size
+        stats.filesBySize.sort((a, b) => b.words - a.words);
+
+        // Show results
+        const resultDoc = await api.workspace.openTextDocument({
+          content: `# Workspace Analysis
+
+## Summary
+- Total files: ${stats.totalFiles}
+- Total words: ${stats.totalWords}
+- Total lines: ${stats.totalLines}
+- Average words per file: ${Math.round(stats.totalWords / stats.totalFiles)}
+
+## Largest Files
+${stats.filesBySize.slice(0, 10).map((file, i) =>
+  `${i + 1}. ${file.path} (${file.words} words, ${file.lines} lines)`
+).join('\n')}
+`,
+          language: 'markdown'
+        });
+
+        // Show the document
+        await api.editor.showDocument(resultDoc);
+
+      } catch (error) {
+        api.window.showErrorMessage(`Analysis failed: $\\{error.message\\}`);
+      }
+    }
+  );
+
+  disposables.push(analyzeCommand);
+
+  // Watch for new markdown files
+  const watcher = api.workspace.createFileSystemWatcher('**/*.md');
+
+  watcher.onDidCreate((uri) => {
+    api.window.showInformationMessage(`New markdown file: $\\{api.workspace.asRelativePath(uri)\\}`);
+  });
+
+  disposables.push(watcher);
+
+  // Listen to document saves
+  disposables.push(
+    api.workspace.onDidSaveTextDocument((document) => {
+      if (document.languageId === 'markdown') {
+        const wordCount = document.getText().split(/\s+/).length;
+        console.log(`Saved ${document.fileName}: ${wordCount} words`);
+      }
+    })
+  );
+
+  // Return deactivation function
+  return {
+    deactivate() {
+      disposables.forEach(d => d.dispose());
+    }
+  };
+}
+```
+
+---
+
+## Complete Example: Multi-File Refactoring
+
+Here's an example showing how to perform refactoring across multiple files:
+
+```javascript
+export function activate(api) {
+  const disposables = [];
+
+  // Command to rename wiki links across all files
+  const renameCommand = api.commands.registerCommand(
+    'myPlugin.renameWikiLink',
+    async () => {
+      try {
+        // Get current selection
+        const editor = await api.editor.getActiveEditor();
+        if (!editor) {
+          api.window.showErrorMessage('No active editor');
+          return;
+        }
+
+        const document = editor.document;
+        const selection = editor.selection;
+        const oldName = document.getText(selection);
+
+        if (!oldName) {
+          api.window.showErrorMessage('No text selected');
+          return;
+        }
+
+        // Prompt for new name
+        const newName = await api.window.showInputBox({
+          prompt: `Rename "${oldName}" to:`,
+          value: oldName
+        });
+
+        if (!newName || newName === oldName) {
+          return;
+        }
+
+        // Find all markdown files
+        const files = await api.workspace.findFiles('**/*.md');
+
+        // Build workspace edit
+        const edit = {
+          changes: {}
+        };
+
+        let totalReplacements = 0;
+
+        // Search each file for wiki links
+        for (const filePath of files) {
+          const doc = await api.workspace.openTextDocument(filePath);
+          const text = doc.getText();
+          const edits = [];
+
+          // Find all occurrences of [[oldName]]
+          const regex = new RegExp(`\\[\\[${oldName}\\]\\]`, 'g');
+          let match;
+
+          while ((match = regex.exec(text)) !== null) {
+            const start = doc.positionAt(match.index);
+            const end = doc.positionAt(match.index + match[0].length);
+
+            edits.push({
+              range: { start, end },
+              newText: `[[${newName}]]`
+            });
+
+            totalReplacements++;
+          }
+
+          if (edits.length > 0) {
+            edit.changes[doc.uri.toString()] = edits;
+          }
+        }
+
+        // Apply the edit
+        if (totalReplacements > 0) {
+          const success = await api.workspace.applyEdit(edit);
+          if (success) {
+            api.window.showInformationMessage(
+              `Renamed "${oldName}" to "${newName}" in ${totalReplacements} locations across ${Object.keys(edit.changes).length} files`
+            );
+          } else {
+            api.window.showErrorMessage('Failed to apply refactoring');
+          }
+        } else {
+          api.window.showInformationMessage(`No occurrences of "${oldName}" found`);
+        }
+
+      } catch (error) {
+        api.window.showErrorMessage(`Refactoring failed: $\\{error.message\\}`);
+      }
+    }
+  );
+
+  disposables.push(renameCommand);
+
+  return {
+    deactivate() {
+      disposables.forEach(d => d.dispose());
+    }
+  };
+}
+```
+
+---
+
+## Related APIs
+
+- **[EditorAPI](/developers/plugins/api-reference/editor-api)** - Editor integration and document manipulation
+- **[LanguagesAPI](/developers/plugins/api-reference/languages-api)** - Language features and providers
+- **[CommandsAPI](/developers/plugins/api-reference/commands-api)** - Command registration
+- **[WindowAPI](/developers/plugins/api-reference/window-api)** - UI interactions
+
+## See Also
+
+- [Plugin Architecture](/developers/plugins/architecture)
+- [File System Operations](/developers/plugins/advanced#file-operations)
+- [Workspace Management Guide](/developers/plugins/advanced#workspace-management)

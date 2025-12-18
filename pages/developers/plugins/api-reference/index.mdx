@@ -1,0 +1,516 @@
+---
+title: "Plugin API Reference Overview"
+description: "Complete reference for all Lokus Plugin APIs - commands, editor, UI, storage, and more"
+keywords: [lokus, plugin api, api reference, plugin development]
+---
+
+# API Reference Overview
+
+Complete reference documentation for all Lokus Plugin APIs. Each plugin receives a `PluginContext` object that provides access to these APIs.
+
+## Quick Start
+
+```typescript
+import { PluginContext } from 'lokus-plugin-sdk';
+
+export default class MyPlugin {
+  private context: PluginContext;
+
+  constructor(context: PluginContext) {
+    this.context = context;
+  }
+
+  async activate(): Promise<void> {
+    // Access APIs via context
+    this.context.ui.showInformationMessage('Plugin activated!');
+    this.context.commands.register('myPlugin.command', {
+      name: 'My Command',
+      execute: () => { /* ... */ }
+    });
+  }
+
+  async deactivate(): Promise<void> {
+    // Cleanup
+  }
+}
+```
+
+---
+
+## Core APIs
+
+Essential APIs for basic plugin functionality.
+
+### [EditorAPI](/developers/plugins/api-reference/editor-api)
+
+Access: `context.editor`
+
+Interact with the TipTap editor - add extensions, slash commands, toolbar items, and manipulate editor content.
+
+**Key Features:**
+- Add custom TipTap extensions
+- Register slash commands
+- Insert and manipulate nodes
+- Get/replace editor selection
+- Add keyboard shortcuts
+- Add toolbar items and context menu items
+
+**Example:**
+```typescript
+await context.editor.addSlashCommand({
+  name: 'timestamp',
+  description: 'Insert current timestamp',
+  execute: async () => {
+    const timestamp = new Date().toISOString();
+    await context.editor.insertNode('text', {}, timestamp);
+  }
+});
+```
+
+---
+
+### [UIAPI](/developers/plugins/api-reference/ui-api)
+
+Access: `context.ui`
+
+Display notifications, dialogs, and UI components to interact with users.
+
+**Key Features:**
+- Show notifications (info, warning, error)
+- Create dialogs (prompt, confirm, quick pick)
+- Create output channels for logs
+- Register panels, tree views, and status bar items
+- Show progress indicators
+- Create webview panels
+
+**Example:**
+```typescript
+const result = await context.ui.showConfirm({
+  title: 'Confirm Action',
+  message: 'Are you sure?'
+});
+
+if (result) {
+  const channel = context.ui.createOutputChannel('My Plugin');
+  channel.appendLine('Action confirmed');
+  channel.show();
+}
+```
+
+---
+
+### [CommandsAPI](/developers/plugins/api-reference/commands-api)
+
+Access: `context.commands`
+
+Register and execute commands that users can trigger from the command palette or via keyboard shortcuts.
+
+**Key Features:**
+- Register commands with metadata
+- Execute commands programmatically
+- Add keyboard shortcuts
+- Show commands in command palette
+- Organize by categories
+
+**Example:**
+```typescript
+context.commands.register('myPlugin.hello', {
+  name: 'Say Hello',
+  category: 'My Plugin',
+  shortcut: 'Ctrl+Shift+H',
+  execute: () => {
+    context.ui.showInformationMessage('Hello, World!');
+  }
+});
+```
+
+---
+
+### [WorkspaceAPI](/developers/plugins/api-reference/workspace-api)
+
+Access: `context.workspace`
+
+Access workspace information, files, and documents.
+
+**Key Features:**
+- Get workspace root path
+- Access active editor
+- Listen for file changes
+- Get workspace configuration
+- Access open documents
+
+**Example:**
+```typescript
+const rootPath = context.workspace?.rootPath;
+const activeEditor = context.workspace?.activeTextEditor;
+
+context.workspace?.onDidChangeActiveTextEditor((editor) => {
+  context.logger.info(`Editor changed: $\\{editor?.document.fileName\\}`);
+});
+```
+
+---
+
+### [ConfigurationAPI](/developers/plugins/api-reference/configuration-api)
+
+Access: `context.config`
+
+Read and write plugin configuration settings.
+
+**Key Features:**
+- Get configuration values
+- Update configuration
+- Listen for configuration changes
+- Plugin-specific settings
+
+**Example:**
+```typescript
+const theme = await context.config.get('theme') ?? 'dark';
+await context.config.set('theme', 'light');
+
+context.config.onDidChange((e) => {
+  if (e.key === 'theme') {
+    context.logger.info(`Theme changed to: $\\{e.value\\}`);
+  }
+});
+```
+
+---
+
+### [LanguagesAPI](/developers/plugins/api-reference/languages-api)
+
+Access: `context.languages`
+
+Register language features like completion providers, hover providers, and formatters.
+
+**Key Features:**
+- Register completion providers
+- Add hover information
+- Implement code actions
+- Provide formatting
+- Register linters
+
+**Example:**
+```typescript
+context.languages.registerCompletionProvider('markdown', {
+  async provideCompletionItems(document, position) {
+    return [
+      { label: 'todo', insertText: '- [ ] ' },
+      { label: 'done', insertText: '- [x] ' }
+    ];
+  }
+});
+```
+
+---
+
+## Terminal & Tasks
+
+APIs for running commands and managing processes.
+
+### [TerminalAPI](/developers/plugins/api-reference/terminal-api)
+
+Access: `context.terminal`
+
+Create and manage virtual terminals.
+
+**Key Features:**
+- Create named terminals
+- Send commands to terminals
+- Listen for terminal events
+- Get active terminal
+
+**Example:**
+```typescript
+const terminal = context.terminal.createTerminal({
+  name: 'Build',
+  cwd: context.workspace?.rootPath
+});
+terminal.show();
+terminal.sendText('npm run build');
+```
+
+---
+
+### [TaskAPI](/developers/plugins/api-reference/task-api)
+
+Access: `context.tasks`
+
+Register task providers and execute automated tasks.
+
+**Key Features:**
+- Register task providers
+- Execute tasks programmatically
+- Listen for task events
+- Get available tasks
+
+**Example:**
+```typescript
+context.tasks.registerTaskProvider('npm', {
+  async provideTasks() {
+    return [
+      { type: 'npm', name: 'build', command: 'npm run build' },
+      { type: 'npm', name: 'test', command: 'npm test' }
+    ];
+  }
+});
+
+const tasks = await context.tasks.getTasks();
+await context.tasks.executeTask(tasks[0]);
+```
+
+---
+
+## Debugging & Themes
+
+### [DebugAPI](/developers/plugins/api-reference/debug-api)
+
+Access: `context.debug`
+
+Register debug adapters and manage debugging sessions.
+
+**Key Features:**
+- Start/stop debugging sessions
+- Register debug adapters
+- Provide debug configurations
+- Listen for debug events
+
+**Example:**
+```typescript
+await context.debug.startDebugging({
+  type: 'node',
+  name: 'Launch App',
+  request: 'launch',
+  program: '${workspaceFolder}/index.js'
+});
+```
+
+---
+
+### [ThemeAPI](/developers/plugins/api-reference/theme-api)
+
+Access: `context.themes`
+
+Register custom themes and manage theme settings.
+
+**Key Features:**
+- Register color themes
+- Get/set active theme
+- Listen for theme changes
+- Customize editor colors
+
+**Example:**
+```typescript
+context.themes.registerTheme({
+  id: 'my-theme',
+  label: 'My Theme',
+  uiTheme: 'vs-dark',
+  colors: {
+    'editor.background': '#1a1a1a',
+    'editor.foreground': '#e0e0e0'
+  }
+});
+```
+
+---
+
+## Storage & Files
+
+APIs for persisting data and accessing files.
+
+### [StorageAPI](/developers/plugins/api-reference/storage-api)
+
+Access: `context.storage`
+
+Key-value storage for persisting plugin data.
+
+**Key Features:**
+- Get/set key-value pairs
+- Delete values
+- List all keys
+- Clear all data
+- Named databases
+
+**Example:**
+```typescript
+await context.storage.set('settings', { theme: 'dark' });
+const settings = await context.storage.get('settings');
+
+// Use separate database
+const cacheDb = await context.storage.getDatabase('cache');
+await cacheDb.set('lastFetch', Date.now());
+```
+
+---
+
+### [FilesystemAPI](/developers/plugins/api-reference/filesystem-api)
+
+Access: `context.fs`
+
+Safe file system access within plugin directory.
+
+**Key Features:**
+- Read/write files
+- Create/delete directories
+- Copy/move/rename files
+- Check file existence
+- Get file metadata
+- Open file dialogs
+
+**Example:**
+```typescript
+await context.fs.writeFile('config.json', JSON.stringify(config));
+const data = await context.fs.readFile('config.json');
+const files = await context.fs.readdir('data');
+```
+
+---
+
+## Network & Clipboard
+
+### [NetworkAPI](/developers/plugins/api-reference/network-api)
+
+Access: `context.network`
+
+Make HTTP requests (requires `network` permission).
+
+**Key Features:**
+- Fetch API interface
+- All HTTP methods
+- Request/response headers
+- JSON and binary data
+
+**Example:**
+```typescript
+const response = await context.network.fetch('https://api.example.com/data', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ key: 'value' })
+});
+const data = await response.json();
+```
+
+---
+
+### [ClipboardAPI](/developers/plugins/api-reference/clipboard-api)
+
+Access: `context.clipboard`
+
+Read from and write to the system clipboard.
+
+**Key Features:**
+- Copy text to clipboard
+- Read clipboard content
+- Clipboard history
+
+**Example:**
+```typescript
+await context.clipboard.writeText('Hello, World!');
+
+const items = await context.clipboard.read();
+if (items.length > 0) {
+  const blob = await items[0].getType('text/plain');
+  const text = await blob.text();
+}
+```
+
+---
+
+## API Summary Table
+
+| API | Access | Permission Required | Purpose |
+|-----|--------|---------------------|---------|
+| [EditorAPI](/developers/plugins/api-reference/editor-api) | `context.editor` | None | Editor manipulation |
+| [UIAPI](/developers/plugins/api-reference/ui-api) | `context.ui` | None | UI components & notifications |
+| [CommandsAPI](/developers/plugins/api-reference/commands-api) | `context.commands` | None | Command registration |
+| [WorkspaceAPI](/developers/plugins/api-reference/workspace-api) | `context.workspace` | None | Workspace information |
+| [ConfigurationAPI](/developers/plugins/api-reference/configuration-api) | `context.config` | None | Plugin settings |
+| [LanguagesAPI](/developers/plugins/api-reference/languages-api) | `context.languages` | None | Language features |
+| [TerminalAPI](/developers/plugins/api-reference/terminal-api) | `context.terminal` | None | Terminal management |
+| [TaskAPI](/developers/plugins/api-reference/task-api) | `context.tasks` | None | Task automation |
+| [DebugAPI](/developers/plugins/api-reference/debug-api) | `context.debug` | None | Debugging |
+| [ThemeAPI](/developers/plugins/api-reference/theme-api) | `context.themes` | None | Theme management |
+| [StorageAPI](/developers/plugins/api-reference/storage-api) | `context.storage` | None | Data persistence |
+| [FilesystemAPI](/developers/plugins/api-reference/filesystem-api) | `context.fs` | None | File operations |
+| [NetworkAPI](/developers/plugins/api-reference/network-api) | `context.network` | `network` | HTTP requests |
+| [ClipboardAPI](/developers/plugins/api-reference/clipboard-api) | `context.clipboard` | None | Clipboard access |
+
+---
+
+## Common Patterns
+
+### Command with UI Feedback
+
+```typescript
+context.commands.register('myPlugin.action', {
+  name: 'My Action',
+  execute: async () => {
+    try {
+      await context.ui.withProgress(
+        { title: 'Processing...' },
+        async (progress) => {
+          // Do work
+          progress.report({ message: 'Step 1...' });
+          await doStep1();
+          progress.report({ message: 'Step 2...' });
+          await doStep2();
+        }
+      );
+      context.ui.showInformationMessage('Success!');
+    } catch (error) {
+      context.ui.showErrorMessage(`Failed: $\\{error.message\\}`);
+    }
+  }
+});
+```
+
+---
+
+### Persistent Settings
+
+```typescript
+async activate() {
+  // Load settings
+  const settings = await context.storage.get('settings') ?? defaultSettings;
+
+  // Register command to update
+  context.commands.register('myPlugin.configure', {
+    name: 'Configure',
+    execute: async () => {
+      const value = await context.ui.showInputBox({
+        prompt: 'Enter value',
+        value: settings.value
+      });
+      if (value) {
+        settings.value = value;
+        await context.storage.set('settings', settings);
+      }
+    }
+  });
+}
+```
+
+---
+
+### File Processing
+
+```typescript
+async processFiles() {
+  await context.fs.ensureDir('output');
+  const files = await context.fs.readdir('input');
+
+  for (const file of files) {
+    const data = await context.fs.readFile(`input/$\\{file\\}`);
+    const processed = await this.process(data);
+    await context.fs.writeFile(`output/$\\{file\\}`, processed);
+  }
+}
+```
+
+---
+
+## See Also
+
+- [Getting Started](/developers/plugins/getting-started) - Create your first plugin
+- [Plugin Architecture](/developers/plugins/architecture) - How plugins work
+- [Publishing](/developers/plugins/publishing) - Share your plugin

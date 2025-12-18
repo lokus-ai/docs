@@ -1,0 +1,529 @@
+---
+title: "DebugAPI Reference"
+description: "Debug adapter registration and debugging session management in Lokus plugins"
+keywords: [lokus, plugin api, debugging, debug adapter, breakpoints]
+---
+
+# DebugAPI
+
+Register debug adapters and manage debugging sessions. Access via `context.debug`.
+
+## Overview
+
+The DebugAPI allows plugins to:
+- Start and stop debugging sessions
+- Register debug adapters for different languages/runtimes
+- Provide debug configurations
+- Listen for debug session events
+
+Debug adapters enable step-through debugging, breakpoints, variable inspection, and other debugging features.
+
+## Methods
+
+### startDebugging(config)
+
+Start a debugging session with a configuration.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| config | DebugConfiguration | Yes | Debug configuration |
+
+**DebugConfiguration Interface:**
+
+```typescript
+interface DebugConfiguration {
+  type: string;           // Debug type (e.g., 'node', 'python')
+  name: string;           // Configuration name
+  request: 'launch' | 'attach';  // Request type
+  program?: string;       // Program path (for launch)
+  args?: string[];        // Program arguments
+  cwd?: string;          // Working directory
+  env?: object;          // Environment variables
+  port?: number;         // Port (for attach)
+  [key: string]: any;    // Additional properties
+}
+```
+
+**Returns:** Promise resolving to `true` on success.
+
+**Example:**
+
+```typescript
+// Launch debugging
+await context.debug.startDebugging({
+  type: 'node',
+  name: 'Launch App',
+  request: 'launch',
+  program: '${workspaceFolder}/index.js',
+  args: ['--debug'],
+  cwd: context.workspace?.rootPath
+});
+
+// Attach to running process
+await context.debug.startDebugging({
+  type: 'node',
+  name: 'Attach to Process',
+  request: 'attach',
+  port: 9229
+});
+```
+
+---
+
+### stopDebugging()
+
+Stop the active debugging session.
+
+**Returns:** Promise resolving to `true` if session stopped, `false` if no active session.
+
+**Example:**
+
+```typescript
+const stopped = await context.debug.stopDebugging();
+if (stopped) {
+  context.logger.info('Debug session stopped');
+} else {
+  context.logger.info('No active debug session');
+}
+```
+
+---
+
+### getActiveDebugSession()
+
+Get the currently active debug session.
+
+**Returns:** DebugSession object or `undefined` if no active session.
+
+**DebugSession Interface:**
+
+```typescript
+interface DebugSession {
+  id: string;
+  config: DebugConfiguration;
+  pluginId: string;
+  started: number;  // Timestamp
+}
+```
+
+**Example:**
+
+```typescript
+const session = context.debug.getActiveDebugSession();
+if (session) {
+  context.logger.info(`Active session: $\\{session.config.name\\}`);
+  context.logger.info(`Started: $\\{new Date(session.started)\\}`);
+}
+```
+
+---
+
+### registerDebugAdapterProvider(type, provider)
+
+Register a debug adapter provider for a specific debug type.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| type | string | Yes | Debug type identifier |
+| provider | DebugAdapterProvider | Yes | Provider implementation |
+
+**DebugAdapterProvider Interface:**
+
+```typescript
+interface DebugAdapterProvider {
+  provideDebugConfigurations?(): Promise<DebugConfiguration[]>;
+  resolveDebugConfiguration?(config: DebugConfiguration): Promise<DebugConfiguration>;
+}
+```
+
+**Returns:** Disposable to unregister the provider.
+
+**Example:**
+
+```typescript
+const disposable = context.debug.registerDebugAdapterProvider('node', {
+  async provideDebugConfigurations() {
+    return [
+      {
+        type: 'node',
+        name: 'Launch App',
+        request: 'launch',
+        program: '${workspaceFolder}/index.js'
+      },
+      {
+        type: 'node',
+        name: 'Launch Tests',
+        request: 'launch',
+        program: '${workspaceFolder}/test/index.js'
+      }
+    ];
+  },
+  async resolveDebugConfiguration(config) {
+    // Add default values
+    return {
+      ...config,
+      cwd: config.cwd || context.workspace?.rootPath,
+      env: {
+        NODE_ENV: 'development',
+        ...config.env
+      }
+    };
+  }
+});
+
+// Unregister when done
+disposable.dispose();
+```
+
+---
+
+## Events
+
+### onDidStartDebugSession(listener)
+
+Listen for debug session start events.
+
+**Parameters:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| listener | function | Callback receiving `\\\{ session \\\}` |
+
+**Returns:** Disposable to stop listening.
+
+**Example:**
+
+```typescript
+context.debug.onDidStartDebugSession(({ session }) => {
+  context.logger.info(`Debug session started: $\\{session.config.name\\}`);
+  context.ui.showInformationMessage('Debugging started');
+});
+```
+
+---
+
+### onDidTerminateDebugSession(listener)
+
+Listen for debug session termination events.
+
+**Parameters:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| listener | function | Callback receiving `\\\{ session \\\}` |
+
+**Returns:** Disposable to stop listening.
+
+**Example:**
+
+```typescript
+context.debug.onDidTerminateDebugSession(({ session }) => {
+  context.logger.info(`Debug session ended: $\\{session.config.name\\}`);
+  const duration = Date.now() - session.started;
+  context.ui.showInformationMessage(`Debug session ended (${duration}ms)`);
+});
+```
+
+---
+
+## Complete Example
+
+```typescript
+export default class DebugPlugin {
+  private context: PluginContext;
+
+  constructor(context: PluginContext) {
+    this.context = context;
+  }
+
+  async activate(): Promise<void> {
+    // Register debug adapter for custom runtime
+    context.debug.registerDebugAdapterProvider('myruntime', {
+      async provideDebugConfigurations() {
+        return [
+          {
+            type: 'myruntime',
+            name: 'Debug Main',
+            request: 'launch',
+            program: 'main.mr'
+          }
+        ];
+      },
+      async resolveDebugConfiguration(config) {
+        // Validate and enhance config
+        if (!config.program) {
+          throw new Error('Program path required');
+        }
+        return {
+          ...config,
+          cwd: context.workspace?.rootPath,
+          env: {
+            DEBUG: 'true',
+            ...config.env
+          }
+        };
+      }
+    });
+
+    // Register commands
+    context.commands.register([
+      {
+        id: 'myPlugin.debug',
+        name: 'Start Debugging',
+        execute: () => this.startDebugging()
+      },
+      {
+        id: 'myPlugin.stopDebug',
+        name: 'Stop Debugging',
+        execute: () => this.stopDebugging()
+      }
+    ]);
+
+    // Listen for debug events
+    context.debug.onDidStartDebugSession(({ session }) => {
+      context.logger.info(`Started: $\\{session.config.name\\}`);
+    });
+
+    context.debug.onDidTerminateDebugSession(({ session }) => {
+      context.logger.info(`Stopped: $\\{session.config.name\\}`);
+    });
+  }
+
+  async startDebugging(): Promise<void> {
+    try {
+      await context.debug.startDebugging({
+        type: 'myruntime',
+        name: 'Debug Main',
+        request: 'launch',
+        program: 'main.mr',
+        cwd: context.workspace?.rootPath
+      });
+    } catch (error) {
+      context.ui.showErrorMessage(`Failed to start debugging: $\\{error.message\\}`);
+    }
+  }
+
+  async stopDebugging(): Promise<void> {
+    const stopped = await context.debug.stopDebugging();
+    if (!stopped) {
+      context.ui.showWarningMessage('No active debug session');
+    }
+  }
+
+  async deactivate(): Promise<void> {
+    // Stop any active debug sessions
+    await context.debug.stopDebugging();
+  }
+}
+```
+
+---
+
+## Advanced Example: Multi-Configuration Debugger
+
+```typescript
+export default class AdvancedDebugPlugin {
+  private context: PluginContext;
+  private configurations: Map<string, DebugConfiguration>;
+
+  constructor(context: PluginContext) {
+    this.context = context;
+    this.configurations = new Map();
+  }
+
+  async activate(): Promise<void> {
+    // Register Python debug adapter
+    context.debug.registerDebugAdapterProvider('python', {
+      async provideDebugConfigurations() {
+        return [
+          {
+            type: 'python',
+            name: 'Python: Current File',
+            request: 'launch',
+            program: '${file}',
+            console: 'integratedTerminal'
+          },
+          {
+            type: 'python',
+            name: 'Python: Module',
+            request: 'launch',
+            module: 'main',
+            args: []
+          },
+          {
+            type: 'python',
+            name: 'Python: Attach',
+            request: 'attach',
+            port: 5678,
+            host: 'localhost'
+          }
+        ];
+      },
+      async resolveDebugConfiguration(config) {
+        // Add Python path and environment
+        return {
+          ...config,
+          pythonPath: '${workspaceFolder}/venv/bin/python',
+          cwd: config.cwd || context.workspace?.rootPath,
+          env: {
+            PYTHONPATH: '${workspaceFolder}',
+            ...config.env
+          }
+        };
+      }
+    });
+
+    // Register commands for each configuration
+    context.commands.register([
+      {
+        id: 'myPlugin.debugCurrentFile',
+        name: 'Debug Current Python File',
+        execute: () => this.debugCurrentFile()
+      },
+      {
+        id: 'myPlugin.debugModule',
+        name: 'Debug Python Module',
+        execute: () => this.debugModule()
+      },
+      {
+        id: 'myPlugin.attachDebugger',
+        name: 'Attach Python Debugger',
+        execute: () => this.attachDebugger()
+      }
+    ]);
+
+    // Track debug sessions
+    context.debug.onDidStartDebugSession(({ session }) => {
+      this.configurations.set(session.id, session.config);
+      context.logger.info(`Debug session started: $\\{session.config.name\\}`);
+
+      // Show status
+      context.ui.showInformationMessage(
+        `Debugging: $\\{session.config.name\\}`,
+        'Stop'
+      ).then(action => {
+        if (action === 'Stop') {
+          context.debug.stopDebugging();
+        }
+      });
+    });
+
+    context.debug.onDidTerminateDebugSession(({ session }) => {
+      this.configurations.delete(session.id);
+      const duration = Date.now() - session.started;
+      context.logger.info(`Debug session ended after ${duration}ms`);
+    });
+  }
+
+  async debugCurrentFile(): Promise<void> {
+    const currentFile = context.workspace?.activeTextEditor?.document.fileName;
+    if (!currentFile) {
+      context.ui.showErrorMessage('No active file');
+      return;
+    }
+
+    await context.debug.startDebugging({
+      type: 'python',
+      name: 'Debug Current File',
+      request: 'launch',
+      program: currentFile,
+      console: 'integratedTerminal'
+    });
+  }
+
+  async debugModule(): Promise<void> {
+    const moduleName = await context.ui.showInputBox({
+      prompt: 'Enter module name',
+      placeholder: 'main'
+    });
+
+    if (!moduleName) return;
+
+    await context.debug.startDebugging({
+      type: 'python',
+      name: `Debug Module: $\\{moduleName\\}`,
+      request: 'launch',
+      module: moduleName
+    });
+  }
+
+  async attachDebugger(): Promise<void> {
+    const port = await context.ui.showInputBox({
+      prompt: 'Enter debug port',
+      placeholder: '5678'
+    });
+
+    if (!port) return;
+
+    await context.debug.startDebugging({
+      type: 'python',
+      name: 'Attach Debugger',
+      request: 'attach',
+      port: parseInt(port, 10),
+      host: 'localhost'
+    });
+  }
+
+  async deactivate(): Promise<void> {
+    // Stop all debug sessions
+    await context.debug.stopDebugging();
+  }
+}
+```
+
+---
+
+## Best Practices
+
+1. **Validate Configurations**: Check required fields
+   ```typescript
+   if (!config.program && config.request === 'launch') {
+     throw new Error('Program path required for launch');
+   }
+   ```
+
+2. **Use Workspace Paths**: Resolve relative paths
+   ```typescript
+   {
+     program: path.join(context.workspace?.rootPath, 'index.js')
+   }
+   ```
+
+3. **Handle Errors**: Wrap in try-catch
+   ```typescript
+   try {
+     await context.debug.startDebugging(config);
+   } catch (error) {
+     context.ui.showErrorMessage(`Debug failed: $\\{error.message\\}`);
+   }
+   ```
+
+4. **Provide Multiple Configs**: Offer common scenarios
+   ```typescript
+   provideDebugConfigurations() {
+     return [
+       { /* launch */ },
+       { /* attach */ },
+       { /* test */ }
+     ];
+   }
+   ```
+
+5. **Clean Up Sessions**: Stop debugging on deactivate
+   ```typescript
+   async deactivate() {
+     await context.debug.stopDebugging();
+   }
+   ```
+
+---
+
+## See Also
+
+- [TaskAPI Reference](/developers/plugins/api-reference/task-api) - Task execution
+- [TerminalAPI Reference](/developers/plugins/api-reference/terminal-api) - Terminal management
+- [WorkspaceAPI Reference](/developers/plugins/api-reference/workspace-api) - Workspace information
