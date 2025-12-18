@@ -1,144 +1,580 @@
 ---
-title: CLI Reference
-description: The essential command-line tool for Lokus plugin development.
+title: Plugin CLI Reference
+description: Complete reference for the Lokus Plugin CLI - create, build, validate, link, package, and publish plugins.
+keywords: [lokus, plugin cli, lokus-plugin, cli reference, plugin development]
 ---
 
-import { Tabs, Callout, Steps } from 'nextra/components'
+# Plugin CLI Reference
 
-# CLI Reference
+The Lokus Plugin CLI (`lokus-plugin-cli`) is the official command-line tool for creating, building, testing, and publishing Lokus plugins.
 
-The `lokus-plugin` CLI is your primary tool for creating, building, and publishing plugins.
+## Installation
 
-<Callout type="info">
-  **Quick Install:** `npm install -g @lokus/plugin-cli`
-</Callout>
+```bash
+# Install globally
+npm install -g lokus-plugin-cli
 
-## Quick Reference
+# Or use with npx (no installation needed)
+npx lokus-plugin <command>
+```
+
+## Commands Overview
 
 | Command | Description |
-| :--- | :--- |
-| `create` | Scaffold a new plugin project |
-| `dev` | Start development server with hot-reload |
-| `link` | Symlink plugin for local development |
-| `publish` | Publish to the Lokus Registry |
+|---------|-------------|
+| `create` | Create a new plugin from a template |
+| `build` | Build plugin for production |
+| `dev` | Run in development mode with hot reload |
+| `validate` | Validate plugin manifest |
+| `link` | Link plugin for local development |
+| `package` | Create distributable package |
+| `publish` | Publish to the registry |
+| `login` | Authenticate with the registry |
+| `list` | List installed plugins |
+| `info` | Show plugin information |
 
 ---
 
-## Commands
+## create
 
-<Tabs items={['Basics', 'Development', 'Publishing', 'Utility']}>
+Create a new plugin project from a template.
 
-  <Tabs.Tab>
-    ### `create`
-    Scaffold a new plugin project.
-
-    ```bash
-    lokus-plugin create <name> [options]
-    ```
-
-    **Options:**
-    - `-y, --yes`: Quick mode (skip prompts)
-    - `--template <name>`: `basic`, `ui`, `editor`
-
-    ### `install`
-    Install a plugin locally.
-
-    ```bash
-    lokus-plugin install <path|id>
-    ```
-  </Tabs.Tab>
-
-  <Tabs.Tab>
-    ### `dev`
-    Start the development server with hot-reloading.
-
-    ```bash
-    lokus-plugin dev
-    ```
-
-    <Callout type="warning" emoji="⚠️">
-      **Tip:** Run `lokus-plugin link` first to symlink your plugin to the app!
-    </Callout>
-
-    ### `link`
-    Symlink the current plugin to Lokus for local development.
-
-    ```bash
-    lokus-plugin link [--force]
-    ```
-
-    ### `test`
-    Run the test suite (Vitest/Jest).
-
-    ```bash
-    lokus-plugin test [--watch] [--coverage]
-    ```
-  </Tabs.Tab>
-
-  <Tabs.Tab>
-    ### `login`
-    Authenticate with the registry.
-
-    ```bash
-    lokus-plugin login
-    # Follow the interactive prompts
-    ```
-
-    ### `publish`
-    Publish your plugin to the registry.
-
-    ```bash
-    lokus-plugin publish
-    ```
-
-    **Options:**
-    - `--tag <tag>`: `latest`, `beta`, `alpha`
-    - `--dry-run`: Simulate without uploading
-
-    ### `package`
-    Build a `.vsix` file for manual distribution.
-
-    ```bash
-    lokus-plugin package
-    ```
-  </Tabs.Tab>
-
-  <Tabs.Tab>
-    ### `docs`
-    Generate documentation website.
-    
-    ```bash
-    lokus-plugin docs --serve
-    ```
-
-    ### `validate`
-    Check your `plugin.json` and code for errors.
-
-    ```bash
-    lokus-plugin validate --strict
-    ```
-
-    ### `info`
-    Show details about a plugin.
-
-    ```bash
-    lokus-plugin info <id>
-    ```
-  </Tabs.Tab>
-
-</Tabs>
-
-## CI/CD Integration
-
-<Callout type="info">
-  Use the `LOKUS_REGISTRY_TOKEN` environment variable in CI environments.
-</Callout>
-
-```yaml filename="github-actions.yml"
-steps:
-  - run: npm install
-  - run: npm run build
-  - run: npm run publish
-    env:
-      LOKUS_REGISTRY_TOKEN: ${{ secrets.LOKUS_TOKEN }}
+```bash
+npx lokus-plugin create <plugin-name> [options]
 ```
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `-t, --template <name>` | Template to use (see below) |
+| `--skip-prompts` | Skip interactive prompts, use defaults |
+| `--author <name>` | Plugin author name |
+| `--description <desc>` | Plugin description |
+| `--display-name <name>` | Human-readable plugin name |
+
+### Available Templates
+
+| Template | Description |
+|----------|-------------|
+| `basic-typescript` | Simple TypeScript plugin with commands |
+| `basic-plugin` | Minimal plugin structure |
+| `react-ui-panel` | Plugin with React-based UI panel |
+| `ui-extension-plugin` | Plugin with toolbar and status bar items |
+| `language-support-plugin` | Plugin for language/syntax support |
+
+### Examples
+
+```bash
+# Interactive mode (prompts for all options)
+npx lokus-plugin create my-plugin
+
+# Quick start with defaults
+npx lokus-plugin create my-plugin --skip-prompts
+
+# Specific template
+npx lokus-plugin create my-plugin --template react-ui-panel
+
+# With metadata
+npx lokus-plugin create my-plugin \
+  --template basic-typescript \
+  --author "John Doe" \
+  --description "My awesome plugin" \
+  --display-name "My Plugin"
+```
+
+### Generated Files
+
+```
+my-plugin/
+├── src/
+│   └── index.ts          # Plugin entry point
+├── test/
+│   ├── index.test.ts     # Unit tests
+│   └── setup.ts          # Test setup
+├── dist/                  # Build output (after npm run build)
+├── package.json          # npm configuration
+├── plugin.json           # Plugin manifest
+├── tsconfig.json         # TypeScript config
+├── esbuild.config.js     # Build configuration
+└── README.md
+```
+
+---
+
+## build
+
+Build the plugin for production.
+
+```bash
+npx lokus-plugin build [options]
+```
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `-p, --path <path>` | Plugin directory (default: `.`) |
+| `--watch` | Watch mode for continuous building |
+| `--minify` | Minify output |
+| `--sourcemap` | Generate source maps |
+
+### Examples
+
+```bash
+# Build current directory
+npx lokus-plugin build
+
+# Build with source maps
+npx lokus-plugin build --sourcemap
+
+# Watch mode
+npx lokus-plugin build --watch
+
+# Build specific directory
+npx lokus-plugin build --path ./my-plugin
+```
+
+**Note:** Most projects use `npm run build` which is configured in `package.json` to use esbuild directly.
+
+---
+
+## dev
+
+Run the plugin in development mode with file watching.
+
+```bash
+npx lokus-plugin dev [options]
+```
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `-p, --path <path>` | Plugin directory (default: `.`) |
+| `--verbose` | Enable verbose logging |
+| `--clean` | Clean build artifacts before starting |
+
+### Examples
+
+```bash
+# Start dev mode
+npx lokus-plugin dev
+
+# With verbose output
+npx lokus-plugin dev --verbose
+
+# Clean start
+npx lokus-plugin dev --clean
+```
+
+---
+
+## validate
+
+Validate the plugin manifest (`plugin.json`).
+
+```bash
+npx lokus-plugin validate [options]
+```
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `-p, --path <path>` | Plugin directory (default: `.`) |
+
+### Output
+
+On success:
+```
+✓ Plugin manifest is valid
+  Name: my-plugin
+  Version: 0.1.0
+  Description: A Lokus plugin
+```
+
+On failure:
+```
+Error: Missing required fields: version, main
+```
+
+### Examples
+
+```bash
+# Validate current directory
+npx lokus-plugin validate
+
+# Validate specific plugin
+npx lokus-plugin validate --path ./my-plugin
+```
+
+---
+
+## link
+
+Create a symbolic link in the Lokus plugins directory for local development.
+
+```bash
+npx lokus-plugin link [options]
+```
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `-p, --path <path>` | Plugin directory (default: `.`) |
+
+### What it does
+
+1. Reads the plugin ID from `plugin.json`
+2. Creates a symlink at `~/.lokus/plugins/<plugin-id>` pointing to your plugin directory
+3. Lokus will now load your plugin on startup
+
+### Examples
+
+```bash
+# Link current plugin
+npx lokus-plugin link
+
+# Link specific plugin
+npx lokus-plugin link --path ./my-plugin
+```
+
+### Verifying the Link
+
+```bash
+ls -la ~/.lokus/plugins/
+# Should show: my-plugin -> /path/to/your/plugin
+```
+
+### Unlinking
+
+To remove the link:
+
+```bash
+rm ~/.lokus/plugins/<plugin-id>
+```
+
+---
+
+## package
+
+Create a distributable package (`.zip` file).
+
+```bash
+npx lokus-plugin package [options]
+```
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `-p, --path <path>` | Plugin directory (default: `.`) |
+| `-o, --output <dir>` | Output directory |
+
+### What it includes
+
+- `dist/` directory (compiled code)
+- `plugin.json` manifest
+- `README.md` (if exists)
+- `LICENSE` (if exists)
+- Assets defined in manifest
+
+### Examples
+
+```bash
+# Package current plugin
+npx lokus-plugin package
+
+# Custom output directory
+npx lokus-plugin package --output ./releases
+```
+
+Output: `my-plugin-1.0.0.zip`
+
+---
+
+## publish
+
+Publish the plugin to the Lokus registry.
+
+```bash
+npx lokus-plugin publish [options]
+```
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `-p, --path <path>` | Plugin directory (default: `.`) |
+| `-r, --registry <url>` | Registry URL (default: `https://lokusmd.com`) |
+| `--dry-run` | Simulate without publishing |
+| `--tag <tag>` | Version tag (e.g., `beta`, `latest`) |
+
+### Prerequisites
+
+1. **Login first:** Run `npx lokus-plugin login`
+2. **Build:** Ensure plugin is built (`npm run build`)
+3. **Validate:** Run `npx lokus-plugin validate`
+4. **Version:** Update version in `plugin.json` and `package.json`
+
+### Examples
+
+```bash
+# Publish to production
+npx lokus-plugin publish
+
+# Dry run (test without publishing)
+npx lokus-plugin publish --dry-run
+
+# Publish as beta
+npx lokus-plugin publish --tag beta
+```
+
+### Publish Flow
+
+1. Validates manifest
+2. Packages the plugin
+3. Uploads to registry at `lokusmd.com/api/v1/registry/publish`
+4. Returns the published package URL
+
+---
+
+## login
+
+Authenticate with the plugin registry.
+
+```bash
+npx lokus-plugin login [options]
+```
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `--token <token>` | API token (or set via prompt) |
+
+### Getting a Token
+
+1. Go to [lokusmd.com/marketplace](https://lokusmd.com/marketplace)
+2. Sign in to your account
+3. Navigate to Developer Settings
+4. Generate an API token
+
+### Examples
+
+```bash
+# Interactive login
+npx lokus-plugin login
+
+# With token
+npx lokus-plugin login --token lok_xxxxxxxxxxxxxxxx
+
+# Using environment variable
+export LOKUS_REGISTRY_TOKEN=lok_xxxxxxxxxxxxxxxx
+npx lokus-plugin publish
+```
+
+### Token Storage
+
+Tokens are stored in `~/.lokus/config.json`:
+
+```json
+{
+  "registryToken": "lok_xxxxxxxxxxxxxxxx"
+}
+```
+
+---
+
+## list
+
+List installed plugins.
+
+```bash
+npx lokus-plugin list [options]
+```
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `--json` | Output as JSON |
+
+### Example Output
+
+```
+Installed Plugins:
+  my-plugin (0.1.0) - linked
+  other-plugin (1.2.3) - installed
+```
+
+---
+
+## info
+
+Show detailed information about a plugin.
+
+```bash
+npx lokus-plugin info [plugin-id] [options]
+```
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `-p, --path <path>` | Plugin directory (default: `.`) |
+
+### Examples
+
+```bash
+# Info for current plugin
+npx lokus-plugin info
+
+# Info for specific plugin
+npx lokus-plugin info my-plugin
+```
+
+---
+
+## Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `LOKUS_REGISTRY_URL` | Registry URL (default: `https://lokusmd.com`) |
+| `LOKUS_REGISTRY_TOKEN` | Authentication token |
+| `LOKUS_PLUGIN_TOKEN` | Alternative token variable |
+
+---
+
+## Configuration
+
+You can configure defaults in `package.json`:
+
+```json
+{
+  "lokus": {
+    "manifest": "./plugin.json",
+    "entry": "./src/index.ts",
+    "outDir": "./dist"
+  }
+}
+```
+
+Or in `.lokuspluginrc.json`:
+
+```json
+{
+  "registry": "https://lokusmd.com",
+  "manifest": "./plugin.json"
+}
+```
+
+---
+
+## Common Workflows
+
+### Creating and Testing a New Plugin
+
+```bash
+# 1. Create plugin
+npx lokus-plugin create my-plugin --template basic-typescript
+cd my-plugin
+
+# 2. Install dependencies
+npm install
+
+# 3. Build
+npm run build
+
+# 4. Validate
+npx lokus-plugin validate
+
+# 5. Link for development
+npx lokus-plugin link
+
+# 6. Start Lokus and test your plugin
+```
+
+### Publishing a Plugin
+
+```bash
+# 1. Ensure tests pass
+npm test
+
+# 2. Build production
+npm run build
+
+# 3. Validate
+npx lokus-plugin validate
+
+# 4. Update version
+npm version patch  # or minor/major
+
+# 5. Login (if not already)
+npx lokus-plugin login
+
+# 6. Publish
+npx lokus-plugin publish
+```
+
+### Updating a Published Plugin
+
+```bash
+# 1. Make changes
+# 2. Update version
+npm version patch
+
+# 3. Build and validate
+npm run build
+npx lokus-plugin validate
+
+# 4. Publish update
+npx lokus-plugin publish
+```
+
+---
+
+## Troubleshooting
+
+### "Command not found"
+
+```bash
+# Use npx instead of global install
+npx lokus-plugin <command>
+```
+
+### "Plugin manifest not found"
+
+Ensure you're in the plugin directory and `plugin.json` exists:
+
+```bash
+ls plugin.json
+```
+
+### "Authentication failed"
+
+```bash
+# Re-login
+npx lokus-plugin login
+
+# Check token
+cat ~/.lokus/config.json
+```
+
+### "Version already exists"
+
+Update the version in both `plugin.json` and `package.json`:
+
+```bash
+npm version patch
+```
+
+---
+
+## Next Steps
+
+- [Getting Started](/developers/plugins/getting-started) - Create your first plugin
+- [API Reference](/developers/plugins/api) - Full API documentation
+- [Publishing](/developers/plugins/publishing) - Detailed publishing guide

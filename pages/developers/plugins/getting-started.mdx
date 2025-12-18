@@ -1,21 +1,21 @@
 ---
 title: Getting Started with Plugin Development
-description: Step-by-step guide to creating your first Lokus plugin from scratch covering project setup, plugin structure, commands, UI panels, debugging, and development workflow.
-keywords: [lokus, plugin development, getting started, plugin tutorial, first plugin, plugin cli, development workflow, plugin debugging]
+description: Step-by-step guide to creating your first Lokus plugin from scratch covering project setup, plugin structure, commands, UI panels, and development workflow.
+keywords: [lokus, plugin development, getting started, plugin tutorial, first plugin, plugin cli, development workflow]
 ---
 
 # Getting Started
 
-This guide will walk you through creating your first Lokus plugin from scratch. By the end, you'll have a working plugin that adds a custom command and UI panel to Lokus.
+This guide will walk you through creating your first Lokus plugin from scratch. By the end, you'll have a working plugin that adds custom commands and interacts with the editor.
 
 ## Prerequisites
 
 Before you begin, ensure you have:
 
 - **Node.js 18+** installed
-- **npm or yarn** package manager
-- **Lokus installed** on your system
-- Basic knowledge of **TypeScript** and **JavaScript**
+- **npm** package manager
+- **Lokus** installed on your system
+- Basic knowledge of **TypeScript**
 - A code editor (VS Code recommended)
 
 ## Quick Start
@@ -26,315 +26,335 @@ The fastest way to create a new plugin is using the Lokus Plugin CLI:
 # Install the CLI globally
 npm install -g lokus-plugin-cli
 
-# Create a new plugin (Quick Mode)
-lokus-plugin create my-first-plugin -y
+# Create a new plugin with interactive prompts
+npx lokus-plugin create my-first-plugin
+
+# Or use quick mode with defaults
+npx lokus-plugin create my-first-plugin --skip-prompts --template basic-typescript
 
 # Navigate to the plugin directory
 cd my-first-plugin
 
-# Link for development
-lokus-plugin link
-
-# Start development mode
-lokus-plugin dev
-```
-
-This creates a fully functional plugin with:
-- TypeScript configuration
-- Plugin manifest
-- Example code
-- Test setup
-- Hot reload support
-
-## Project Structure
-
-Let's explore the generated project structure:
-
-```
-my-first-plugin/
-├── src/
-│   ├── index.ts          # Plugin entry point
-│   ├── commands.ts       # Command definitions
-│   └── panels.ts         # UI panel definitions
-├── assets/
-│   ├── icon.png          # Plugin icon
-│   └── logo.svg          # Logo assets
-├── test/
-│   └── index.test.ts     # Unit tests
-├── package.json          # npm package configuration
-├── plugin.json           # Plugin manifest
-├── tsconfig.json         # TypeScript configuration
-├── README.md             # Plugin documentation
-└── .gitignore           # Git ignore rules
-```
-
-## Understanding the Manifest
-
-The `plugin.json` file is the heart of your plugin. It defines metadata, permissions, and contribution points:
-
-```json
-{
-  "id": "my-first-plugin",
-  "version": "0.1.0",
-  "name": "My First Plugin",
-  "description": "A simple example plugin for Lokus",
-  "author": "Your Name",
-  "license": "MIT",
-  "lokusVersion": "^1.0.0",
-
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-
-  "activationEvents": [
-    "onStartup"
-  ],
-
-  "permissions": [
-    "editor:read",
-    "ui:create",
-    "commands:register"
-  ],
-
-  "contributes": {
-    "commands": [
-      {
-        "command": "myFirstPlugin.hello",
-        "title": "Say Hello",
-        "category": "My Plugin"
-      }
-    ]
-  }
-}
-```
-
-## Creating Your First Plugin
-
-Let's build a simple plugin step by step.
-
-### Step 1: Define the Plugin Class
-
-Create or edit `src/index.ts`:
-
-```typescript
-import { definePlugin } from '@lokus/plugin-sdk'
-
-export default definePlugin({
-  activate(context) {
-    console.log('My First Plugin is now active!')
-
-    // Register "Say Hello" command
-    context.subscriptions.push(
-      context.api.commands.register({
-        id: 'myFirstPlugin.hello',
-        title: 'Say Hello',
-        handler: () => {
-          context.api.ui.showNotification(
-            'Hello from My First Plugin!',
-            'success'
-          )
-        }
-      })
-    )
-
-    // Create a UI panel
-    context.subscriptions.push(
-      context.api.ui.registerPanel({
-        id: 'myFirstPlugin.panel',
-        title: 'My First Panel',
-        type: 'webview',
-        location: 'sidebar',
-        icon: 'star',
-        html: `
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <style>
-                body { padding: 20px; font-family: system-ui; }
-                .button {
-                  background: #007acc; color: white; border: none;
-                  padding: 10px 20px; border-radius: 4px; cursor: pointer;
-                }
-              </style>
-            </head>
-            <body>
-              <h1>Welcome!</h1>
-              <p>This is your first Lokus plugin panel.</p>
-              <button class="button" onclick="handleClick()">Click Me</button>
-              <script>
-                function handleClick() {
-                  window.parent.postMessage({ command: 'buttonClicked' }, '*')
-                }
-              </script>
-            </body>
-          </html>
-        `
-      })
-    )
-  },
-
-  deactivate() {
-    console.log('My First Plugin is deactivated')
-  }
-})
-```
-
-### Step 2: Add Package Dependencies
-
-Edit `package.json`:
-
-```json
-{
-  "name": "my-first-plugin",
-  "version": "0.1.0",
-  "description": "My first Lokus plugin",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "scripts": {
-    "build": "tsc",
-    "dev": "lokus-plugin dev",
-    "test": "jest",
-    "lint": "eslint src --ext .ts",
-    "package": "lokus-plugin package"
-  },
-  "dependencies": {
-    "@lokus/plugin-sdk": "^1.0.0"
-  },
-  "devDependencies": {
-    "@types/node": "^18.0.0",
-    "typescript": "^5.0.0",
-    "eslint": "^8.0.0",
-    "@typescript-eslint/eslint-plugin": "^5.0.0",
-    "@typescript-eslint/parser": "^5.0.0",
-    "jest": "^29.0.0",
-    "@types/jest": "^29.0.0",
-    "ts-jest": "^29.0.0"
-  },
-  "lokus": {
-    "manifest": "./plugin.json"
-  }
-}
-```
-
-### Step 3: Configure TypeScript
-
-Create or edit `tsconfig.json`:
-
-```json
-{
-  "compilerOptions": {
-    "target": "ES2020",
-    "module": "commonjs",
-    "lib": ["ES2020"],
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "moduleResolution": "node",
-    "resolveJsonModule": true
-  },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "test"]
-}
-```
-
-### Step 4: Build and Test
-
-```bash
 # Install dependencies
 npm install
 
 # Build the plugin
 npm run build
 
-# Run in development mode with hot reload
-npm run dev
+# Link for development (creates symlink in ~/.lokus/plugins)
+npx lokus-plugin link
+
+# Validate the plugin
+npx lokus-plugin validate
 ```
 
-## Testing Your Plugin
+## Available Templates
 
-### Manual Testing
+When creating a plugin, you can choose from these templates:
 
-1. **Start Development Mode:**
-   ```bash
-   lokus-plugin dev
-   ```
+| Template | Description |
+|----------|-------------|
+| `basic-typescript` | Simple TypeScript plugin with commands |
+| `basic-plugin` | Minimal plugin structure |
+| `react-ui-panel` | Plugin with React-based UI panel |
+| `ui-extension-plugin` | Plugin with toolbar and status bar items |
+| `language-support-plugin` | Plugin for language/syntax support |
 
-2. **Open Lokus** - The plugin should be automatically loaded
+Use with: `npx lokus-plugin create my-plugin --template react-ui-panel`
 
-3. **Test the Command:**
-   - Open command palette (Ctrl/Cmd + Shift + P)
-   - Type "Say Hello"
-   - Execute the command
-   - You should see a notification
+## Project Structure
 
-4. **Test the Panel:**
-   - Look for "My First Panel" in the sidebar
-   - Click to open it
-   - Interact with the button
+Here's what gets generated:
 
-### Automated Testing
+```
+my-first-plugin/
+├── src/
+│   └── index.ts          # Plugin entry point
+├── dist/                  # Compiled output (after build)
+│   └── index.js
+├── test/
+│   ├── index.test.ts     # Unit tests
+│   └── setup.ts          # Test setup
+├── package.json          # npm configuration
+├── plugin.json           # Plugin manifest
+├── tsconfig.json         # TypeScript configuration
+├── esbuild.config.js     # Build configuration
+└── README.md
+```
+
+## Understanding the Manifest
+
+The `plugin.json` file defines your plugin's metadata and capabilities:
+
+```json
+{
+  "manifest": "2.0",
+  "id": "my-first-plugin",
+  "name": "my-first-plugin",
+  "displayName": "My First Plugin",
+  "version": "0.1.0",
+  "description": "A Lokus plugin",
+  "author": "Your Name",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "lokusVersion": ">=1.0.0",
+  "permissions": [
+    "editor:read",
+    "editor:write",
+    "commands:register",
+    "ui:notifications"
+  ],
+  "activationEvents": ["onStartup"]
+}
+```
+
+### Key Manifest Fields
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `id` | Yes | Unique identifier (lowercase, hyphens) |
+| `name` | Yes | Plugin name |
+| `version` | Yes | Semantic version (e.g., "1.0.0") |
+| `main` | Yes | Path to compiled entry point |
+| `permissions` | No | Required API permissions |
+| `activationEvents` | No | When to activate the plugin |
+
+## Creating Your First Plugin
+
+### Step 1: Define the Plugin Class
+
+Edit `src/index.ts`:
+
+```typescript
+import { PluginContext } from 'lokus-plugin-sdk';
+
+export default class MyFirstPlugin {
+  private context: PluginContext;
+  private logger: PluginContext['logger'];
+
+  constructor(context: PluginContext) {
+    this.context = context;
+    this.logger = context.logger;
+    this.logger.info('MyFirstPlugin initialized');
+  }
+
+  async activate(activationContext: any): Promise<void> {
+    this.logger.info('Activating MyFirstPlugin...');
+
+    try {
+      // Register a command
+      activationContext.commands.registerCommand(
+        'myFirstPlugin.sayHello',
+        {
+          name: 'Say Hello',
+          description: 'Shows a hello notification',
+          callback: () => {
+            this.context.ui.showInformationMessage('Hello from MyFirstPlugin!');
+            this.logger.info('Hello command executed');
+          }
+        }
+      );
+
+      this.logger.info('MyFirstPlugin activated successfully');
+    } catch (error) {
+      this.logger.error('Failed to activate plugin:', error);
+      throw error;
+    }
+  }
+
+  async deactivate(): Promise<void> {
+    this.logger.info('Deactivating MyFirstPlugin...');
+    // Cleanup resources here
+    this.logger.info('MyFirstPlugin deactivated');
+  }
+}
+```
+
+### Step 2: Understanding the Plugin Context
+
+When your plugin is instantiated, it receives a `PluginContext` with these APIs:
+
+```typescript
+interface PluginContext {
+  // Logging
+  logger: {
+    info(message: string, ...args: any[]): void;
+    warn(message: string, ...args: any[]): void;
+    error(message: string, ...args: any[]): void;
+    debug(message: string, ...args: any[]): void;
+  };
+
+  // UI notifications
+  ui: {
+    showInformationMessage(message: string): void;
+    showWarningMessage(message: string): void;
+    showErrorMessage(message: string): void;
+  };
+
+  // Plugin metadata
+  pluginId: string;
+  pluginPath: string;
+}
+```
+
+### Step 3: Using the Activation Context
+
+The `activate` method receives an activation context with command registration:
+
+```typescript
+async activate(activationContext: any): Promise<void> {
+  // Register commands
+  activationContext.commands.registerCommand(
+    'commandId',
+    {
+      name: 'Display Name',
+      description: 'What this command does',
+      callback: () => {
+        // Command implementation
+      }
+    }
+  );
+}
+```
+
+### Step 4: Build and Test
+
+```bash
+# Build the plugin
+npm run build
+
+# Run tests
+npm test
+
+# Validate manifest
+npx lokus-plugin validate
+```
+
+## Development Workflow
+
+### 1. Link Your Plugin
+
+```bash
+# Creates symlink in ~/.lokus/plugins/
+npx lokus-plugin link
+```
+
+### 2. Rebuild on Changes
+
+```bash
+# Watch mode (if configured)
+npm run dev
+
+# Or manual rebuild
+npm run build
+```
+
+### 3. Restart Lokus
+
+After rebuilding, restart Lokus to load the updated plugin.
+
+### 4. Check Logs
+
+Open Lokus Developer Tools (View → Developer → Toggle Developer Tools) to see plugin logs.
+
+## Working with the Editor API
+
+If your plugin needs to interact with the editor:
+
+```typescript
+async activate(activationContext: any): Promise<void> {
+  const editor = this.context.editor;
+
+  // Add a slash command
+  editor.addSlashCommand({
+    name: 'my-command',
+    description: 'Insert custom content',
+    icon: '🎉',
+    execute: async () => {
+      await editor.insertNode('paragraph', {}, 'Hello World!');
+    }
+  });
+
+  // Add a toolbar button
+  editor.addToolbarItem({
+    id: 'my-toolbar-button',
+    title: 'My Button',
+    icon: 'star',
+    handler: () => {
+      this.context.ui.showInformationMessage('Toolbar button clicked!');
+    }
+  });
+
+  // Get current selection
+  const selection = await editor.getSelection();
+  if (selection) {
+    this.logger.info('Selection:', selection);
+  }
+}
+```
+
+### Available Editor Methods
+
+| Method | Description |
+|--------|-------------|
+| `addSlashCommand()` | Add a slash command to the editor |
+| `addToolbarItem()` | Add a button to the editor toolbar |
+| `addContextMenuItem()` | Add item to right-click menu |
+| `addKeyboardShortcut()` | Register a keyboard shortcut |
+| `getSelection()` | Get current text selection |
+| `replaceSelection()` | Replace selected text |
+| `getText()` | Get editor content as text |
+| `insertNode()` | Insert a node at cursor position |
+
+## Writing Tests
 
 Create `test/index.test.ts`:
 
 ```typescript
-import { describe, it, expect, beforeEach } from '@jest/globals'
-import { createMockContext, TestHelper } from '@lokus/plugin-sdk/testing'
-import MyFirstPlugin from '../src/index'
+import { createMockPluginContext, createMockActivationContext } from 'lokus-plugin-sdk/testing';
+import MyFirstPlugin from '../src/index';
 
 describe('MyFirstPlugin', () => {
-  let plugin: MyFirstPlugin
-  let context: ReturnType<typeof createMockContext>
-  let helper: TestHelper
+  let plugin: MyFirstPlugin;
+  let mockContext: any;
+  let mockActivationContext: any;
 
   beforeEach(() => {
-    context = createMockContext()
-    helper = new TestHelper(context)
-    plugin = new MyFirstPlugin()
-  })
+    mockContext = createMockPluginContext();
+    mockActivationContext = createMockActivationContext();
+    plugin = new MyFirstPlugin(mockContext);
+  });
 
-  it('should activate successfully', async () => {
-    await plugin.activate(context)
-    expect(context.subscriptions.length).toBeGreaterThan(0)
-  })
+  afterEach(async () => {
+    await plugin.deactivate();
+  });
 
-  it('should register hello command', async () => {
-    await plugin.activate(context)
+  it('should initialize', () => {
+    expect(plugin).toBeDefined();
+    expect(mockContext.logger.info).toHaveBeenCalledWith('MyFirstPlugin initialized');
+  });
 
-    const commands = await helper.getRegisteredCommands()
-    expect(commands).toContain('myFirstPlugin.hello')
-  })
+  it('should activate and register commands', async () => {
+    await plugin.activate(mockActivationContext);
 
-  it('should create panel', async () => {
-    await plugin.activate(context)
+    expect(mockActivationContext.commands.registerCommand).toHaveBeenCalledWith(
+      'myFirstPlugin.sayHello',
+      expect.any(Object)
+    );
+  });
 
-    const panels = await helper.getRegisteredPanels()
-    expect(panels).toContain('myFirstPlugin.panel')
-  })
+  it('should execute hello command', async () => {
+    await plugin.activate(mockActivationContext);
 
-  it('should show notification when command executed', async () => {
-    await plugin.activate(context)
+    // Get the callback that was registered
+    const [, options] = mockActivationContext.commands.registerCommand.mock.calls[0];
+    options.callback();
 
-    await context.api.commands.execute('myFirstPlugin.hello')
-
-    const notifications = helper.getNotifications()
-    expect(notifications.length).toBe(1)
-    expect(notifications[0].message).toBe('Hello from My First Plugin!')
-    expect(notifications[0].type).toBe('success')
-  })
-
-  it('should deactivate cleanly', async () => {
-    await plugin.activate(context)
-    await plugin.deactivate()
-
-    // Verify cleanup
-    expect(context.subscriptions.every(s => s.disposed)).toBe(true)
-  })
-})
+    expect(mockContext.ui.showInformationMessage).toHaveBeenCalledWith(
+      'Hello from MyFirstPlugin!'
+    );
+  });
+});
 ```
 
 Run tests:
@@ -343,337 +363,74 @@ Run tests:
 npm test
 ```
 
-## Adding More Features
+## Packaging and Publishing
 
-### Adding a Second Command
-
-```typescript
-private registerCommands() {
-  if (!this.context) return
-
-  // Existing hello command
-  this.context.subscriptions.push(
-    this.context.api.commands.register({
-      id: 'myFirstPlugin.hello',
-      title: 'Say Hello',
-      handler: () => this.sayHello()
-    })
-  )
-
-  // New command: Insert current date
-  this.context.subscriptions.push(
-    this.context.api.commands.register({
-      id: 'myFirstPlugin.insertDate',
-      title: 'Insert Current Date',
-      handler: () => this.insertDate()
-    })
-  )
-}
-
-private async insertDate() {
-  if (!this.context) return
-
-  const date = new Date().toLocaleDateString()
-  await this.context.api.editor.insertContent(date)
-}
-```
-
-Don't forget to add the command to your manifest:
-
-```json
-{
-  "contributes": {
-    "commands": [
-      {
-        "command": "myFirstPlugin.hello",
-        "title": "Say Hello",
-        "category": "My Plugin"
-      },
-      {
-        "command": "myFirstPlugin.insertDate",
-        "title": "Insert Current Date",
-        "category": "My Plugin"
-      }
-    ]
-  }
-}
-```
-
-### Adding a Keyboard Shortcut
-
-Add to your manifest:
-
-```json
-{
-  "contributes": {
-    "keybindings": [
-      {
-        "command": "myFirstPlugin.insertDate",
-        "key": "ctrl+shift+d",
-        "mac": "cmd+shift+d",
-        "when": "editorTextFocus"
-      }
-    ]
-  }
-}
-```
-
-### Adding Configuration
-
-Add to your manifest:
-
-```json
-{
-  "contributes": {
-    "configuration": {
-      "title": "My First Plugin",
-      "properties": {
-        "myFirstPlugin.greeting": {
-          "type": "string",
-          "default": "Hello",
-          "description": "Greeting message to display"
-        },
-        "myFirstPlugin.showTimestamp": {
-          "type": "boolean",
-          "default": true,
-          "description": "Show timestamp with greeting"
-        }
-      }
-    }
-  }
-}
-```
-
-Use configuration in your code:
-
-```typescript
-private async sayHello() {
-  if (!this.context) return
-
-  const greeting = await this.context.api.config.get<string>(
-    'myFirstPlugin.greeting',
-    'Hello'
-  )
-
-  const showTimestamp = await this.context.api.config.get<boolean>(
-    'myFirstPlugin.showTimestamp',
-    true
-  )
-
-  let message = `${greeting} from My First Plugin!`
-
-  if (showTimestamp) {
-    const time = new Date().toLocaleTimeString()
-    message += ` (${time})`
-  }
-
-  this.context.api.ui.showNotification(message, 'success')
-}
-```
-
-## Debugging
-
-### Enable Debug Mode
-
-Edit `plugin.json`:
-
-```json
-{
-  "dev": {
-    "hotReload": true,
-    "debug": true,
-    "sourceMaps": true,
-    "verboseLogging": true
-  }
-}
-```
-
-### Using Debug Logs
-
-```typescript
-export default class MyFirstPlugin implements Plugin {
-  async activate(context: PluginContext) {
-    // Debug logging
-    context.api.log('debug', 'Plugin activating...')
-
-    try {
-      this.registerCommands()
-      context.api.log('info', 'Commands registered successfully')
-    } catch (error) {
-      context.api.log('error', 'Failed to register commands', error)
-    }
-  }
-}
-```
-
-### Using Breakpoints
-
-1. Open Lokus in development mode
-2. Open Developer Tools (View → Developer → Toggle Developer Tools)
-3. Navigate to Sources tab
-4. Find your plugin code
-5. Set breakpoints
-6. Trigger plugin functionality
-
-## Packaging
-
-When you're ready to share your plugin:
+### Package Your Plugin
 
 ```bash
-# Package the plugin
-lokus-plugin package
+# Validate first
+npx lokus-plugin validate
 
-# This creates: my-first-plugin-0.1.0.vsix
+# Build
+npm run build
+
+# Package (creates .zip file)
+npx lokus-plugin package
 ```
 
-The `.vsix` file can be:
-- Installed locally in Lokus
-- Shared with others
-- Published to the plugin registry
+### Publish to Registry
 
-## Common Patterns
+```bash
+# Login (first time only)
+npx lokus-plugin login
 
-### Lazy Loading
-
-Load heavy dependencies only when needed:
-
-```typescript
-private async processMarkdown() {
-  // Lazy load markdown-it
-  const { default: MarkdownIt } = await import('markdown-it')
-  const md = new MarkdownIt()
-  return md.render(content)
-}
+# Publish
+npx lokus-plugin publish
 ```
 
-### Error Handling
-
-Always handle errors gracefully:
-
-```typescript
-private async safeExecute<T>(
-  operation: () => Promise<T>,
-  fallback: T
-): Promise<T> {
-  try {
-    return await operation()
-  } catch (error) {
-    this.context?.api.log('error', 'Operation failed', error)
-    this.context?.api.ui.showNotification(
-      'Operation failed. Please try again.',
-      'error'
-    )
-    return fallback
-  }
-}
-```
-
-### Resource Cleanup
-
-Always clean up resources in deactivate:
-
-```typescript
-export default class MyFirstPlugin implements Plugin {
-  private timers: NodeJS.Timeout[] = []
-  private watchers: Disposable[] = []
-
-  async activate(context: PluginContext) {
-    // Create resources
-    this.timers.push(
-      setInterval(() => this.checkUpdates(), 60000)
-    )
-
-    const watcher = context.api.fs.watch('/path', () => {})
-    this.watchers.push(watcher)
-  }
-
-  async deactivate() {
-    // Clean up timers
-    this.timers.forEach(timer => clearInterval(timer))
-    this.timers = []
-
-    // Dispose watchers
-    this.watchers.forEach(watcher => watcher.dispose())
-    this.watchers = []
-  }
-}
-```
+See [Publishing Guide](/developers/plugins/publishing) for more details.
 
 ## Troubleshooting
 
-### Plugin Won't Activate
+### Plugin Won't Load
 
-**Check:**
-- Manifest file is valid JSON
-- Required permissions are declared
-- Activation events are properly configured
-- No syntax errors in code
+1. **Check the manifest:**
+   ```bash
+   npx lokus-plugin validate
+   ```
 
-**Solution:**
-```bash
-# Validate plugin
-lokus-plugin validate
+2. **Verify the build output exists:**
+   ```bash
+   ls dist/index.js
+   ```
 
-# Check logs
-lokus-plugin dev --verbose
-```
-
-### Hot Reload Not Working
-
-**Check:**
-- Development mode is enabled
-- File watcher is running
-- No compilation errors
-
-**Solution:**
-```bash
-# Restart dev mode
-lokus-plugin dev --clean
-```
+3. **Check symlink:**
+   ```bash
+   ls -la ~/.lokus/plugins/
+   ```
 
 ### Commands Not Appearing
 
-**Check:**
-- Commands declared in manifest
-- Command IDs match between manifest and code
-- Command registration in activate method
+1. Ensure command is registered in `activate()` method
+2. Check browser console for errors
+3. Verify `permissions` includes `commands:register`
 
-**Solution:**
-Verify manifest and code match:
+### Build Errors
 
-```json
-// plugin.json
-{
-  "contributes": {
-    "commands": [
-      { "command": "myPlugin.hello", "title": "Say Hello" }
-    ]
-  }
-}
-```
+1. **TypeScript errors:**
+   ```bash
+   npx tsc --noEmit
+   ```
 
-```typescript
-// index.ts
-api.commands.register({
-  id: 'myPlugin.hello',  // Must match manifest
-  title: 'Say Hello',
-  handler: () => {}
-})
-```
+2. **Missing dependencies:**
+   ```bash
+   npm install
+   ```
 
 ## Next Steps
 
-Now that you have a working plugin, explore more advanced topics:
-
-**Related Documentation:**
-- [Plugin Manifest](/developers/plugins/manifest)
-- [API Reference](/developers/plugins/api)
-- [Editor Plugins](/developers/plugins/editor-plugins)
-- [UI Plugins](/developers/plugins/ui-plugins)
-
-## Additional Resources
-
-- [Plugin Examples Repository](https://github.com/lokus-ai/plugin-examples)
-- [Plugin Development Forum](https://forum.lokus.dev/c/plugin-development)
-- [API Documentation](/developers/plugins/api)
-- [Best Practices Guide](/developers/plugins/best-practices)
+- [Plugin API Reference](/developers/plugins/api) - Full API documentation
+- [Plugin Manifest](/developers/plugins/manifest) - Manifest schema reference
+- [Editor Plugins](/developers/plugins/editor-plugins) - Build editor extensions
+- [UI Plugins](/developers/plugins/ui-plugins) - Create custom UI panels
+- [Publishing](/developers/plugins/publishing) - Publish to the marketplace

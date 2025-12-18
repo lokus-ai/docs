@@ -1,85 +1,339 @@
 ---
 title: Publishing Guide
-description: How to publish your plugin to the Lokus Registry.
+description: How to publish your plugin to the Lokus Marketplace.
+keywords: [lokus, plugin publishing, marketplace, registry, npm]
 ---
-
-import { Steps, Callout } from 'nextra/components'
 
 # Publishing Plugins
 
-Share your plugin with the world in 3 simple steps.
+Share your plugin with the Lokus community through the official marketplace.
 
-<Steps>
+## Prerequisites
 
-### Prepare for Release
+Before publishing, ensure you have:
 
-Ensure your `plugin.json` has the correct version and metadata.
+1. A completed, tested plugin
+2. A Lokus account at [lokusmd.com](https://lokusmd.com)
+3. An API token for publishing
 
-```bash
-# Bump version
-npm version patch
-
-# Run validation
-lokus-plugin validate --strict
-```
-
-### Authenticate
-
-Generate a token from your **[Dashboard](https://registry.lokus.dev/dashboard)** and login.
+## Quick Start
 
 ```bash
-lokus-plugin login
-# Paste your token (starts with lpt_)
+# 1. Build your plugin
+npm run build
+
+# 2. Validate the manifest
+npx lokus-plugin validate
+
+# 3. Login (first time only)
+npx lokus-plugin login
+
+# 4. Publish
+npx lokus-plugin publish
 ```
-
-### Publish
-
-Push your plugin to the registry.
-
-```bash
-lokus-plugin publish
-```
-
-<Callout type="success">
-  **Done!** Your plugin is now live at `https://registry.lokus.dev/plugins/<your-plugin-id>`
-</Callout>
-
-</Steps>
 
 ---
 
-## Advanced Publishing
+## Step-by-Step Guide
 
-### Release Channels
+### Step 1: Prepare Your Plugin
 
-You can publish to different channels (tags) for testing:
+**Update `plugin.json`:**
+
+```json
+{
+  "manifest": "2.0",
+  "id": "my-plugin",
+  "name": "my-plugin",
+  "displayName": "My Awesome Plugin",
+  "version": "1.0.0",
+  "description": "A detailed description of what your plugin does",
+  "author": "Your Name",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "lokusVersion": ">=1.0.0",
+  "keywords": ["productivity", "editor"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/my-plugin"
+  }
+}
+```
+
+**Ensure you have:**
+
+- Clear, descriptive `displayName` and `description`
+- Correct `version` (semantic versioning)
+- Valid `author` information
+- Appropriate `keywords` for discoverability
+
+### Step 2: Build and Validate
 
 ```bash
-# Beta channel
-lokus-plugin publish --tag beta
+# Build production bundle
+npm run build
 
-# Alpha channel
-lokus-plugin publish --tag alpha
+# Run tests
+npm test
+
+# Validate manifest
+npx lokus-plugin validate
 ```
 
-Users can install these specific versions:
+Expected output:
+```
+✓ Plugin manifest is valid
+  Name: my-plugin
+  Version: 1.0.0
+  Description: A detailed description of what your plugin does
+```
+
+### Step 3: Get Your API Token
+
+1. Go to [lokusmd.com/marketplace](https://lokusmd.com/marketplace)
+2. Sign in to your account
+3. Navigate to **Developer Settings**
+4. Click **Generate API Token**
+5. Copy the token (starts with `lok_`)
+
+**Important:** Keep your token secure. Don't commit it to version control.
+
+### Step 4: Login
+
 ```bash
-lokus-plugin install my-plugin@beta
+npx lokus-plugin login
 ```
 
-### CI/CD Automation
+When prompted, paste your API token.
 
-Automate publishing with GitHub Actions:
+Alternatively, use environment variables:
 
-```yaml
-- name: Publish
-  run: npm run publish
-  env:
-    LOKUS_REGISTRY_TOKEN: ${{ secrets.LOKUS_TOKEN }}
+```bash
+export LOKUS_REGISTRY_TOKEN=lok_xxxxxxxxxxxxxxxx
 ```
+
+### Step 5: Publish
+
+```bash
+npx lokus-plugin publish
+```
+
+**Output:**
+```
+Publishing my-plugin@1.0.0...
+✓ Validated manifest
+✓ Packaged plugin
+✓ Uploaded to registry
+
+Success! my-plugin@1.0.0 published
+View at: https://lokusmd.com/marketplace/plugin/my-plugin
+```
+
+---
+
+## Version Management
+
+Use semantic versioning (semver):
+
+- **Patch** (`1.0.0` → `1.0.1`): Bug fixes
+- **Minor** (`1.0.0` → `1.1.0`): New features (backwards compatible)
+- **Major** (`1.0.0` → `2.0.0`): Breaking changes
+
+```bash
+# Update version in package.json and plugin.json
+npm version patch   # 1.0.0 → 1.0.1
+npm version minor   # 1.0.0 → 1.1.0
+npm version major   # 1.0.0 → 2.0.0
+```
+
+**Note:** Keep `package.json` and `plugin.json` versions in sync.
+
+---
+
+## Publishing Options
+
+### Dry Run
+
+Test the publish process without actually uploading:
+
+```bash
+npx lokus-plugin publish --dry-run
+```
+
+### Beta/Preview Releases
+
+Publish to a specific tag:
+
+```bash
+npx lokus-plugin publish --tag beta
+```
+
+Users can install with:
+```bash
+# In Lokus marketplace, filter by "beta" releases
+```
+
+### Custom Registry
+
+For private registries:
+
+```bash
+npx lokus-plugin publish --registry https://your-registry.com
+```
+
+---
+
+## Plugin Visibility
+
+All published plugins are:
+
+- **Public** by default
+- Immediately available in the marketplace
+- Searchable by name, description, and keywords
+
+---
 
 ## Best Practices
 
-*   **Semantic Versioning**: Use `MAJOR.MINOR.PATCH`.
-*   **Changelog**: Keep `CHANGELOG.md` updated.
-*   **Readme**: Include screenshots and clear usage instructions.
+### Documentation
+
+Include a comprehensive `README.md`:
+
+```markdown
+# My Plugin
+
+Brief description of what your plugin does.
+
+## Features
+
+- Feature 1
+- Feature 2
+- Feature 3
+
+## Installation
+
+Available in the Lokus Marketplace.
+
+## Usage
+
+1. Open command palette (Cmd/Ctrl + Shift + P)
+2. Type "My Plugin: Command Name"
+3. Execute
+
+## Configuration
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `myPlugin.option` | `true` | Description |
+
+## License
+
+MIT
+```
+
+### Changelog
+
+Maintain a `CHANGELOG.md`:
+
+```markdown
+# Changelog
+
+## [1.0.1] - 2024-01-15
+
+### Fixed
+- Bug fix description
+
+## [1.0.0] - 2024-01-01
+
+### Added
+- Initial release
+- Feature description
+```
+
+### Screenshots
+
+Include screenshots in your README to showcase your plugin's UI.
+
+---
+
+## Updating a Published Plugin
+
+```bash
+# 1. Make your changes
+# 2. Update version
+npm version patch
+
+# 3. Build
+npm run build
+
+# 4. Publish update
+npx lokus-plugin publish
+```
+
+---
+
+## Unpublishing
+
+To remove a plugin from the marketplace, contact support at [lokusmd.com](https://lokusmd.com).
+
+**Note:** Unpublishing may break users who depend on your plugin.
+
+---
+
+## Troubleshooting
+
+### "Authentication failed"
+
+```bash
+# Re-authenticate
+npx lokus-plugin login
+
+# Or set environment variable
+export LOKUS_REGISTRY_TOKEN=lok_xxxxxxxxxxxxxxxx
+```
+
+### "Version already exists"
+
+You cannot overwrite an existing version. Bump your version:
+
+```bash
+npm version patch
+npx lokus-plugin publish
+```
+
+### "Invalid manifest"
+
+Run validation to see specific errors:
+
+```bash
+npx lokus-plugin validate
+```
+
+### "Network error"
+
+Check your internet connection and try again:
+
+```bash
+npx lokus-plugin publish
+```
+
+---
+
+## Registry API
+
+The registry is hosted at `lokusmd.com/api/v1/registry/`:
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/publish` | POST | Publish a plugin |
+| `/search` | GET | Search plugins |
+| `/download/{id}/{version}` | GET | Download plugin |
+| `/plugin/{id}` | GET | Plugin details |
+
+---
+
+## Next Steps
+
+- [CLI Reference](/developers/plugins/cli) - Full CLI documentation
+- [API Reference](/developers/plugins/api) - Plugin API documentation
+- [Marketplace](https://lokusmd.com/marketplace) - Browse published plugins
