@@ -1,0 +1,38 @@
+---
+title: Lokus Documentation
+description: Documentation for Lokus — a local-first note-taking app built with Tauri.
+template: splash
+hero:
+  tagline: Where your thinking lives. A local-first note-taking app built with Tauri.
+  actions:
+    - text: Get Started
+      link: /getting-started/installation/
+      icon: right-arrow
+    - text: View on GitHub
+      link: https://github.com/nicepkg/lokus
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## Explore the docs
+
+<CardGrid stagger>
+	<Card title="Installation" icon="laptop">
+		Get Lokus running on macOS, Windows, or Linux.
+		[Install now](/getting-started/installation/)
+	</Card>
+	<Card title="Features" icon="star">
+		Explore the editor, wiki links, graph view, canvas, and more.
+		[See features](/features/editor/)
+	</Card>
+	<Card title="Plugins" icon="puzzle">
+		Extend Lokus with community plugins or build your own.
+		[Learn more](/plugins/using-plugins/)
+	</Card>
+	<Card title="Developers" icon="setting">
+		Build from source, contribute, and explore the architecture.
+		[Developer docs](/developers/architecture/)
+	</Card>
+</CardGrid>
