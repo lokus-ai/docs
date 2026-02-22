@@ -59,7 +59,7 @@ curl http://localhost:3456/health
 Expected response:
 
 ```json
-{"status":"ok","server":"lokus-mcp","version":"1.3.1"}
+{"status":"ok","server":"lokus-mcp","version":"1.0.1"}
 ```
 
 ### Configure Claude Desktop (stdio)

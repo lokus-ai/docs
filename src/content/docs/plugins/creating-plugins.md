@@ -55,7 +55,7 @@ Every plugin needs a `plugin.json` (v1) or `manifest.json` (v2) at its root. Thi
   "main": "./dist/index.js",
   "lokusVersion": "^1.0.0",
   "author": "Your Name",
-  "license": "MIT",
+  "license": "ISC",
   "permissions": ["editor:read", "ui:create"],
   "activationEvents": ["onStartup"],
   "categories": ["Editor"]
