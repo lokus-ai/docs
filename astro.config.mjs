@@ -10,6 +10,7 @@ export default defineConfig({
 			title: 'Lokus',
 			logo: {
 				src: './src/assets/lokus-logo.svg',
+				replacesTitle: true,
 			},
 			tagline: 'Where your thinking lives',
 			social: [
