@@ -8,6 +8,9 @@ export default defineConfig({
 	integrations: [
 		starlight({
 			title: 'Lokus',
+			logo: {
+				src: './src/assets/lokus-logo.svg',
+			},
 			tagline: 'Where your thinking lives',
 			social: [
 				{
