@@ -42,9 +42,11 @@ For TypeScript projects, the CLI scaffolds `.ts` source files with full type def
 
 ## Plugin manifest
 
-Every plugin needs a `plugin.json` (v1) or `manifest.json` (v2) at its root. This file defines metadata, permissions, activation triggers, and contribution points.
+Every plugin needs a `plugin.json` at its root. This file defines metadata, permissions, activation triggers, and contribution points.
 
-### Minimal v1 manifest
+In Tauri desktop mode, only `plugin.json` is read. The `manifest.json` fallback is only available in browser mode (via PluginManager). For maximum compatibility, always include `plugin.json`.
+
+### Minimal manifest
 
 ```json
 {
@@ -82,8 +84,6 @@ The v2 format adds `manifest`, `engines`, `publisher`, and `capabilities` fields
 }
 ```
 
-Lokus tries `manifest.json` first, then falls back to `plugin.json`.
-
 ### Required fields
 
 | Field | Type | Description |
@@ -102,11 +102,19 @@ Control when your plugin loads:
 {
   "activationEvents": [
     "onStartup",
+    "onStartupFinished",
     "onCommand:myPlugin.hello",
     "onLanguage:markdown",
     "onView:myPlugin.sidebar",
     "workspaceContains:**/*.custom",
-    "onFileType:*.csv"
+    "onFileSystem:myScheme",
+    "onUri",
+    "onDebug:node",
+    "onSearch:myProvider",
+    "onWebviewPanel:myPlugin.preview",
+    "onCustomEditor:myPlugin.editor",
+    "onAuthenticationRequest:myPlugin.auth",
+    "*"
   ]
 }
 ```
@@ -114,12 +122,19 @@ Control when your plugin loads:
 | Event | Trigger |
 |---|---|
 | `onStartup` | App launches (use sparingly -- impacts startup) |
+| `onStartupFinished` | App has finished launching |
+| `*` | Activate for all events (wildcard) |
 | `onCommand:id` | A specific command is executed |
 | `onLanguage:lang` | A file with that language ID opens |
 | `onView:viewId` | A specific view is opened |
 | `workspaceContains:pattern` | Workspace has files matching the glob |
-| `onFileType:pattern` | A matching file type opens |
-| `onMCPServer:id` | An MCP server is requested |
+| `onFileSystem:scheme` | A file system scheme is accessed |
+| `onUri` | A URI is handled by the plugin |
+| `onDebug:type` | A debug session of the given type starts |
+| `onSearch:provider` | A search provider is requested |
+| `onWebviewPanel:viewType` | A webview panel is opened |
+| `onCustomEditor:viewType` | A custom editor is opened |
+| `onAuthenticationRequest:id` | An authentication request is made |
 
 ### Contribution points
 
@@ -151,7 +166,9 @@ Declare what your plugin adds to Lokus in the `contributes` section:
           "description": "Enable word counting"
         }
       }
-    }
+    },
+    "customEditors": [],
+    "webviews": []
   }
 }
 ```
@@ -178,7 +195,7 @@ export default class WordCountPlugin {
       id: 'wordCount.status',
       text: 'Words: 0',
       tooltip: 'Click to count words',
-      alignment: 2,
+      alignment: 'right',
       priority: 100
     });
 
@@ -225,15 +242,49 @@ export default definePlugin({
 
 ### Using BasePlugin
 
-For more structure, extend `BasePlugin`:
+For more structure, extend `BasePlugin`. The SDK provides built-in logger, config manager, disposable tracking, and utility methods (`safeExecute`, `debounce`, `throttle`, `retry`, `measurePerformance`):
 
 ```typescript
 import { BasePlugin, PluginContext } from 'lokus-plugin-sdk';
 
 export default class MyPlugin extends BasePlugin {
   async activate(context: PluginContext) {
-    super.activate(context);
-    // Your activation logic
+    await this.initialize(context);
+    this.markActivationTime();
+
+    // Use built-in helpers
+    this.registerCommand('myPlugin.hello', () => {
+      this.showNotification('Hello!', 'info');
+    });
+  }
+}
+```
+
+### Using EnhancedBasePlugin
+
+For plugins that need command palette integration, status bar items, and quick picks, extend `EnhancedBasePlugin`:
+
+```typescript
+import { EnhancedBasePlugin, PluginContext } from 'lokus-plugin-sdk';
+
+export default class MyPlugin extends EnhancedBasePlugin {
+  async activate(context: PluginContext) {
+    await this.initialize(context);
+
+    // Register command with palette visibility
+    this.registerCommandWithPalette({
+      id: 'myPlugin.action',
+      title: 'My Action',
+      category: 'My Plugin',
+      handler: () => { /* ... */ }
+    });
+
+    // Create a status bar item
+    this.createStatusBarItem('myPlugin.status', 'Ready', {
+      tooltip: 'Plugin status',
+      alignment: 'left',
+      priority: 100
+    });
   }
 }
 ```
@@ -243,10 +294,19 @@ export default class MyPlugin extends BasePlugin {
 Plugins move through these states:
 
 ```
-NOT_LOADED -> LOADING -> LOADED -> ACTIVATING -> ACTIVE -> DEACTIVATING -> DEACTIVATED
-                                        |
-                                      ERROR
+discovered -> loaded -> active
+                |         |
+              error     error
 ```
+
+The four lifecycle states are:
+
+| State | Description |
+|---|---|
+| `discovered` | Plugin folder found and manifest validated |
+| `loaded` | Plugin module imported and initialized |
+| `active` | Plugin `activate()` called successfully |
+| `error` | An error occurred during loading or activation |
 
 ### Plugin context
 
@@ -286,6 +346,22 @@ async deactivate() {
 }
 ```
 
+## Plugin styles
+
+Lokus automatically loads CSS stylesheets from your plugin directory. Place a `style.css`, `index.css`, or `styles.css` file in your plugin root, and it will be loaded when the plugin is activated. No manifest configuration is needed.
+
+## Plugin sandbox and security
+
+Plugins run inside a sandboxed environment (`PluginSandbox`) that provides:
+
+- **Isolated execution** via Web Workers (when available)
+- **Resource quotas**: 50 MB memory limit, 1 second CPU time per task, 30 second network timeout, 10 MB max file access
+- **Permission-based API access**: only manifest-declared permissions are granted
+- **Code signing verification** (optional, when `requireSignature` is enabled)
+- **Runtime monitoring**: memory usage, CPU time, network requests, and API call tracking
+
+The security manager (`PluginSecurityManager`) enforces these constraints and can terminate plugins that exceed their quotas.
+
 ## Permissions
 
 Declare every permission your plugin needs. The runtime enforces these -- calling an API without the matching permission throws `PermissionDeniedError`.
@@ -323,6 +399,28 @@ Declare every permission your plugin needs. The runtime enforces these -- callin
 | **Debug** | `debug:session`, `debug:register` |
 
 Request only what you need. Plugins requesting `all` are flagged during security scanning.
+
+## MCP plugin system
+
+Lokus includes a built-in MCP (Model Context Protocol) plugin system for AI-integrated plugins. The system consists of:
+
+- **MCPPluginManager**: manages MCP-enabled plugin lifecycle with states (discovered, loading, loaded, initializing, active, error, disposed)
+- **MCPProtocol**: handles JSON-RPC communication between MCP servers and clients
+- **MCPClient**: connects to external MCP servers
+- **MCPServerHost**: hosts MCP servers within Lokus
+
+MCP plugins can be typed as `mcp-server`, `mcp-client`, or `mcp-hybrid`. They register resources, tools, and prompts in global registries accessible across the plugin system.
+
+To create an MCP plugin, set the type in your manifest and use the `onMCPServer:id` activation event:
+
+```json
+{
+  "id": "my-mcp-plugin",
+  "type": "mcp-server",
+  "activationEvents": ["onMCPServer:my-mcp-plugin"],
+  "permissions": ["editor:read", "commands:register"]
+}
+```
 
 ## Building, testing, and publishing
 
@@ -365,6 +463,8 @@ lokus-plugin publish   # Upload to registry (run lokus-plugin login first)
 
 ## CLI command reference
 
+The following commands are registered and functional in the CLI:
+
 | Command | Description |
 |---|---|
 | `lokus-plugin create <name>` | Scaffold a new plugin project |
@@ -373,12 +473,10 @@ lokus-plugin publish   # Upload to registry (run lokus-plugin login first)
 | `lokus-plugin validate` | Validate the plugin manifest |
 | `lokus-plugin package` | Create a distributable package |
 | `lokus-plugin publish` | Publish to a registry |
-| `lokus-plugin install <id>` | Install a plugin |
 | `lokus-plugin link` | Symlink plugin for local development |
-| `lokus-plugin list` | List installed plugins |
-| `lokus-plugin info <id>` | Show plugin details |
 | `lokus-plugin login` | Authenticate with the registry |
 | `lokus-plugin test` | Run plugin tests |
+| `lokus-plugin docs` | Generate plugin documentation |
 
 ## Example: slash command plugin
 

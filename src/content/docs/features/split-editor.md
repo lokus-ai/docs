@@ -3,11 +3,11 @@ title: Split Editor
 description: View and edit multiple notes side-by-side with resizable panes.
 ---
 
-Split your editor into multiple panes to view and edit notes side-by-side. Each pane operates independently with its own tab, scroll position, and content.
+Split your editor into multiple panes to view and edit notes side-by-side. Each pane operates independently with its own tabs, scroll position, and content.
 
 ## Create a split
 
-Drag a tab toward the edge of the editor area. Drop zones appear as you drag:
+Use the **split button** in the toolbar to split the current pane. You can also drag a tab toward the edge of the editor area to create a split:
 
 | Drop position | Result                          |
 |---------------|---------------------------------|
@@ -17,11 +17,11 @@ Drag a tab toward the edge of the editor area. Drop zones appear as you drag:
 | Bottom edge   | New pane below                  |
 | Center        | Move tab into existing pane     |
 
-The drop zone highlights with a dashed border to confirm your target.
-
 ## Resize panes
 
-Drag the thin divider between panes to adjust their sizes. The divider highlights on hover and turns to the accent color while dragging. Panes have a minimum width of 200px and minimum height of 150px.
+Drag the thin divider between panes to adjust their sizes. The divider highlights on hover and turns to the accent color while dragging. Panes have a minimum size of 10%.
+
+Double-click a resizer to equalize all pane sizes in that split.
 
 ## Focus a pane
 
@@ -43,24 +43,20 @@ Drag a tab from one pane and drop it onto another pane's area. The tab moves to 
 
 ## Close a pane
 
-Click the close button in a pane's header. If you close the active pane, focus shifts to the first remaining pane. The last pane cannot be closed -- there is always at least one editor visible.
+Empty panes auto-close when their last tab is removed or moved to another pane. Focus shifts to the first remaining pane. The last pane cannot be closed -- there is always at least one editor visible.
 
 ## Layout
 
-Panes use CSS Grid for layout. Vertical splits add columns; horizontal splits add rows. The layout adapts automatically:
+Panes use Flexbox for layout. Vertical splits arrange panes side-by-side in a row; horizontal splits stack them in a column. The layout adapts automatically:
 
-- **Vertical split**: Two panes side-by-side (`1fr 1fr` columns)
-- **Horizontal split**: Two panes stacked (`1fr 1fr` rows)
+- **Vertical split**: Two panes side-by-side (equal width)
+- **Horizontal split**: Two panes stacked (equal height)
 - **Mixed**: Combine both directions for 3+ pane layouts
 
 ## Drag-and-drop details
 
-Split editor uses `@dnd-kit/core` for drag interactions. A 10px distance threshold prevents accidental drags. While dragging, a floating preview shows the tab name with a slight rotation for visual feedback.
+Split editor uses `@dnd-kit/core` for drag interactions. A 10px distance threshold prevents accidental drags.
 
 ## Accessibility
 
 - Active pane has a visible focus outline
-- Pane resizers are keyboard-focusable
-- Supports `prefers-reduced-motion` (disables animations)
-- Supports `prefers-contrast: high` (thicker borders)
-- Print styles hide resizers and controls

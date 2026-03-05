@@ -141,4 +141,4 @@ Lokus checks for updates automatically and prompts you when a new version is ava
 
 ## Next steps
 
-Install complete? Head to the [Quick Start guide](/getting-started/quick-start) to create your first workspace.
+Install complete? Head to the [Quick Start guide](/getting-started/quick-start) to sign in and create your first workspace. On first launch, Lokus will present a login screen where you can sign in with an email, Google, or Apple account -- or continue as a guest to keep your notes local-only.

@@ -1,9 +1,9 @@
 ---
 title: MCP Server
-description: Connect AI assistants to your Lokus workspace using the built-in MCP server with 68+ tools.
+description: Connect AI assistants to your Lokus workspace using the built-in MCP server with 67 tools.
 ---
 
-Lokus ships with a built-in [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server that lets AI assistants read, write, search, and manage your entire knowledge base. The server auto-starts with Lokus and provides 68 tools across 12 categories -- notes, workspace, databases, canvas, kanban, graph, templates, themes, daily notes, tasks, search, and workspace context.
+Lokus ships with a built-in [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server that lets AI assistants read, write, search, and manage your entire knowledge base. The server auto-starts with Lokus and provides 67 tools across 12 categories -- notes, workspace, databases, canvas, kanban, graph, templates, themes, daily notes, tasks, search, and workspace context.
 
 ## What is MCP?
 
@@ -24,7 +24,7 @@ Lokus MCP Server
 ├── Stdio Transport (desktop clients)
 └── HTTP Transport (CLI clients, port 3456)
         |
-        | Tool Router (68 tools)
+        | Tool Router (67 tools)
         |
 Your Workspace (local Markdown files)
 ```
@@ -43,10 +43,17 @@ Both transports are local-only. No data leaves your machine.
 On first launch, Lokus:
 
 1. Extracts the MCP server to `~/.lokus/mcp-server/`.
-2. Creates a Claude Desktop config at `~/.lokus/mcp-server/claude_desktop_config.json`.
-3. Creates a CLI config at `~/.lokus/mcp-server/cline_mcp_settings.json`.
-4. Starts the HTTP server on port 3456.
-5. Registers all 68 tools.
+2. Writes the Claude Desktop config to the OS-specific location (see table below).
+3. Creates a `.mcp.json` file in your workspace root for Claude Code.
+4. Runs `claude mcp add` to register with the Claude CLI (if installed).
+5. Starts the HTTP server on port 3456.
+6. Registers all 67 tools.
+
+| OS | Claude Desktop config path |
+|----|---------------------------|
+| macOS | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+| Windows | `%APPDATA%\Claude\claude_desktop_config.json` |
+| Linux | `~/.config/Claude/claude_desktop_config.json` |
 
 No manual configuration required. Check the status bar at the bottom of Lokus -- it shows "MCP: Running" with a green indicator when the server is active.
 
@@ -59,12 +66,14 @@ curl http://localhost:3456/health
 Expected response:
 
 ```json
-{"status":"ok","server":"lokus-mcp","version":"1.0.1"}
+{"status":"healthy","service":"lokus-mcp-http"}
 ```
+
+The `/health` endpoint does not require authentication.
 
 ### Configure Claude Desktop (stdio)
 
-Copy the generated config into Claude Desktop's settings, or point it to the file directly:
+Lokus writes this configuration automatically. If you need to set it up manually, add the following to your Claude Desktop config file (see the path table above):
 
 ```json
 {
@@ -97,12 +106,13 @@ To specify a workspace path:
 
 ### Configure Claude Code (HTTP)
 
-Add this to your `.mcp.json` file in your project root or home directory:
+Lokus automatically creates a `.mcp.json` file in your workspace root and registers with the Claude CLI via `claude mcp add`. If you need to configure it manually, add this to your `.mcp.json` file in your project root or home directory:
 
 ```json
 {
   "mcpServers": {
     "lokus": {
+      "transport": "http",
       "url": "http://localhost:3456/mcp"
     }
   }
@@ -111,13 +121,41 @@ Add this to your `.mcp.json` file in your project root or home directory:
 
 ### Configure other MCP clients
 
-Any client that supports the MCP specification works. Use stdio transport for desktop apps and HTTP transport for CLI tools. The HTTP endpoint is `http://localhost:3456/mcp` and accepts standard JSON-RPC 2.0 requests.
+Any client that supports the MCP specification works. Use stdio transport for desktop apps and HTTP transport for CLI tools. The HTTP endpoint is `http://localhost:3456/mcp` and accepts standard JSON-RPC 2.0 requests. All HTTP requests (except `/health`) require a bearer token -- see the [Authentication](#authentication) section below.
 
-## Available tools (68)
+## Authentication
+
+The HTTP server uses bearer token authentication. On startup, the server generates a random 32-byte hex token and writes it to `~/.lokus/mcp-token` with file permissions `0600` (owner read/write only).
+
+All HTTP requests except `/health` must include the token in the `Authorization` header:
+
+```
+Authorization: Bearer <token>
+```
+
+Requests without a valid token receive a `401 Unauthorized` response.
+
+### Reading the token
+
+```bash
+cat ~/.lokus/mcp-token
+```
+
+The token is regenerated each time the HTTP server starts. MCP clients using stdio transport (like Claude Desktop) are not affected by token auth since they communicate through standard I/O, not HTTP.
+
+## HTTP endpoints
+
+| Method | Path | Auth required | Description |
+|--------|------|---------------|-------------|
+| `GET` | `/health` | No | Health check |
+| `GET` | `/mcp/info` | Yes | Server info (name, version, transport, tool count) |
+| `POST` | `/mcp` | Yes | MCP JSON-RPC 2.0 endpoint |
+
+## Available tools (67)
 
 ### Workspace Context (6 tools)
 
-Smart workspace detection and context switching. The server auto-detects your active workspace using this priority chain: current directory > `LOKUS_WORKSPACE` env var > Lokus app API > MCP context > last-used config > default location.
+Smart workspace detection and context switching. The server auto-detects your active workspace using this priority chain: Lokus app API > last-used config > default location (`~/Documents/Lokus Workspace`).
 
 | Tool | Description |
 |------|-------------|
@@ -262,15 +300,27 @@ Graph-enhanced search that combines full-text matching with knowledge graph trav
 | `smart_search` | Full-text search enhanced with wiki link graph traversal. Returns matching notes plus their connected notes. |
 | `explore_topic` | Navigate the knowledge graph from a starting point to discover related content. |
 
+## File tools plugin
+
+The MCP server includes a file tools plugin (`file-tools-plugin.js`) that registers additional file operation tools when the MCP integration system is available inside the Lokus app. This plugin provides workspace-level file management capabilities and is loaded automatically -- no manual configuration is needed.
+
 ## Environment variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `LOKUS_WORKSPACE` | Workspace path | Auto-detected |
 | `LOKUS_MCP_PORT` | HTTP server port | `3456` |
-| `LOKUS_LOG_LEVEL` | Logging verbosity (`debug`, `info`, `error`) | `info` |
-| `LOKUS_CACHE_SIZE` | Cache size in MB | `500` |
-| `LOKUS_AUTO_START` | Auto-start the MCP server | `true` |
+
+## CORS
+
+The HTTP server whitelists the following origins for cross-origin requests:
+
+- `http://localhost` (and any port)
+- `http://127.0.0.1` (and any port)
+- `tauri://localhost`
+- `https://tauri.localhost`
+
+Requests from other origins will not receive CORS headers. Preflight `OPTIONS` requests are handled automatically.
 
 ## Usage examples
 
@@ -316,17 +366,24 @@ The AI calls `get_hub_notes` and `get_orphan_notes` to analyze graph structure.
 
 ## HTTP API
 
+All requests to the HTTP API (except `/health`) require the bearer token from `~/.lokus/mcp-token`.
+
 Send MCP requests to the HTTP endpoint using JSON-RPC 2.0:
 
 ```bash
+# Read the auth token
+TOKEN=$(cat ~/.lokus/mcp-token)
+
 # List all tools
 curl -X POST http://localhost:3456/mcp \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
   -d '{"jsonrpc":"2.0","method":"tools/list","id":1}'
 
 # Call a tool
 curl -X POST http://localhost:3456/mcp \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
   -d '{
     "jsonrpc":"2.0",
     "method":"tools/call",
@@ -336,15 +393,20 @@ curl -X POST http://localhost:3456/mcp \
     },
     "id":2
   }'
+
+# Get server info
+curl -H "Authorization: Bearer $TOKEN" http://localhost:3456/mcp/info
 ```
 
 ## Security
 
-- **Local-only connections.** The HTTP server binds to `localhost`. No remote access by default.
-- **No authentication required.** The server trusts local processes. If you expose the port externally (not recommended), add authentication middleware.
+- **Local-only connections.** The HTTP server binds to `127.0.0.1`. No remote access by default.
+- **Bearer token authentication.** Every HTTP request (except `/health`) must include a valid `Authorization: Bearer <token>` header. The token is stored at `~/.lokus/mcp-token` with `0600` permissions and regenerated on each server start.
+- **Constant-time token comparison.** Token validation uses a byte-by-byte XOR comparison to prevent timing attacks.
+- **CORS origin whitelisting.** Only `localhost`, `127.0.0.1`, and Tauri origins are allowed.
 - **File system permissions.** The server respects OS-level read/write permissions.
 - **No external network calls.** The MCP server never phones home or calls external APIs.
-- **Audit logging.** All tool calls are logged to `~/.lokus/mcp-server/logs/server.log`.
+- **Logging to stderr.** All server logs are written to stderr, not to files on disk.
 
 ## Troubleshooting
 
@@ -358,23 +420,28 @@ curl -X POST http://localhost:3456/mcp \
    ```bash
    node --version
    ```
-3. Check server logs:
-   ```bash
-   tail -f ~/.lokus/mcp-server/logs/server.log
-   ```
+3. Check server logs in the terminal where Lokus is running (logs go to stderr).
 4. Delete `~/.lokus/mcp-server/` and restart Lokus to rebuild.
 
 ### AI cannot see Lokus tools
 
-1. Confirm the config file exists and points to the correct path:
-   ```bash
-   cat ~/.lokus/mcp-server/claude_desktop_config.json
-   ```
+1. Confirm the Claude Desktop config exists at the correct OS-specific path (see the config path table above).
 2. Restart your AI client after adding the configuration.
 3. Test the HTTP endpoint directly:
    ```bash
    curl http://localhost:3456/health
    ```
+
+### 401 Unauthorized errors
+
+The bearer token is regenerated each time the HTTP server starts. If you are getting 401 errors:
+
+1. Re-read the token:
+   ```bash
+   cat ~/.lokus/mcp-token
+   ```
+2. Update your requests with the new token value.
+3. MCP clients configured via `.mcp.json` or `claude mcp add` using stdio transport are not affected -- only direct HTTP callers need the token.
 
 ### Wrong workspace detected
 
@@ -385,12 +452,6 @@ export LOKUS_WORKSPACE="/path/to/your/workspace"
 ```
 
 Or use the `set_workspace_context` tool to switch workspaces within a conversation.
-
-### Slow responses on large workspaces
-
-- Reduce cache size: `export LOKUS_CACHE_SIZE=250`
-- Lower log level: `export LOKUS_LOG_LEVEL=error`
-- Archive old content into a separate workspace.
 
 ## Resources
 

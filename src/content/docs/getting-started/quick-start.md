@@ -1,15 +1,47 @@
 ---
 title: Quick Start
-description: Create your first workspace, write a note, and learn the basics of Lokus in five minutes.
+description: Sign in, create your first workspace, write a note, and learn the basics of Lokus in five minutes.
 ---
 
-This guide walks you through the first five minutes with Lokus: creating a workspace, writing a note, and navigating the interface.
+This guide walks you through the first five minutes with Lokus: signing in, creating a workspace, writing a note, and navigating the interface.
+
+## Sign in or continue as guest
+
+When you launch Lokus for the first time, the **Login screen** appears. You must sign in or continue as a guest before you can access the app.
+
+### Sign-in methods
+
+Lokus supports three sign-in methods:
+
+| Method | How |
+|--------|-----|
+| **Email and password** | Enter your email and password, then click **Sign In**. New users can click **Sign up** to create an account (password must be at least 6 characters). A confirmation email is sent before the account is active. |
+| **Google OAuth** | Click **Continue with Google** and complete the Google sign-in flow. |
+| **Apple OAuth** | Click **Continue with Apple** and complete the Apple sign-in flow. |
+
+If you forget your password, click **Forgot password?** on the sign-in screen to receive a reset link by email.
+
+### Guest mode
+
+If you prefer not to create an account, click **Continue as Guest** at the bottom of the login screen.
+
+Guest mode lets you use Lokus without an account. Key details:
+
+- **Local-only.** Your notes are stored on your device and are not synced to the cloud.
+- **Persists between sessions.** Guest mode state is saved in localStorage, so you stay in guest mode until you explicitly sign in.
+- **No cloud sync.** Features that require an account (cloud backup, cross-device sync) are disabled.
+- **"Guest" indicator.** The app displays a "Guest" label so you always know you are in guest mode.
+- **Sign in later.** You can sign in at any time using the "Sign in to sync" option to upgrade from guest mode to a full account.
+
+:::caution
+In guest mode, some Preferences sections that depend on a cloud account are disabled. If you need cloud sync, sign in with an account.
+:::
 
 ## Create a workspace
 
 A workspace is a folder on your computer where Lokus stores your notes as plain markdown files. You can use any folder -- a new empty one, an existing folder of `.md` files, or even an Obsidian vault.
 
-1. Launch Lokus. The **Launcher** screen appears.
+1. After signing in (or continuing as guest), the **Launcher** screen appears.
 2. Click **Create New Workspace** to start fresh, or **Open Existing Workspace** to point Lokus at a folder you already have.
 3. Pick or create a folder in the file dialog. Lokus will use this folder as your workspace root.
 
@@ -127,7 +159,7 @@ Click any node in the graph to open that note.
 
 ## Open a canvas
 
-Press `Cmd+Shift+C` / `Ctrl+Shift+C` to create a new canvas -- an infinite whiteboard for spatial thinking, built on TLDraw. You can place notes, draw, and arrange ideas visually.
+Press `Cmd+Shift+C` / `Ctrl+Shift+C` to create a new canvas -- an infinite whiteboard for spatial thinking. You can place notes, draw, and arrange ideas visually.
 
 ## Open preferences
 
@@ -137,6 +169,10 @@ Press `Cmd+,` (macOS) or `Ctrl+,` (Windows/Linux) to open Preferences. Key secti
 - **Editor** -- tab size, line numbers, spell check
 - **Shortcuts** -- view and customize all keyboard shortcuts
 - **Import** -- import notes from other apps
+
+:::note
+If you are in guest mode, some Preferences sections related to cloud sync and account management are disabled. Sign in with an account to access these features.
+:::
 
 ## Keyboard shortcuts reference
 

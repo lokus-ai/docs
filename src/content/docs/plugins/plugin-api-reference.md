@@ -18,7 +18,7 @@ api.ui          // UIAPI - panels, dialogs, status bar, webviews
 api.commands    // CommandsAPI - register and execute commands
 api.fs          // FilesystemAPI - file read/write operations
 api.network     // NetworkAPI - HTTP requests
-api.storage     // DataAPI - key-value storage
+api.storage     // DataAPI - key-value storage and data providers
 api.clipboard   // ClipboardAPI - clipboard read/write
 api.workspace   // WorkspaceAPI - workspace folders and configuration
 api.languages   // LanguagesAPI - language feature providers
@@ -34,7 +34,9 @@ api.debug       // DebugAPI - debug sessions
 
 ## EditorAPI
 
-Access to the TipTap editor. Read content, insert nodes, register extensions, add slash commands, and listen for updates.
+Access to the ProseMirror editor. Read content, insert nodes, register extensions, add slash commands, and listen for updates.
+
+The underlying editor instance is a raw ProseMirror `EditorView`. The plugin API wraps ProseMirror commands and state management behind a stable interface.
 
 **Required permissions:** `editor:read` for read operations, `editor:write` for modifications.
 
@@ -59,8 +61,10 @@ await api.editor.insertNode('heading', { level: 2 }, 'My Heading');
 
 | Method | Parameters | Returns | Permission | Description |
 |---|---|---|---|---|
-| `addExtension(options)` | See below | `Promise<string>` | `editor:write` | Register a TipTap extension |
+| `addExtension(options)` | See below | `Promise<string>` | `editor:write` | Register a ProseMirror extension |
 | `removeExtension(extensionId)` | `extensionId: string` | `void` | `editor:write` | Remove a registered extension |
+
+Extensions are registered as ProseMirror plugins, input rules, or keymaps under the hood.
 
 #### addExtension(options)
 
@@ -203,20 +207,52 @@ const confirmed = await api.ui.showConfirm({ title: 'Delete?', message: 'Are you
 
 | Method | Parameters | Returns | Permission | Description |
 |---|---|---|---|---|
-| `addPanel(options)` | `{ id, title, position, icon, component, props }` | `Panel` | `ui:create` | Add a UI panel |
+| `addPanel(options)` | `{ id, title, position, type, icon, component, props }` | `Panel` | `ui:create` | Add a UI panel |
 | `registerPanel(options)` | `{ id, title, location, icon, initialState }` | `Disposable` | `ui:create` | Register a panel (SDK alias) |
 | `removePanel(id)` | `id: string` | `boolean` | -- | Remove a panel |
 | `updatePanel(id, props)` | `id: string`, `props: object` | `Panel` | -- | Update panel properties |
 
-Panel positions: `'sidebar-left'`, `'sidebar-right'`, `'bottom'`, `'modal'`.
+#### Panel positions
+
+Panels can be placed in these positions:
+
+| Position | Description |
+|---|---|
+| `'sidebar-left'` | Left sidebar |
+| `'sidebar-right'` | Right sidebar |
+| `'bottom'` | Bottom panel area |
+| `'floating'` | Floating window |
+| `'modal'` | Modal overlay |
+| `'editor-overlay'` | Overlaid on the editor area |
+
+#### Panel types
+
+Each panel has a rendering type:
+
+| Type | Description |
+|---|---|
+| `'react'` | React component (default) |
+| `'webview'` | HTML content in a sandboxed webview |
+| `'iframe'` | Content loaded in an iframe |
+| `'custom'` | Custom rendering logic |
 
 ```javascript
 api.ui.addPanel({
   id: 'myPlugin.explorer',
   title: 'My Explorer',
   position: 'sidebar-left',
+  type: 'react',
   icon: 'folder',
   props: { rootPath: '/workspace' }
+});
+
+// Floating panel
+api.ui.addPanel({
+  id: 'myPlugin.tools',
+  title: 'Floating Tools',
+  position: 'floating',
+  type: 'webview',
+  props: { html: '<h1>Tools</h1>' }
 });
 ```
 
@@ -234,7 +270,7 @@ api.ui.addPanel({
 | `text` | string | Yes | Display text |
 | `tooltip` | string | No | Hover tooltip |
 | `command` | string\|object | No | Command to execute on click |
-| `alignment` | number | No | 1 = left, 2 = right (default) |
+| `alignment` | string | No | `'left'` (default), `'center'`, or `'right'` |
 | `priority` | number | No | Sort order (higher = closer to edge) |
 | `color` | string | No | Text color |
 | `backgroundColor` | string | No | Background color |
@@ -246,7 +282,7 @@ const item = api.ui.registerStatusBarItem({
   id: 'myPlugin.status',
   text: 'Ready',
   tooltip: 'Plugin status',
-  alignment: 2,
+  alignment: 'right',
   priority: 100
 });
 
@@ -480,11 +516,15 @@ const resp = await api.network.fetch('https://api.example.com/data', {
 
 ---
 
-## DataAPI (Storage)
+## DataAPI (Storage and Providers)
 
 Persistent key-value storage scoped to your plugin. Backed by a database when available, with localStorage fallback.
 
+The DataAPI also supports registering data providers for deeper integration with Lokus components.
+
 **Required permissions:** `storage:read`, `storage:write`.
+
+### Key-value storage
 
 | Method | Parameters | Returns | Permission | Description |
 |---|---|---|---|---|
@@ -500,6 +540,22 @@ await api.storage.set('lastSync', Date.now());
 const lastSync = await api.storage.get('lastSync');
 const keys = await api.storage.keys();
 ```
+
+### Data providers
+
+Plugins can register data providers to supply alternative data sources for Lokus components. All providers extend `BaseDataProvider` and are managed through the `ProviderRegistry`.
+
+Supported provider types:
+
+| Provider Type | Description |
+|---|---|
+| **Graph** | Custom graph visualization and layout algorithms |
+| **Kanban** | External task management systems (Jira, Trello, etc.) |
+| **Search** | Enhanced search capabilities (semantic search, external indexing) |
+| **FileSystem** | Cloud storage integration (Dropbox, Google Drive, etc.) |
+| **Data Transform** | Custom data processing pipelines |
+
+Each provider must implement `initialize()`, `connect()`, `disconnect()`, and `healthCheck()` methods. The registry handles provider lifecycle, health monitoring, and fallback selection.
 
 ---
 

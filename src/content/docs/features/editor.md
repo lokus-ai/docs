@@ -1,9 +1,15 @@
 ---
 title: Editor
-description: TipTap-based rich text editor with slash commands, markdown shortcuts, code blocks, callouts, math, and more.
+description: ProseMirror-based rich text editor with slash commands, markdown shortcuts, code blocks, callouts, math, and more.
 ---
 
-Lokus uses a TipTap-based editor that renders Markdown as rich text. You write in Markdown or use the toolbar -- the editor handles both. Files are stored as `.md` on disk.
+Lokus uses a ProseMirror-based editor that renders Markdown as rich text. You write in Markdown or use the toolbar -- the editor handles both. Files are stored as `.md` on disk.
+
+## Editor state management
+
+Each open tab maintains its own isolated ProseMirror `EditorState`, including independent undo/redo history, selection, and scroll position. Switching between tabs restores the exact editor state you left.
+
+Content for inactive tabs is held in an LRU cache with a maximum of 20 entries per editor group. When the cache is full, the least-recently-accessed clean (unsaved) entries are evicted first; dirty (modified) entries are preserved. You can reopen recently closed tabs -- the last 20 closed tabs are tracked and can be restored into the focused pane.
 
 ## Keyboard shortcuts
 
@@ -54,15 +60,7 @@ Click the fold indicator (triangle) next to any heading to collapse everything u
 
 Type `/` on any line to open the command menu. Start typing to filter. Navigate with arrow keys, press `Enter` to insert.
 
-### Tasks and Kanban
-
-| Command | What it does |
-|---------|-------------|
-| `/Kanban Board` | Open or create a kanban board |
-| `/Linked Task` | Create a task linked to a kanban board |
-| `/Simple Task` | Insert standalone `!task` syntax |
-
-### Basic blocks
+### Writing
 
 | Command | What it does |
 |---------|-------------|
@@ -73,21 +71,16 @@ Type `/` on any line to open the command menu. Start typing to filter. Navigate 
 | `/Ordered List` | Numbered list |
 | `/Task List` | Checkbox list |
 | `/Quote` | Blockquote |
-| `/Table` | Opens a size picker grid (up to 6x8), click to insert |
-| `/Image` | Triggers image embed autocomplete (`![[`) |
-| `/Template` | Opens the template picker |
-| `/Link to File` | Opens the file picker, inserts a `[[wiki-link]]` |
-| `/Load Gmail` | Inserts an email template with the current filename as subject |
 
-### Formatting
+### Content
 
 | Command | What it does |
 |---------|-------------|
-| `/Superscript` | Raise text (x^2) |
-| `/Subscript` | Lower text (H2O) |
-| `/Strikethrough` | Cross out text |
-| `/Highlight` | Highlight text |
-| `/Horizontal Rule` | Insert a divider |
+| `/Image` | Triggers image embed autocomplete (`![[`) |
+| `/Table` | Opens a size picker grid (up to 6x8), click to insert |
+| `/Template` | Opens the template picker |
+| `/Link to File` | Opens the file picker, inserts a `[[wiki-link]]` |
+| `/Simple Task` | Insert standalone `!task` syntax |
 
 ### Code
 
@@ -96,15 +89,25 @@ Type `/` on any line to open the command menu. Start typing to filter. Navigate 
 | `/Code` | Toggle inline code |
 | `/Code Block` | Insert a fenced code block |
 
+### Formatting
+
+| Command | What it does |
+|---------|-------------|
+| `/Highlight` | Highlight text |
+| `/Strikethrough` | Cross out text |
+| `/Superscript` | Raise text (x^2) |
+| `/Subscript` | Lower text (H2O) |
+| `/Horizontal Rule` | Insert a divider |
+
 ### Callouts
 
 | Command | What it does |
 |---------|-------------|
 | `/Note Callout` | Blue info callout |
 | `/Tip Callout` | Green tip callout |
+| `/Info Callout` | Cyan info callout |
 | `/Warning Callout` | Orange warning callout |
 | `/Danger Callout` | Red danger callout |
-| `/Info Callout` | Cyan info callout |
 | `/Success Callout` | Green success callout |
 | `/Question Callout` | Purple question callout |
 | `/Example Callout` | Gray example callout |
@@ -134,7 +137,7 @@ Inside a code block:
 
 ## Mermaid diagrams
 
-Type `` ``mm `` (two backticks followed by `mm`) to insert a Mermaid diagram block. The block renders the diagram live as you type. Supports flowcharts, sequence diagrams, Gantt charts, and other Mermaid syntax.
+Type `` ```mm `` (three backticks followed by `mm`, then a space) to insert a Mermaid diagram block. The block renders the diagram live as you type. Supports flowcharts, sequence diagrams, Gantt charts, and other Mermaid syntax.
 
 ## Callouts
 
@@ -247,7 +250,7 @@ Click the triangle icon next to any heading to fold/unfold the content beneath i
 
 The editor supports plugin-provided extensions. Plugins can:
 
-- Register custom TipTap nodes and marks
+- Register custom ProseMirror nodes and marks
 - Add new slash commands to the `/` menu
 - Subscribe to editor events
 - Provide autocomplete suggestions
