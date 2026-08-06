@@ -9,6 +9,10 @@ Download the latest release from the [GitHub Releases page](https://github.com/l
 
 **Supported versions:** macOS 10.15 (Catalina) and later. Works on both Intel and Apple Silicon.
 
+**Option A — Mac App Store:** search for **Lokus** in the App Store. Updates arrive through the App Store automatically.
+
+**Option B — Direct download:**
+
 1. Download `Lokus_x.x.x_universal.dmg` from the releases page.
 2. Open the DMG and drag **Lokus.app** into your **Applications** folder.
 3. On first launch, macOS will warn about an unverified developer. Right-click the app and select **Open**, then click **Open** again in the dialog.

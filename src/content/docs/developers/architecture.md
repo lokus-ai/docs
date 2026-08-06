@@ -5,6 +5,28 @@ description: Tauri 2.0 + React 19 + Vite 7 architecture, directory structure, IP
 
 Lokus is a desktop application built on [Tauri 2.0](https://v2.tauri.app/), combining a Rust backend with a React 19 frontend bundled by Vite 7. This page explains how the pieces connect.
 
+## Plugin system (v3)
+
+Since v1.3.0, plugins run in a **dedicated Worker per plugin** — no DOM, no Tauri bridge, no globals. The only door out is a typed RPC bridge into the host:
+
+```
+plugin code (Worker)
+   │  lokus.* RPC (request/response/events)
+   ▼
+PluginHost (frontend) ── CapabilityGate ── user grants (Rust settings store)
+   │  allowed calls only
+   ▼
+managers / editor / Tauri IPC / overlay windows
+```
+
+- `src/core/plugin-v3/` holds the contract (manifest v3 schema), RPC protocol, gate, host, bridge, and Worker runtime.
+- Grants come from the **Ask Screen** (install *and* enable) and persist via the Rust plugin settings store.
+- Contribution points (commands, slash commands, status bar, toolbar, panels, overlays) are declared in the manifest and rendered natively by the host.
+- Rust keeps installation, the enabled list, and grant storage; it never executes plugin code.
+- The SDK (`lokus-plugin-sdk` v3) is the typed mirror of the Worker API.
+
+See [Plugin API Reference](/plugins/plugin-api-reference/) and [Creating Plugins](/plugins/creating-plugins/).
+
 ## High-Level Architecture
 
 ```

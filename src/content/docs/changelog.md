@@ -5,6 +5,38 @@ description: Release notes for every version of Lokus.
 
 All notable changes to Lokus, ordered by release date. Lokus follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.3.0 -- 2026-08-04
+
+### Plugin System v3
+
+- **Real isolation.** Plugins now run in a dedicated Worker with no DOM, no IPC, and no access to your notes, tokens, or files unless you grant it. The old same-realm runtime is gone.
+- **Ask Screen.** Every install and enable lists the plugin's requested capabilities and requires your explicit approval. Unchecked capabilities are denied at runtime.
+- **Capability gate.** Every plugin request is checked per call; denied attempts are recorded and visible in the new per-plugin console (terminal icon on the plugin card).
+- **Contribution points.** Plugins declare commands, slash commands, status-bar items, toolbar buttons, panels (including webview panels), and transparent always-on-top overlays; Lokus renders them natively.
+- **Activation events.** Plugins boot lazily on `startup`, `command:`, `view:`, or `file:` triggers instead of all at boot.
+- **Crash protection.** A plugin that crashes repeatedly is stopped after three strikes; the app keeps running.
+- **SDK 3.0.0.** `lokus-plugin-sdk` rewritten against the v3 API: typed `LokusAPI`, manifest v3 types, `definePlugin`, templates, testing mocks.
+- Legacy (pre-v3) plugins are listed as unsupported and never execute.
+
+### Release and platform
+
+- App Store build submitted for review; Windows and Linux release artifacts shipped with updater signatures.
+- Marketplace UI at marketplace.lokusmd.com with graceful offline handling.
+
+## 1.2.0 -- 2026-07-31
+
+### Performance
+
+- Boot payload cut from 9.10 MB to 1.58 MB — Excalidraw and Sentry no longer load at startup.
+- Saves no longer block the UI; file writes moved off the main thread.
+- No more "Loading…" on launch; the editor view loads lazily behind the sidebar.
+- Bases, Kanban, Canvas, Calendar, and Daily Notes warm while the app is idle.
+- The vault crosses the IPC bridge once per workspace open instead of once per file.
+
+## 1.1.0 -- 2026-03-05
+
+- Documentation and release pipeline updates; plugin registry groundwork.
+
 ## 1.0.1 -- 2026-01-26
 
 ### iOS and mobile support

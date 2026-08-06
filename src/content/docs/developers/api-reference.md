@@ -878,103 +878,24 @@ pub fn save_theme_tokens(tokens: HashMap<String, String>) -> Result<(), String>
 
 ## Plugin Commands
 
-Plugins are installed from ZIP files and stored in `~/.lokus/plugins/`.
+:::caution
+The plugin system was rebuilt in v1.3.0 (plugin system v3). Plugins no longer run in the app's process and most of the old plugin IPC surface is gone. The Rust commands below still exist for **installation and grant storage only**; everything at runtime happens over the Worker RPC bridge described in the [Plugin API Reference](/plugins/plugin-api-reference/).
+:::
 
-### list_plugins
+Still exposed (used by the v3 host):
 
-```rust
-pub fn list_plugins(app: AppHandle) -> Result<Vec<PluginInfo>, String>
-```
+| Command | Purpose |
+|---|---|
+| `list_plugins` | Scan `~/.lokus/plugins/` and return each folder's manifest v3 + path |
+| `install_plugin` | Install from a ZIP/folder/URL (validates manifest, rejects duplicates) |
+| `uninstall_plugin` | Remove the plugin folder and its stored settings/grants |
+| `enable_plugin` / `disable_plugin` | Toggle the enabled list (keyed by manifest `id`) |
+| `get_enabled_plugins` | The enabled list |
+| `set_plugin_permission` / `get_plugin_permissions` | Store/read the **user-granted capabilities** (the Ask Screen result) |
+| `set_plugin_setting` / `get_plugin_setting` | Per-plugin settings storage |
+| `read_plugin_file` | Read a file inside a plugin folder (confined to the plugins dir) |
 
-**PluginInfo:**
-
-```typescript
-interface PluginInfo {
-  manifest: PluginManifest
-  path: string
-  enabled: boolean
-  installed_at: string
-  size: number
-}
-
-interface PluginManifest {
-  name: string
-  version: string
-  description: string
-  author: string
-  main: string
-  permissions: string[]
-  dependencies?: Record<string, string>
-  keywords?: string[]
-  repository?: string
-  homepage?: string
-  license?: string
-}
-```
-
-### install_plugin
-
-```rust
-pub fn install_plugin(app: AppHandle, plugin_path: String) -> Result<InstallResult, String>
-```
-
-Validates ZIP structure, manifest, version compatibility, and duplicate detection.
-
-### uninstall_plugin
-
-```rust
-pub fn uninstall_plugin(app: AppHandle, plugin_name: String) -> Result<(), String>
-```
-
-Removes the plugin directory, settings, and permissions.
-
-### get_plugin_info
-
-```rust
-pub fn get_plugin_info(app: AppHandle, plugin_name: String) -> Result<PluginInfo, String>
-```
-
-### validate_plugin_manifest
-
-```rust
-pub fn validate_plugin_manifest(manifest: PluginManifest) -> Result<ValidationResult, String>
-```
-
-### enable_plugin / disable_plugin
-
-```rust
-pub fn enable_plugin(app: AppHandle, plugin_name: String) -> Result<(), String>
-pub fn disable_plugin(app: AppHandle, plugin_name: String) -> Result<(), String>
-```
-
-### get_enabled_plugins
-
-```rust
-pub fn get_enabled_plugins(app: AppHandle) -> Result<Vec<String>, String>
-```
-
-### set_plugin_permission / get_plugin_permissions
-
-```rust
-pub fn set_plugin_permission(app: AppHandle, plugin_name: String, permission: String, granted: bool) -> Result<(), String>
-pub fn get_plugin_permissions(app: AppHandle, plugin_name: String) -> Result<Vec<String>, String>
-```
-
-Permission IDs follow the format `category:action` (e.g., `filesystem:read`, `filesystem:write`, `network:request`, `clipboard:read`).
-
-### set_plugin_setting / get_plugin_setting
-
-```rust
-pub fn set_plugin_setting(app: AppHandle, plugin_name: String, key: String, value: JsonValue) -> Result<(), String>
-pub fn get_plugin_setting(app: AppHandle, plugin_name: String, key: String) -> Result<Option<JsonValue>, String>
-```
-
-### read_plugin_file / get_plugin_manifest
-
-```rust
-pub fn read_plugin_file(app: AppHandle, plugin_name: String, file_path: String) -> Result<String, String>
-pub fn get_plugin_manifest(app: AppHandle, plugin_name: String) -> Result<PluginManifest, String>
-```
+Runtime capabilities (`ui`, `editor`, `notes.*`, `network`, `overlay`, …) are **not** IPC commands — they are RPC methods checked per call against the stored grants inside the plugin's Worker. See [Creating Plugins](/plugins/creating-plugins/) for the manifest and [Plugin API Reference](/plugins/plugin-api-reference/) for the surface.
 
 ---
 
