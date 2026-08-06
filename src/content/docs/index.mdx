@@ -1,52 +1,38 @@
 ---
 title: Lokus
-description: Documentation for Lokus — a local-first knowledge OS built with Tauri.
+description: A local-first knowledge OS. Your notes are plain markdown files in a folder you own — Lokus makes them think.
 template: splash
-hero:
-  tagline: Your notes, your machine, your rules. Lokus is a local-first knowledge OS that keeps everything on your device.
-  actions:
-    - text: Get Started
-      link: /getting-started/installation/
-      icon: right-arrow
-    - text: View on GitHub
-      link: https://github.com/nicepkg/lokus
-      icon: external
-      variant: minimal
 ---
 
 import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
 
-## What you can do
+**Where your thinking lives.** Lokus is a local-first knowledge OS: notes, tasks, canvases, and a plugin system — all on top of plain markdown files in a folder you own. No database, no lock-in.
 
-<CardGrid>
-	<Card title="Write in markdown" icon="pencil">
-		A block editor with slash commands, wiki links, callouts, LaTeX math, Mermaid diagrams, and 20+ syntax-highlighted languages.
-	</Card>
-	<Card title="See how ideas connect" icon="random">
-		Graph view shows every link between your notes in 2D, 3D, or force-directed layouts. Click any node to navigate.
-	</Card>
-	<Card title="Think visually" icon="document">
-		Infinite canvas powered by TLDraw. Drag notes, draw shapes, and lay out ideas spatially.
-	</Card>
-	<Card title="Build databases" icon="list-format">
-		Turn frontmatter into structured views — tables, boards, galleries. Filter, sort, and write formulas across your notes.
-	</Card>
+<CardGrid stagger>
+  <Card title="Quick Start" icon="rocket">
+    From install to your first linked note in five minutes.
+    <a href="/getting-started/quick-start/">Get started →</a>
+  </Card>
+  <Card title="Plugins, safely" icon="puzzle">
+    Plugins run isolated and can only do what you approve on the Ask Screen.
+    <a href="/plugins/using-plugins/">Using plugins →</a>
+  </Card>
+  <Card title="Build a plugin" icon="seti:typescript">
+    Manifest v3, the SDK, contribution points, and the dev loop.
+    <a href="/plugins/creating-plugins/">Creating plugins →</a>
+  </Card>
+  <Card title="Your data, your rules" icon="shield">
+    How sync and encryption work — and exactly what they don't do.
+    <a href="/core/sync-privacy/">Sync & privacy →</a>
+  </Card>
 </CardGrid>
 
-## Start here
+## What's inside
 
-<CardGrid>
-	<LinkCard title="Install Lokus" description="macOS, Windows, and Linux. Takes two minutes." href="/getting-started/installation/" />
-	<LinkCard title="Quick Start" description="Create a workspace, write your first note, learn the shortcuts." href="/getting-started/quick-start/" />
-	<LinkCard title="Import your notes" description="Bring your Obsidian vault, Logseq graph, or markdown folders." href="/getting-started/importing-notes/" />
-	<LinkCard title="Keyboard shortcuts" description="Every shortcut in one table." href="/reference/keyboard-shortcuts/" />
-</CardGrid>
+- **Editor** — markdown-first, with wiki links, embeds, callouts, math, and live preview
+- **Organize** — folders, tags, tasks, kanban boards, databases (Bases), daily notes
+- **Think** — graph view, canvases, templates, full-text search
+- **Extend** — plugins with commands, panels, status-bar widgets, and overlays
+- **Everywhere** — macOS, Windows, Linux, with optional encrypted sync
 
-## Go deeper
-
-<CardGrid>
-	<LinkCard title="MCP Server" description="68 tools for AI assistants. Connect Claude, Cursor, or any MCP client to your notes." href="/ai/mcp-server/" />
-	<LinkCard title="Build a plugin" description="SDK, lifecycle hooks, 15 APIs. Extend anything." href="/plugins/creating-plugins/" />
-	<LinkCard title="API Reference" description="Every Tauri command and IPC signature." href="/developers/api-reference/" />
-	<LinkCard title="Architecture" description="How Tauri, React, and Vite fit together." href="/developers/architecture/" />
-</CardGrid>
+New here? Start with the [Quick Start](/getting-started/quick-start/), then browse [Features](/features/editor/).

@@ -1,230 +1,91 @@
 ---
 title: Using Plugins
-description: Install, enable, disable, and configure Lokus plugins.
+description: Find, install, and manage Lokus plugins — and control exactly what each one is allowed to do.
 ---
 
-Lokus plugins extend the editor with custom commands, UI panels, themes, language features, and integrations. This guide covers installing and managing them.
+Plugins extend Lokus with commands, editor tools, sidebar panels, status-bar widgets, and even little companions running on top of your screen. Every plugin runs **isolated from your notes and from Lokus itself** — it can only do what you explicitly allow.
 
-## Plugin directories
+## The Extensions view
 
-Lokus looks for plugins in two directories under your home folder:
+Click the **puzzle icon** in the left ribbon to open Extensions.
 
-```
-~/.lokus/plugins/
-~/.lokus/extensions/
-```
-
-Both directories are created automatically on first launch. Drop a plugin folder into either location and restart Lokus to pick it up.
+- **Installed** — every plugin Lokus found in `~/.lokus/plugins/`, with enable/disable, console, and uninstall controls.
+- **Browse** — the plugin marketplace at [marketplace.lokusmd.com](https://marketplace.lokusmd.com), searchable from the same screen.
+- The **refresh** button (top right) rescans your plugins folder without restarting.
 
 ## Installing a plugin
 
-### Manual installation
+### From the marketplace
 
-1. Download or clone the plugin repository.
-2. Run `npm install && npm run build` inside the plugin directory.
-3. Copy the built plugin folder to `~/.lokus/plugins/`.
-4. Restart Lokus.
+1. Open **Browse**, find a plugin, click **Install**.
+2. The **Ask Screen** appears (see below). Review what it wants and click **Allow & install**.
 
-### From a URL
+### Manually
 
-Lokus supports installing plugins directly from a URL. The Tauri backend downloads and extracts the plugin package into the plugins directory:
+1. Create a folder in `~/.lokus/plugins/<plugin-id>/`.
+2. Put a `plugin.json` (with `"apiVersion": 3`) and the built `index.js` inside.
+3. Hit **refresh** in the Extensions view (or restart Lokus).
 
-```javascript
-// Programmatic installation via PluginAPI
-await api.installPluginFromUrl('https://example.com/my-plugin-1.0.0.tgz');
-```
+### For developers (hot load)
 
-### From a Git repository
+A development server can be attached with the deep link `lokus://plugin-dev?url=http://localhost:PORT`. Lokus asks for confirmation before loading any development plugin.
 
-The plugin loader can clone and install plugins from Git repositories:
+## The Ask Screen — you approve everything
 
-```javascript
-await pluginLoader.installFromGit('https://github.com/user/lokus-plugin-example.git');
-```
+Before any plugin code runs, Lokus shows the **Ask Screen**: the plugin's name, description, and the exact capabilities it is requesting. You can uncheck any of them.
 
-### Using the CLI for development
-
-The `lokus-plugin-cli` tool is primarily for plugin development. Install it globally:
-
-```bash
-npm install -g lokus-plugin-cli
-```
-
-The following commands are available for developing and publishing plugins:
-
-```bash
-lokus-plugin create my-plugin    # Scaffold a new plugin project
-lokus-plugin build               # Build the plugin
-lokus-plugin dev                 # Watch mode with hot reload
-lokus-plugin validate            # Validate the plugin manifest
-lokus-plugin package             # Create a distributable package
-lokus-plugin publish             # Publish to a registry
-lokus-plugin link                # Symlink plugin for local development
-lokus-plugin login               # Authenticate with the registry
-lokus-plugin test                # Run plugin tests
-lokus-plugin docs                # Generate plugin documentation
-```
-
-## Plugin discovery
-
-On startup, the plugin manager scans both plugin directories for folders containing a `plugin.json` file. In Tauri desktop mode, only `plugin.json` is read. The `manifest.json` fallback is only available in browser mode.
-
-Each discovered plugin is validated against the manifest schema and registered in the internal plugin registry.
-
-View discovered plugins from the command palette or by checking the plugin system status programmatically.
-
-## Enabling and disabling plugins
-
-### Activate a plugin
-
-Plugins load automatically based on their `activationEvents`. A plugin with `"activationEvents": ["onStartup"]` activates immediately. Others wait for a trigger -- opening a file type, running a command, or matching a workspace pattern.
-
-To manually activate a loaded plugin, use the command palette:
-
-```
-Lokus: Activate Plugin -> [plugin-name]
-```
-
-### Deactivate a plugin
-
-Deactivating a plugin calls its `deactivate()` method, cleans up all registered commands, panels, toolbar items, and editor extensions, then marks the plugin as inactive.
-
-```
-Lokus: Deactivate Plugin -> [plugin-name]
-```
-
-Dependent plugins are deactivated first, in reverse dependency order.
-
-### Reload a plugin
-
-Reloading unloads and re-loads a plugin without restarting Lokus. Useful during development:
-
-```
-Lokus: Reload Plugin -> [plugin-name]
-```
-
-## Plugin settings
-
-Plugins define their own configuration through the `contributes.configuration` section of their manifest. Settings are stored per-plugin and accessed through the Settings panel.
-
-Example configuration definition in a plugin manifest:
-
-```json
-{
-  "contributes": {
-    "configuration": {
-      "title": "Word Count",
-      "properties": {
-        "wordCount.showInStatusBar": {
-          "type": "boolean",
-          "default": true,
-          "description": "Show word count in the status bar"
-        },
-        "wordCount.countWhitespace": {
-          "type": "boolean",
-          "default": false,
-          "description": "Include whitespace in character count"
-        }
-      }
-    }
-  }
-}
-```
-
-Plugins read their settings at runtime with the Configuration API:
-
-```javascript
-const showInStatusBar = await api.config.get('wordCount.showInStatusBar', true);
-```
-
-## Permissions
-
-Each plugin declares the permissions it needs in its manifest. Lokus enforces these at runtime -- a plugin without `filesystem:write` permission cannot write files, even if it tries.
-
-Common permission groups:
-
-| Permission | Access granted |
+| Capability | What it lets the plugin do |
 |---|---|
-| `editor:read` | Read editor content and selections |
-| `editor:write` | Modify editor content, add extensions |
-| `ui:create` | Create panels, status bar items, webviews |
-| `ui:notifications` | Show notifications and messages |
-| `filesystem:read` | Read files within the workspace |
-| `filesystem:write` | Write files within the workspace |
-| `commands:register` | Register commands |
-| `network:http` | Make HTTP requests |
-| `storage:read` | Read plugin storage |
-| `storage:write` | Write plugin storage |
-| `clipboard:read` | Read from clipboard |
-| `clipboard:write` | Write to clipboard |
-| `terminal:create` | Create terminal instances |
+| `commands` | Run and trigger commands |
+| `ui` | Show notifications, panels, and status-bar items |
+| `editor` | Insert content into the open note |
+| `notes.read` | Read notes in your vault |
+| `notes.write` | Create or modify notes in your vault |
+| `storage` | Keep its own private data |
+| `network` | Access the internet |
+| `overlay` | Show a transparent, always-on-top window |
 
-Review a plugin's requested permissions before installing it. Plugins requesting `all` or `shell:execute` warrant extra scrutiny.
+The Ask Screen appears on **install and on every enable**, so you can change your mind at any time. Anything you didn't grant is denied at runtime — and every denied attempt is recorded in the plugin's console.
 
-## Plugin sandbox
+## Enabling, disabling, uninstalling
 
-Plugins run in a sandboxed environment that enforces resource limits and permission boundaries:
+- **Enable / Disable** — the toggle on the plugin card. Disabling stops the plugin immediately; its panels and commands disappear.
+- **Uninstall** — the trash icon. Removes the plugin folder after a confirmation.
 
-- **Memory**: 50 MB default limit per plugin
-- **CPU**: 1 second CPU time per task
-- **Network**: 30 second timeout
-- **File access**: 10 MB max file size
+## The plugin console
 
-The sandbox uses Web Workers for isolation when available. Plugins that exceed their resource quotas are terminated. The security manager also supports optional code signing verification.
+The **terminal icon** on a plugin card opens its console: live log output plus every capability request that was **blocked**. If a plugin misbehaves, this is where you'll see exactly what it tried to do.
 
-## Checking plugin status
+## Where plugins can appear
 
-The plugin system uses four lifecycle states:
+Plugins declare *contribution points* in their manifest; Lokus renders them natively:
 
-| State | Description |
-|---|---|
-| `discovered` | Plugin found and manifest validated |
-| `loaded` | Plugin module imported and initialized |
-| `active` | Plugin currently running |
-| `error` | An error occurred (shows error message in plugin info panel) |
+- **Command palette** (`⌘K`) — plugin commands under their own name
+- **Slash menu** — type `/` in the editor
+- **Status bar** — left or right side
+- **Editor toolbar** buttons
+- **Sidebar / bottom panels** — including webview panels
+- **Overlays** — transparent windows above everything (desktop)
 
-View active and loaded plugins through the plugin system:
+## When do plugins run?
 
-- **Total plugins** -- all discovered plugins
-- **Loaded plugins** -- validated and loaded into memory
-- **Active plugins** -- currently running
+Plugins boot lazily, only when needed, based on their `activation` events:
 
-Plugins in an `error` state show their error message in the plugin info panel. Fix the issue and reload to recover.
+- `startup` — as soon as Lokus opens
+- `command:<id>` — the first time their command runs
+- `view:<name>` — when you open a view
+- `file:<ext>` — when you open a matching file
 
-## MCP plugins
+A plugin that crashes repeatedly is stopped automatically after three strikes — Lokus itself keeps running.
 
-Lokus includes a built-in MCP (Model Context Protocol) plugin system for AI-integrated plugins. MCP plugins can act as servers (providing tools, resources, and prompts), clients (consuming MCP services), or hybrids.
+## Older plugins
 
-The MCP plugin system is managed by the `MCPPluginManager` and provides:
-
-- Server and client protocol handling via `MCPProtocol`
-- Global registries for MCP resources, tools, and prompts
-- Communication channels between MCP servers and clients
-- Integration with the plugin sandbox for security
-
-MCP plugins are activated via the `onMCPServer:id` activation event and follow the same permission model as regular plugins.
-
-## Inter-plugin communication
-
-Plugins can communicate with each other through the `PluginCommunicationProtocol`. This enables plugins to share data, invoke each other's functionality, and coordinate behavior without tight coupling.
-
-## Uninstalling a plugin
-
-Remove the plugin's folder from `~/.lokus/plugins/` or `~/.lokus/extensions/` and restart Lokus. Any commands, panels, or extensions registered by that plugin are cleaned up automatically on the next startup.
+Plugins built for the old plugin system (no `apiVersion: 3`) are listed as **unsupported** and never execute. This is deliberate: the old system ran plugin code with full access to your machine.
 
 ## Troubleshooting
 
-**Plugin not discovered:**
-Check that the plugin folder contains a valid `plugin.json` with all required fields (`id`, `name`, `version`, `main`). In Tauri desktop mode, `manifest.json` alone is not sufficient -- you must include `plugin.json`.
+**Plugin doesn't appear** — check the folder name matches the manifest `id`, that `plugin.json` has `"apiVersion": 3`, then hit refresh.
 
-**Plugin stuck in error state:**
-Check the Lokus developer console for the specific error. Common causes: missing `main` entry file, invalid version format, unresolved dependency.
+**"Unsupported"** — the plugin targets the removed pre-v3 system. Ask the author to update it.
 
-**Permission denied errors:**
-The plugin is calling an API it did not request permission for. Update the plugin's `permissions` array in its manifest.
-
-**Circular dependency detected:**
-Two or more plugins depend on each other. Remove one of the circular dependencies from the plugin manifests.
-
-**Plugin exceeding resource limits:**
-The sandbox may terminate plugins that use too much memory or CPU. Optimize your plugin or request higher limits if needed.
+**A feature of my plugin says "permission denied"** — you unchecked that capability. Disable and re-enable the plugin, and tick the box on the Ask Screen.

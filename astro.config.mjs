@@ -17,7 +17,7 @@ export default defineConfig({
 				{
 					icon: 'github',
 					label: 'GitHub',
-					href: 'https://github.com/nicepkg/lokus',
+					href: 'https://github.com/lokus-ai/lokus',
 				},
 			],
 			sidebar: [
@@ -27,6 +27,12 @@ export default defineConfig({
 						{ label: 'Installation', slug: 'getting-started/installation' },
 						{ label: 'Quick Start', slug: 'getting-started/quick-start' },
 						{ label: 'Importing Notes', slug: 'getting-started/importing-notes' },
+					],
+				},
+				{
+					label: 'Core Concepts',
+					items: [
+						{ label: 'Local-first & Sync', slug: 'core/sync-privacy' },
 					],
 				},
 				{
@@ -42,6 +48,7 @@ export default defineConfig({
 						{ label: 'Tags', slug: 'features/tags' },
 						{ label: 'Templates', slug: 'features/templates' },
 						{ label: 'Search', slug: 'features/search' },
+						{ label: 'Calendar', slug: 'features/calendar' },
 						{ label: 'Split Editor', slug: 'features/split-editor' },
 						{ label: 'Themes', slug: 'features/themes' },
 					],
