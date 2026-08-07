@@ -1,6 +1,6 @@
 ---
 title: Frontmatter
-description: Supported YAML frontmatter fields, types, and usage in Lokus v1.0.1.
+description: Supported YAML frontmatter fields, types, and usage.
 ---
 
 Frontmatter is YAML metadata at the top of a markdown file, enclosed by `---` delimiters. Lokus parses frontmatter for Bases, filtering, sorting, and display in the editor.

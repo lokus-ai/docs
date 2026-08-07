@@ -1,6 +1,6 @@
 ---
 title: Markdown Syntax
-description: All supported markdown syntax in Lokus v1.0.1 with examples.
+description: All supported markdown syntax with examples.
 ---
 
 Lokus uses a markdown compiler built on [markdown-it](https://github.com/markdown-it/markdown-it) with extensions for highlights, strikethrough, task lists, math, callouts, and WikiLinks.
