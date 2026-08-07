@@ -3,6 +3,9 @@ title: Tasks
 description: Task management with checkboxes, extended task states, kanban boards, and keyboard shortcuts.
 ---
 
+
+![A kanban board](/shots/kanban.png)
+
 Lokus supports tasks through Markdown checkboxes with extended states and kanban boards for visual workflow management.
 
 ## Task checkboxes

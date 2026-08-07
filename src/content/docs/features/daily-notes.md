@@ -3,6 +3,9 @@ title: Daily Notes
 description: Create and navigate date-based journal entries with automatic note creation and templates.
 ---
 
+
+![The daily notes panel](/shots/daily-notes.png)
+
 Daily notes give you a dedicated page for each day. Open today's note, and Lokus creates it automatically if it doesn't exist. Notes live as plain Markdown files inside a `Daily Notes/` folder in your workspace.
 
 ## Open today's note

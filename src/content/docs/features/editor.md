@@ -3,6 +3,9 @@ title: Editor
 description: ProseMirror-based rich text editor with slash commands, markdown shortcuts, code blocks, callouts, math, and more.
 ---
 
+
+![The Lokus editor: headings, tasks, a callout, and a wiki link](/shots/editor.png)
+
 Lokus uses a ProseMirror-based editor that renders Markdown as rich text. You write in Markdown or use the toolbar -- the editor handles both. Files are stored as `.md` on disk.
 
 ## Editor state management

@@ -3,6 +3,11 @@ title: Using Plugins
 description: Find, install, and manage Lokus plugins — and control exactly what each one is allowed to do.
 ---
 
+
+![The Extensions view with an installed plugin](/shots/extensions.png)
+
+![The Ask Screen listing requested capabilities](/shots/ask-screen.png)
+
 Plugins extend Lokus with commands, editor tools, sidebar panels, status-bar widgets, and even little companions running on top of your screen. Every plugin runs **isolated from your notes and from Lokus itself** — it can only do what you explicitly allow.
 
 ## The Extensions view

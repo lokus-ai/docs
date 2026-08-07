@@ -3,6 +3,9 @@ title: Bases
 description: Query your notes as structured data using YAML frontmatter, with table, list, and gallery views, filters, sorting, and formulas.
 ---
 
+
+![A base rendered as a table](/shots/bases.png)
+
 Bases let you treat your notes as a database. Define a base that pulls notes from a folder, tag, or search query, then view and filter them by their YAML frontmatter properties. Think of it like a spreadsheet view over your Markdown files.
 
 ## Creating a base

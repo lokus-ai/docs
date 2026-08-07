@@ -3,6 +3,9 @@ title: Search
 description: Find anything in your vault — global search, in-note find, and the quick switcher.
 ---
 
+
+![Global search results](/shots/search.png)
+
 Three ways to find things in Lokus:
 
 | Tool | Shortcut | What it does |

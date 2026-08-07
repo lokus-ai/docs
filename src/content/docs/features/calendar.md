@@ -3,6 +3,9 @@ title: Calendar
 description: Connect Google, iCloud, and CalDAV calendars; see events next to your notes and tasks.
 ---
 
+
+![The calendar view](/shots/calendar.png)
+
 Lokus puts your calendars inside your knowledge base: events show up in the sidebar, in the agenda, and on a full calendar view — next to your notes and tasks.
 
 Calendar is an **advanced feature**: enable it in **Preferences → Advanced features**, then connect accounts in **Preferences → Connections**.

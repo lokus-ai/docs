@@ -3,6 +3,9 @@ title: Quick Start
 description: Sign in, create your first workspace, write a note, and learn the basics of Lokus in five minutes.
 ---
 
+
+![The command palette](/shots/command-palette.png)
+
 This guide walks you through the first five minutes with Lokus: signing in, creating a workspace, writing a note, and navigating the interface.
 
 ## Sign in or continue as guest

@@ -3,6 +3,9 @@ title: Wiki Links
 description: Link notes with [[wiki-link]] syntax, backlinks, block references, image embeds, and autocomplete.
 ---
 
+
+![A note with a wiki link to another note](/shots/wiki-links.png)
+
 Wiki links connect your notes. Type `[[` to link to another note, `![[` to embed an image, or `[[page^block]]` to reference a specific block.
 
 ## Creating links

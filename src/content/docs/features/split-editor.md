@@ -3,6 +3,9 @@ title: Split Editor
 description: View and edit multiple notes side-by-side with resizable panes.
 ---
 
+
+![Two panes side by side](/shots/split.png)
+
 Split your editor into multiple panes to view and edit notes side-by-side. Each pane operates independently with its own tabs, scroll position, and content.
 
 ## Create a split

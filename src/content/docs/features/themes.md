@@ -3,6 +3,9 @@ title: Themes
 description: Switch between built-in themes or create custom color schemes with token-based theming.
 ---
 
+
+![Preferences appearance](/shots/themes.png)
+
 Lokus uses a token-based theme system. Every color in the UI maps to a CSS variable, and switching themes swaps those variables instantly. The default theme is **Lokus Dark**.
 
 ## Built-in themes
