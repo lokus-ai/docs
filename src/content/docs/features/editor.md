@@ -26,16 +26,16 @@ Content for inactive tabs is held in an LRU cache with a maximum of 20 entries p
 
 ### Document structure
 
-| Action | macOS | Windows/Linux | Markdown |
-|--------|-------|---------------|----------|
-| Heading 1 | `Cmd+Opt+1` | `Ctrl+Alt+1` | `# ` |
-| Heading 2 | `Cmd+Opt+2` | `Ctrl+Alt+2` | `## ` |
-| Heading 3 | `Cmd+Opt+3` | `Ctrl+Alt+3` | `### ` |
-| Bullet list | `Cmd+Shift+8` | `Ctrl+Shift+8` | `- ` or `* ` |
-| Ordered list | `Cmd+Shift+7` | `Ctrl+Shift+7` | `1. ` |
-| Task list | `Cmd+Shift+9` | `Ctrl+Shift+9` | `- [ ] ` |
-| Blockquote | `Cmd+Shift+B` | `Ctrl+Shift+B` | `> ` |
-| Horizontal rule | -- | -- | `---` |
+Structure is created the markdown way — input rules and slash commands, not hotkeys:
+
+| Type | Type this | Or use |
+|------|-----------|--------|
+| Heading 1–6 | `# ` … `###### ` at line start | `/Heading 1–3` |
+| Bullet list | `- ` or `* ` | `/Bullet List` |
+| Ordered list | `1. ` | `/Ordered List` |
+| Task list | `- [ ] ` | `/Task List` |
+| Blockquote | `> ` | `/Quote` |
+| Horizontal rule | `---` on its own line | `/Horizontal Rule` |
 
 ### Code and technical
 
@@ -44,7 +44,7 @@ Content for inactive tabs is held in an LRU cache with a maximum of 20 entries p
 | Code block | `Cmd+Opt+C` | `Ctrl+Alt+C` | ` ```lang ` |
 | Inline math | -- | -- | `$x^2$` |
 | Block math | -- | -- | `$$E=mc^2$$` |
-| Callout | `Cmd+Opt+C` | `Ctrl+Alt+C` | `>[!note]` |
+| Callout | -- | -- | `>[!note]` or `/Note Callout` |
 
 ### Section folding
 
@@ -248,11 +248,10 @@ Click the triangle icon next to any heading to fold/unfold the content beneath i
 
 ## Plugin extensions
 
-The editor supports plugin-provided extensions. Plugins can:
+Since plugin system v3, plugins extend the editor **declaratively and safely**:
 
-- Register custom ProseMirror nodes and marks
-- Add new slash commands to the `/` menu
-- Subscribe to editor events
-- Provide autocomplete suggestions
+- Add **slash commands** to the `/` menu (declared in the plugin manifest)
+- **Insert content** at your cursor through a permission-gated call
+- Add **toolbar buttons** and **status-bar items**
 
-Plugin slash commands appear alongside built-in commands in the slash menu.
+Plugins cannot inject arbitrary editor internals — that's the isolation model. See [Creating Plugins](/plugins/creating-plugins/).

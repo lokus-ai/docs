@@ -1,6 +1,6 @@
 ---
 title: Config Options
-description: Application configuration and settings reference for Lokus v1.0.1.
+description: Application configuration and settings reference.
 ---
 
 Lokus stores global configuration in `config.json` inside the app data directory. On macOS this is `~/Library/Application Support/Lokus/config.json`. Workspace-specific settings are stored in `.lokus/` within the workspace folder.
@@ -18,7 +18,7 @@ Open Preferences with `Cmd+,` / `Ctrl+,`. Available sections:
 | Shortcuts | Keyboard shortcut customization |
 | Connections | Gmail, Calendar (iCal, CalDAV) integrations |
 | Account | Authentication, user account management |
-| Sync | Iroh P2P sync or Git sync configuration |
+| Sync | Encrypted cloud sync: enable/disable, device status, encryption key management |
 | Updates | App version, beta channel opt-in |
 
 ## Editor Settings

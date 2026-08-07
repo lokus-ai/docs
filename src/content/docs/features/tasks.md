@@ -14,7 +14,7 @@ Create tasks with standard Markdown checkbox syntax:
 - [x] Completed item
 ```
 
-Type `- [ ] ` in the editor, or use the `/Task List` slash command, or press `Cmd+Shift+9` / `Ctrl+Shift+9`.
+Type `- [ ] ` in the editor, or use the `/Task List` slash command.
 
 ## Extended task states
 
@@ -51,22 +51,7 @@ Beyond basic todo/done checkboxes, Lokus supports extended task states. Type the
 
 Each state has its own CSS class for custom styling (e.g., `task-urgent`, `task-in-progress`, `task-blocked`).
 
-## Keyboard shortcuts
-
-| Action | macOS | Windows/Linux | Description |
-|--------|-------|---------------|-------------|
-| Cycle state | `Cmd+Shift+T` | `Ctrl+Shift+T` | Cycle through todo, in-progress, completed |
-| Toggle complete | `Opt+T` | `Alt+T` | Toggle between todo and completed |
-
-### Cycle behavior
-
-`Cmd+Shift+T` / `Ctrl+Shift+T` cycles through the three most common states:
-
-1. **Todo** -- not started
-2. **In progress** -- working on it
-3. **Completed** -- done
-
-This makes it easy to advance a task's status without reaching for the mouse.
+States are set by typing the symbol in the checkbox brackets, and clicking a checkbox cycles todo → completed. Tasks also flow into the [Calendar](/features/calendar/) and kanban boards when they carry due dates.
 
 ## Kanban boards
 

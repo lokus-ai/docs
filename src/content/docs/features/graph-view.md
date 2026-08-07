@@ -1,21 +1,17 @@
 ---
 title: Graph View
-description: Visualize your knowledge graph with 2D, 3D, and force-directed layouts. Navigate, filter, and explore connections.
+description: Visualize your knowledge graph as a force-directed map. Navigate, filter, and explore connections.
 ---
 
-The graph view shows every note in your workspace as a node and every wiki link as an edge. Open it from the sidebar or via the command palette.
+The graph view shows every note in your workspace as a node and every wiki link as an edge. Open it with the graph icon in the ribbon, or `⌘⇧G`.
 
-## View modes
+## The view
 
-Switch between three view modes using the toolbar buttons or keyboard shortcuts:
+A single force-directed 2D canvas, rendered with a D3 force simulation:
 
-| Mode | Shortcut (macOS) | Shortcut (Win/Linux) | Description |
-|------|-------------------|----------------------|-------------|
-| 2D | `Cmd+1` | `Ctrl+1` | Flat force-directed graph using `react-force-graph-2d` |
-| 3D | `Cmd+2` | `Ctrl+2` | Three-dimensional graph using `react-force-graph-3d` and Three.js |
-| Force | `Cmd+3` | `Ctrl+3` | Alternative force-directed layout |
-
-All modes use D3 force simulation under the hood. The 3D mode adds depth and camera rotation via Three.js.
+- **Scroll** to zoom, **drag the background** to pan, **drag nodes** to reposition.
+- **Hover** a node to see its label and highlight its connections.
+- **Click** a document node to open that note in the editor.
 
 ## Node types
 
@@ -39,14 +35,6 @@ The graph contains several node types, each rendered differently:
 ### Search
 
 Type in the search bar at the top of the graph view to find nodes by name. Results highlight in the graph.
-
-### Reset
-
-Press `Cmd+R` / `Ctrl+R` to reset the graph layout and zoom to fit all nodes.
-
-### Layout simulation
-
-Press `Space` to pause or resume the force simulation. Pausing freezes nodes in place so you can inspect the layout without it shifting.
 
 ## Graph sidebar
 

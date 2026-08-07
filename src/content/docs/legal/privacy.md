@@ -7,7 +7,7 @@ Lokus is a local-first application. Your notes, files, and workspace data stay o
 
 ## What stays on your machine
 
-**Everything you write.** Notes, canvas drawings, kanban boards, databases, templates, daily notes, and all attachments are stored as files in your local workspace directory. Lokus does not upload, sync, or mirror your content to any cloud service unless you explicitly configure sync.
+**Everything you write.** Notes, canvas drawings, kanban boards, databases, templates, daily notes, and all attachments are stored as files in your local workspace directory. Lokus does not upload, sync, or mirror your content to any cloud service unless you explicitly enable sync — and when you do, content is encrypted on-device before upload (see [Sync & Privacy](/core/sync-privacy/) for the exact model).
 
 **Your preferences and settings.** Theme choices, keyboard shortcuts, workspace paths, plugin configurations, and editor preferences are stored in `~/.lokus/` and your workspace's `.lokus/` folder.
 
@@ -56,6 +56,7 @@ Lokus makes these outbound connections:
 | `accounts.google.com` | Google Calendar sync | Only if you connect Google Calendar |
 | CalDAV provider URLs | Calendar sync | Only if you connect a CalDAV calendar |
 | Supabase endpoints | Authentication | Only if you sign in |
+| Supabase storage | Encrypted sync blobs + manifest | Only if you enable sync |
 
 All connections use HTTPS. The MCP server binds to `localhost` only and does not accept remote connections.
 
