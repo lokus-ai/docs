@@ -3,6 +3,9 @@ title: Graph View
 description: Visualize your knowledge graph as a force-directed map. Navigate, filter, and explore connections.
 ---
 
+
+![The force-directed graph view](/shots/graph.png)
+
 The graph view shows every note in your workspace as a node and every wiki link as an edge. Open it with the graph icon in the ribbon, or `⌘⇧G`.
 
 ## The view

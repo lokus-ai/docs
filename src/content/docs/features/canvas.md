@@ -3,6 +3,9 @@ title: Canvas
 description: Infinite canvas powered by Excalidraw for visual thinking, spatial note arrangement, and freeform drawing.
 ---
 
+
+![An open canvas](/shots/canvas.png)
+
 The canvas is an infinite, zoomable drawing surface built on [Excalidraw](https://excalidraw.com). Use it for spatial note arrangement, diagrams, brainstorming, or freeform sketching. Canvas files use the `.excalidraw` extension and are stored alongside your notes.
 
 ## Creating a canvas
